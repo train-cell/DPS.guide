@@ -1,20 +1,26 @@
 /** Καθαρή λογική cookie jar — χωρίς δίκτυο και χωρίς I/O, ώστε να δοκιμάζεται μεμονωμένα.
  *  Αποθήκευση ανά host (host → όνομα → Cookie): ομώνυμα cookies διαφορετικών hosts
  *  (π.χ. JSESSIONID του CAS και του eClass) δεν αλληλοεπικαλύπτονται.
- *  Τα cookies αποστέλλονται μόνο σε αιτήματα του ίδιου (ή υπο-)domain με συμβατή διαδρομή,
- *  όπως απαιτεί η ροή CAS όπου η ταυτότητα σπάνε μέσω των ενδιάμεσων 30x. */
+ *  Διάκριση host-only και Domain cookies κατά RFC 6265: τα host-only στέλνονται ΜΟΝΟ
+ *  στον ακριβή host που τα έθεσε, τα Domain cookies και στα υπο-domain του, ενώ ένα
+ *  `Domain` που δεν ταιριάζει με τον host του αιτήματος απορρίπτεται εντελώς.
+ *  Η αποθήκευση είναι φραγμένη (RFC 6265 §6.1): πάνω από `MEGISTOS_ARITHMOS_COOKIES`
+ *  σβήνονται τα παλαιότερα cookies. */
 
 const MILLIS_ANA_DEYTEROLEPTO = 1000;
 const PROTAXI_MONOPATHIAS = '/';
 const TELIKO_SIMEIO_MONOPATHIAS = '/';
 const IPV4_MOTIVO = /^\d{1,3}(\.\d{1,3}){3}$/;
+/** Ανώτατο πλήθος cookies στο jar (RFC 6265 §6.1): πάνω από αυτό σβήνονται τα παλαιότερα. */
+export const MEGISTOS_ARITHMOS_COOKIES = 300;
 
 export interface Cookie {
   readonly onoma: string;
   readonly timi: string;
   readonly host: string;
   readonly monopathia: string;
-  readonly monimos: boolean;
+  readonly asfales: boolean;
+  readonly host_only: boolean;
   readonly mexri: number | null;
 }
 
@@ -33,6 +39,16 @@ function taftisi_host(host_cookie: string, host_aitimatos: string): boolean {
 
 function einai_ip(host: string): boolean {
   return IPV4_MOTIVO.test(host) || host.includes(':');
+}
+
+/** Επιλογή cookie για αποστολή σε δεδομένο host κατά RFC 6265 §5.4: host-only cookie
+ *  ταιριάζει ΜΟΝΟ με ακριβή ισότητα host (χωρίς υπο-domain), ενώ Domain cookie
+ *  ταιριάζει με domain-match (ίδιο host ή υπο-domain του). */
+function tainriazei_cookie(cookie: Cookie, host_aitimatos: string): boolean {
+  if (cookie.host_only) {
+    return cookie.host === host_aitimatos;
+  }
+  return taftisi_host(cookie.host, host_aitimatos);
 }
 
 /** Ταίριασμα διαδρομής κατά RFC 6265 path-match. */
@@ -65,6 +81,9 @@ export function default_path(monopathia: string): string {
 /** Μετατρέφει τις ωμές τιμές `Set-Cookie` σε cookies με βάση το URL του αιτήματος.
  *  Χαρακτηριστικά που δεν επηρεάζουν την αποστολή (HttpOnly, SameSite) αγνοούνται·
  *  `Max-Age` υπερισχύει του `Expires` (RFC 6265 §5.2.2/§5.3).
+ *  `Domain` γίνεται δεκτό ΜΟΝΟ όταν ο host του αιτήματος το domain-matchάρει
+ *  (ίδιος ή υπο-domain)· αλλιώς το cookie απορρίπτεται εντελώς, όπως και όταν ο
+ *  host του αιτήματος είναι διεύθυνση IP. Χωρίς `Domain` το cookie είναι host-only.
  *  Cookie με `Max-Age<=0` ή `Expires` στο παρελθόν επιστράφεται με `mexri` στο
  *  παρελθόν — το jar το διαγράφει αντί να το αποθηκεύσει. */
 export function parse_set_cookies(raw: readonly string[], vasi: URL): Cookie[] {
@@ -98,12 +117,15 @@ export function parse_set_cookies(raw: readonly string[], vasi: URL): Cookie[] {
     }
 
     let host = vasi.hostname;
+    let host_only = true;
     const domain = xaraktiristika.get('domain');
     if (domain !== undefined) {
       const katharo = domain.replace(/^\./, '').toLowerCase();
-      if (katharo !== '') {
-        host = katharo;
+      if (katharo === '' || einai_ip(vasi.hostname) || !taftisi_host(katharo, vasi.hostname)) {
+        continue;
       }
+      host = katharo;
+      host_only = false;
     }
 
     let monopathia = default_path(vasi.pathname);
@@ -134,7 +156,8 @@ export function parse_set_cookies(raw: readonly string[], vasi: URL): Cookie[] {
       timi: zeugari.slice(theseis_isou + 1).trim(),
       host,
       monopathia,
-      monimos: xaraktiristika.has('secure'),
+      asfales: xaraktiristika.has('secure'),
+      host_only,
       mexri,
     });
   }
@@ -143,8 +166,11 @@ export function parse_set_cookies(raw: readonly string[], vasi: URL): Cookie[] {
 
 export class CookieJar {
   private readonly domes = new Map<string, Map<string, Cookie>>();
+  /** Σειρά εισαγωγής (host, όνομα) για τον εντοπισμό των παλαιότερων cookies. */
+  private readonly seira: { host: string; onoma: string }[] = [];
 
-  /** Αποθήκευση/ενημέρωση· cookie που έχει ήδη λήξει διαγράφεται αντί να αποθηκευτεί. */
+  /** Αποθήκευση/ενημέρωση· cookie που έχει ήδη λήξει διαγράφεται αντί να αποθηκευτεί.
+   *  Μετά από κάθε εγγραφή επιβάλλεται το φράγμα χωρητικότητας του jar. */
   val(cookie: Cookie): void {
     if (einai_ligmeno(cookie)) {
       this.svise(cookie.onoma, cookie.host);
@@ -153,9 +179,25 @@ export class CookieJar {
     const domi = this.domes.get(cookie.host);
     if (domi === undefined) {
       this.domes.set(cookie.host, new Map([[cookie.onoma, cookie]]));
-      return;
+      this.seira.push({ host: cookie.host, onoma: cookie.onoma });
+    } else {
+      if (!domi.has(cookie.onoma)) {
+        this.seira.push({ host: cookie.host, onoma: cookie.onoma });
+      }
+      domi.set(cookie.onoma, cookie);
     }
-    domi.set(cookie.onoma, cookie);
+    this.periorismos_xoritikotitas();
+  }
+
+  /** RFC 6265 §6.1: φραγμένη αποθήκευση — μόλις ο αριθμός cookies ξεπεράσει το όριο,
+   *  σβήνονται τα παλαιότερα (σειρά εισαγωγής) μέχρι να επανέλθει εντός ορίου. */
+  private periorismos_xoritikotitas(): void {
+    while (this.megethos > MEGISTOS_ARITHMOS_COOKIES && this.seira.length > 0) {
+      const palaiotero = this.seira.shift();
+      if (palaiotero !== undefined) {
+        this.svise(palaiotero.onoma, palaiotero.host);
+      }
+    }
   }
 
   val_se_ola(cookies: readonly Cookie[]): void {
@@ -185,19 +227,20 @@ export class CookieJar {
     return diagrafike;
   }
 
-  /** Cookies κατάλληλα για το URL: ίδιο/υπο-domain, συμβατή διαδρομή, μη ληγμένα,
-   *  και τα secure μόνο σε https. Ταξινόμηση: πιο συγκεκριμένη διαδρομή πρώτη. */
-  gia_ekpompi(host: string, monopathia: string, asfales: boolean): Cookie[] {
+  /** Cookies κατάλληλα για το URL: host-only μόνο στον ίδιο host, Domain σε ίδιο/υπο-domain,
+   *  συμβατή διαδρομή, μη ληγμένα, και τα secure μόνο σε https.
+   *  Ταξινόμηση: πιο συγκεκριμένη διαδρομή πρώτη. */
+  gia_ekpompi(host: string, monopathia: string, asfales_syndesis: boolean): Cookie[] {
     const apotelesmata: Cookie[] = [];
-    for (const [host_cookie, domi] of this.domes) {
-      if (!taftisi_host(host_cookie, host)) {
-        continue;
-      }
+    for (const domi of this.domes.values()) {
       for (const cookie of domi.values()) {
+        if (!tainriazei_cookie(cookie, host)) {
+          continue;
+        }
         if (einai_ligmeno(cookie)) {
           continue;
         }
-        if (cookie.monimos && !asfales) {
+        if (cookie.asfales && !asfales_syndesis) {
           continue;
         }
         if (!taftisi_monopathias(cookie.monopathia, monopathia)) {
@@ -228,6 +271,7 @@ export class CookieJar {
 
   adeia(): void {
     this.domes.clear();
+    this.seira.length = 0;
   }
 }
 

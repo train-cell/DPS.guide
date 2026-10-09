@@ -67,4 +67,37 @@ describe('path normalization (§5.3 rules)', () => {
     const deutero = prwto.ok ? karnikopoise_diadromi(prwto.timi) : prwto;
     expect(deutero).toEqual(prwto);
   });
+
+  it('rejects Windows reserved device names', () => {
+    for (const onoma of ['CON', 'NUL', 'COM1', 'LPT9']) {
+      const res = karnikopoise_diadromi(onoma);
+      expect(res.ok).toBe(false);
+      if (!res.ok) {
+        expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      }
+    }
+  });
+
+  it('rejects reserved names case-insensitively, with extension, or as nested segment', () => {
+    for (const onoma of ['con', 'Nul', 'com1.txt', 'fakelos/LPT9.log']) {
+      const res = karnikopoise_diadromi(onoma);
+      expect(res.ok).toBe(false);
+    }
+  });
+
+  it('rejects segments ending in a dot or a space', () => {
+    for (const onoma of ['arxeio.', 'arxeio ', 'fakelos/arxeio.', 'fakelos/arxeio ']) {
+      const res = karnikopoise_diadromi(onoma);
+      expect(res.ok).toBe(false);
+      if (!res.ok) {
+        expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      }
+    }
+  });
+
+  it('accepts normal names that only contain reserved substrings', () => {
+    for (const onoma of ['console.txt', 'com10.log', 'lpt10', 'nulos', 'CONNECT/arxeio']) {
+      expect(karnikopoise_diadromi(onoma).ok).toBe(true);
+    }
+  });
 });

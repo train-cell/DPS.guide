@@ -4,6 +4,7 @@ import { createServer, type Server } from 'node:http';
 import {
   CookieJar,
   MEGISTES_ANAKATEUTHINSEIS,
+  MEGISTOS_ARITHMOS_COOKIES,
   NodeFetchHttpPyli,
   anakateuthinsi,
   apofasi_anakateuthinsis,
@@ -94,7 +95,8 @@ function dimiourgise_cookie(
 ): Cookie {
   return {
     monopathia: '/',
-    monimos: false,
+    asfales: false,
+    host_only: true,
     mexri: null,
     ...parts,
   };
@@ -145,7 +147,7 @@ describe('CookieJar', () => {
       dimiourgise_cookie({ onoma: 'ligmeno', timi: '1', host: 'enas.test', mexri: Date.now() - 1000 })
     );
     zakari.val(
-      dimiourgise_cookie({ onoma: 'asfales', timi: '2', host: 'enas.test', monimos: true })
+      dimiourgise_cookie({ onoma: 'asfales', timi: '2', host: 'enas.test', asfales: true })
     );
 
     expect(zakari.kefalida_gia(t_url('http://enas.test/'))).toBe('');
@@ -167,7 +169,8 @@ describe('CookieJar', () => {
       expect(mono.timi).toBe('abc');
       expect(mono.host).toBe('127.0.0.1');
       expect(mono.monopathia).toBe('/cas');
-      expect(mono.monimos).toBe(true);
+      expect(mono.asfales).toBe(true);
+      expect(mono.host_only).toBe(true);
       expect(mono.mexri).toBeNull();
     }
   });
@@ -210,6 +213,62 @@ describe('CookieJar', () => {
       t_url('http://app.ypodomi.test/x')
     );
     expect(cookies[0]?.host).toBe('ypodomi.test');
+  });
+
+  it('απορρίπτει Domain που δεν ταιριάζει με τον host του αιτήματος', () => {
+    const kako = parse_set_cookies(['kako=1; Domain=evil.com'], t_url('http://eclass.gr/login'));
+    expect(kako).toHaveLength(0);
+
+    const kako_ypodomi = parse_set_cookies(
+      ['kako=1; Domain=.evil.com'],
+      t_url('http://eclass.gr/login')
+    );
+    expect(kako_ypodomi).toHaveLength(0);
+
+    const se_ip = parse_set_cookies(['kako=1; Domain=127.0.0.1'], t_url('http://127.0.0.1/'));
+    expect(se_ip).toHaveLength(0);
+
+    const zakari = new CookieJar();
+    zakari.val_se_ola(kako);
+    expect(zakari.pare('kako', 'evil.com')).toBeUndefined();
+    expect(zakari.kefalida_gia(t_url('http://evil.com/'))).toBe('');
+  });
+
+  it('αποθηκεύει Domain cookie και το στέλνει σε ίδιο host και υπο-domain', () => {
+    const cookies = parse_set_cookies(['kalo=1; Domain=.eclass.gr'], t_url('http://eclass.gr/login'));
+    expect(cookies).toHaveLength(1);
+    expect(cookies[0]?.host).toBe('eclass.gr');
+    expect(cookies[0]?.host_only).toBe(false);
+
+    const zakari = new CookieJar();
+    zakari.val_se_ola(cookies);
+
+    expect(zakari.kefalida_gia(t_url('http://eclass.gr/x'))).toBe('kalo=1');
+    expect(zakari.kefalida_gia(t_url('http://sub.eclass.gr/x'))).toBe('kalo=1');
+    expect(zakari.kefalida_gia(t_url('http://allos.gr/x'))).toBe('');
+  });
+
+  it('host-only cookie δεν αποστέλλεται σε υπο-domain', () => {
+    const cookies = parse_set_cookies(['mono=1'], t_url('http://eclass.gr/login'));
+    expect(cookies[0]?.host_only).toBe(true);
+
+    const zakari = new CookieJar();
+    zakari.val_se_ola(cookies);
+
+    expect(zakari.kefalida_gia(t_url('http://eclass.gr/x'))).toBe('mono=1');
+    expect(zakari.kefalida_gia(t_url('http://sub.eclass.gr/x'))).toBe('');
+  });
+
+  it('περιορίζει το πλήθος cookies σβήνοντας τα παλαιότερα', () => {
+    const zakari = new CookieJar();
+    for (let i = 0; i < MEGISTOS_ARITHMOS_COOKIES + 5; i += 1) {
+      zakari.val(dimiourgise_cookie({ onoma: `k${i}`, timi: String(i), host: 'ypodomi.test' }));
+    }
+
+    expect(zakari.megethos).toBe(MEGISTOS_ARITHMOS_COOKIES);
+    expect(zakari.pare('k0', 'ypodomi.test')).toBeUndefined();
+    expect(zakari.pare('k4', 'ypodomi.test')).toBeUndefined();
+    expect(zakari.pare(`k${MEGISTOS_ARITHMOS_COOKIES + 4}`, 'ypodomi.test')).toBeDefined();
   });
 });
 
@@ -444,10 +503,131 @@ describe('anakateuthinsi (με ψεύτικο εκδότη)', () => {
     }
     expect(ekdotis.kliseis()).toBe(0);
   });
+
+  it('διατηρεί πολλαπλά Set-Cookie (κόμμα στο Expires) σε ανακατεύθυνση', async () => {
+    const me_expires = 'enas=1; Expires=Fri, 31 Dec 2099 23:59:59 GMT; Path=/';
+    const ekdotis = dimiourgise_ekdoti([
+      dimiourgise_apantisi(302, {
+        url: 'http://127.0.0.1/ena',
+        thesi: '/dyo',
+        set_cookie: [me_expires, 'dyo=2; Path=/'],
+      }),
+      dimiourgise_apantisi(200, { url: 'http://127.0.0.1/dyo', keimeno: 'telos' }),
+    ]);
+    const zakari = new CookieJar();
+
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({ url: 'http://127.0.0.1/ena' }),
+      ekdotis.ekdotis,
+      zakari
+    );
+
+    expect(apotelesma.ok).toBe(true);
+    expect(zakari.pare('enas', '127.0.0.1')?.timi).toBe('1');
+    expect(zakari.pare('dyo', '127.0.0.1')?.timi).toBe('2');
+    const kefalida = ekdotis.teleftaio()?.kefalides['Cookie'] ?? '';
+    expect(kefalida).toContain('enas=1');
+    expect(kefalida).toContain('dyo=2');
+  });
+
+  it('διαβάζει Location/Set-Cookie με ανεξάρτητη κεφαλαία (τρίτος εκδότης)', async () => {
+    const vimata: ApantisiEkdoti[] = [
+      {
+        url: 'http://127.0.0.1/ena',
+        katastasi: 302,
+        kefalides: { Location: ['/dyo'], 'Set-Cookie': ['kapitala=1; Path=/'] },
+        keimeno: async () => '',
+        dyadiko: async () => new Uint8Array(),
+      },
+      {
+        url: 'http://127.0.0.1/dyo',
+        katastasi: 200,
+        kefalides: {},
+        keimeno: async () => 'telos',
+        dyadiko: async () => new TextEncoder().encode('telos'),
+      },
+    ];
+    const ekdotis = dimiourgise_ekdoti(vimata);
+    const zakari = new CookieJar();
+
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({ url: 'http://127.0.0.1/ena' }),
+      ekdotis.ekdotis,
+      zakari
+    );
+
+    expect(apotelesma.ok).toBe(true);
+    expect(ekdotis.kliseis()).toBe(2);
+    expect(zakari.pare('kapitala', '127.0.0.1')?.timi).toBe('1');
+    expect(ekdotis.teleftaio()?.kefalides['Cookie']).toBe('kapitala=1');
+  });
+
+  it('συγχωνεύει cookie του καλούντα (πεζό) με το jar σε ΜΙΑ κεφαλίδα Cookie', async () => {
+    const ekdotis = dimiourgise_ekdoti([dimiourgise_apantisi(200, { url: 'http://127.0.0.1/ena' })]);
+    const zakari = new CookieJar();
+    zakari.val(dimiourgise_cookie({ onoma: 'jar', timi: 'j', host: '127.0.0.1' }));
+
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({ kefalides: { cookie: 'kalon=k' } }),
+      ekdotis.ekdotis,
+      zakari
+    );
+
+    expect(apotelesma.ok).toBe(true);
+    const kefalides = ekdotis.teleftaio()?.kefalides ?? {};
+    const cookie_kleidia = Object.keys(kefalides).filter((k) => k.toLowerCase() === 'cookie');
+    expect(cookie_kleidia).toHaveLength(1);
+    expect(kefalides[cookie_kleidia[0] ?? '']).toBe('kalon=k; jar=j');
+  });
+
+  it('αδειάζει (drain) το σώμα των ενδιάμεσων 30x απαντήσεων', async () => {
+    let ena_keimeno = 0;
+    let dyo_keimeno = 0;
+    const ekdotis: EkdotisAitimaton = async (aitima) => {
+      if (aitima.url.endsWith('/ena')) {
+        return {
+          url: 'http://127.0.0.1/ena',
+          katastasi: 302,
+          kefalides: { location: ['/dyo'] },
+          keimeno: async () => {
+            ena_keimeno += 1;
+            return 'soma-enomeno';
+          },
+          dyadiko: async () => new Uint8Array(),
+        };
+      }
+      return {
+        url: 'http://127.0.0.1/dyo',
+        katastasi: 200,
+        kefalides: {},
+        keimeno: async () => {
+          dyo_keimeno += 1;
+          return 'teliko';
+        },
+        dyadiko: async () => new TextEncoder().encode('teliko'),
+      };
+    };
+
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({ url: 'http://127.0.0.1/ena' }),
+      ekdotis,
+      new CookieJar()
+    );
+
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi.keimeno).toBe('teliko');
+    }
+    expect(ena_keimeno).toBe(1);
+    expect(dyo_keimeno).toBe(1);
+  });
 });
 
 let server: Server;
 let lenis: number;
+let server_b: Server;
+let lenis_b: number;
+let auth_sto_a = '';
 
 beforeAll(async () => {
   server = createServer((aitima, apantisi) => {
@@ -507,6 +687,19 @@ beforeAll(async () => {
           });
           apantisi.end();
           return;
+        case '/me-auth-xeno':
+          auth_sto_a = aitima.headers.authorization ?? '';
+          apantisi.writeHead(302, { Location: `http://127.0.0.1:${lenis_b}/proorismos` });
+          apantisi.end('meta');
+          return;
+        case '/me-auth-idio':
+          apantisi.writeHead(302, { Location: '/auth-echo' });
+          apantisi.end();
+          return;
+        case '/auth-echo':
+          apantisi.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+          apantisi.end(`auth<${aitima.headers.authorization ?? ''}>`);
+          return;
         default:
           apantisi.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
           apantisi.end('den vrethike');
@@ -519,11 +712,38 @@ beforeAll(async () => {
       lysi();
     });
   });
+
+  server_b = createServer((aitima, apantisi) => {
+    const url = new URL(aitima.url ?? '/', `http://127.0.0.1:${lenis_b}`);
+    aitima.on('data', () => undefined);
+    aitima.on('end', () => {
+      switch (url.pathname) {
+        case '/proorismos':
+          apantisi.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+          apantisi.end(`auth<${aitima.headers.authorization ?? ''}>`);
+          return;
+        default:
+          apantisi.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          apantisi.end('den vrethike');
+      }
+    });
+  });
+  await new Promise<void>((lysi) => {
+    server_b.listen(0, '127.0.0.1', () => {
+      lenis_b = (server_b.address() as AddressInfo).port;
+      lysi();
+    });
+  });
 });
 
 afterAll(async () => {
   await new Promise<void>((lysi) => {
     server.close(() => {
+      lysi();
+    });
+  });
+  await new Promise<void>((lysi) => {
+    server_b.close(() => {
       lysi();
     });
   });
@@ -760,6 +980,46 @@ describe('NodeFetchHttpPyli (localhost)', () => {
     expect(apotelesma.ok).toBe(false);
     if (!apotelesma.ok) {
       expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+  });
+
+  it('ρίχνει το Authorization όταν η ανακατεύθυνση αλλάζει host', async () => {
+    const pyli = new NodeFetchHttpPyli();
+    auth_sto_a = '';
+
+    const apotelesma = await pyli.aitima({
+      methodos: 'GET',
+      url: diefthinsi('/me-auth-xeno'),
+      kefalides: { authorization: `Bearer ${MYSTIKO}` },
+      akolouthise_anakateuthinseis: true,
+      xronos_orio_ms: XORI_ORIO_MS,
+      typos_apantisis: 'keimeno',
+    });
+
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi.teliko_url).toBe(`http://127.0.0.1:${lenis_b}/proorismos`);
+      expect(apotelesma.timi.keimeno).toBe('auth<>');
+    }
+    expect(auth_sto_a).toBe(`Bearer ${MYSTIKO}`);
+  });
+
+  it('διατηρεί το Authorization όταν η ανακατεύθυνση μένει στον ίδιο host', async () => {
+    const pyli = new NodeFetchHttpPyli();
+
+    const apotelesma = await pyli.aitima({
+      methodos: 'GET',
+      url: diefthinsi('/me-auth-idio'),
+      kefalides: { authorization: `Bearer ${MYSTIKO}` },
+      akolouthise_anakateuthinseis: true,
+      xronos_orio_ms: XORI_ORIO_MS,
+      typos_apantisis: 'keimeno',
+    });
+
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi.teliko_url).toBe(diefthinsi('/auth-echo'));
+      expect(apotelesma.timi.keimeno).toBe(`auth<Bearer ${MYSTIKO}>`);
     }
   });
 });

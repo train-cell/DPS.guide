@@ -126,4 +126,32 @@ describe('NodeFsApothiki', () => {
     const akoma = await readdir(path.join(riza, proorismos));
     expect(akoma).toEqual([]);
   });
+
+  it('sanitizes error aitia: stable code only, never raw fs error or absolute path', async () => {
+    const proorismos = 'leak-fakelos';
+    await mkdir(path.join(riza, proorismos));
+
+    const res = await apothiki.grapse_keimeno(proorismos, 'dedomena');
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AGNOSTO');
+      expect(typeof res.sfalma.aitia).toBe('string');
+      expect(String(res.sfalma.aitia)).toMatch(/^[A-Z_]+$/);
+      expect(String(res.sfalma.aitia)).not.toMatch(/[A-Za-z]:[\\/]/);
+      expect(res.sfalma.minima).not.toContain(riza);
+      expect(res.sfalma.minima).not.toMatch(/[A-Za-z]:[\\/]/);
+    }
+  });
+
+  it('missing-file message uses the normalized path, not the caller absolute path', async () => {
+    const apsoluth = path.join(riza, 'leak-tpt.txt');
+    const res = await apothiki.diavase_keimeno(apsoluth);
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DEN_VRETHIKE');
+      expect(res.sfalma.minima).not.toContain(riza);
+      expect(res.sfalma.minima).not.toContain(':\\');
+      expect(res.sfalma.minima).not.toMatch(/[A-Za-z]:[\\/]/);
+    }
+  });
 });

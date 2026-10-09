@@ -59,11 +59,11 @@ export function patch_plist(keimeno) {
 function elenxos_arxeiou(diadromi) {
   const pliri = path.resolve(diadromi);
   if (!existsSync(pliri)) {
-    console.error(`Το αρχείο δεν βρέθηκε: ${diadromi}`);
+    console.error(`Το αρχείο δεν βρέθηκε: ${path.basename(diadromi)}`);
     process.exit(1);
   }
   if (!statSync(pliri).isFile()) {
-    console.error(`Η διαδρομή δεν είναι αρχείο: ${diadromi}`);
+    console.error(`Η διαδρομή δεν είναι αρχείο: ${path.basename(diadromi)}`);
     process.exit(1);
   }
   return pliri;
@@ -76,7 +76,7 @@ async function grapse_atomika(pliri, periexomeno) {
     await writeFile(prosorino, periexomeno, 'utf8');
     await rename(prosorino, pliri);
   } finally {
-    await rm(prosorino, { force: true });
+    await rm(prosorino, { force: true }).catch(() => undefined);
   }
 }
 
@@ -90,7 +90,7 @@ async function kentriko() {
 
   const keimeno = await readFile(pliri, 'utf8');
   await grapse_atomika(pliri, patch_plist(keimeno));
-  console.log(`[OK] Το Info.plist ενημερώθηκε: ${diadromi} (${KLEIDIA.join(', ')})`);
+  console.log(`[OK] Το Info.plist ενημερώθηκε: ${path.basename(diadromi)} (${KLEIDIA.join(', ')})`);
 }
 
 /** Τρέχει μόνο όταν καλείται απευθείας από τη γραμμή εντολών, όχι σε import από tests. */

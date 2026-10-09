@@ -22,6 +22,16 @@ const ANAKATEUTHINSEIS_ME_METHODO_GET: readonly number[] = [KODIKI_301, KODIKI_3
 /** 307/308: διατηρείται η μέθοδος ΚΑΙ το σώμα του αιτήματος. */
 const ANAKATEUTHINSEIS_ME_MONIMO_METHODO: readonly number[] = [KODIKI_307, KODIKI_308];
 
+/** Κεφαλίδες που εκθέτουν διαπιστευτήρια· ΔΕΝ διαβιβάζονται σε διαφορετικό
+ *  origin, όπως ακριβώς κάνει και το native fetch στα cross-origin redirects. */
+const KEFALIDES_EYAISTHITES_STIN_TAYTOTITA: readonly string[] = [
+  'authorization',
+  'proxy-authorization',
+];
+
+/** Κατώφλι χρονικού ορίου σε ms. Τιμή `0` (ή μικρότερη) ΣΗΜΑΙΝΕΙ «χωρίς όριο»:
+ *  το αίτημα περιμένει επ' αόριστον μέχρι να απαντήσει ο εκδότης ή να ακυρωθεί
+ *  εξωτερικά. Οποιαδήποτε τιμή > 0 ενεργοποιεί όριο που τερματίζει το αίτημα. */
 const TOULAXISTON_XRONOS_ORIOU_MS = 0;
 
 export type MethodosAitimatos = 'GET' | 'POST' | 'HEAD';
@@ -150,24 +160,64 @@ function syndyasmos_simaton(
 }
 
 function pare_kefalida(kefalides: Record<string, string>, onoma: string): string | undefined {
+  const stoxos = onoma.toLowerCase();
   for (const [kleidi, timi] of Object.entries(kefalides)) {
-    if (kleidi.toLowerCase() === onoma) {
+    if (kleidi.toLowerCase() === stoxos) {
       return timi;
     }
   }
   return undefined;
 }
 
+/** Ανάγνωση όλων των τιμών μιας multi-map κεφαλίδας με ανεξάρτητη κεφαλαία:
+ *  τρίτοι `EkdotisAitimaton` μπορεί να επιστρέφουν `Set-Cookie`/`Location` με
+ *  διαφορετικό casing από το αναμενόμενο πεζό. */
+function pare_times_kefalidas(
+  kefalides: Record<string, readonly string[]>,
+  onoma: string
+): readonly string[] {
+  const stoxos = onoma.toLowerCase();
+  for (const [kleidi, times] of Object.entries(kefalides)) {
+    if (kleidi.toLowerCase() === stoxos) {
+      return times;
+    }
+  }
+  return [];
+}
+
+/** Διαγραφή κεφαλίδας με ανεξάρτητη κεφαλαία (σβήνει όλες τις παραλλαγές). */
+function diagrapse_kefalida(kefalides: Record<string, string>, onoma: string): void {
+  const stoxos = onoma.toLowerCase();
+  for (const kleidi of Object.keys(kefalides)) {
+    if (kleidi.toLowerCase() === stoxos) {
+      delete kefalides[kleidi];
+    }
+  }
+}
+
+/** Θέση κεφαλίδας με ανεξάρτητη κεφαλαία: σβήνει τυχόν παραλλαγές πριν γράψει,
+ *  ώστε να μην καταλήξουν ΔΥΟ κεφαλίδες Cookie (π.χ. `cookie` + `Cookie`). */
+function thesei_kefalida(kefalides: Record<string, string>, onoma: string, timi: string): void {
+  diagrapse_kefalida(kefalides, onoma);
+  kefalides[onoma] = timi;
+}
+
+/** Συνθέτει τις κεφαλίδες του τρέχοντος hop: βασικές κεφαλίδες (ενδεχομένως με
+ *  κομμένες τις auth-sensitive) + τα cookies του jar, σε ΕΝΑ `Cookie`. */
 function dimiourgise_kefalides(
-  basika: BasikaAnakateuthinsis,
+  kefalides_vasis: Record<string, string>,
   zakari: CookieJar,
   trexon: URL
 ): Record<string, string> {
-  const kefalides: Record<string, string> = { ...basika.kefalides };
+  const kefalides: Record<string, string> = { ...kefalides_vasis };
   const zakari_cookies = zakari.kefalida_gia(trexon);
   if (zakari_cookies !== '') {
-    const yparxon = pare_kefalida(basika.kefalides, 'cookie');
-    kefalides['Cookie'] = yparxon === undefined ? zakari_cookies : `${yparxon}; ${zakari_cookies}`;
+    const yparxon = pare_kefalida(kefalides, 'cookie');
+    thesei_kefalida(
+      kefalides,
+      'Cookie',
+      yparxon === undefined ? zakari_cookies : `${yparxon}; ${zakari_cookies}`
+    );
   }
   return kefalides;
 }
@@ -199,6 +249,17 @@ async function dimiourgise_teliki_apantisi(
   }
 }
 
+/** Αδειάζει (drain) το σώμα μιας απορριπτέας απάντησης — ενδιάμεσο 30x ή
+ *  απάντηση μετά την υπέρβαση ορίου — πριν από το επόμενο hop, ώστε να μην
+ *  παραμένουν ανοιχτά/αδιάβαστα sockets του transport. Τυχόν σφάλμα αγνοείται. */
+async function adeiaze_soma(apantisi: ApantisiEkdoti): Promise<void> {
+  try {
+    await apantisi.keimeno();
+  } catch {
+    // Το σώμα είναι απορριπτέο· κανένα σφάλμα ανάγνωσης δεν έχει σημασία.
+  }
+}
+
 export async function anakateuthinsi(
   basika: BasikaAnakateuthinsis,
   ekdotis: EkdotisAitimaton,
@@ -217,6 +278,9 @@ export async function anakateuthinsi(
 
   let methodos = basika.methodos;
   let soma = basika.soma;
+  // Οι κεφαλίδες που διαβιβάζονται σταδιακά· αρχικά του καλούντα, με τις
+  // auth-sensitive να κόβονται μόλις η ανακατεύθυνση αλλάξει origin.
+  const kefalides_trexouses: Record<string, string> = { ...basika.kefalides };
 
   for (let ana = 0; ; ana += 1) {
     const sinero = syndyasmos_simaton(basika.simatodotis, basika.xronos_orio_ms);
@@ -225,14 +289,17 @@ export async function anakateuthinsi(
         {
           methodos,
           url: trexon.href,
-          kefalides: dimiourgise_kefalides(basika, zakari, trexon),
+          kefalides: dimiourgise_kefalides(kefalides_trexouses, zakari, trexon),
           soma,
         },
         sinero.sima
       );
 
-      // Τα ενδιάμεσα Set-Cookie συλλέγονται ΠΑΝΤΑ πριν την επόμενη ανακατεύθυνση.
-      zakari.val_se_ola(parse_set_cookies(apantisi.kefalides['set-cookie'] ?? [], trexon));
+      // Τα ενδιάμεσα Set-Cookie συλλέγονται ΠΑΝΤΑ πριν την επόμενη ανακατεύθυνση
+      // ως ΞΕΧΩΡΙΣΤΕΣ τιμές (χωρίς join) — αλλιώς κόμματα σε `Expires` τις χαλάνε.
+      zakari.val_se_ola(
+        parse_set_cookies(pare_times_kefalidas(apantisi.kefalides, 'set-cookie'), trexon)
+      );
 
       const kefalides_sen_morphi_record: Record<string, string> = {};
       for (const [kleidi, times] of Object.entries(apantisi.kefalides)) {
@@ -242,7 +309,7 @@ export async function anakateuthinsi(
       const apofasi = apofasi_anakateuthinsis(
         methodos,
         apantisi.katastasi,
-        apantisi.kefalides['location']?.[0] ?? null,
+        pare_times_kefalidas(apantisi.kefalides, 'location')[0] ?? null,
         trexon.href
       );
 
@@ -256,14 +323,24 @@ export async function anakateuthinsi(
       }
 
       if (ana >= MEGISTES_ANAKATEUTHINSEIS) {
+        await adeiaze_soma(apantisi);
         return apotyxia(
           'DIKTYO',
           `Υπέρβαση μέγιστου αριθμού ανακατευθύνσεων (${MEGISTES_ANAKATEUTHINSEIS})`
         );
       }
 
+      const nea_trexousa = new URL(apofasi.url);
+      if (nea_trexousa.origin !== trexon.origin) {
+        for (const onoma of KEFALIDES_EYAISTHITES_STIN_TAYTOTITA) {
+          diagrapse_kefalida(kefalides_trexouses, onoma);
+        }
+      }
+
+      await adeiaze_soma(apantisi);
+
       methodos = apofasi.methodos;
-      trexon = new URL(apofasi.url);
+      trexon = nea_trexousa;
       if (!apofasi.kratima_somatos) {
         soma = null;
       }
