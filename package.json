@@ -1,0 +1,23 @@
+{
+  "name": "dps-guide-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DPS.guide monorepo",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node scripts/test-lock.mjs vitest run",
+    "test:lane": "node scripts/test-lock.mjs vitest run",
+    "typecheck": "tsc --build",
+    "lint": "eslint .",
+    "check:ownership": "node scripts/check-ownership.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.9",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.7",
+    "@vitest/coverage-v8": "^3.0.7",
+    "eslint": "^9.21.0",
+    "prettier": "^3.5.3"
+  }
+}
