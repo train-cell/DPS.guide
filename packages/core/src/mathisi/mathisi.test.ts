@@ -19,10 +19,12 @@ describe('arxikopoiisi_mathisis', () => {
   });
 
   it('rejects an invalid date', () => {
-    const res = arxikopoiisi_mathisis(['a'], 'oxi-mera');
-    expect(res.ok).toBe(false);
-    if (!res.ok) {
-      expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    for (const imerominia of ['oxi-mera', '2026-13-01', '2026-02-30', '2026-10-32']) {
+      const res = arxikopoiisi_mathisis(['a'], imerominia);
+      expect(res.ok).toBe(false);
+      if (!res.ok) {
+        expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      }
     }
   });
 });

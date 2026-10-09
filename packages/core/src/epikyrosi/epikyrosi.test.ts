@@ -127,6 +127,17 @@ describe('epikyrose_perigramma', () => {
     }
   });
 
+  it('sorts by end when starts are equal', () => {
+    const res = epikyrose_perigramma(
+      perigramma_raw([tmima('B', 1, 2), tmima('A', 1, 1)]),
+      10
+    );
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi.perigramma.tmimata.map((t) => t.titlos)).toEqual(['A', 'B']);
+    }
+  });
+
   it('tolerates a single shared boundary page', () => {
     const res = epikyrose_perigramma(
       perigramma_raw([tmima('A', 1, 3), tmima('B', 3, 5)]),

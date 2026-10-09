@@ -82,57 +82,78 @@ export interface Programma {
 const PATTERN_IMEROMINIAS = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MILLIS_ANA_IMERA = 86_400_000;
 
-/** Μετατρέπει `YYYY-MM-DD` σε UTC millis ή null αν δεν είναι έγκυρη ημέρα. */
-function parse_imerominia(imerominia: string): number | null {
+/** Ημερολογιακά μέρη μιας έγκυρης ημερομηνίας. */
+interface MeriImorominias {
+  etos: number;
+  minas: number;
+  imera: number;
+}
+
+/** Μορφοποιεί μέρη σε `YYYY-MM-DD`. */
+function iso_apo_meri(meri: MeriImorominias): string {
+  const mm = String(meri.minas).padStart(2, '0');
+  const dd = String(meri.imera).padStart(2, '0');
+  return `${meri.etos}-${mm}-${dd}`;
+}
+
+/**
+ * Αυστηρός έλεγχος `YYYY-MM-DD` με round-trip: η ημερομηνία ξαναχτίζεται και
+ * πρέπει να ταυτίζεται με την είσοδο (πιάνει 32/13, 30 Φεβρουαρίου κ.λπ.).
+ */
+function parse_meri(imerominia: string): MeriImorominias | null {
   const match = PATTERN_IMEROMINIAS.exec(imerominia);
   if (match === null) {
     return null;
   }
-  const etos = Number.parseInt(match[1] ?? '', 10);
-  const minas = Number.parseInt(match[2] ?? '', 10);
-  const imera = Number.parseInt(match[3] ?? '', 10);
-  const millis = Date.UTC(etos, minas - 1, imera);
-  const elegxos = new Date(millis);
-  if (
-    elegxos.getUTCFullYear() !== etos ||
-    elegxos.getUTCMonth() !== minas - 1 ||
-    elegxos.getUTCDate() !== imera
-  ) {
+  const meri = { etos: Number(match[1]), minas: Number(match[2]), imera: Number(match[3]) };
+  if (meri.minas < 1 || meri.minas > 12 || meri.imera < 1 || meri.imera > 31) {
     return null;
   }
-  return millis;
+  const millis = Date.UTC(meri.etos, meri.minas - 1, meri.imera);
+  const epistrefo = {
+    etos: new Date(millis).getUTCFullYear(),
+    minas: new Date(millis).getUTCMonth() + 1,
+    imera: new Date(millis).getUTCDate(),
+  };
+  return iso_apo_meri(epistrefo) === imerominia ? epistrefo : null;
 }
 
-/** Μορφοποιεί UTC millis σε `YYYY-MM-DD` (ημερολογιακό, απρόσβλητο από DST). */
-function iso_apo_millis(millis: number): string {
-  return new Date(millis).toISOString().slice(0, 10);
-}
-
-/** Προσθέτει ημέρες σε ημερομηνία (ημερολογιακά, όχι 24ωρα). */
-function add_imeres(imerominia: string, imeres: number): string {
-  const millis = parse_imerominia(imerominia) ?? 0;
-  return iso_apo_millis(millis + imeres * MILLIS_ANA_IMERA);
+/** Προσθέτει ημέρες ημερολογιακά (απρόσβλητο από DST). */
+function add_imeres(meri: MeriImorominias, imeres: number): string {
+  const millis = Date.UTC(meri.etos, meri.minas - 1, meri.imera);
+  return new Date(millis + imeres * MILLIS_ANA_IMERA).toISOString().slice(0, 10);
 }
 
 /** Δείκτης ημέρας εβδομάδας με 0 = Δευτέρα (Europe/Athens ημερολόγιο). */
-function deiktis_evdomadas(imerominia: string): number {
-  const millis = parse_imerominia(imerominia) ?? 0;
+function deiktis_evdomadas(meri: MeriImorominias): number {
+  const millis = Date.UTC(meri.etos, meri.minas - 1, meri.imera);
   return (new Date(millis).getUTCDay() + 6) % 7;
 }
 
+/** Εσωτερική κατάσταση ενότητας: υπόλοιπο λεπτών και τελευταία μελέτη. */
 interface KatastasiEnotitas {
-  kleidi: string;
   kodikos_mathimatos: string;
   enotita: Enotita;
   deadline: string;
+  /** Επικυρωμένη εκτίμηση λεπτών (ποτέ null εδώ· ελέγχεται στην είσοδο). */
+  ektimisi: number;
   ypoloipo: number;
+  teleutaia_meleti: string | null;
 }
 
+/** Μάθημα με επιλυμένο deadline και ενότητες σε τοπολογική σειρά. */
+interface GrammiMathimatos {
+  kodikos_mathimatos: string;
+  deadline: string;
+  lista: KatastasiEnotitas[];
+  deiktis: number;
+}
+
+/** Εκκρεμής επανάληψη με αναφορά στην ενότητα (χωρίς lookups). */
 interface EkremisEpanlipsi {
   due: string;
   deadline: string;
-  kleidi: string;
-  lepta: number;
+  katastasi: KatastasiEnotitas;
   ypoloipo: number;
 }
 
@@ -147,24 +168,25 @@ interface EkremisEpanlipsi {
  * Europe/Athens, απρόσβλητες από αλλαγές ώρας.
  */
 export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Programma> {
-  const simera_ms = parse_imerominia(eisodos.simera);
-  if (simera_ms === null) {
+  const meri_simera = parse_meri(eisodos.simera);
+  if (meri_simera === null) {
     return apotyxia('MI_EGKYRO_SXIMA', 'Μη έγκυρη ημερομηνία «σήμερα».');
   }
-  let arxi_ms: number | null = null;
+  let arxi: string | null = null;
   if (eisodos.arxi_exetastikis !== null) {
-    arxi_ms = parse_imerominia(eisodos.arxi_exetastikis);
-    if (arxi_ms === null) {
+    if (parse_meri(eisodos.arxi_exetastikis) === null) {
       return apotyxia('MI_EGKYRO_SXIMA', 'Μη έγκυρη αρχή εξεταστικής.');
     }
+    arxi = eisodos.arxi_exetastikis;
   }
 
   const template = eisodos.diathesimotita.ana_imera_evdomadas;
   if (template.length !== 7 || template.some((l) => !Number.isFinite(l) || l < 0)) {
     return apotyxia('MI_EGKYRO_SXIMA', 'Η διαθεσιμότητα θέλει 7 μη αρνητικές τιμές.');
   }
+  const evdomada = template as [number, number, number, number, number, number, number];
   for (const [imerominia, lepta] of Object.entries(eisodos.diathesimotita.overrides)) {
-    if (parse_imerominia(imerominia) === null || !Number.isFinite(lepta) || lepta < 0) {
+    if (parse_meri(imerominia) === null || !Number.isFinite(lepta) || lepta < 0) {
       return apotyxia('MI_EGKYRO_SXIMA', `Μη έγκυρο override «${imerominia}».`);
     }
   }
@@ -174,57 +196,67 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
   }
 
   const monades = new Map<string, KatastasiEnotitas>();
-  const deadlines: string[] = [];
+  const grammes: GrammiMathimatos[] = [];
   for (const mathima of eisodos.mathimata) {
     let deadline = mathima.imerominia_exetasis;
-    if (deadline !== null && parse_imerominia(deadline) === null) {
+    if (deadline !== null && parse_meri(deadline) === null) {
       return apotyxia('MI_EGKYRO_SXIMA', `Μη έγκυρη εξέταση μαθήματος «${mathima.kodikos_mathimatos}».`);
     }
     if (deadline === null) {
-      deadline = eisodos.arxi_exetastikis;
+      deadline = arxi;
     }
     if (deadline === null) {
-      return apotyxia(
-        'MI_EGKYRO_SXIMA',
-        `Χωρίς deadline το μάθημα «${mathima.kodikos_mathimatos}».`
-      );
+      return apotyxia('MI_EGKYRO_SXIMA', `Χωρίς deadline το μάθημα «${mathima.kodikos_mathimatos}».`);
     }
-    deadlines.push(deadline);
+    const teliko_deadline: string = deadline;
 
     const taxinomisi = topologiki_taxinomisi(mathima.enotites);
     if (!taxinomisi.ok) {
       return taxinomisi;
     }
     const seira_ids = taxinomisi.timi;
-    const seira_deikti = new Map(seira_ids.map((id, i) => [id, i]));
-    const taksinomimenes = [...mathima.enotites].sort(
-      (a, b) => (seira_deikti.get(a.id) ?? 0) - (seira_deikti.get(b.id) ?? 0)
-    );
-    for (const enotita of taksinomimenes) {
-      if (monades.has(enotita.id)) {
-        return apotyxia('MI_EGKYRO_SXIMA', `Διπλότυπο id ενότητας «${enotita.id}» σε μαθήματα.`);
-      }
+    const kata_id = new Map(mathima.enotites.map((e) => [e.id, e] as const));
+    const lista: KatastasiEnotitas[] = [];
+    for (const id of seira_ids) {
+      // Η ταξινόμηση επιστρέφει μετάθεση των ids εισόδου, οπότε η εύρεση πετυχαίνει πάντα.
+      const enotita = kata_id.get(id) as Enotita;
       const lepta = enotita.lepta_ektimisi;
       if (lepta === null || !Number.isFinite(lepta) || lepta < 0) {
-        return apotyxia('MI_EGKYRO_SXIMA', `Μη έγκυρα λεπτά ενότητας «${enotita.id}».`);
+        return apotyxia('MI_EGKYRO_SXIMA', `Μη έγκυρα λεπτά ενότητας «${id}».`);
       }
-      monades.set(enotita.id, {
-        kleidi: enotita.id,
+      if (monades.has(id)) {
+        return apotyxia('MI_EGKYRO_SXIMA', `Διπλότυπο id ενότητας «${id}» σε μαθήματα.`);
+      }
+      const katastasi: KatastasiEnotitas = {
         kodikos_mathimatos: mathima.kodikos_mathimatos,
         enotita,
-        deadline,
+        deadline: teliko_deadline,
+        ektimisi: lepta,
         ypoloipo: lepta,
-      });
+        teleutaia_meleti: null,
+      };
+      monades.set(id, katastasi);
+      lista.push(katastasi);
     }
+    grammes.push({ kodikos_mathimatos: mathima.kodikos_mathimatos, deadline: teliko_deadline, lista, deiktis: 0 });
   }
+  grammes.sort((a, b) =>
+    a.deadline === b.deadline
+      ? a.kodikos_mathimatos.localeCompare(b.kodikos_mathimatos)
+      : a.deadline.localeCompare(b.deadline)
+  );
 
   for (const checkin of eisodos.checkins) {
     const katastasi = monades.get(checkin.enotita_id);
     if (katastasi === undefined) {
       return apotyxia('DEN_VRETHIKE', `Άγνωστη ενότητα check-in «${checkin.enotita_id}».`);
     }
-    if (parse_imerominia(checkin.imerominia) === null) {
+    const meri_checkin = parse_meri(checkin.imerominia);
+    if (meri_checkin === null) {
       return apotyxia('MI_EGKYRO_SXIMA', 'Μη έγκυρη ημερομηνία check-in.');
+    }
+    if (checkin.imerominia > eisodos.simera) {
+      return apotyxia('MI_EGKYRO_SXIMA', 'Το check-in δεν μπορεί να είναι στο μέλλον.');
     }
     if (!Number.isFinite(checkin.pragmatika_lepta) || checkin.pragmatika_lepta < 0) {
       return apotyxia('MI_EGKYRO_SXIMA', 'Μη έγκυρα λεπτά check-in.');
@@ -234,74 +266,47 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
     } else {
       katastasi.ypoloipo = Math.max(0, katastasi.ypoloipo - checkin.pragmatika_lepta);
     }
+    if (katastasi.teleutaia_meleti === null || katastasi.teleutaia_meleti < checkin.imerominia) {
+      katastasi.teleutaia_meleti = checkin.imerominia;
+    }
   }
 
-  const xorikotita = (imerominia: string): number => {
-    const override = eisodos.diathesimotita.overrides[imerominia];
-    const lepta = override ?? template[deiktis_evdomadas(imerominia)] ?? 0;
+  const xorikotita = (meri: MeriImorominias): number => {
+    const iso = iso_apo_meri(meri);
+    const override = eisodos.diathesimotita.overrides[iso];
+    // Ο δείκτης είναι 0–6 εκ κατασκευής και η 7άδα επικυρωμένη.
+    const lepta_evdomadas = evdomada[deiktis_evdomadas(meri)] as number;
+    const lepta = override === undefined ? lepta_evdomadas : override;
     return lepta * POSOSTO_XORITIKOTITAS;
   };
 
   const ekremeis: EkremisEpanlipsi[] = [];
-  const checkins_ana_enotita = new Map<string, string[]>();
-  for (const checkin of eisodos.checkins) {
-    const lista = checkins_ana_enotita.get(checkin.enotita_id) ?? [];
-    lista.push(checkin.imerominia);
-    checkins_ana_enotita.set(checkin.enotita_id, lista);
-  }
-  const vale_epanalipseis = (katastasi: KatastasiEnotitas, vasi: string): void => {
-    const ektimisi = katastasi.enotita.lepta_ektimisi ?? 0;
-    if (ektimisi <= 0) {
+  const vale_epanalipseis = (katastasi: KatastasiEnotitas, vasi: MeriImorominias): void => {
+    if (katastasi.ektimisi <= 0) {
       return;
     }
     for (const offset of OFFSETS_EPANALIPSIS) {
       const due = add_imeres(vasi, offset);
       if (due >= eisodos.simera && due <= katastasi.deadline) {
-        const lepta = ektimisi * KLASMA_EPANALIPSIS;
-        ekremeis.push({ due, deadline: katastasi.deadline, kleidi: katastasi.kleidi, lepta, ypoloipo: lepta });
+        ekremeis.push({ due, deadline: katastasi.deadline, katastasi, ypoloipo: katastasi.ektimisi * KLASMA_EPANALIPSIS });
       }
     }
   };
   for (const katastasi of monades.values()) {
-    if (katastasi.ypoloipo > 0) {
+    if (katastasi.ypoloipo > 0 || katastasi.teleutaia_meleti === null) {
       continue;
     }
-    const imerominies = checkins_ana_enotita.get(katastasi.kleidi) ?? [];
-    if (imerominies.length === 0) {
-      continue;
-    }
-    const teleutaia = [...imerominies].sort().at(-1) ?? eisodos.simera;
-    vale_epanalipseis(katastasi, teleutaia);
+    // Η ημερομηνία check-in ελέγχθηκε κατά την είσοδο, οπότε είναι πάντα έγκυρη.
+    const vasi = parse_meri(katastasi.teleutaia_meleti) as MeriImorominias;
+    vale_epanalipseis(katastasi, vasi);
   }
 
-  const mathimata_me_seira = [...eisodos.mathimata].sort((a, b) =>
-    a.imerominia_exetasis === b.imerominia_exetasis
-      ? a.kodikos_mathimatos.localeCompare(b.kodikos_mathimatos)
-      : (a.imerominia_exetasis ?? eisodos.arxi_exetastikis ?? '').localeCompare(
-          b.imerominia_exetasis ?? eisodos.arxi_exetastikis ?? ''
-        )
-  );
-  const deiktes = new Map<string, number>(mathimata_me_seira.map((m) => [m.kodikos_mathimatos, 0]));
-  const taksi_ana_mathima = new Map<string, KatastasiEnotitas[]>();
-  for (const mathima of mathimata_me_seira) {
-    const taxinomisi = topologiki_taxinomisi(mathima.enotites);
-    if (!taxinomisi.ok) {
-      return taxinomisi;
-    }
-    const seira_deikti = new Map(taxinomisi.timi.map((id, i) => [id, i]));
-    const lista = mathima.enotites
-      .map((e) => monades.get(e.id))
-      .filter((k): k is KatastasiEnotitas => k !== undefined)
-      .sort((a, b) => (seira_deikti.get(a.kleidi) ?? 0) - (seira_deikti.get(b.kleidi) ?? 0));
-    taksi_ana_mathima.set(mathima.kodikos_mathimatos, lista);
-  }
-
-  const megisto_deadline = [...deadlines].sort().at(-1) ?? eisodos.simera;
+  const megisto_deadline = grammes.map((g) => g.deadline).sort().at(-1) as string;
   const meres: MeraProgrammatos[] = [];
+  let meri = meri_simera;
   let imera = eisodos.simera;
   while (imera <= megisto_deadline) {
-    const cap = xorikotita(imera);
-    let ypoloipo_meras = cap;
+    let ypoloipo_meras = xorikotita(meri);
     const ergasies: ErgasiaImaras[] = [];
 
     const ofeilomenes = ekremeis
@@ -309,7 +314,7 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
       .sort((a, b) =>
         a.due === b.due
           ? a.deadline === b.deadline
-            ? a.kleidi.localeCompare(b.kleidi)
+            ? a.katastasi.enotita.id.localeCompare(b.katastasi.enotita.id)
             : a.deadline.localeCompare(b.deadline)
           : a.due.localeCompare(b.due)
       );
@@ -317,50 +322,39 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
       if (ypoloipo_meras <= 0) {
         break;
       }
-      const katastasi = monades.get(epan.kleidi);
-      if (katastasi === undefined) {
-        continue;
-      }
       const topothetisi = Math.min(epan.ypoloipo, ypoloipo_meras);
       ergasies.push({
         eidos: 'epanalipsi',
-        kodikos_mathimatos: katastasi.kodikos_mathimatos,
-        enotita_id: epan.kleidi,
-        titlos: katastasi.enotita.titlos,
+        kodikos_mathimatos: epan.katastasi.kodikos_mathimatos,
+        enotita_id: epan.katastasi.enotita.id,
+        titlos: epan.katastasi.enotita.titlos,
         lepta: topothetisi,
       });
       epan.ypoloipo -= topothetisi;
       ypoloipo_meras -= topothetisi;
     }
 
-    const nea_epitrepetai = arxi_ms === null || imera < (eisodos.arxi_exetastikis ?? '');
+    const nea_epitrepetai = arxi === null || imera < arxi;
     if (nea_epitrepetai && ypoloipo_meras > 0) {
       let proodos = true;
       while (ypoloipo_meras > 0 && proodos) {
         proodos = false;
-        for (const mathima of mathimata_me_seira) {
-          if (ypoloipo_meras <= 0) {
-            break;
-          }
-          const deadline = mathima.imerominia_exetasis ?? eisodos.arxi_exetastikis ?? '';
-          if (imera > deadline) {
+        for (const grammi of grammes) {
+          if (ypoloipo_meras <= 0 || imera > grammi.deadline) {
             continue;
           }
-          const lista = taksi_ana_mathima.get(mathima.kodikos_mathimatos) ?? [];
-          let deiktis = deiktes.get(mathima.kodikos_mathimatos) ?? 0;
-          while (deiktis < lista.length && (lista[deiktis]?.ypoloipo ?? 0) <= 0) {
-            deiktis += 1;
+          while (grammi.deiktis < grammi.lista.length && (grammi.lista[grammi.deiktis] as KatastasiEnotitas).ypoloipo <= 0) {
+            grammi.deiktis += 1;
           }
-          deiktes.set(mathima.kodikos_mathimatos, deiktis);
-          const trexousa = lista[deiktis];
+          const trexousa = grammi.lista[grammi.deiktis];
           if (trexousa === undefined) {
             continue;
           }
           const topothetisi = Math.min(trexousa.ypoloipo, ypoloipo_meras);
           ergasies.push({
             eidos: 'nea_yli',
-            kodikos_mathimatos: mathima.kodikos_mathimatos,
-            enotita_id: trexousa.kleidi,
+            kodikos_mathimatos: grammi.kodikos_mathimatos,
+            enotita_id: trexousa.enotita.id,
             titlos: trexousa.enotita.titlos,
             lepta: topothetisi,
           });
@@ -368,29 +362,29 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
           ypoloipo_meras -= topothetisi;
           proodos = true;
           if (trexousa.ypoloipo <= 0) {
-            deiktes.set(mathima.kodikos_mathimatos, deiktis + 1);
-            vale_epanalipseis(trexousa, imera);
+            grammi.deiktis += 1;
+            vale_epanalipseis(trexousa, meri);
           }
         }
       }
     }
 
     if (ypoloipo_meras > 0) {
-      const epomeno = mathimata_me_seira.find(
-        (m) => imera <= (m.imerominia_exetasis ?? eisodos.arxi_exetastikis ?? '')
-      );
-      if (epomeno !== undefined) {
-        const lista = taksi_ana_mathima.get(epomeno.kodikos_mathimatos) ?? [];
-        const prota = [...lista].sort((a, b) => {
-          const aa = a.enotita.apodosi_exetasis ?? -1;
-          const bb = b.enotita.apodosi_exetasis ?? -1;
-          return bb === aa ? a.kleidi.localeCompare(b.kleidi) : bb - aa;
-        })[0];
-        if (prota !== undefined) {
+      const epomeni = grammes.find((g) => imera <= g.deadline);
+      if (epomeni !== undefined) {
+        // Η επανάληψη παραπέμπει σε ενότητα με υλικό (όχι μηδενική εκτίμηση).
+        const me_yliko = epomeni.lista.filter((k) => k.ektimisi > 0);
+        if (me_yliko.length > 0) {
+          const me_apodosi = [...me_yliko].sort((a, b) => {
+            const aa = a.enotita.apodosi_exetasis ?? -1;
+            const bb = b.enotita.apodosi_exetasis ?? -1;
+            return bb === aa ? a.enotita.id.localeCompare(b.enotita.id) : bb - aa;
+          });
+          const prota = me_apodosi[0] as KatastasiEnotitas;
           ergasies.push({
             eidos: 'epanalipsi',
-            kodikos_mathimatos: epomeno.kodikos_mathimatos,
-            enotita_id: prota.kleidi,
+            kodikos_mathimatos: epomeni.kodikos_mathimatos,
+            enotita_id: prota.enotita.id,
             titlos: prota.enotita.titlos,
             lepta: ypoloipo_meras,
           });
@@ -402,41 +396,41 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
     if (ergasies.length > 0) {
       meres.push({ imerominia: imera, ergasies });
     }
-    imera = add_imeres(imera, 1);
+    meri = parse_meri(add_imeres(meri, 1)) as MeriImorominias;
+    imera = iso_apo_meri(meri);
   }
 
   const slack_ana_mathima: Record<string, number> = {};
   const protasi_epiviosis: ProtasiEpiviosis[] = [];
-  for (const mathima of eisodos.mathimata) {
-    const deadline = mathima.imerominia_exetasis ?? eisodos.arxi_exetastikis ?? '';
+  for (const grammi of grammes) {
     let diathesima = 0;
-    let imera_iter = eisodos.simera;
-    while (imera_iter <= deadline) {
-      diathesima += xorikotita(imera_iter);
-      imera_iter = add_imeres(imera_iter, 1);
+    let meri_iter = meri_simera;
+    let iter = eisodos.simera;
+    while (iter <= grammi.deadline) {
+      diathesima += xorikotita(meri_iter);
+      meri_iter = parse_meri(add_imeres(meri_iter, 1)) as MeriImorominias;
+      iter = iso_apo_meri(meri_iter);
     }
     let apaitoumena = 0;
     const ypopshfies: YpopshfiaEnotita[] = [];
-    for (const enotita of mathima.enotites) {
-      const katastasi = monades.get(enotita.id);
-      void katastasi;
-      const arxiki = enotita.lepta_ektimisi ?? 0;
-      const checkins = eisodos.checkins.filter((c) => c.enotita_id === enotita.id);
+    for (const katastasi of grammi.lista) {
+      const arxiki = katastasi.ektimisi;
+      const checkins = eisodos.checkins.filter((c) => c.enotita_id === katastasi.enotita.id);
       const olokliro = checkins.some((c) => c.oloklirothike);
-      const mereos = checkins.filter((c) => !c.oloklirothike).reduce((s, c) => s + c.pragmatika_lepta, 0);
-      const ypoloipo_arxiko = olokliro ? 0 : Math.max(0, arxiki - mereos);
+      const merika = checkins.filter((c) => !c.oloklirothike).reduce((s, c) => s + c.pragmatika_lepta, 0);
+      const ypoloipo_arxiko = olokliro ? 0 : Math.max(0, arxiki - merika);
       apaitoumena += ypoloipo_arxiko * (1 + OFFSETS_EPANALIPSIS.length * KLASMA_EPANALIPSIS);
       if (ypoloipo_arxiko > 0) {
         ypopshfies.push({
-          enotita_id: enotita.id,
-          titlos: enotita.titlos,
-          apodosi_exetasis: enotita.apodosi_exetasis,
+          enotita_id: katastasi.enotita.id,
+          titlos: katastasi.enotita.titlos,
+          apodosi_exetasis: katastasi.enotita.apodosi_exetasis,
           lepta: ypoloipo_arxiko,
         });
       }
     }
     const slack = diathesima - apaitoumena;
-    slack_ana_mathima[mathima.kodikos_mathimatos] = slack;
+    slack_ana_mathima[grammi.kodikos_mathimatos] = slack;
     if (slack < 0) {
       ypopshfies.sort((a, b) => {
         const aa = a.apodosi_exetasis ?? -1;
@@ -449,7 +443,7 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
         }
         return a.enotita_id.localeCompare(b.enotita_id);
       });
-      protasi_epiviosis.push({ kodikos_mathimatos: mathima.kodikos_mathimatos, ypopshfies });
+      protasi_epiviosis.push({ kodikos_mathimatos: grammi.kodikos_mathimatos, ypopshfies });
     }
   }
   protasi_epiviosis.sort((a, b) => a.kodikos_mathimatos.localeCompare(b.kodikos_mathimatos));

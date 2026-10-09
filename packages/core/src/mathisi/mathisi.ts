@@ -30,31 +30,45 @@ const ORIO_ASTHENOUS_KOUTIOU = 2;
 const PATTERN_IMEROMINIAS = /^(\d{4})-(\d{2})-(\d{2})$/;
 const MILLIS_ANA_IMERA = 86_400_000;
 
-/** Ελέγχει `YYYY-MM-DD` με πραγματικό ημερολόγιο. */
-function egkyri_imerominia(imerominia: string): boolean {
+/** Ημερολογιακά μέρη μιας έγκυρης ημερομηνίας. */
+interface MeriImorominias {
+  etos: number;
+  minas: number;
+  imera: number;
+}
+
+/** Μορφοποιεί μέρη σε `YYYY-MM-DD`. */
+function iso_apo_meri(meri: MeriImorominias): string {
+  const mm = String(meri.minas).padStart(2, '0');
+  const dd = String(meri.imera).padStart(2, '0');
+  return `${meri.etos}-${mm}-${dd}`;
+}
+
+/**
+ * Αυστηρός έλεγχος `YYYY-MM-DD` με round-trip: η ημερομηνία ξαναχτίζεται και
+ * πρέπει να ταυτίζεται με την είσοδο (πιάνει 32/13, 30 Φεβρουαρίου κ.λπ.).
+ */
+function parse_meri(imerominia: string): MeriImorominias | null {
   const match = PATTERN_IMEROMINIAS.exec(imerominia);
   if (match === null) {
-    return false;
+    return null;
   }
-  const etos = Number.parseInt(match[1] ?? '', 10);
-  const minas = Number.parseInt(match[2] ?? '', 10);
-  const imera = Number.parseInt(match[3] ?? '', 10);
-  const elegxos = new Date(Date.UTC(etos, minas - 1, imera));
-  return (
-    elegxos.getUTCFullYear() === etos &&
-    elegxos.getUTCMonth() === minas - 1 &&
-    elegxos.getUTCDate() === imera
-  );
+  const meri = { etos: Number(match[1]), minas: Number(match[2]), imera: Number(match[3]) };
+  if (meri.minas < 1 || meri.minas > 12 || meri.imera < 1 || meri.imera > 31) {
+    return null;
+  }
+  const millis = Date.UTC(meri.etos, meri.minas - 1, meri.imera);
+  const epistrefo = {
+    etos: new Date(millis).getUTCFullYear(),
+    minas: new Date(millis).getUTCMonth() + 1,
+    imera: new Date(millis).getUTCDate(),
+  };
+  return iso_apo_meri(epistrefo) === imerominia ? epistrefo : null;
 }
 
 /** Προσθέτει ημέρες ημερολογιακά (απρόσβλητο από DST). */
-function add_imeres(imerominia: string, imeres: number): string {
-  const match = PATTERN_IMEROMINIAS.exec(imerominia) ?? [];
-  const millis = Date.UTC(
-    Number.parseInt(match[1] ?? '1970', 10),
-    Number.parseInt(match[2] ?? '01', 10) - 1,
-    Number.parseInt(match[3] ?? '01', 10)
-  );
+function add_imeres(meri: MeriImorominias, imeres: number): string {
+  const millis = Date.UTC(meri.etos, meri.minas - 1, meri.imera);
   return new Date(millis + imeres * MILLIS_ANA_IMERA).toISOString().slice(0, 10);
 }
 
@@ -65,7 +79,8 @@ export function arxikopoiisi_mathisis(
   ennoies: string[],
   simera: string
 ): Apotelesma<KatastasiMathisis[]> {
-  if (!egkyri_imerominia(simera)) {
+  const meri = parse_meri(simera);
+  if (meri === null) {
     return apotyxia('MI_EGKYRO_SXIMA', 'Μη έγκυρη ημερομηνία.');
   }
   const eidele = new Set<string>();
@@ -79,7 +94,7 @@ export function arxikopoiisi_mathisis(
     ennoies.map((ennoia) => ({
       ennoia,
       kouti: 1 as KoutiLeitner,
-      epomeni_epanalipsi: add_imeres(simera, DIASTIMATA_LEITNER_IMERES[1]),
+      epomeni_epanalipsi: add_imeres(meri, DIASTIMATA_LEITNER_IMERES[1]),
       sosta_seiri: 0,
     }))
   );
@@ -97,7 +112,8 @@ export function katagrafe_apotelesma(
   sosto: boolean,
   simera: string
 ): Apotelesma<KatastasiMathisis[]> {
-  if (!egkyri_imerominia(simera)) {
+  const meri = parse_meri(simera);
+  if (meri === null) {
     return apotyxia('MI_EGKYRO_SXIMA', 'Μη έγκυρη ημερομηνία.');
   }
   if (!katastaseis.some((k) => k.ennoia === ennoia)) {
@@ -114,7 +130,7 @@ export function katagrafe_apotelesma(
       return {
         ennoia: katastasi.ennoia,
         kouti: neo_kouti,
-        epomeni_epanalipsi: add_imeres(simera, DIASTIMATA_LEITNER_IMERES[neo_kouti]),
+        epomeni_epanalipsi: add_imeres(meri, DIASTIMATA_LEITNER_IMERES[neo_kouti]),
         sosta_seiri: sosto ? katastasi.sosta_seiri + 1 : 0,
       };
     })
