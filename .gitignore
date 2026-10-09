@@ -1,0 +1,35 @@
+# Dependencies & Build
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+
+# OS & Environment
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+
+# Platform & Sideload
+*.ipa
+*.app
+apps/mobile/ios/
+apps/mobile/android/
+
+# Storage & Runtime Data (Local Filesystem)
+data/
+*.log
+
+# Sensitive eClass Fixtures & Downloads
+fixtures/eclass/raw/
+fixtures/eclass/**/cookies*
+fixtures/eclass/**/session*
+**/*.pdf
+**/*.pptx
+**/*.docx
+!fixtures/fonts/*.ttf
+
+# Windows Concurrency Locks
+%TEMP%/DPS.guide-test-locks/
