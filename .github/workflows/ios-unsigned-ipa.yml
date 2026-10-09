@@ -1,14 +1,19 @@
 name: Build Unsigned iOS IPA
 
+# Χειροκίνητο trigger ΜΟΝΟ: σε private repo τα λεπτά των macOS runners μετράνε
+# με πολλαπλασιαστή στο δωρεάν όριο (D8), οπότε κρατάμε τα IPA builds σπάνια.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
+
+permissions:
+  contents: read
 
 jobs:
   build-ipa:
-    runs-on: macos-latest
+    # macos-15 = Xcode 16, η ελάχιστη έκδοση για Capacitor 8. Αν περάσουμε σε
+    # νεότερη Capacitor/Xcode, ο runner πιθανότατα πρέπει να γίνει macos-26.
+    runs-on: macos-15
+    timeout-minutes: 45
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -18,17 +23,74 @@ jobs:
         with:
           node-version: 22
 
+      # Το lockfile είναι lockfileVersion 9.0 → απαιτεί pnpm 10.
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 12
+          version: 10
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Το webDir του capacitor.config.ts δείχνει στο output του @dps/mobile.
       - name: Build web assets
         run: pnpm --filter @dps/mobile build
 
-      - name: Build unsigned IPA
+      # Το apps/mobile/ios/ είναι gitignored, άρα σε κάθε καθαρό checkout λείπει.
+      - name: Add iOS platform (if missing)
         run: |
-          echo "Building unsigned iOS app package..."
+          if [ ! -d apps/mobile/ios ]; then
+            (cd apps/mobile && npx cap add ios)
+          fi
+
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+        working-directory: apps/mobile
+
+      # Δικαιώματα αρχείων στο Info.plist (Files app, UIFileSharingEnabled).
+      - name: Patch Info.plist
+        run: node scripts/ios/patch-plist.mjs apps/mobile/ios/App/App/Info.plist
+
+      # Capacitor 8 βγάζει SPM από default (χωρίς Podfile). Αν κάποιο plugin
+      # φέρει Podfile, χρειαζόμαστε -workspace: με -project χάνονται τα
+      # Pods.xcconfig build settings.
+      - name: Resolve Xcode project
+        id: resolve
+        run: |
+          if [ -f apps/mobile/ios/App/Podfile ]; then
+            (cd apps/mobile/ios/App && pod install)
+            echo "project_flag=-workspace" >> "$GITHUB_OUTPUT"
+            echo "target=apps/mobile/ios/App/App.xcworkspace" >> "$GITHUB_OUTPUT"
+          else
+            echo "project_flag=-project" >> "$GITHUB_OUTPUT"
+            echo "target=apps/mobile/ios/App/App.xcodeproj" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Τα build settings πρέπει να είναι ΣΤΟ ΤΕΛΟΣ της εντολής, αλλιώς
+      # αγνοούνται από τα project-level settings.
+      - name: Build unsigned .app
+        run: |
+          xcodebuild \
+            ${{ steps.resolve.outputs.project_flag }} ${{ steps.resolve.outputs.target }} \
+            -scheme App -configuration Release \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO DEVELOPMENT_TEAM="" ONLY_ACTIVE_ARCH=NO \
+            build
+
+      # Το όνομα Payload πρέπει να είναι ακριβώς case-sensitive για να το
+      # αναγνωρίσει ο iOS.
+      - name: Package IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/DerivedData/Build/Products/Release-iphoneos/App.app Payload/
+          zip -r App.ipa Payload
+          rm -rf Payload
+
+      # Αποτυγχάνει αν λείπει το .ipa (if-no-files-found: error, default).
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-ipa
+          path: App.ipa
+          if-no-files-found: error
