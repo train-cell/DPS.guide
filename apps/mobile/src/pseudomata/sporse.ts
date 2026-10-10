@@ -2,6 +2,7 @@ import type { ApothikiPyli, Arxeio, Parapompi } from '@dps/core';
 import { pseudos_mathimata, pseudos_xartis } from './pseudomata.js';
 import { pseudos_odigos_md, pseudos_synomilia_jsonl } from './odigos-md.js';
 import { analise_parapompi } from '../provoli-pdf/parapompi.js';
+import { PROEDAFO_TEMPLATE } from '../programma/programma-vohthia.js';
 import { LEKIKIA_TMIMATON } from '../ypiresies/odigos.js';
 import { ftiaxe_synthetiko_pdf } from '../provoli-pdf/synthetiko-pdf.js';
 
@@ -109,6 +110,12 @@ export async function sporse_deigma(apothiki: ApothikiPyli): Promise<void> {
     exeiKleidiLlm: false,
     onomasApothikefsis: 'Documents/DPS.guide',
     einaiEidopoieseis: true,
+    exetaseis: [
+      { kodikos_mathimatos: KODIKOS_DEIGMATOS, imerominia: '2027-01-18', tropos: 'kleista_vivlia' },
+    ],
+    arxiExetastikis: '2027-01-11',
+    templateLepton: PROEDAFO_TEMPLATE,
+    overridesLepton: [{ imerominia: '2027-01-09', lepta: 45 }],
   }, null, 2));
   await grapse_an_leipei(apothiki, DIADROMI_MATHIMATON, JSON.stringify(pseudos_mathimata(), null, 2));
   await grapse_an_leipei(apothiki, DIADROMI_XARTI, JSON.stringify(pseudos_xartis(), null, 2));
