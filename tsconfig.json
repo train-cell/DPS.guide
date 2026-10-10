@@ -4,6 +4,7 @@
     { "path": "./packages/core" },
     { "path": "./packages/extract" },
     { "path": "./packages/adapters-node" },
+    { "path": "./packages/adapters-capacitor" },
     { "path": "./apps/mobile" }
   ]
 }
