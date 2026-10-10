@@ -4,6 +4,9 @@
  * i sti CapacitorFilesystem (paragogi).
  */
 
+import type { Exetasi } from '@dps/core';
+import type { OverrideLepton, TemplateLepton } from '../programma/programma-typoi.js';
+
 /** Οι ρυθμίσεις της εφαρμογής, όπως τις βλέπει η οθόνη ρυθμίσεων. */
 export interface Rytheseis {
   /** Διεύθυνση του eClass. */
@@ -18,6 +21,14 @@ export interface Rytheseis {
   readonly onomasApothikefsis: string;
   /** Αν οι τοπικές ειδοποιήσεις είναι ενεργές. */
   readonly einaiEidopoieseis: boolean;
+  /** Εξετάσεις που εισάγει ο χρήστης (κάρτα P1, §5.3). */
+  readonly exetaseis: readonly Exetasi[];
+  /** Αρχή της εξεταστικής, αν έχει δηλωθεί (κάρτα P1). */
+  readonly arxiExetastikis: string | null;
+  /** Εβδομαδιαίο template λεπτών μελέτης (κάρτα P1). */
+  readonly templateLepton: TemplateLepton;
+  /** Εξαιρέσεις λεπτών ανά ημερομηνία (κάρτα P1). */
+  readonly overridesLepton: readonly OverrideLepton[];
 }
 
 /** Η πρόοδος του χρήστη ανά μάθημα. */
@@ -27,7 +38,7 @@ export interface Proodhos {
 }
 
 /** Θέση του αρχείου ρυθμίσεων, σύμφωνα με το layout §5.3. */
-export const DIALOMI_RYTHMSEON = 'rythmiseis.json';
+export const DIALOMI_RYTHMISEON = 'rythmiseis.json';
 
 /** Θέση αρχείου προόδου για ένα μάθημα, σύμφωνα με το layout §5.3. */
 export function dialomos_proodhou(kodikosMathimatos: string): string {

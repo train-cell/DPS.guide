@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router-dom';
 import Rythisies, { pare_editable_rytheseis } from './rythisies.js';
 import { proedapes_rytheseis } from '../../apothiki/index.js';
 
@@ -19,9 +20,14 @@ const APOTELEMATA = [
   'rythisies-apothekeysto',
 ] as const;
 
-/** Αποδίδει την οθόνη χωρίς Provider· ο γαντζότης πέφτει στις προεπιλογές της αποθήκευσης. */
+/** Αποδίδει την οθόνη χωρίς Provider· ο γαντζότης πέφτει στις προεπιλογές της αποθήκευσης.
+ *  MemoryRouter ώστε το συνδέσμο προς την οθόνη προγράμματος (κάρτα P1) να μην απαιτεί πραγματικό router. */
 function apostrophes_rythisi(): string {
-  return renderToStaticMarkup(<Rythisies />);
+  return renderToStaticMarkup(
+    <MemoryRouter>
+      <Rythisies />
+    </MemoryRouter>
+  );
 }
 
 describe('Rythisies — συμβόλαιο οθόνης', () => {
@@ -72,6 +78,10 @@ describe('Rythisies — τιμές από την αποθήκευση, όχι ha
       exeiKleidiLlm: true,
       onomasApothikefsis: 'Documents/DPS.guide',
       einaiEidopoieseis: false,
+      exetaseis: [{ kodikos_mathimatos: 'ΠΛΗ201', imerominia: '2027-01-18', tropos: 'kleista_vivlia' }],
+      arxiExetastikis: '2027-01-11',
+      templateLepton: [{ imera: 1, lepta: 60 }],
+      overridesLepton: [{ imerominia: '2027-01-09', lepta: 45 }],
     });
     expect(pare).toEqual({
       baseUrl: 'https://eclass.example.unipi.gr',

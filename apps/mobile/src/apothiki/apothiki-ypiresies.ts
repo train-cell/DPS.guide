@@ -1,6 +1,7 @@
 ﻿import type { ApothikiPyli, Apotelesma } from '@dps/core';
 import type { Rytheseis, Proodhos } from './apothiki-typoi.js';
-import { DIALOMI_RYTHMSEON, dialomos_proodhou } from './apothiki-typoi.js';
+import { DIALOMI_RYTHMISEON, dialomos_proodhou } from './apothiki-typoi.js';
+import { PROEDAFO_TEMPLATE } from '../programma/programma-vohthia.js';
 
 /** Προσωρινές προεπιλογές όσο δεν υπάρχει αποθηκευμένο αρχείο — τιμές παραδείγματος, όχι hardcoded μέσα στην οθόνη. */
 export function proedapes_rytheseis(): Rytheseis {
@@ -11,6 +12,10 @@ export function proedapes_rytheseis(): Rytheseis {
     exeiKleidiLlm: false,
     onomasApothikefsis: 'Documents/DPS.guide',
     einaiEidopoieseis: true,
+    exetaseis: [],
+    arxiExetastikis: null,
+    templateLepton: PROEDAFO_TEMPLATE,
+    overridesLepton: [],
   };
 }
 
@@ -29,7 +34,7 @@ function anagnose_json<T>(keimeno: string): T | null {
 
 /** Διαβάζει τις ρυθμίσεις από τη θύρα αποθήκευσης· αν λείπουν ή είναι χαλασμένες, δίνει τις προεπιλογές. */
 export async function fortose_rytheseis(apothiki: ApothikiPyli): Promise<Rytheseis> {
-  const diavase = await apothiki.diavase_keimeno(DIALOMI_RYTHMSEON);
+  const diavase = await apothiki.diavase_keimeno(DIALOMI_RYTHMISEON);
   if (!diavase.ok) {
     return proedapes_rytheseis();
   }
@@ -39,7 +44,7 @@ export async function fortose_rytheseis(apothiki: ApothikiPyli): Promise<Rythese
 
 /** Αποθηκεύει τις ρυθμίσεις στη θύρα αποθήκευσης. */
 export async function grapse_rytheseis(apothiki: ApothikiPyli, rytheseis: Rytheseis): Promise<Apotelesma<void>> {
-  return apothiki.grapse_keimeno(DIALOMI_RYTHMSEON, JSON.stringify(rytheseis, null, 2));
+  return apothiki.grapse_keimeno(DIALOMI_RYTHMISEON, JSON.stringify(rytheseis, null, 2));
 }
 
 /** Διαβάζει την πρόοδο ενός μαθήματος· αν λείπει, δίνει κενή πρόοδο. */
