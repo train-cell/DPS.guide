@@ -1,0 +1,71 @@
+/*
+ * Xromata design tokens - dark-only foundation (kanonas D11).
+ * Single source of truth ton timon: xromata.ts, antikatoptrizetai 1:1 me UPPER_SNAKE statheres.
+ * Epitrepomena xromata: mono ta tessera ypochreotika hex + oudetera aspro/mavro se vimata diafaneias.
+ */
+
+:root {
+  /* Epifaneies */
+  --xroma-fonto: #0B0B0C;
+  --xroma-karta: #161618;
+  --xroma-entono: #3B82F6;
+  --xroma-apoxromatismeno: #9D9DA2;
+
+  /* Oudetera keimena, synoria kai epifaneies se pososta diafaneias */
+  --xroma-keimeno-prwtarxiko: rgb(255 255 255 / 92%);
+  --xroma-keimeno-defteron: rgb(255 255 255 / 64%);
+  --xroma-synorio: rgb(255 255 255 / 12%);
+  --xroma-epifaneia-ypsomeni: rgb(255 255 255 / 8%);
+  --xroma-epifaneia-patimeni: rgb(0 0 0 / 32%);
+
+  /* Klimaka diastimaton (px) */
+  --diastima-1: 4px;
+  --diastima-2: 8px;
+  --diastima-3: 12px;
+  --diastima-4: 16px;
+  --diastima-5: 24px;
+  --diastima-6: 32px;
+
+  /* Typografika */
+  --grammatoseira-oikogeneia: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --grammatoseira-mikro: 12px;
+  --grammatoseira-meso: 14px;
+  --grammatoseira-megalo: 16px;
+  --grammatoseira-titlos: 20px;
+  --grammatoseira-grammi-mikri: 1.25;
+  --grammatoseira-grammi-kanoniki: 1.5;
+  --grammatoseira-baros-kanoniko: 400;
+  --grammatoseira-baros-entono: 600;
+
+  /* Aktines */
+  --aktina-mikro: 4px;
+  --aktina-meso: 8px;
+  --aktina-kapsoula: 999px;
+
+  /* Kinisi */
+  --diarkeia-grigori: 120ms;
+  --diarkeia-mesi: 200ms;
+  --diarkeia-argi: 320ms;
+
+  /* To Ionic yioθetei tin paleta tou DPS.guide, skoura mono */
+  --ion-background-color: var(--xroma-fonto);
+  --ion-text-color: var(--xroma-keimeno-prwtarxiko);
+  --ion-color-primary: var(--xroma-entono);
+  --ion-color-primary-contrast: var(--xroma-keimeno-prwtarxiko);
+  --ion-toolbar-background: var(--xroma-karta);
+  --ion-item-background: var(--xroma-karta);
+}
+
+/* Base epifaneia: katalanvei ta tokens, alloios i prosorina othoni paramenei lefka (kanonas D11) */
+html,
+body,
+ion-app {
+  margin: 0;
+  padding: 0;
+  background-color: var(--xroma-fonto);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-megalo);
+  line-height: var(--grammatoseira-grammi-kanoniki);
+  font-weight: var(--grammatoseira-baros-kanoniko);
+}
