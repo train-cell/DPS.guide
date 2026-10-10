@@ -22,7 +22,7 @@ export interface AntistoixisiThematos {
 export function ypologise_apodosi(
   antistoixiseis: AntistoixisiThematos[]
 ): Apotelesma<Record<string, number>> {
-  const apodosi: Record<string, number> = {};
+  const apodosi = new Map<string, number>();
   for (const antistoixisi of antistoixiseis) {
     if (antistoixisi.enotita_id.trim() === '') {
       return apotyxia('MI_EGKYRO_SXIMA', 'Κενό id ενότητας.');
@@ -30,7 +30,7 @@ export function ypologise_apodosi(
     if (!Number.isFinite(antistoixisi.monades) || antistoixisi.monades < 0) {
       return apotyxia('MI_EGKYRO_SXIMA', 'Οι μονάδες πρέπει να είναι πεπερασμένος μη αρνητικός αριθμός.');
     }
-    apodosi[antistoixisi.enotita_id] = (apodosi[antistoixisi.enotita_id] ?? 0) + antistoixisi.monades;
+    apodosi.set(antistoixisi.enotita_id, (apodosi.get(antistoixisi.enotita_id) ?? 0) + antistoixisi.monades);
   }
-  return ok(apodosi);
+  return ok(Object.fromEntries(apodosi));
 }

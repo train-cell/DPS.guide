@@ -207,6 +207,37 @@ describe('topologiki_taxinomisi', () => {
   });
 });
 
+describe('handles unit ids that shadow Object prototype keys', () => {
+  it('runs all graph operations without throwing on constructor/__proto__ ids', () => {
+    const enotites = [
+      enotita('constructor', 0, [proapaitoumeno('__proto__')]),
+      enotita('__proto__', 1, [proapaitoumeno('constructor')]),
+    ];
+
+    expect(() => topologiki_taxinomisi(enotites)).not.toThrow();
+    expect(() => vres_kyklous(enotites)).not.toThrow();
+    expect(() => episkevi_kyklon(enotites)).not.toThrow();
+
+    const taxinomisi = topologiki_taxinomisi(enotites);
+    expect(taxinomisi.ok).toBe(false);
+    if (!taxinomisi.ok) {
+      expect(taxinomisi.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+
+    const kykloi = vres_kyklous(enotites);
+    expect(kykloi.ok).toBe(true);
+    if (kykloi.ok) {
+      expect(kykloi.timi).toEqual([['__proto__', 'constructor']]);
+    }
+
+    const episkevi = episkevi_kyklon(enotites);
+    expect(episkevi.ok).toBe(true);
+    if (episkevi.ok) {
+      expect(episkevi.timi.afairemenes_akmes).toHaveLength(1);
+    }
+  });
+});
+
 describe('vres_kyklous', () => {
   it('finds no cycles in an acyclic graph', () => {
     const enotites = [
@@ -267,6 +298,22 @@ describe('vres_kyklous', () => {
       expect(res.timi).toEqual([
         ['a', 'b'],
         ['c', 'd'],
+      ]);
+    }
+  });
+
+  it('returns both cycles once when they share their smallest node', () => {
+    const enotites = [
+      enotita('a', 1, [proapaitoumeno('b'), proapaitoumeno('c')]),
+      enotita('b', 2, [proapaitoumeno('a')]),
+      enotita('c', 3, [proapaitoumeno('a')]),
+    ];
+    const res = vres_kyklous(enotites);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi).toEqual([
+        ['a', 'b'],
+        ['a', 'c'],
       ]);
     }
   });

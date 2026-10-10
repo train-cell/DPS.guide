@@ -146,8 +146,10 @@ describe('ftiaxe_programma', () => {
   });
 
   it('handles the DST change on 2026-10-25 with calendar days', () => {
+    // Αρκετό υλικό ώστε η προγραμματισμένη εργασία να διασπίζει την
+    // ημέρα αλλαγής ώρας (2026-10-25, κυριακή 30 λεπτά × 0,8 = 24).
     const res = ftiaxe_programma({
-      ...eisodos([mathima('PLI-1', [enotita('e1', 60, [], null, 0)], '2026-11-05')], '2026-10-20', '2026-11-06'),
+      ...eisodos([mathima('PLI-1', [enotita('e1', 600, [], null, 0)], '2026-11-05')], '2026-10-20', '2026-11-06'),
       diathesimotita: {
         ana_imera_evdomadas: [120, 120, 120, 120, 120, 120, 30],
         overrides: {},
@@ -369,7 +371,8 @@ describe('ftiaxe_programma validation and branches', () => {
     expect(mera15?.ergasies.map((e) => e.enotita_id)).toEqual(['e-c', 'e-a', 'e-d']);
   });
 
-  it('sorts same-day reviews by deadline', () => {    const res = ftiaxe_programma({
+  it('sorts same-day reviews by deadline', () => {
+    const res = ftiaxe_programma({
       ...eisodos([
         mathima('B', [enotita('eb', 60, [], null, 0)], '2026-10-30'),
         mathima('A', [enotita('ea', 60, [], null, 0)], '2026-10-15'),

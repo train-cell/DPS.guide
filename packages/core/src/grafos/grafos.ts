@@ -59,7 +59,7 @@ function kleidi_akmis(apo: string, pros: string): string {
   return `${apo}->${pros}`;
 }
 
-/** Εσωτερική κληρονομιά: όλοι οι κόμβοι του γράφου έχουν καταχώριση γειτόνων. */
+/** Αναλλοίωτη κατάσταση: κάθε κόμβος του γράφου έχει καταχώριση γειτόνων (ίσως κενή). */
 function geitonesTou(grafima: Grafima, v: string): AkmiGrafou[] {
   return grafima.geitones.get(v) ?? [];
 }
@@ -69,16 +69,16 @@ function ftiaxe_geitones(
   akmes: Map<string, AkmiGrafou>,
   ids: string[]
 ): Map<string, AkmiGrafou[]> {
-  const exerxomenes: Record<string, AkmiGrafou[]> = {};
+  const exerxomenes = new Map<string, AkmiGrafou[]>();
   for (const akmi of akmes.values()) {
-    const lista = exerxomenes[akmi.apo] ?? [];
+    const lista = exerxomenes.get(akmi.apo) ?? [];
     lista.push(akmi);
-    exerxomenes[akmi.apo] = lista;
+    exerxomenes.set(akmi.apo, lista);
   }
 
   const geitones = new Map<string, AkmiGrafou[]>();
   for (const id of ids) {
-    geitones.set(id, exerxomenes[id] ?? []);
+    geitones.set(id, exerxomenes.get(id) ?? []);
   }
   for (const lista of geitones.values()) {
     lista.sort((a, b) => (a.pros < b.pros ? -1 : 1));
@@ -218,10 +218,25 @@ function kyreose_kryo(grafima: Grafima): string[] {
   }
 }
 
+/** Κανονικό κλειδί κύκλου: η λεξικογραφικά ελάχιστη περιστροφή της ακολουθίας ids. */
+function kleidi_kyklou(ids: string[]): string {
+  let kaliteri = ids.join('\u0000');
+  for (let i = 1; i < ids.length; i += 1) {
+    const peristrofi = ids.slice(i).concat(ids.slice(0, i)).join('\u0000');
+    if (peristrofi < kaliteri) {
+      kaliteri = peristrofi;
+    }
+  }
+  return kaliteri;
+}
+
 /**
- * Αναζητά κύκλους μέσα στον πυρήνα (κύκλων) με DFS από τον μικρότερο κόμβο.
- * Κάθε κύκλος αναφέρεται μία φορά, ξεκινώντας από τον μικρότερο του κόμβο.
- * Το `proypologismos` μετρά βήματα και μεταφέρεται μεταξύ επαναλήψεων επισκευής.
+ * Αναζητά όλους τους κύκλους μέσα στον πυρήνα (κύκλων) με DFS από τον
+ * μικρότερο κόμβο κάθε κύκλου. Μετά την εύρεση κύκλου για τον ίδιο κόμβο
+ * εκκίνησης η αναζήτηση συνεχίζει (δεν επιστρέφει πρόωρα), ώστε να
+ * καταγραφούν όλοι οι κύκλοι· τα διπλότυπα αποφεύγονται με κανονικοποίηση
+ * περιστροφής. Το `proypologismos` μετρά βήματα και μεταφέρεται μεταξύ
+ * επαναλήψεων επισκευής.
  */
 function anazitisi_kyklon(
   grafima: Grafima,
@@ -229,54 +244,61 @@ function anazitisi_kyklon(
 ): ApotelesmaAnazitisis {
   const kores = kyreose_kryo(grafima);
   const kykloi: Kiklos[] = [];
+  const evretike = new Set<string>();
   let eksantlithike = false;
+  let ipervasi_orou = false;
 
-  const dfsApo = (arxi: string, epitrepomenoi: Set<string>): Kiklos | null => {
+  for (const [i, arxi] of kores.entries()) {
+    if (eksantlithike || ipervasi_orou) {
+      break;
+    }
+    const epitrepomenoi = new Set(kores.slice(i + 1));
     const diadromiIds: string[] = [arxi];
     const diadromiAkmon: AkmiGrafou[] = [];
     const episkepmena = new Set<string>([arxi]);
 
-    const apo = (v: string): boolean => {
+    const apo = (v: string): void => {
       for (const akmi of geitonesTou(grafima, v)) {
+        if (eksantlithike || ipervasi_orou) {
+          return;
+        }
         proypologismos.vimata += 1;
         if (proypologismos.vimata > MEGISTA_VIOMATA_ANAZITISIS) {
           eksantlithike = true;
-          return false;
+          return;
         }
         if (akmi.pros === arxi) {
-          diadromiAkmon.push(akmi);
-          return true;
+          const kleidi = kleidi_kyklou(diadromiIds);
+          if (!evretike.has(kleidi)) {
+            evretike.add(kleidi);
+            kykloi.push({ ids: [...diadromiIds], akmes: [...diadromiAkmon, akmi] });
+            if (kykloi.length >= MEGISTOS_ARITHMOS_KYKLON) {
+              ipervasi_orou = true;
+              return;
+            }
+          }
+          continue;
         }
         if (epitrepomenoi.has(akmi.pros) && !episkepmena.has(akmi.pros)) {
           episkepmena.add(akmi.pros);
           diadromiIds.push(akmi.pros);
           diadromiAkmon.push(akmi);
-          if (apo(akmi.pros)) {
-            return true;
-          }
+          apo(akmi.pros);
           diadromiIds.pop();
           diadromiAkmon.pop();
           episkepmena.delete(akmi.pros);
         }
       }
-      return false;
     };
 
-    return apo(arxi) ? { ids: diadromiIds, akmes: diadromiAkmon } : null;
-  };
+    apo(arxi);
+  }
 
-  for (const [i, arxi] of kores.entries()) {
-    const epitrepomenoi = new Set(kores.slice(i + 1));
-    const kiklos = dfsApo(arxi, epitrepomenoi);
-    if (eksantlithike) {
-      return { kykloi, terminatismos: 'orio_vimaton' };
-    }
-    if (kiklos !== null) {
-      kykloi.push(kiklos);
-      if (kykloi.length >= MEGISTOS_ARITHMOS_KYKLON) {
-        return { kykloi, terminatismos: 'orio_kyklon' };
-      }
-    }
+  if (eksantlithike) {
+    return { kykloi, terminatismos: 'orio_vimaton' };
+  }
+  if (ipervasi_orou) {
+    return { kykloi, terminatismos: 'orio_kyklon' };
   }
 
   return { kykloi, terminatismos: 'oloklirothike' };

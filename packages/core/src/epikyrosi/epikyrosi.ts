@@ -33,13 +33,11 @@ export interface EpikyromenoPerigramma {
 /** Επικυρωμένος χάρτης μαθήματος. */
 export interface EpikyromenosXartis {
   xartis: XartisMathimatos;
-  proeidopoiiseis: string[];
 }
 
 /** Επικυρωμένος οδηγός: οι παραπομπές του σε σειρά εμφάνισης. */
 export interface EpikyromenosOdigos {
   parapompes: Parapompi[];
-  proeidopoiiseis: string[];
 }
 
 /**
@@ -153,7 +151,7 @@ export function epikyrose_xarti(
     }
   }
 
-  return ok({ xartis: parsed.data, proeidopoiiseis: [] });
+  return ok({ xartis: parsed.data });
 }
 
 /**
@@ -194,5 +192,5 @@ export function epikyrose_odigo(
     parapompes.push({ arxeio_id, selida });
   }
 
-  return ok({ parapompes, proeidopoiiseis: [] });
+  return ok({ parapompes });
 }

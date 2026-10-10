@@ -104,6 +104,28 @@ describe('ektimisi_lepton', () => {
     }
   });
 
+  it('rejects a section whose end page exceeds the safe bound', () => {
+    const res = ektimisi_lepton(
+      perigramma('arx-1', [tmima('Theoria', 1, 1_000_000_000, 'theoria')]),
+      [selida('arx-1', 1, 120)]
+    );
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+  });
+
+  it('rejects a non-finite section end page', () => {
+    const res = ektimisi_lepton(
+      perigramma('arx-1', [tmima('Theoria', 1, Number.NaN, 'theoria')]),
+      [selida('arx-1', 1, 120)]
+    );
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+  });
+
   it('rejects a non-finite user coefficient', () => {
     const per = perigramma('arx-1', [tmima('Theoria', 1, 1, 'theoria')]);
     const pages = [selida('arx-1', 1, 120)];

@@ -11,6 +11,9 @@ import {
   RYTHMOS_LEPTA_ANA_TYPO,
 } from '../statheres.js';
 
+/** Ασφαλές ανώτατο όριο αριθμού σελίδας για την επανάληψη εύρους τμήματος. */
+const MEGISTI_EPITREPTI_SELIDA = 100_000;
+
 /** Κλειδί ευρετηρίου σελίδας: σταθερό, ανεξάρτητο από σειρά εισόδου. */
 function kleidi_selidas(arxeio_id: string, arithmos: number): string {
   return `${arxeio_id}:${arithmos}`;
@@ -48,6 +51,14 @@ export function ektimisi_lepton(
   for (const selida of selides) {
     if (!Number.isFinite(selida.lekseis) || selida.lekseis < 0) {
       return apotyxia('MI_EGKYRO_SXIMA', 'Οι λέξεις σελίδας πρέπει να είναι πεπερασμένος μη αρνητικός αριθμός.');
+    }
+  }
+  for (const tmima of perigramma.tmimata) {
+    if (!Number.isFinite(tmima.selides.eos) || tmima.selides.eos > MEGISTI_EPITREPTI_SELIDA) {
+      return apotyxia(
+        'MI_EGKYRO_SXIMA',
+        `Ο αριθμός σελίδας ${tmima.selides.eos} ξεπερνά το επιτρεπτό όριο ${MEGISTI_EPITREPTI_SELIDA}.`
+      );
     }
   }
 

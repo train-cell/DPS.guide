@@ -57,4 +57,17 @@ describe('ypologise_apodosi', () => {
     if (!prwto.ok || !deutero.ok) return;
     expect(deutero.timi).toEqual(prwto.timi);
   });
+
+  it('accumulates ids that shadow Object prototype keys', () => {
+    const res = ypologise_apodosi([
+      { enotita_id: '__proto__', monades: 5 },
+      { enotita_id: 'constructor', monades: 7 },
+      { enotita_id: '__proto__', monades: 3 },
+    ]);
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.timi['__proto__']).toBe(8);
+    expect(res.timi['constructor']).toBe(7);
+    expect(Object.prototype.hasOwnProperty.call(res.timi, '__proto__')).toBe(true);
+  });
 });
