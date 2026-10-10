@@ -1,0 +1,29 @@
+{
+  "odos_kleidiou": "dps.llm.cache.v1",
+  "hash": "8d1e8a4a44685c5eadb36aaa006f5e538935920aa47c0124a7f4466affd04c6c",
+  "montelo": "mock-flash-1",
+  "ekdosi_prompt": "p1@1",
+  "typos_aitimatos": "json",
+  "imeras_athinas": "2026-10-09",
+  "timi": {
+    "arxeio_id": "arx-1",
+    "titlos": "Δομές δεδομένων και αναζητήσεις",
+    "tmimata": [
+      {
+        "titlos": "Λίστες και στοίβες",
+        "typos": "theoria",
+        "ennoies": ["λίστα", "στοίβα", "δυαδική δενδρική λίστα"]
+      },
+      {
+        "titlos": "Δυαδική αναζήτηση",
+        "typos": "algorithmos",
+        "ennoies": ["δυαδική αναζήτηση", "πολυπλοκότητα"]
+      },
+      {
+        "titlos": "Παράδειγμα αναζήτησης σε ταξινομημένο πίνακα",
+        "typos": "paradeigma",
+        "ennoies": ["μονοτονότητα", "διαίρεση και κατάκτηση"]
+      }
+    ]
+  }
+}
