@@ -10,12 +10,17 @@ const DOS_DATE = ((2024 - 1980) << 9) | (1 << 5) | 1;
 const DOS_TIME = 0;
 const FLAG_UTF8 = 0x0800;
 
+const YPOGRAFI_LOCAL_HEADER = 0x04034b50;
+const YPOGRAFI_CENTRAL_HEADER = 0x02014b50;
+const YPOGRAFI_END_CENTRAL = 0x06054b50;
+const POLYONYMIO_CRC32 = 0xedb88320;
+
 const CRC_PINAKAS = (() => {
   const pinakas = new Uint32Array(256);
   for (let n = 0; n < 256; n++) {
     let c = n;
     for (let k = 0; k < 8; k++) {
-      c = (c & 1) === 1 ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+      c = (c & 1) === 1 ? (POLYONYMIO_CRC32 ^ (c >>> 1)) : (c >>> 1);
     }
     pinakas[n] = c >>> 0;
   }
@@ -59,7 +64,7 @@ function store_zip(eisodoi: ReadonlyArray<EisodosZip>): Uint8Array {
     const anathesi = crc32(dedomena);
 
     const kefalida = new Uint8Array(30 + onoma.length + dedomena.length);
-    grafe_u32(kefalida, 0, 0x04034b50);
+    grafe_u32(kefalida, 0, YPOGRAFI_LOCAL_HEADER);
     grafe_u16(kefalida, 4, 20);
     grafe_u16(kefalida, 6, FLAG_UTF8);
     grafe_u16(kefalida, 8, 0);
