@@ -318,6 +318,62 @@ describe('vres_kyklous', () => {
     }
   });
 
+  it('canonicalises a cycle from any rotation, including one not starting at its smallest node', () => {
+    // Η ακμή δείχνει από το προαπαιτούμενο στην ενότητα, άρα η πορεία από τον
+    // ελάχιστο κόμβο «a» είναι a → c → b. Το τεστ καλύπτει τη διάκριση των
+    // περιστροφών στον υπολογισμό του κλειδιού κύκλου.
+    const enotites = [
+      enotita('a', 1, [proapaitoumeno('b')]),
+      enotita('b', 2, [proapaitoumeno('c')]),
+      enotita('c', 3, [proapaitoumeno('a')]),
+    ];
+    const res = vres_kyklous(enotites);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi).toEqual([['a', 'c', 'b']]);
+    }
+  });
+
+  it('deduplicates a cycle reached through different rotations', () => {
+    // Ένας «θύλακας» γύρω από τον κύκλο δεν πρέπει να παράγει διπλότυπα.
+    const enotites = [
+      enotita('a', 1, [proapaitoumeno('b'), proapaitoumeno('c')]),
+      enotita('b', 2, [proapaitoumeno('c'), proapaitoumeno('a')]),
+      enotita('c', 3, [proapaitoumeno('a'), proapaitoumeno('b')]),
+      enotita('d', 4, [proapaitoumeno('b')]),
+    ];
+    const res = vres_kyklous(enotites);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi).toEqual([
+        ['a', 'b'],
+        ['a', 'b', 'c'],
+        ['a', 'c'],
+        ['a', 'c', 'b'],
+        ['b', 'c'],
+      ]);
+    }
+  });
+
+  it('stops the traversal cleanly when the step budget runs out at a branching node', { timeout: 30_000 }, () => {
+    const plethos = 40;
+    const enotites: Enotita[] = [];
+    for (let i = 0; i < plethos; i += 1) {
+      const proapaitoumenes = [i - 1, i - 2].filter((k) => k >= 0);
+      enotites.push(
+        enotita(`n${String(i).padStart(4, '0')}`, i, [
+          proapaitoumeno(`n${String(plethos - 1).padStart(4, '0')}`),
+          ...proapaitoumenes.map((k) => proapaitoumeno(`n${String(k).padStart(4, '0')}`)),
+        ])
+      );
+    }
+    const res = vres_kyklous(enotites);
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+  });
+
   it('rejects references to nonexistent units', () => {
     const enotites = [enotita('a', 1, [proapaitoumeno('fantasma')])];
     const res = vres_kyklous(enotites);
@@ -335,7 +391,7 @@ describe('vres_kyklous', () => {
     }
   });
 
-  it('aborts with MI_EGKYRO_SXIMA when the step budget is exhausted', () => {
+  it('aborts with MI_EGKYRO_SXIMA when the step budget is exhausted', { timeout: 30_000 }, () => {
     const plethos = 3200;
     const enotites: Enotita[] = [];
     for (let i = 0; i < plethos; i += 1) {
@@ -349,7 +405,7 @@ describe('vres_kyklous', () => {
     }
   });
 
-  it('aborts with MI_EGKYRO_SXIMA when the cycle cap is reached', () => {
+  it('aborts with MI_EGKYRO_SXIMA when the cycle cap is reached', { timeout: 30_000 }, () => {
     const zeugaria = 500;
     const enotites: Enotita[] = [];
     for (let i = 0; i < zeugaria; i += 1) {

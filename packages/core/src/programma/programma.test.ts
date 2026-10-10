@@ -407,4 +407,38 @@ describe('ftiaxe_programma validation and branches', () => {
     if (!res.ok) return;
     expect(res.timi.protasi_epiviosis[0]?.ypopshfies.map((y) => y.enotita_id)).toEqual(['e-agnosto', 'e-agnosto2', 'e-flira', 'e-mid', 'e-mid2', 'e-sos']);
   });
+
+  it('fills a gap with revision of already-studied units when new material is closed', () => {
+    // Ξεκινάει η εξεταστική: η νέα ύλη είναι κλειστή και δεν υπάρχουν οφειλές
+    // επανάληψης (κανένα unit δεν έχει ολοκληρωθεί). Το κενό της ημέρας πρέπει να
+    // πάει σε επανάληψη των units που έχουν ήδη μελετηθεί μερικά.
+    const res = ftiaxe_programma({
+      ...eisodos(
+        [mathima('PLI-1', [
+          enotita('e1', 60, [], null, 0),
+          enotita('e2', 60, [], null, 1),
+          enotita('e3', 60, [], 5, 2),
+        ], '2026-10-20')],
+        '2026-10-12',
+        '2026-10-12'
+      ),
+      diathesimotita: { ana_imera_evdomadas: [1000, 1000, 1000, 1000, 1000, 1000, 1000], overrides: {} },
+      checkins: ['e1', 'e2', 'e3'].map((enotita_id) => ({
+        enotita_id,
+        imerominia: '2026-10-11',
+        pragmatika_lepta: 24,
+        oloklirothike: false,
+      })),
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    const proti = res.timi.meres.find((m) => m.imerominia === '2026-10-12');
+    expect(proti?.ergasies).toHaveLength(1);
+    expect(proti?.ergasies[0]?.eidos).toBe('epanalipsi');
+    // Υψηλότερη απόδοση εξέτασης πρώτη, μετά το id ως ισοπαλία.
+    expect(proti?.ergasies[0]?.enotita_id).toBe('e3');
+    expect(proti?.ergasies[0]?.lepta).toBe(36);
+    expect(proti?.ergasies.some((e) => e.eidos === 'nea_yli')).toBe(false);
+  });
 });
