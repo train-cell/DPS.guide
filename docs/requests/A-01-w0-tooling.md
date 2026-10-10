@@ -62,5 +62,30 @@ commit των παραπάνω, το `pnpm check:ownership --lane stream/A` αν
 
 ## Ζητείμενη ενέργεια
 
-Ο integrator να κάνει squash/review των 3 commits παραπάνω στο `main`. Εναλλακτικά,
+Ο integrator να κάνει squash/review των παρακάτω commits στο `main`. Εναλλακτικά,
 αν προτιμάται διατήρηση του W0 πραγματικά frozen, ας ανατεθεί η διόρθωση σε lane W0.
+
+| Commit | Τι |
+|---|---|
+| `0ffb49b` | lint findings στον κώδικα του stream/A (σε ownership) |
+| `40b7be1` | unblock `pnpm test:lane` και `pnpm lint` |
+| `0d9e3f2` | shared contract suites + κλείσιμο κενών coverage (σε ownership) |
+| `9246e5e` | `pnpm test:lane <LANE_ID>` ανά lane + ελλείποντα globs |
+
+## Νέα ευρήματα από τον έλεγχο του πλάνου
+
+1. **`pnpm test:lane <LANE_ID>` αγνοούσε το όρισμα.** Το DoD κάθε κάρτας το
+   απαιτεί, αλλά το script έτρεχε όλο το suite. Διορθώθηκε με χαρτογράφηση
+   lane → φίλτρα μέσω του ίδιου `ownership.json`.
+2. **Λείπουν 12 globs από το `ownership.json`** (I1–I4, T1–T4, P1–P3), άρα τα
+   T2/T3 DoD reports δεν μπορούσαν να εκτελεστούν.
+3. **Δεν υπήρχαν πουθενά τα shared contract suites** (W0 παράδοτεο 12), άρα
+   κανένας adapter δεν μπορούσε να επαληθευτεί έναντι του port.
+4. **Τα budget tests του `vres_kyklous` χτυπούσαν το 5s default timeout** όταν
+   ενεργοποιείται το coverage instrumentation. Πήραν ρητό timeout.
+5. **Μη-προσπέλαστοι defensive κλάδοι** (δεν επισκευάσιμοι χωρίς αλλαγή κώδικα):
+   - `grafos.ts:227-228` — η εναλλαγή περιστροφής στο κλειδί κύκλου δεν προκαλείται
+     ποτέ, γιατί η DFS ξεκινά πάντα από τον ελάχιστο κόμβο του κύκλου.
+   - `epikyrosi.ts:184-185` — τα `?? ''` σε capture groups του regex που είναι
+     υποχρεωτικά (`[^:[\]]+`, `\d+`), άρα το group δεν μπορεί να λείπει.
+   - `contract-suites.ts:18-19` — ίδιο μοτίβο στους assertion helpers.
