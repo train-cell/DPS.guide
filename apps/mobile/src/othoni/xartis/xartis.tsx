@@ -10,9 +10,11 @@ import {
   ProskelesioOmonimas,
 } from '../../koinima/index.js';
 import { xrisiApothekisis } from '../../apothiki/index.js';
+import { xrisiPeriballontos } from '../../periballon/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
 import { fortosi, sfalma } from '../../kathstasi/index.js';
-import { fortose_xartis, pososto_aristeias, pseudos_xartis } from '../../pseudomata/index.js';
+import { fortose_xartis_apo_apothiki } from '../../ypiresies/index.js';
+import { pososto_aristeias } from '../../pseudomata/index.js';
 
 /** Λεπτά ανά ώρα, για τη μορφοποίηση του χρόνου εκτίμησης. */
 export const LEPTA_PER_ORA = 60;
@@ -156,12 +158,13 @@ export function OdomosEnotiton({ xartis, telies, allaxe_telia }: OdomosEnotitonP
 /** Χάρτης ενοτήτων του επιλεγμένου μαθήματος με φόρτωση, κενό, σφάλμα και δεδομένα. */
 export default function XartisEnotiton() {
   const apothiki = xrisiApothekisis();
+  const periballon = xrisiPeriballontos();
   const [katastasi, setKatastasi] = useState<Katastasi<XartisMathimatos>>(fortosi<XartisMathimatos>());
   const [prospatheies, setProspatheies] = useState(0);
 
   useEffect(() => {
     let zontas = true;
-    void fortose_xartis()
+    void fortose_xartis_apo_apothiki(periballon.apothiki, apothiki.kodikosMathimatos)
       .then((apothike) => {
         if (zontas) {
           setKatastasi(apothike);
@@ -177,7 +180,7 @@ export default function XartisEnotiton() {
     return () => {
       zontas = false;
     };
-  }, [prospatheies]);
+  }, [periballon.apothiki, apothiki.kodikosMathimatos, prospatheies]);
 
   const epanalipsi = useCallback(() => {
     setKatastasi(fortosi<XartisMathimatos>());
@@ -186,7 +189,7 @@ export default function XartisEnotiton() {
 
   return (
     <div className="episkefsi" data-testid="xartis-ekran">
-      <ProskelesioOmonimas titlos="Χάρτης" ypokeimeno={pseudos_xartis().kodikos_mathimatos} />
+      <ProskelesioOmonimas titlos="Χάρτης" ypokeimeno={apothiki.kodikosMathimatos} />
       <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_XARTI} epanalipsi={epanalipsi}>
         {(xartis) => (
           <OdomosEnotiton

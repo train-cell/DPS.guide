@@ -41,6 +41,17 @@ export function akirose_trexousa_apostoli(): void {
   }
 }
 
+/**
+ * Αντιγράφει τα byteof πριν το getDocument: το pdf.js μεταφέρει (detach) τον πίνακα
+ * στον worker, άστο χωρίς αντίγραφο ο ίδιος πίνακας δεν θα μπορούσε να ανοιχτεί
+ * δύο φορές (μία για σελίδες και μία για απόδοση).
+ */
+export function antigrafo_dyadikon(dyadiko: Uint8Array): Uint8Array {
+  const antigrafo = new Uint8Array(dyadiko.length);
+  antigrafo.set(dyadiko);
+  return antigrafo;
+}
+
 /** Ρυθμίζει μία φορά τον worker του pdf.js· η επανάκληψη είναι αθόρυβη. */
 export async function etimose_pdfjs(): Promise<Apotelesma<void>> {
   try {
@@ -68,7 +79,7 @@ export async function arithmos_selidon(dyadiko: Uint8Array): Promise<Apotelesma<
   }
   try {
     const pdfjs = await import('pdfjs-dist');
-    const fortosi = pdfjs.getDocument({ data: dyadiko });
+    const fortosi = pdfjs.getDocument({ data: antigrafo_dyadikon(dyadiko) });
     const eggrafo = await fortosi.promise;
     const selides = eggrafo.numPages;
     await fortosi.destroy();
@@ -96,7 +107,7 @@ export async function stilise_selida(
   akirose_trexousa_apostoli();
   try {
     const pdfjs = await import('pdfjs-dist');
-    const fortosi = pdfjs.getDocument({ data: dyadiko });
+    const fortosi = pdfjs.getDocument({ data: antigrafo_dyadikon(dyadiko) });
     const eggrafo = await fortosi.promise;
     const selida = await eggrafo.getPage(arithmos);
     const provoli = selida.getViewport({ scale: kilise_klimaka(klimaka) });

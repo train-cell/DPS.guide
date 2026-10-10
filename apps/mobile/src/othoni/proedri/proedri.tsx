@@ -7,7 +7,7 @@ import { adeio, fortosi, sfalma } from '../../kathstasi/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
 import { ftiaxe_periballon } from '../../periballon/index.js';
 import type { Periballon } from '../../periballon/index.js';
-import { fortose_mathimata } from '../../pseudomata/index.js';
+import { fortose_mathimata_apo_apothiki } from '../../ypiresies/index.js';
 
 /** Η προεπιλεγμένη διεύθυνση του eClass στο Πανεπιστήμιο Πειραιώς. */
 export const PROEDRI_BASE_URL = 'https://thales.cs.unipi.gr';
@@ -35,7 +35,7 @@ export default function Proedri({ periballon }: ProedriProps) {
     setEpixeirithike(true);
     setKatastasi(fortosi());
     try {
-      const apotelesma = await fortose_mathimata();
+      const apotelesma = await fortose_mathimata_apo_apothiki(pyles.apothiki);
       if (apotelesma.katastasi === 'etimo') {
         await pyles.mystika.vale('eclass_onoma_xristi', xristis.trim());
         await pyles.mystika.vale('eclass_kodikos', kodikos.trim());

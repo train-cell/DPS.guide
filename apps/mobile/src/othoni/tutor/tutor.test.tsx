@@ -6,10 +6,11 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import TutorChat, {
   APANTISI_YPARXEIS_STO_YLIKO,
   apantisa_tutor,
-  fortise_konteksto,
+  enotita_apo_xarti,
   kanonikopoiei,
-  psedoi_enotita,
+  xairetisma_tutor,
 } from './tutor.js';
+import { pseudos_xartis } from '../../pseudomata/index.js';
 
 function tutor_arxeio(): string {
   return readFileSync(fileURLToPath(new URL('./tutor.tsx', import.meta.url)), 'utf8');
@@ -34,17 +35,16 @@ describe('tutor — κανονικοποίηση κειμένου', () => {
   });
 });
 
-describe('tutor — psedoi_enotita', () => {
-  it('διαβάζει το query string ?enotita= και επιστρέφει την ενότητα του χάρτη', () => {
-    expect(psedoi_enotita('en-2')?.titlos).toBe('Μεταβλητές και τύποι');
-    expect(psedoi_enotita('en-4')?.id).toBe('en-4');
+describe('tutor — enotita_apo_xarti', () => {
+  it('βρίσκει την ενότητά του χάρτη από το id του query string', () => {
+    expect(enotita_apo_xarti(pseudos_xartis(), 'en-2')?.titlos).toBe('Μεταβλητές και τύποι');
+    expect(enotita_apo_xarti(pseudos_xartis(), 'en-4')?.id).toBe('en-4');
   });
 
   it('επιστρέφει null για κενό, whitespace ή άγνωστο id', () => {
-    expect(psedoi_enotita(null)).toBeNull();
-    expect(psedoi_enotita('')).toBeNull();
-    expect(psedoi_enotita('   ')).toBeNull();
-    expect(psedoi_enotita('en-999')).toBeNull();
+    expect(enotita_apo_xarti(pseudos_xartis(), '')).toBeNull();
+    expect(enotita_apo_xarti(pseudos_xartis(), '   ')).toBeNull();
+    expect(enotita_apo_xarti(pseudos_xartis(), 'en-999')).toBeNull();
   });
 });
 
@@ -75,25 +75,18 @@ describe('tutor — apantisa_tutor (ο κανόνας «Δεν υπάρχει σ
   });
 });
 
-describe('tutor — fortise_konteksto', () => {
-  it('δίνει etimo με το αρχικό γράμμα του tutor και την ενεργή ενότητα', async () => {
-    const apokrisis = await fortise_konteksto(psedoi_enotita('en-2'));
-    expect(apokrisis.katastasi).toBe('etimo');
-    if (apokrisis.katastasi === 'etimo') {
-      expect(apokrisis.dedomena.enotita?.id).toBe('en-2');
-      expect(apokrisis.dedomena.arxikes_grammata).toHaveLength(1);
-      expect(apokrisis.dedomena.arxikes_grammata[0]?.rolos).toBe('tutor');
-      expect(apokrisis.dedomena.arxikes_grammata[0]?.keimeno).toContain('Μεταβλητές και τύποι');
-    }
+describe('tutor — xairetisma_tutor', () => {
+  it('το αρχικό γράμμα ονομάζει την ενεργή ενότητα', () => {
+    const enotita = enotita_apo_xarti(pseudos_xartis(), 'en-2');
+    const gramma = xairetisma_tutor(enotita);
+    expect(gramma.rolos).toBe('tutor');
+    expect(gramma.keimeno).toContain('Μεταβλητές και τύποι');
   });
 
-  it('χωρίς ?enotita δίνει etimo με null ενότητα, όχι σφάλμα', async () => {
-    const apokrisis = await fortise_konteksto(psedoi_enotita(null));
-    expect(apokrisis.katastasi).toBe('etimo');
-    if (apokrisis.katastasi === 'etimo') {
-      expect(apokrisis.dedomena.enotita).toBeNull();
-      expect(apokrisis.dedomena.arxikes_grammata[0]?.keimeno).toContain('το μάθημα');
-    }
+  it('χωρίς ενότητα μιλά για το μάθημα, χωρίς να εμφανίζει «undefined»', () => {
+    const gramma = xairetisma_tutor(null);
+    expect(gramma.keimeno).toContain('το μάθημα');
+    expect(gramma.keimeno).not.toContain('undefined');
   });
 });
 
@@ -108,9 +101,9 @@ describe('tutor — SSR της οθόνης', () => {
     expect(html).toContain('data-testid="katastasi-fortosi"');
   });
 
-  it('το ?enotita της διαδρομής ορίζει το Pilegma της κεφαλίδας', () => {
+  it('το ?enotita της διαδρομής εμφανίζεται στην κεφαλίδα πριν φορτωθεί ο χάρτης', () => {
     const html = apostrophes_tutor('/tutor?enotita=en-2');
-    expect(html).toContain('Ενότητα: Μεταβλητές και τύποι');
+    expect(html).toContain('Ενότητα: en-2');
     expect(html).toContain('pilegma');
   });
 

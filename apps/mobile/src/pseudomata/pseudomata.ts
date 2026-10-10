@@ -1,8 +1,5 @@
 import type { Mathima, Enotita, XartisMathimatos } from '@dps/core';
 
-/** Καθυστέρηση προσομοίωσης ώστε η κατάσταση φόρτωσης να είναι πραγματική, όχι θεωρητική. */
-export const KATHYSTERISI_PSEDON_MS = 220;
-
 const MATHIMA_MOCK: Mathima = {
   kodikos: 'ΠΛΗ201',
   titlos: 'Πληροφορική & Προγραμματισμός',

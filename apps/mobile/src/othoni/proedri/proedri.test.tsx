@@ -22,7 +22,7 @@ const AMIDES_ASYNKRONES = [
   'OloniKatastasis',
   'fortosi()',
   'sfalma(',
-  'fortose_mathimata()',
+  'fortose_mathimata_apo_apothiki(',
   'epanalipsi={ananevei}',
 ] as const;
 

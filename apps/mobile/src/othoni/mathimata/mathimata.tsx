@@ -4,7 +4,8 @@ import type { Mathima } from '@dps/core';
 import { Karta, OloniKatastasis, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
 import { fortosi, sfalma } from '../../kathstasi/index.js';
-import { fortose_mathimata } from '../../pseudomata/index.js';
+import { xrisiPeriballontos } from '../../periballon/index.js';
+import { fortose_mathimata_apo_apothiki } from '../../ypiresies/index.js';
 
 /** Ετικέτα που σημαίνει ότι το μάθημα είναι ήδη συγχρονισμένο. */
 export const MINIMA_SYNXRONISMENOU = 'Συγχρονισμένο';
@@ -33,12 +34,13 @@ export function KartaMathimatos({ mathima }: { readonly mathima: Mathima }) {
 
 /** Λίστα μαθημάτων με φόρτωση, κενό, σφάλμα και δεδομένα πάνω από το OloniKatastasis. */
 export default function Mathimata() {
+  const periballon = xrisiPeriballontos();
   const [katastasi, setKatastasi] = useState<Katastasi<readonly Mathima[]>>(fortosi<readonly Mathima[]>());
   const [prospatheies, setProspatheies] = useState(0);
 
   useEffect(() => {
     let zontas = true;
-    void fortose_mathimata()
+    void fortose_mathimata_apo_apothiki(periballon.apothiki)
       .then((apothike) => {
         if (zontas) {
           setKatastasi(apothike);
@@ -52,7 +54,7 @@ export default function Mathimata() {
     return () => {
       zontas = false;
     };
-  }, [prospatheies]);
+  }, [periballon.apothiki, prospatheies]);
 
   const epanalipsi = useCallback(() => {
     setKatastasi(fortosi<readonly Mathima[]>());

@@ -3,13 +3,9 @@ import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import OdigosMeletis, {
-  EPKEFALIDES_TMIMATON,
-  LEKIKIA_TMIMATON,
-  ODIGOI_PSEUDOI,
-  fortose_odigo,
-  type KleidiTmimatos,
-} from './odigos.js';
+import OdigosMeletis, { ParapompiTmimatos } from './odigos.js';
+import { EPKEFALIDES_TMIMATON, LEKIKIA_TMIMATON } from '../../ypiresies/index.js';
+import { ODIGOI_PSEUDOI } from '../../pseudomata/index.js';
 
 const DIALOMOS_PALIAS = LEKIKIA_TMIMATON;
 
@@ -29,7 +25,7 @@ function apostrophes_odigos(diadromi: string): string {
   );
 }
 
-describe('odigos — τοπικός χάρτης οδηγών', () => {
+describe('odigos — τοπικός χάρτης οδηγών (ψεύτικα περιεχόμενα)', () => {
   it('καλύπτει ακριβώς τις τέσσερις ενότητες του ψεύτικου μαθήματος', () => {
     expect([...Object.keys(ODIGOI_PSEUDOI)].sort()).toEqual(['en-1', 'en-2', 'en-3', 'en-4']);
   });
@@ -52,7 +48,7 @@ describe('odigos — τοπικός χάρτης οδηγών', () => {
   it('κάθε τμήμα έχει κείμενο και παραπομπή της μορφής [[arx-N: σ. X]]', () => {
     for (const odigos of Object.values(ODIGOI_PSEUDOI)) {
       for (const kleidi of DIALOMOS_PALIAS) {
-        const tmima = odigos.tmimata[kleidi as KleidiTmimatos];
+        const tmima = odigos.tmimata[kleidi];
         expect(tmima.keimena.length).toBeGreaterThan(0);
         expect(tmima.parapompi).toMatch(/^\[\[arx-\d+: σ\. \d+(–\d+)?\]\]$/);
       }
@@ -72,31 +68,25 @@ describe('odigos — τοπικός χάρτης οδηγών', () => {
   });
 });
 
-describe('odigos — fortose_odigo', () => {
-  it('δίνει etimo με τις επτά ενότητες και τον τίτλο από τον ψεύτικο χάρτη', async () => {
-    const apokrisis = await fortose_odigo('en-2');
-    expect(apokrisis.katastasi).toBe('etimo');
-    if (apokrisis.katastasi === 'etimo') {
-      expect(apokrisis.dedomena.enotita_id).toBe('en-2');
-      expect(apokrisis.dedomena.titlos).toBe('Μεταβλητές και τύποι');
-      expect([...Object.keys(apokrisis.dedomena.tmimata)]).toHaveLength(DIALOMOS_PALIAS.length);
-    }
+describe('odigos — ParapompiTmimatos', () => {
+  it('αποδίδει κουμπί με την κανονική παραπομπή όταν το κείμενο αναλύεται', () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <ParapompiTmimatos parapompi="[[arx-1: σ. 3]]" />
+      </MemoryRouter>
+    );
+    expect(html).toContain('data-testid="odigos-parapompi"');
+    expect(html).toContain('[[arx-1: σ. 3]]');
   });
 
-  it('δίνει sfalma DEN_VRETHIKE για άγνωστο id, ποτέ κενή κατάσταση', async () => {
-    const apokrisis = await fortose_odigo('en-999');
-    expect(apokrisis.katastasi).toBe('sfalma');
-    if (apokrisis.katastasi === 'sfalma') {
-      expect(apokrisis.sfalma.kodikos).toBe('DEN_VRETHIKE');
-      expect(apokrisis.sfalma.minima).toContain('en-999');
-    }
-  });
-
-  it('οι τέσσερις διαθέσιμες ενότητες φορτώνουν όλες με κατάσταση etimo', async () => {
-    for (const enotitaId of ['en-1', 'en-2', 'en-3', 'en-4']) {
-      const apokrisis = await fortose_odigo(enotitaId);
-      expect(apokrisis.katastasi).toBe('etimo');
-    }
+  it('αποδίδει απλό κείμενο όταν η παραπομπή δεν αναλύεται', () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <ParapompiTmimatos parapompi="χωρίς παραπομπή" />
+      </MemoryRouter>
+    );
+    expect(html).not.toContain('data-testid="odigos-parapompi"');
+    expect(html).toContain('χωρίς παραπομπή');
   });
 });
 
@@ -121,13 +111,14 @@ describe('odigos — SSR της οθόνης', () => {
 });
 
 describe('odigos — συμβόλαιο data-testid στον πηγαίο κώδικα', () => {
-  it('δηλώνει ακριβώς τα τέσσερα υποχρεωτικά testid', () => {
+  it('δηλώνει ακριβώς τα υποχρεωτικά testid', () => {
     const arxeio = odigos_arxeio();
     for (const testid of [
       'odigos-ekran',
       'odigos-epikefalida',
       'odigos-tutor',
       'odigos-episostrofh',
+      'odigos-parapompi',
     ]) {
       expect(arxeio).toContain(`data-testid="${testid}"`);
     }

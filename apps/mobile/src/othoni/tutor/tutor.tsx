@@ -3,8 +3,14 @@ import { useSearchParams } from 'react-router-dom';
 import { IonButton, IonSpinner } from '@ionic/react';
 import { Pilegma, OloniKatastasis, ProskelesioOmonimas } from '../../koinima/index.js';
 import { fortosi, etimo, type Katastasi } from '../../kathstasi/index.js';
-import { KATHYSTERISI_PSEDON_MS, pseudos_xartis } from '../../pseudomata/index.js';
-import type { Enotita } from '@dps/core';
+import { xoris_katastasi } from '../../kathstasi/index.js';
+import { xrisiApothekisis } from '../../apothiki/index.js';
+import { xrisiPeriballontos } from '../../periballon/index.js';
+import {
+  fortose_synomilia_apo_apothiki,
+  fortose_xartis_apo_apothiki,
+} from '../../ypiresies/index.js';
+import type { Enotita, XartisMathimatos } from '@dps/core';
 
 /** Η απάντηση-φράγκος του tutor όταν δεν υπάρχει τεκμηρίωση στο υλικό. */
 export const APANTISI_YPARXEIS_STO_YLIKO = 'Δεν υπάρχει στο υλικό';
@@ -12,12 +18,9 @@ export const APANTISI_YPARXEIS_STO_YLIKO = 'Δεν υπάρχει στο υλι�
 /** Χρόνος εικονικής «σκέψης» του tutor πριν την απάντηση, ώστε η αναμονή να είναι ορατή. */
 export const KATHYSTERISI_APANTISIS_MS = 420;
 
-/** Ποιος έγραψε ένα γράμμα στην ιστορικό. */
-export type RologosImerrologiou = 'xristis' | 'tutor';
-
-/** Ένα γράμμα της ιστορικού, είτε ερώτημα είτε απάντηση. */
+/** Ένα γράμμα της ιστορικής συνομιλίας, είτε ερώτημα είτε απάντηση. */
 export interface GrammiImerrologiou {
-  readonly rolos: RologosImerrologiou;
+  readonly rolos: 'xristis' | 'tutor';
   readonly keimeno: string;
 }
 
@@ -99,21 +102,22 @@ export function kanonikopoiei(keimeno: string): string {
     .join('');
 }
 
-/** Αναμένει το δοθέντο αριθμό χιλιοστών του δευτερολέπτου, όπως οι ψεύτικες υπηρεσίες του repo. */
-function anastoli(chronos_ms: number): Promise<void> {
-  return new Promise((lise) => {
-    setTimeout(lise, chronos_ms);
-  });
-}
-
-/** Επιστρέφει την ενότητα του ψεύτικου χάρτη, ή null αν το id είναι κενό ή άγνωστο. */
-export function psedoi_enotita(enotita_id: string | null): Enotita | null {
-  if (enotita_id === null || kanonikopoiei(enotita_id).trim() === '') {
+/** Βρίσκει την ενότητα του χάρτη με όρους αντιστοίχισης ανθεκτικούς σε τόνους και κενά. */
+export function enotita_apo_xarti(xartis: XartisMathimatos, enotita_id: string): Enotita | null {
+  const zitoumeni = kanonikopoiei(enotita_id).trim();
+  if (zitoumeni === '') {
     return null;
   }
-  const zitoumeni = kanonikopoiei(enotita_id);
-  const enotita = pseudos_xartis().enotites.find((katixeino) => kanonikopoiei(katixeino.id) === zitoumeni);
-  return enotita ?? null;
+  return xartis.enotites.find((katixeino) => kanonikopoiei(katixeino.id) === zitoumeni) ?? null;
+}
+
+/** Το χαιρετιστήριο γράμμα του tutor για την ενότητα (ή για το μάθημα, αν δεν επιλέχθηκε). */
+export function xairetisma_tutor(enotita: Enotita | null): GrammiImerrologiou {
+  const skeinos = enotita === null ? 'το μάθημα' : `την ενότητα «${enotita.titlos}»`;
+  return {
+    rolos: 'tutor',
+    keimeno: `Γεια σου, ρώτα με γλώσσα του μαθήματος για ${skeinos}. Αν κάτι δεν τεκμηριώνεται στο υλικό, θα το πω.`,
+  };
 }
 
 /** Δίνει την απάντηση του tutor· χωρίς αντιστοίχιση επιστρέφει ακριβώς «Δεν υπάρχει στο υλικό». */
@@ -132,26 +136,12 @@ export function apantisa_tutor(erotisi: string): string {
   return APANTISI_YPARXEIS_STO_YLIKO;
 }
 
-/** Φορτώνει το αρχικό context του tutor για την ενότητα που ζητήθηκε από το query string. */
-export async function fortise_konteksto(enotita: Enotita | null): Promise<Katastasi<KontekstoTutor>> {
-  await anastoli(KATHYSTERISI_PSEDON_MS);
-  const xairetismata = enotita === null ? 'το μάθημα' : `την ενότητα «${enotita.titlos}»`;
-  return etimo({
-    enotita,
-    arxikes_grammata: [
-      {
-        rolos: 'tutor',
-        keimeno: `Γεια σου, ρώτα με γλώσσα του μαθήματος για ${xairetismata}. Αν κάτι δεν τεκμηριώνεται στο υλικό, θα το πω.`,
-      },
-    ],
-  });
-}
-
-/** Συνομιλία με τον tutor: ιστορικό γραμμάτων, ορατή αναμονή και κανόνας «Δεν υπάρχει στο υλικό». */
+/** Συνομιλία με τον tutor: ιστορικό από τα αρχεία, ορατή αναμονή και κανόνας «Δεν υπάρχει στο υλικό». */
 export default function TutorChat() {
   const [parametroi] = useSearchParams();
-  const enotitaId = parametroi.get('enotita');
-  const enotita = psedoi_enotita(enotitaId);
+  const enotitaId = parametroi.get('enotita') ?? '';
+  const periballon = xrisiPeriballontos();
+  const { kodikosMathimatos } = xrisiApothekisis();
   const [katastasi, setKatastasi] = useState<Katastasi<KontekstoTutor>>(fortosi());
   const [exomena, setExomena] = useState<readonly GrammiImerrologiou[]>([]);
   const [trima, setTrima] = useState('');
@@ -161,12 +151,27 @@ export default function TutorChat() {
 
   useEffect(() => {
     alive.current = true;
-    setKatastasi(fortosi());
-    void fortise_konteksto(psedoi_enotita(enotitaId)).then((apokrisis) => {
-      if (alive.current) {
-        setKatastasi(apokrisis);
+    setKatastasi(fortosi<KontekstoTutor>());
+    setExomena([]);
+    void (async () => {
+      const xartis = await fortose_xartis_apo_apothiki(periballon.apothiki, kodikosMathimatos);
+      const dedomenaXarti = xoris_katastasi(xartis);
+      const enotita = dedomenaXarti === undefined ? null : enotita_apo_xarti(dedomenaXarti, enotitaId);
+      const istoriko = await fortose_synomilia_apo_apothiki(
+        periballon.apothiki,
+        kodikosMathimatos,
+        enotitaId
+      );
+      if (!alive.current) {
+        return;
       }
-    });
+      setKatastasi(
+        etimo<KontekstoTutor>({
+          enotita,
+          arxikes_grammata: istoriko.length > 0 ? istoriko : [xairetisma_tutor(enotita)],
+        })
+      );
+    })();
     return () => {
       alive.current = false;
       for (const xronos of xronologia.current) {
@@ -174,7 +179,7 @@ export default function TutorChat() {
       }
       xronologia.current = [];
     };
-  }, [enotitaId]);
+  }, [periballon.apothiki, kodikosMathimatos, enotitaId]);
 
   const apostoli_erotisi = (): void => {
     if (apostolto || trima.trim() === '') {
@@ -197,65 +202,66 @@ export default function TutorChat() {
     xronologia.current.push(xronos);
   };
 
-  const pilegmaEnotitas = `Ενότητα: ${enotita?.titlos ?? enotitaId ?? 'γενικά'}`;
+  const enotita = xoris_katastasi(katastasi)?.enotita ?? null;
+  const pilegmaEnotitas = `Ενότητα: ${enotita?.titlos ?? (enotitaId.length > 0 ? enotitaId : 'γενικά')}`;
 
   return (
-      <div className="episkefsi" data-testid="tutor-ekran">
-        <ProskelesioOmonimas
-          titlos="Tutor"
-          ypokeimeno="Απαντά μόνο από το υλικό του μαθήματος."
-          akseis={<Pilegma keimeno={pilegmaEnotitas} entono />}
-        />
-        <OloniKatastasis katastasi={katastasi} adeioMinima="Δεν υπάρχει ακόμη συνομιλία.">
-          {(konteksto) => (
-            <>
-              <div className="imerologia" data-testid="tutor-imerologia">
-                {[...konteksto.arxikes_grammata, ...exomena].map((gramma, thesi) => (
-                  <div
-                    key={`${thesi}-${gramma.keimeno}`}
-                    className={
-                      gramma.rolos === 'xristis'
-                        ? 'imerologia-gramma imerologia-bolakia'
-                        : 'imerologia-gramma imerologia-apantisi'
-                    }
-                  >
-                    {gramma.keimeno}
-                  </div>
-                ))}
-              </div>
-              {apostolto && (
-                <div className="katastasi-periochos" data-testid="tutor-fortisi">
-                  <IonSpinner name="crescent" aria-label="Ο tutor γράφει" />
-                  <p className="katastasi-ypokeimeno">Ο tutor γράφει…</p>
-                </div>
-              )}
-              <div className="imerologia-paixidi" data-testid="tutor-paixidi">
-                <input
-                  className="imerologia-paixidi-gramma"
-                  value={trima}
-                  placeholder="Γράψε την ερώτησή σου…"
-                  aria-label="Ερώτηση για τον tutor"
-                  onChange={(γεγονός) => {
-                    setTrima(γεγονός.target.value);
-                  }}
-                  onKeyDown={(γεγονός) => {
-                    if (γεγονός.key === 'Enter') {
-                      apostoli_erotisi();
-                    }
-                  }}
-                />
-                <IonButton
-                  size="small"
-                  disabled={apostolto || trima.trim() === ''}
-                  onClick={apostoli_erotisi}
-                  data-testid="tutor-apomilosi"
+    <div className="episkefsi" data-testid="tutor-ekran">
+      <ProskelesioOmonimas
+        titlos="Tutor"
+        ypokeimeno="Απαντά μόνο από το υλικό του μαθήματος."
+        akseis={<Pilegma keimeno={pilegmaEnotitas} entono />}
+      />
+      <OloniKatastasis katastasi={katastasi} adeioMinima="Δεν υπάρχει ακόμη συνομιλία.">
+        {(konteksto) => (
+          <>
+            <div className="imerologia" data-testid="tutor-imerologia">
+              {[...konteksto.arxikes_grammata, ...exomena].map((gramma, thesi) => (
+                <div
+                  key={`${thesi}-${gramma.keimeno}`}
+                  className={
+                    gramma.rolos === 'xristis'
+                      ? 'imerologia-gramma imerologia-bolakia'
+                      : 'imerologia-gramma imerologia-apantisi'
+                  }
                 >
-                  Αποστολή
-                </IonButton>
+                  {gramma.keimeno}
+                </div>
+              ))}
+            </div>
+            {apostolto && (
+              <div className="katastasi-periohos" data-testid="tutor-fortisi">
+                <IonSpinner name="crescent" aria-label="Ο tutor γράφει" />
+                <p className="katastasi-ypokeimeno">Ο tutor γράφει…</p>
               </div>
-            </>
-          )}
-        </OloniKatastasis>
-      </div>
+            )}
+            <div className="imerologia-paixidi" data-testid="tutor-paixidi">
+              <input
+                className="imerologia-paixidi-gramma"
+                value={trima}
+                placeholder="Γράψε την ερώτησή σου…"
+                aria-label="Ερώτηση για τον tutor"
+                onChange={(γεγονός) => {
+                  setTrima(γεγονός.target.value);
+                }}
+                onKeyDown={(γεγονός) => {
+                  if (γεγονός.key === 'Enter') {
+                    apostoli_erotisi();
+                  }
+                }}
+              />
+              <IonButton
+                size="small"
+                disabled={apostolto || trima.trim() === ''}
+                onClick={apostoli_erotisi}
+                data-testid="tutor-apomilosi"
+              >
+                Αποστολή
+              </IonButton>
+            </div>
+          </>
+        )}
+      </OloniKatastasis>
+    </div>
   );
 }

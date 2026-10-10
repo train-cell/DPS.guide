@@ -3,6 +3,7 @@ import type { MouseEvent as GeventoPedomati } from 'react';
 import { Link } from 'react-router-dom';
 import type { Enotita, XartisMathimatos } from '@dps/core';
 import { xrisiApothekisis } from '../../apothiki/index.js';
+import { xrisiPeriballontos } from '../../periballon/index.js';
 import {
   Karta,
   MetrikosRing,
@@ -11,7 +12,8 @@ import {
   ProskelesioOmonimas,
 } from '../../koinima/index.js';
 import { fortosi, type Katastasi } from '../../kathstasi/index.js';
-import { fortose_xartis, lepita_aristeias, pososto_aristeias } from '../../pseudomata/index.js';
+import { fortose_xartis_apo_apothiki } from '../../ypiresies/index.js';
+import { lepita_aristeias, pososto_aristeias } from '../../pseudomata/index.js';
 
 /** Πόσες ενότητες του χάρτη προτείνονται ως στόχοι της ημέρας. */
 const PLITOS_STOCHOIS = 3;
@@ -123,6 +125,8 @@ export function StochoiSimeras({ enotites }: SimeraEnotitesProps) {
 
 /** Οθόνη «Σήμερα»: η αρχική καρτέλα με πρόοδο μαθήματος και τους στόχους της ημέρας. */
 export function Simera() {
+  const apothiki = xrisiApothekisis();
+  const periballon = xrisiPeriballontos();
   const [katastasi, set_katastasi] = useState<Katastasi<XartisMathimatos>>(
     fortosi<XartisMathimatos>()
   );
@@ -135,15 +139,17 @@ export function Simera() {
 
   useEffect(() => {
     let zontas = true;
-    void fortose_xartis().then((fortotiki) => {
-      if (zontas) {
-        set_katastasi(fortotiki);
+    void fortose_xartis_apo_apothiki(periballon.apothiki, apothiki.kodikosMathimatos).then(
+      (fortotiki) => {
+        if (zontas) {
+          set_katastasi(fortotiki);
+        }
       }
-    });
+    );
     return () => {
       zontas = false;
     };
-  }, [proseis]);
+  }, [periballon.apothiki, apothiki.kodikosMathimatos, proseis]);
 
   return (
     <div className="odoni-lista" data-testid="simera-ekran">
