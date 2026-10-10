@@ -3,25 +3,25 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
-import Rythisies from './rythisies.js';
-import type { RythisiesProps } from './rythisies.js';
+import Rythisies, { pare_editable_rytheseis } from './rythisies.js';
+import { proedapes_rytheseis } from '../../apothiki/index.js';
 
 const ORISTO = dirname(fileURLToPath(import.meta.url));
 const ARXIKOS = readFileSync(join(ORISTO, 'rythisies.tsx'), 'utf8');
 
-const APOTELEMATA = ['rythisies-ekran', 'rythisies-seira-montelo', 'rythisies-apothikeysi'] as const;
+const APOTELEMATA = [
+  'rythisies-ekran',
+  'rythisies-seira-montelo',
+  'rythisies-apothikeysi',
+  'rythisies-gramma-base',
+  'rythisies-gramma-montelo',
+  'rythisies-eidopoieseis',
+  'rythisies-apothekeysto',
+] as const;
 
-const RYTHISIES: RythisiesProps = {
-  baseUrl: 'https://thales.cs.unipi.gr',
-  mathimataSynch: ['Πληροφορική & Προγραμματισμός'],
-  onomaMontelou: 'gemini-2.5-flash',
-  exeiKleidiLlm: true,
-  onomasApothikefsis: 'Documents/DPS.guide',
-  einaiEidopoieseis: true,
-};
-
-function apotelesma_rythisi(antikatastaseis: Partial<RythisiesProps> = {}): string {
-  return renderToStaticMarkup(<Rythisies {...RYTHISIES} {...antikatastaseis} />);
+/** Αποδίδει την οθόνη χωρίς Provider· ο γαντζότης πέφτει στις προεπιλογές της αποθήκευσης. */
+function apostrophes_rythisi(): string {
+  return renderToStaticMarkup(<Rythisies />);
 }
 
 describe('Rythisies — συμβόλαιο οθόνης', () => {
@@ -29,8 +29,8 @@ describe('Rythisies — συμβόλαιο οθόνης', () => {
     expect(typeof Rythisies).toBe('function');
   });
 
-  it('η στατική απόδοση δεν σπάει και δείχνει τους τέσσερις τομείς', () => {
-    const html = apotelesma_rythisi();
+  it('η στατική απόδοση χωρίς Provider δεν σπάει και δείχνει τους τέσσερις τομείς', () => {
+    const html = apostrophes_rythisi();
     expect(html).toContain('Ρυθμίσεις');
     for (const titlos of ['Σύνδεση', 'Μοντέλο AI', 'Αποθήκευση', 'Ειδοποιήσεις']) {
       expect(html).toContain(titlos);
@@ -38,50 +38,133 @@ describe('Rythisies — συμβόλαιο οθόνης', () => {
   });
 
   it('κάθε απαιτούμενο data-testid εμφανίζεται στην απόδοση', () => {
-    const html = apotelesma_rythisi();
+    const html = apostrophes_rythisi();
     for (const testid of APOTELEMATA) {
       expect(html).toContain(`data-testid="${testid}"`);
     }
   });
+});
 
-  it('η οθόνη δεν έχει σταθερό μοντέλο: ακολουθεί πάντα τις ρυθμίσεις', () => {
-    expect(apotelesma_rythisi({ onomaMontelou: 'montelo-alfa' })).toContain('montelo-alfa');
-    expect(apotelesma_rythisi({ onomaMontelou: 'montelo-beta' })).toContain('montelo-beta');
+describe('Rythisies — τιμές από την αποθήκευση, όχι hardcoded', () => {
+  it('διαβάζει τις ρυθμίσεις από το γαντζότο xrisiApothekisis', () => {
+    expect(ARXIKOS).toContain('xrisiApothekisis');
+    expect(ARXIKOS).toContain('apothiki.rytheseis');
+  });
+
+  it('χωρίς Provider η οθόνη παρουσιάζει τις προεπιλογές της αποθήκευσης', () => {
+    const proedapes = proedapes_rytheseis();
+    const html = apostrophes_rythisi();
+    expect(html).toContain(proedapes.baseUrl);
+    expect(html).toContain(proedapes.onomaMontelou);
+    expect(html).toContain(proedapes.onomasApothikefsis);
+  });
+
+  it('η οθόνη δεν έχει σταθερό μοντέλο: το όνομα έρχεται από το store', () => {
     expect(ARXIKOS).not.toMatch(/gemini|gpt-|claude|anthropic/i);
+    expect(ARXIKOS).toContain('grammata.onomaMontelou');
   });
 
-  it('η διεύθυνση σύνδεσης και η θέση αποθήκευσης έρχονται από τις ρυθμίσεις', () => {
-    const html = apotelesma_rythisi({
+  it('το pare_editable_rytheseis κρατάει μόνο τα τρία επεξεργάσιμα πεδία', () => {
+    const pare = pare_editable_rytheseis({
       baseUrl: 'https://eclass.example.unipi.gr',
-      onomasApothikefsis: 'DPS.guide/λεπτομέρειες',
+      mathimataSynch: ['ΠΛΗ201'],
+      onomaMontelou: 'montelo-alfa',
+      exeiKleidiLlm: true,
+      onomasApothikefsis: 'Documents/DPS.guide',
+      einaiEidopoieseis: false,
     });
-    expect(html).toContain('https://eclass.example.unipi.gr');
-    expect(html).toContain('DPS.guide/λεπτομέρειες');
+    expect(pare).toEqual({
+      baseUrl: 'https://eclass.example.unipi.gr',
+      onomaMontelou: 'montelo-alfa',
+      einaiEidopoieseis: false,
+    });
   });
 
-  it('τα μαθήματα συγχρονισμού εμφανίζονται και το κενό λέγεται ρητά', () => {
-    expect(apotelesma_rythisi()).toContain('Πληροφορική &amp; Προγραμματισμός');
-    expect(apotelesma_rythisi({ mathimataSynch: [] })).toContain('Συγχρονισμός: κανένα μάθημα');
+  it('η συγχρονισμός με το store κρέμεται από πρωτόγονα, όχι από την ταυτότητα του αντικειμένου', () => {
+    const eksartiseis = ARXIKOS.match(/useEffect\([\s\S]*?\}, \[([\s\S]*?)\]\);/)?.[1];
+    expect(eksartiseis).toBeDefined();
+    expect(String(eksartiseis)).not.toContain('apothiki.rytheseis');
+    for (const pedio of ['baseUrl', 'onomaMontelou', 'einaiEidopoieseis']) {
+      expect(String(eksartiseis)).toContain(pedio);
+    }
+  });
+});
+
+describe('Rythisies — επεξεργασία και αποθήκευση', () => {
+  it('η αποθήκευση περνά από το allaxe_rytheseis του store', () => {
+    expect(ARXIKOS).toContain('apothiki.allaxe_rytheseis');
+    expect(ARXIKOS).toMatch(/await apothiki\.allaxe_rytheseis/);
   });
 
-  it('δείχνει αν υπάρχει κλειδί LLM, ποτέ την τιμή του', () => {
-    expect(apotelesma_rythisi({ exeiKleidiLlm: true })).toContain('Κλειδί: Ρυθμισμένο');
-    expect(apotelesma_rythisi({ exeiKleidiLlm: false })).toContain('Κλειδί: Μη ρυθμισμένο');
-    expect(ARXIKOS).not.toContain('llm_api_key');
-    expect(ARXIKOS).not.toMatch(/console\./);
+  it('η οθόνη έχει δύο επεξεργάσιμα πεδία κειμένου και κουμπί αποθήκευσης', () => {
+    const html = apostrophes_rythisi();
+    expect((html.match(/<input/g) ?? []).length).toBe(2);
+    expect(html).toContain('rythisies-apothekeysto');
+    expect(ARXIKOS).toContain('onSubmit={ypostiripse}');
   });
 
-  it('οι ειδοποιήσεις δείχνονται με Pilegma ON/OFF', () => {
-    const html = apotelesma_rythisi({ einaiEidopoieseis: true });
+  it('κάθε control έχει προσβάσιμο όνομα', () => {
+    const html = apostrophes_rythisi();
+    expect(html).toContain('aria-label="Διεύθυνση eClass"');
+    expect(html).toContain('aria-label="Όνομα μοντέλου AI"');
+    expect(html).toContain('aria-label="Τοπικές ειδοποιήσεις"');
+    expect(html).toContain('aria-label="Αποθήκευση ρυθμίσεων"');
+  });
+
+  it('οι ειδοποιήσεις είναι role=switch, όχι γυμνό checkbox', () => {
+    const html = apostrophes_rythisi();
+    expect(html).toContain('role="switch"');
+    expect(html).toContain('aria-checked="true"');
     expect(html).toContain('Ενεργές');
     expect(html).toContain('pilegma-entono');
-    expect(apotelesma_rythisi({ einaiEidopoieseis: false })).toContain('Ανενεργές');
+    expect(ARXIKOS).not.toContain('type="checkbox"');
+  });
+});
+
+describe('Rythisies — το κλειδί LLM μέναι μυστικό', () => {
+  it('δείχνει μόνο αν υπάρχει κλειδί, ποτέ την τιμή του', () => {
+    const html = apostrophes_rythisi();
+    expect(html).toContain('Κλειδί: Μη ρυθμισμένο');
+    expect(html).not.toContain('Κλειδί: Ρυθμισμένο');
+    expect(ARXIKOS).toContain("exeiKleidiLlm ? 'Κλειδί: Ρυθμισμένο' : 'Κλειδί: Μη ρυθμισμένο'");
   });
 
+  it('ο πηγαίος κώδικας δεν έχει κλειδί, μέθοδο καταγραφής ή κρυφό input', () => {
+    expect(ARXIKOS).not.toContain('llm_api_key');
+    expect(ARXIKOS).not.toMatch(/console\./);
+    expect(ARXIKOS).not.toContain('type="password"');
+    expect(ARXIKOS.match(/type="password"/g) ?? []).toHaveLength(0);
+  });
+});
+
+describe('Rythisies — περιορισμοί κώδικα', () => {
   it('χρησιμοποιεί μόνο υπάρχουσες τάξεις CSS, χωρίς χρώματα και inline styles', () => {
     expect(ARXIKOS).not.toContain('style={{');
     expect(ARXIKOS).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(ARXIKOS).toContain('className="odoni-lista"');
     expect(ARXIKOS).not.toContain('.css');
+  });
+
+  it('χρησιμοποιεί τις υπάρχουσες κάρτες, ετικέτες και τάξεις της οθόνης', () => {
+    for (const symbolo of ['Karta', 'Pilegma', 'ProskelesioOmonimas']) {
+      expect(ARXIKOS).toContain(symbolo);
+    }
+    for (const klasa of ['pilegma', 'pilegma-entono', 'proedri-travla-gramma']) {
+      expect(ARXIKOS).toContain(klasa);
+      expect(apostrophes_rythisi()).toContain(klasa);
+    }
+  });
+
+  it('δεν εισάγει any, ts-ignore, ts-expect-error ή μη-null assertion', () => {
+    expect(ARXIKOS).not.toMatch(/:\s*any\b/);
+    expect(ARXIKOS).not.toContain('@ts-ignore');
+    expect(ARXIKOS).not.toContain('@ts-expect-error');
+    expect(ARXIKOS).not.toMatch(/!\s*[.;,)]/);
+  });
+
+  it('οι σχετικές εισαγωγές έχουν επέκταση .js', () => {
+    expect(ARXIKOS).toContain("from '../../apothiki/index.js'");
+    expect(ARXIKOS).toContain("from '../../koinima/index.js'");
+    expect(ARXIKOS).not.toMatch(/from '\.\.?\/[^']*[^s]'/);
   });
 });

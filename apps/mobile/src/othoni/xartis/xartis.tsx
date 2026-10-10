@@ -9,6 +9,7 @@ import {
   Pilegma,
   ProskelesioOmonimas,
 } from '../../koinima/index.js';
+import { xrisiApothekisis } from '../../apothiki/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
 import { fortosi, sfalma } from '../../kathstasi/index.js';
 import { fortose_xartis, pososto_aristeias, pseudos_xartis } from '../../pseudomata/index.js';
@@ -27,6 +28,12 @@ export const KODIKOS_SFALMATOS_DIKTYOU = 'DIKTYO';
 
 /** Κείμενο της ετικέτας όταν η ενότητα δεν έχει εκτίμηση χρόνου. */
 export const CHORIS_ESTIMISI = 'Χωρίς εκτίμηση χρόνου';
+
+/** Κείμενο του κουμπιού σήμανσης όσο η ενότητα δεν έχει ολοκληρωθεί. */
+export const KEIMENO_STOXOU = 'Σημείωση ως ολοκληρωμένη';
+
+/** Κείμενο του κουμπιού σήμανσης όταν η ενότητα έχει ολοκληρωθεί. */
+export const KEIMENO_TELIOU = 'Ολοκληρώθηκε';
 
 /** Μετατρέπει λεπτά σε «ώρες και λεπτά», π.χ. 75 → «1 ζ 15 λ». */
 export function stilise_lepta(lepta: number | null): string {
@@ -58,16 +65,16 @@ export function grammi_proapasitis(proapasiti: Proapaitoumeno): string {
 export interface KartaEnotitasProps {
   readonly enotita: Enotita;
   readonly tetagmeni: boolean;
-  readonly allaxe_telia: (id: string) => void;
+  readonly allaxe_telia: (id: string) => Promise<void>;
 }
 
 /** Κάρτα ενότητας: κλικ στην κάρτα ανοίγει τον οδηγό, το κουμπί τη σημειώνει ως ολοκληρωμένη. */
 export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotitasProps) {
   const simaProspatheias = useCallback(
-    (gevento: GeventoPedomati<HTMLButtonElement>) => {
+    async (gevento: GeventoPedomati<HTMLButtonElement>): Promise<void> => {
       gevento.preventDefault();
       gevento.stopPropagation();
-      allaxe_telia(enotita.id);
+      await allaxe_telia(enotita.id);
     },
     [allaxe_telia, enotita.id]
   );
@@ -98,12 +105,12 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
             </div>
             <button
               type="button"
-              className="pilegma"
+              className={`pilegma${tetagmeni ? ' pilegma-entono' : ''}`}
               aria-pressed={tetagmeni}
-              data-testid="xartis-telegmenos"
+              data-testid={`xartis-aristeia-${enotita.id}`}
               onClick={simaProspatheias}
             >
-              {tetagmeni ? 'Ολοκληρώθηκε' : 'Σημείωση ως ολοκληρωμένη'}
+              {tetagmeni ? KEIMENO_TELIOU : KEIMENO_STOXOU}
             </button>
           </div>
         }
@@ -116,7 +123,7 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
 export interface OdomosEnotitonProps {
   readonly xartis: XartisMathimatos;
   readonly telies: readonly string[];
-  readonly allaxe_telia: (id: string) => void;
+  readonly allaxe_telia: (id: string) => Promise<void>;
 }
 
 /** Ο χάρτης του μαθήματος: ενότητες ταξινομημένες κατά σειρά και δακτύλιος προόδου. */
@@ -148,8 +155,8 @@ export function OdomosEnotiton({ xartis, telies, allaxe_telia }: OdomosEnotitonP
 
 /** Χάρτης ενοτήτων του επιλεγμένου μαθήματος με φόρτωση, κενό, σφάλμα και δεδομένα. */
 export default function XartisEnotiton() {
+  const apothiki = xrisiApothekisis();
   const [katastasi, setKatastasi] = useState<Katastasi<XartisMathimatos>>(fortosi<XartisMathimatos>());
-  const [telies, setTelies] = useState<readonly string[]>([]);
   const [prospatheies, setProspatheies] = useState(0);
 
   useEffect(() => {
@@ -172,12 +179,6 @@ export default function XartisEnotiton() {
     };
   }, [prospatheies]);
 
-  const allaxe_telia = useCallback((id: string) => {
-    setTelies((palies) =>
-      palies.includes(id) ? palies.filter((telia) => telia !== id) : [...palies, id]
-    );
-  }, []);
-
   const epanalipsi = useCallback(() => {
     setKatastasi(fortosi<XartisMathimatos>());
     setProspatheies((prospathia) => prospathia + 1);
@@ -188,7 +189,11 @@ export default function XartisEnotiton() {
       <ProskelesioOmonimas titlos="Χάρτης" ypokeimeno={pseudos_xartis().kodikos_mathimatos} />
       <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_XARTI} epanalipsi={epanalipsi}>
         {(xartis) => (
-          <OdomosEnotiton xartis={xartis} telies={telies} allaxe_telia={allaxe_telia} />
+          <OdomosEnotiton
+            xartis={xartis}
+            telies={apothiki.proodhos.aristeiesEnotiton}
+            allaxe_telia={apothiki.allaxe_telia}
+          />
         )}
       </OloniKatastasis>
     </div>

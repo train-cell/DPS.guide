@@ -1,4 +1,4 @@
-﻿import type { Mathima, Enotita, XartisMathimatos } from '@dps/core';
+import type { Mathima, Enotita, XartisMathimatos } from '@dps/core';
 
 /** Καθυστέρηση προσομοίωσης ώστε η κατάσταση φόρτωσης να είναι πραγματική, όχι θεωρητική. */
 export const KATHYSTERISI_PSEDON_MS = 220;
@@ -79,26 +79,4 @@ export function pososto_aristeias(ektyposi: readonly Enotita[], aristeies: reado
     return 0;
   }
   return aristeies.length / ektyposi.length;
-}
-
-/** Οι ρυθμίσεις του εφαρμογής όπως τις βλέπει η οθόνη — ποτέ hardcoded μέσα στην οθόνη. */
-export interface RythisiesPseudes {
-  readonly baseUrl: string;
-  readonly mathimataSynch: readonly string[];
-  readonly onomaMontelou: string;
-  readonly exeiKleidiLlm: boolean;
-  readonly onomasApothikefsis: string;
-  readonly einaiEidopoieseis: boolean;
-}
-
-/** Προσωρινές ρυθμίσεις, μέχρι να συνδεθεί η πραγματική αποθήκευση (rythmiseis.json). */
-export function pseudos_rythisies(): RythisiesPseudes {
-  return {
-    baseUrl: 'https://thales.cs.unipi.gr',
-    mathimataSynch: [MATHIMA_MOCK.kodikos],
-    onomaMontelou: 'gemini-2.5-flash',
-    exeiKleidiLlm: false,
-    onomasApothikefsis: 'Documents/DPS.guide',
-    einaiEidopoieseis: true,
-  };
 }
