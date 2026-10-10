@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "test": "node scripts/test-lock.mjs vitest run",
-    "test:lane": "node scripts/test-lock.mjs vitest run",
+    "test:lane": "node scripts/test-lane.mjs",
     "typecheck": "tsc --build",
     "lint": "eslint .",
     "check:ownership": "node scripts/check-ownership.mjs"
