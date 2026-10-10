@@ -10,6 +10,7 @@ import TutorChat from '../othoni/tutor/tutor.js';
 import Rythisies from '../othoni/rythisies/rythisies.js';
 import Proedri from '../othoni/proedri/proedri.js';
 import ProvoliPdf from '../provoli-pdf/provoli-pdf.js';
+import RythmiseisProgrammatos from '../programma/programma.js';
 
 /** Οι διαδρομές της εφαρμογής, μία ανά οθόνη. */
 export const ODOI: readonly { readonly diadromi: string; readonly onoma: string }[] = [
@@ -21,6 +22,7 @@ export const ODOI: readonly { readonly diadromi: string; readonly onoma: string 
   { diadromi: '/rythisies', onoma: 'Ρυθμίσεις' },
   { diadromi: '/proedri', onoma: 'Onboarding' },
   { diadromi: '/provoli/:arxeioId/:selida', onoma: 'Προβολή PDF' },
+  { diadromi: '/programma', onoma: 'Πρόγραμμα' },
 ] as const;
 
 /** Περιτύλιγμα σελίδας με capsule navigation. */
@@ -43,6 +45,7 @@ export function OdoiNavigisis() {
         <Route path="/xartis" element={meNav(<XartisEnotiton />)} />
         <Route path="/odigos/:enotitaId" element={meNav(<OdigosMeletis />)} />
         <Route path="/provoli/:arxeioId/:selida" element={meNav(<ProvoliPdf />)} />
+        <Route path="/programma" element={meNav(<RythmiseisProgrammatos />)} />
         <Route path="/tutor" element={meNav(<TutorChat />)} />
         <Route path="/rythisies" element={meNav(<Rythisies />)} />
         <Route path="/proedri" element={meNav(<Proedri />, false)} />

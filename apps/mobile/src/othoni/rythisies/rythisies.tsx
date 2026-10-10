@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { xrisiApothekisis } from '../../apothiki/index.js';
 import type { Rytheseis } from '../../apothiki/index.js';
 import { Karta, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
@@ -140,6 +141,16 @@ export default function Rythisies() {
           <div data-testid="rythisies-apothikeysi">
             <Pilegma keimeno={apothiki.rytheseis.onomasApothikefsis} />
           </div>
+        }
+      />
+
+      <Karta
+        titlos="Πρόγραμμα μελέτης"
+        ypokeimeno="Εξετάσεις, έναρξη εξεταστικής, εβδομαδιαίο template λεπτών και εξαιρέσεις."
+        stoixeia={
+          <Link to="/programma" className="pilegma pilegma-entono" data-testid="rythisies-programma">
+            Ρυθμίσεις προγράμματος
+          </Link>
         }
       />
 
