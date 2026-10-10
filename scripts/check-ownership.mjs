@@ -45,7 +45,7 @@ function main() {
     process.exit(1);
   }
 
-  let changedFiles = [];
+  let changedFiles;
   try {
     const diff = execSync('git diff --name-only contracts-v1...HEAD', { encoding: 'utf8' }).trim();
     changedFiles = diff ? diff.split(/\r?\n/) : [];
@@ -58,8 +58,10 @@ function main() {
     }
   }
 
+  const files = changedFiles ?? [];
+
   const violations = [];
-  for (const file of changedFiles) {
+  for (const file of files) {
     if (!file) continue;
     const isAllowed = allowedPatterns.some((pattern) => matchGlob(file, pattern));
     if (!isAllowed) {
@@ -75,7 +77,7 @@ function main() {
     process.exit(1);
   }
 
-  console.log(`[OWNERSHIP OK] Lane/Stream "${lane}" passed ownership check (${changedFiles.length} files checked).`);
+  console.log(`[OWNERSHIP OK] Lane/Stream "${lane}" passed ownership check (${files.length} files checked).`);
 }
 
 main();

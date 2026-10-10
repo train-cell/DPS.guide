@@ -76,6 +76,37 @@ function releaseLock(lockPath) {
   }
 }
 
+/** Windows δεν μπορεί να κάνει spawn `.cmd`/`.bat` χωρίς shell (EINVAL). */
+function aparaitei_shell(command) {
+  return process.platform === 'win32' && /\.(cmd|bat)$/i.test(command);
+}
+
+/**
+ * Επίλυση εκτελέσιμου: γυμνά ονόματα (π.χ. `vitest`) ψάχνονται πρώτα στο
+ * `node_modules/.bin` που ανήκει στον τρέχοντα κατάλογο ή σε γονέα του, γιατί
+ * ο φάκελος δεν είναι απαραίτητα στο PATH (editor, CI, `pnpm --filter`).
+ */
+function epilysi_entolis(command) {
+  if (command.includes('/') || command.includes('\\') || path.isAbsolute(command)) {
+    return command;
+  }
+  let dir = process.cwd();
+  while (true) {
+    const bin = path.join(dir, 'node_modules', '.bin');
+    for (const ext of process.platform === 'win32' ? ['.cmd', '.bat', '.ps1', ''] : ['']) {
+      const candidate = path.join(bin, `${command}${ext}`);
+      if (fs.existsSync(candidate)) {
+        return candidate;
+      }
+    }
+    const goneas = path.dirname(dir);
+    if (goneas === dir) {
+      return command;
+    }
+    dir = goneas;
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2);
   if (args.length === 0) {
@@ -93,12 +124,12 @@ async function main() {
   process.on('SIGINT', () => { cleanup(); process.exit(130); });
   process.on('SIGTERM', () => { cleanup(); process.exit(143); });
 
-  const command = args[0];
+  const command = epilysi_entolis(args[0]);
   const commandArgs = args.slice(1);
 
   const child = spawn(command, commandArgs, {
     stdio: 'inherit',
-    shell: false,
+    shell: aparaitei_shell(command),
   });
 
   child.on('exit', (code, signal) => {
