@@ -4,3 +4,4 @@ export * from './koines.js';
 export * from './xartis.js';
 export * from './odigos.js';
 export * from './tutor.js';
+export * from './tropos/index.js';
