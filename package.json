@@ -7,14 +7,20 @@
   "type": "module",
   "scripts": {
     "test": "node scripts/test-lock.mjs vitest run",
-    "test:lane": "node scripts/test-lock.mjs vitest run",
+    "test:lane": "node scripts/test-lane.mjs --lane",
+    "test:e2e": "playwright test --config apps/mobile/playwright.config.ts",
     "typecheck": "tsc --build",
     "lint": "eslint .",
     "check:ownership": "node scripts/check-ownership.mjs"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.64.0",
     "@types/node": "^22.13.9",
+    "@vitejs/plugin-react": "^6.1.2",
     "typescript": "^5.8.2",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.4",
     "vitest": "^3.0.7",
     "@vitest/coverage-v8": "^3.0.7",
     "eslint": "^9.21.0",

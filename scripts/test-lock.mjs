@@ -1,7 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+
+const RIZA_PROJECT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+/** Εργαλεία Node που καλούνται μέσω του JS entry τους, ώστε να μην εξαρτώνται από το .bin shell shim. */
+const EISODOI_ERGALEION = Object.freeze({
+  vitest: 'vitest/vitest.mjs',
+  eslint: 'eslint/bin/eslint.js',
+  tsc: 'typescript/bin/tsc',
+});
 
 const LOCK_DIR = path.join(os.tmpdir(), 'DPS.guide-test-locks');
 const MAX_SLOTS = 4;
@@ -76,6 +86,20 @@ function releaseLock(lockPath) {
   }
 }
 
+/** Επιλέγει πώς να εκτελεστεί η εντολή: σε Windows το `vitest` υπάρχει μόνο ως vitest.cmd στο node_modules/.bin
+ *  και το spawn χωρίς shell επιστρέφει ENOENT, άρα τρέχουμε το JS entry με τον ίδιο τον Node.
+ */
+function dialekse_diergasia(command, commandArgs) {
+  const eisodos = EISODOI_ERGALEION[command];
+  if (eisodos !== undefined) {
+    const pliriDiadromi = path.join(RIZA_PROJECT, 'node_modules', eisodos);
+    if (fs.existsSync(pliriDiadromi)) {
+      return { file: process.execPath, args: [pliriDiadromi, ...commandArgs] };
+    }
+  }
+  return { file: command, args: commandArgs };
+}
+
 async function main() {
   const args = process.argv.slice(2);
   if (args.length === 0) {
@@ -93,10 +117,9 @@ async function main() {
   process.on('SIGINT', () => { cleanup(); process.exit(130); });
   process.on('SIGTERM', () => { cleanup(); process.exit(143); });
 
-  const command = args[0];
-  const commandArgs = args.slice(1);
+  const { file, args: commandArgs } = dialekse_diergasia(args[0], args.slice(1));
 
-  const child = spawn(command, commandArgs, {
+  const child = spawn(file, commandArgs, {
     stdio: 'inherit',
     shell: false,
   });
