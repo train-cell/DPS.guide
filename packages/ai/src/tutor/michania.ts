@@ -37,7 +37,7 @@ export interface MinimaIstorikou {
 export interface EisodosStrih {
   enotita: Enotita;
   odigos: string;
-  istorico: MinimaIstorikou[];
+  istoriko: MinimaIstorikou[];
   leitourgia: LeitourgiaTutor;
   erotisi: string;
   xekimena_erotisi?: ErotisiAskisis | null;
@@ -58,7 +58,7 @@ export interface EgesErgaleiou {
 export interface StrihTutor {
   apantisi: string;
   parapompes: Parapompi[];
-  istorico: MinimaIstorikou[];
+  istoriko: MinimaIstorikou[];
   symkrisi_arithmetikis: SugkrisiArithmetikis | null;
   kalles_ergaleion: KalliErgaleiou[];
   ereges_ergaleion: EgesErgaleiou[];
@@ -138,7 +138,7 @@ export function ftiaxe_michania_tutor(eisodos: EisodosMichania): MichaniaTutor {
 
   async function strih(eisodosStrih: EisodosStrih): Promise<Apotelesma<StrihTutor>> {
     const symkrisi = anamomeni_symkrisi(eisodosStrih);
-    const istoriko = pare_ma_terma(eisodosStrih.istorico);
+    const istoriko = pare_ma_terma(eisodosStrih.istoriko);
     const minima_ergaleion: MinimaIstorikou[] = [];
     const kalles_ergaleion: KalliErgaleiou[] = [];
     const ereges_ergaleion: EgesErgaleiou[] = [];
@@ -149,7 +149,7 @@ export function ftiaxe_michania_tutor(eisodos: EisodosMichania): MichaniaTutor {
       const aitisi = prompt_tutor({
         enotita: eisodosStrih.enotita,
         odigos: eisodosStrih.odigos,
-        istorico: [...istoriko, ...minima_ergaleion],
+        istoriko: [...istoriko, ...minima_ergaleion],
         leitourgia: eisodosStrih.leitourgia,
         erotisi: eisodosStrih.erotisi,
       });
@@ -178,8 +178,8 @@ export function ftiaxe_michania_tutor(eisodos: EisodosMichania): MichaniaTutor {
           timi: {
             apantisi: teliko.apantisi,
             parapompes: teliko.parapompes,
-            istorico: [
-              ...eisodosStrih.istorico,
+            istoriko: [
+              ...eisodosStrih.istoriko,
               { rolos: 'xristis', keimeno: eisodosStrih.erotisi },
               { rolos: 'montelo', keimeno: teliko.apantisi },
             ],

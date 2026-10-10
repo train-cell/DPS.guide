@@ -1,9 +1,10 @@
-import { ParapompiSchema } from '@dps/core';
+import { ParapompiSchema, MAX_SELIDES_ANA_KLISI, MAX_XARAKTIRES_ANA_KLISI } from '@dps/core';
 import type { Enotita, Selida } from '@dps/core';
 import { z } from 'zod';
 import { EKDOSI_PROMPT_P3 } from './ekdoseis.js';
 import type { AitisiPrompt } from './koines.js';
-import { enotita_se_keimeno } from './koines.js';
+import { enotita_se_keimeno, perivale_dedomena } from './koines.js';
+import { kopse_se_kommatia } from './perigramma.js';
 
 export const ENOTITES_ODIGOU = [
   '🎯 Στόχοι',
@@ -35,7 +36,7 @@ const SISTIMA_P3 =
     '- Κάθε ενότητα του οδηγού γράφεται με την ακριβώς παραπάνω μορφή «## <εικονίδιο> <τίτλος>».',
     '- Το ύφος πάει από το απλό (ELI5) προς τη θεωρία, μετά δείχνει μοτίβα εξετάσεων και τελειώνει με τις παγίδες.',
     '- Το λυμένο παράδειγμα πηγάζει ΑΠΟΚΛΕΙΣΤΙΚΑ από το δεδομένο υλικό. Αν δεν υπάρχει λυμένο παράδειγμα στο υλικό, γράφεις ακριβώς: Δεν υπάρχει λυμένο παράδειγμα στο υλικό',
-    '- Ο αυτοέλεγχος έχει από 3 έως 5 ερωτήσεις. Κάθε ερώτηση συνοδεύεται από την απάντησή της μέσα σε εισαγωγικά με το πρόθεμα «Απάντηση:».',
+    `- Ο αυτοέλεγχος έχει από ${ELAXISTES_EROTISEIS_AUTOELGXOU} έως ${MEGISTES_EROTISEIS_AUTOELGXOU} ερωτήσεις. Κάθε ερώτηση συνοδεύεται από την απάντησή της μέσα σε εισαγωγικά με το πρόθεμα «Απάντηση:».`,
     '- Κάθε παράγραφος του οδηγού κλείνει με παραπομπή στη μορφή [[arxeio_id:σελίδα]], χωρίς να αλλάζει η μορφή των αγκύλων.',
     '- Οι παραπομπές αναφέρονται ΜΟΝΟ σε σελίδες που δίνονται παρακάτω ως επιτρεπόμενες. Απαγορεύεται να παραπέμψεις σε σελίδα εκτός εύρους.',
     '- Αριθμητικός υπολογισμός που δεν υπάρχει αυτούσιος στο υλικό πρέπει να σημειώνεται με «⚠️ μη επαληθευμένο». Απαγορεύεται να παρουσιάζεις ως γεγονός κάτι που δεν υπολόγισε η πηγή.',
@@ -53,6 +54,15 @@ export function prompt_odigou(eisodos: EisodosOdigou): AitisiPrompt<OdigosApotel
     (p) => `- ${p.arxeio_id}: από ${p.apo} έως ${p.eos}`
   );
 
+  const kommatia = kopse_se_kommatia(eisodos.selides);
+  if (kommatia.length > 1) {
+    throw new Error(
+      `P3: τα κείμενα πηγών της ενότητας «${eisodos.enotita.id}» ξεπερνούν τα ` +
+        `MAX_SELIDES_ANA_KLISI (${MAX_SELIDES_ANA_KLISI}) ή MAX_XARAKTIRES_ANA_KLISI ` +
+        `(${MAX_XARAKTIRES_ANA_KLISI}) — δεν επιτρέπεται σιωπηρή αποκοπή πηγής`
+    );
+  }
+
   return {
     sistima: SISTIMA_P3,
     xristis:
@@ -66,7 +76,9 @@ export function prompt_odigou(eisodos: EisodosOdigou): AitisiPrompt<OdigosApotel
         ...epitrepomenes,
       ]) +
       enotita_se_keimeno('Κείμενο πηγών', [
-        eisodos.selides.map((s) => `[σ.${s.arithmos}] ${s.arxeio_id}\n${s.keimeno}`).join('\n\n'),
+        perivale_dedomena(
+          eisodos.selides.map((s) => `[σ.${s.arithmos}] ${s.arxeio_id}\n${s.keimeno}`).join('\n\n')
+        ),
       ]),
     sisma: OdigosApotelesmaSchema,
     ekdosi_prompt: EKDOSI_PROMPT_P3,

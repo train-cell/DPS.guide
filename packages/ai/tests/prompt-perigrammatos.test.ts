@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { prompt_perigrammatos, EKDOSI_PROMPT_P1 } from '../src/prompts/index.js';
+import {
+  prompt_perigrammatos,
+  EKDOSI_PROMPT_P1,
+  MAX_ENNOIES_ANA_TMIMA,
+} from '../src/prompts/index.js';
 import { TyposTmimatosSchema } from '@dps/core';
 import { ftiaxe_selides } from './voitheia.js';
 
@@ -36,7 +40,7 @@ describe('prompt_perigrammatos (P1)', () => {
     expect(sistima).toContain('[σ.N]');
     expect(sistima).toContain('ΑΠΟΚΛΕΙΣΤΙΚΑ από τους δείκτες');
     expect(sistima).toContain('Μην επινοείς');
-    expect(sistima).toContain('8 έννοιες');
+    expect(sistima).toContain(`${MAX_ENNOIES_ANA_TMIMA} έννοιες`);
     expect(sistima).toContain('Perigramma');
     for (const typos of TyposTmimatosSchema.options) {
       expect(sistima).toContain(typos);

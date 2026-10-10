@@ -2,7 +2,7 @@ import { XartisMathimatosSchema } from '@dps/core';
 import type { Perigramma, XartisMathimatos } from '@dps/core';
 import { EKDOSI_PROMPT_P2 } from './ekdoseis.js';
 import type { AitisiPrompt } from './koines.js';
-import { enotita_se_keimeno } from './koines.js';
+import { eksoudeterose_deiktes, enotita_se_keimeno, perivale_dedomena } from './koines.js';
 
 const SISTIMA_P2 =
   enotita_se_keimeno('Ρόλος', [
@@ -17,7 +17,7 @@ const SISTIMA_P2 =
     '- Το proapaitoumeno χρησιμοποιείται μόνο όταν το ίδιο το υλικό δείχνει ότι η μια ενότητα χρειάζεται την άλλη.',
     '- Το πεδίο seira είναι μοναδικός αύξοντας ακέραιος που ξεκινάει από 1, με σεβασμό των προαπαιτούμενων.',
     '- Τα πεδία lepta_ektimisi και apodosi_exetasis παραμένουν null: τα λεπτά και η απόδοση εξετάσεων υπολογίζονται deterministic έξω από σένα.',
-    '- Το πεδίο ekdosi_prompt του χάρτη παίρνει την τιμή p2@1 και το dimiourgithike την ημερομηνία εισόδου που δίνεται παρακάτω.',
+    `- Το πεδίο ekdosi_prompt του χάρτη παίρνει την τιμή ${EKDOSI_PROMPT_P2} και το dimiourgithike την ημερομηνία εισόδου που δίνεται παρακάτω.`,
     '- Η απάντηση πρέπει να συμμορφώνεται πλήρως με το σχήμα XartisMathimatos: kodikos_mathimatos, enotites[], ekdosi_prompt, dimiourgithike.',
     '- Η απάντηση είναι ΑΠΟΚΛΕΙΣΤΙΚΑ JSON: χωρίς Markdown, χωρίς σχόλια, χωρίς κείμενο εκτός JSON.',
   ]);
@@ -34,9 +34,8 @@ export function prompt_xarti(eisodos: EisodosXarti): AitisiPrompt<XartisMathimat
       (t) =>
         `- τμήμα: ${t.titlos} | σελίδες: ${t.selides.apo}-${t.selides.eos} | τύπος: ${t.typos}\n  έννοιες: ${t.ennoies.join(', ')}`
     );
-    return enotita_se_keimeno(`Αρχείο ${p.arxeio_id}`, [
-      `τίτλος: ${p.titlos}`,
-      ...tmimata,
+    return enotita_se_keimeno(`Αρχείο ${eksoudeterose_deiktes(p.arxeio_id)}`, [
+      perivale_dedomena([`τίτλος: ${p.titlos}`, ...tmimata].join('\n')),
     ]);
   });
 

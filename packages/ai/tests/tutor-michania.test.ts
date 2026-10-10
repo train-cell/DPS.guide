@@ -30,7 +30,7 @@ function eisodos_strih(epateseis: Partial<EisodosStrih> = {}): EisodosStrih {
   return {
     enotita: ftiaxe_enotita(),
     odigos: ODIGOS_ENOTITAS_1,
-    istorico: [],
+    istoriko: [],
     leitourgia: 'exigisi',
     erotisi: 'Τι είναι λίστα;',
     ...epateseis,
@@ -75,7 +75,7 @@ describe('tutor — λειτουργίες του P4', () => {
     }
     expect(apotelesma.timi.apantisi).toBe('Λίστα είναι ακολουθία στοιχείων. [[arx-1:2]]');
     expect(apotelesma.timi.parapompes).toEqual([PARAPOMPI_SELIDA_2]);
-    expect(apotelesma.timi.istorico).toEqual([
+    expect(apotelesma.timi.istoriko).toEqual([
       { rolos: 'xristis', keimeno: 'Τι είναι λίστα;' },
       { rolos: 'montelo', keimeno: 'Λίστα είναι ακολουθία στοιχείων. [[arx-1:2]]' },
     ]);
@@ -540,7 +540,7 @@ describe('tutor — αντοχή και ντετερμινισμός', () => {
     const llm = new SkribinioLlm([apantisi_leitourgias()]);
     const michania = ftiaxe_michania_tutor(periballon(llm));
 
-    const apotelesma = await michania.strih(eisodos_strih({ istorico: istoriko }));
+    const apotelesma = await michania.strih(eisodos_strih({ istoriko: istoriko }));
 
     expect(apotelesma.ok).toBe(true);
     if (!apotelesma.ok) {
@@ -548,7 +548,7 @@ describe('tutor — αντοχή και ντετερμινισμός', () => {
     }
     expect(llm.zitiseis[0]).not.toContain('μήνυμα-0');
     expect(llm.zitiseis[0]).toContain(`μήνυμα-${istoriko.length - 1}`);
-    expect(apotelesma.timi.istorico).toHaveLength(istoriko.length + 2);
+    expect(apotelesma.timi.istoriko).toHaveLength(istoriko.length + 2);
   });
 
   it('είναι ντετερμινιστικό για πανομοιότυπη είσοδο', async () => {
@@ -576,7 +576,7 @@ describe('tutor — αντοχή και ντετερμινισμός', () => {
         eisodos_strih({
           leitourgia: 'exetasi_me',
           erotisi: '3,14',
-          istorico: peryti.ok ? peryti.timi.istorico : [],
+          istoriko: peryti.ok ? peryti.timi.istoriko : [],
           xekimena_erotisi: peryti.ok ? peryti.timi.xekimena_erotisi : null,
         })
       );

@@ -1,16 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { prompt_odigou, EKDOSI_PROMPT_P3 } from '../src/prompts/index.js';
+import {
+  prompt_odigou,
+  EKDOSI_PROMPT_P3,
+  ENOTITES_ODIGOU,
+  ELAXISTES_EROTISEIS_AUTOELGXOU,
+  MEGISTES_EROTISEIS_AUTOELGXOU,
+} from '../src/prompts/index.js';
 import { ftiaxe_enotita, ftiaxe_selides } from './voitheia.js';
-
-const ENOTITES_ODIGOU = [
-  '🎯 Στόχοι',
-  '👶 ELI5',
-  '🔬 Θεωρία',
-  '🧪 Λυμένο παράδειγμα',
-  '⚠️ Παγίδες',
-  '🔗 Συνδέσεις',
-  '✅ Αυτοέλεγχος',
-];
 
 function eisodos_odigou() {
   return {
@@ -67,7 +63,13 @@ describe('prompt_odigou (P3)', () => {
 
   it('το sistima καθορίζει 3 έως 5 ερωτήσεις αυτοελέγχου με κρυφές απαντήσεις', () => {
     const { sistima } = prompt_odigou(eisodos_odigou());
-    expect(sistima).toMatch(/3[\s\S]*5 ερωτήσεις/);
+    expect(sistima).toContain(
+      `από ${ELAXISTES_EROTISEIS_AUTOELGXOU} έως ${MEGISTES_EROTISEIS_AUTOELGXOU} ερωτήσεις`
+    );
+    const protipo = new RegExp(
+      `${ELAXISTES_EROTISEIS_AUTOELGXOU}[\\s\\S]*${MEGISTES_EROTISEIS_AUTOELGXOU} ερωτήσεις`
+    );
+    expect(sistima).toMatch(protipo);
   });
 
   it('το xristis περιέχει τον τίτλο και τον κωδικό της ενότητας καθώς και σελίδες με δείκτες', () => {

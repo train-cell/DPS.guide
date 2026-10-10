@@ -3,10 +3,17 @@ import type { Enotita } from '@dps/core';
 import { z } from 'zod';
 import { EKDOSI_PROMPT_P4 } from './ekdoseis.js';
 import type { AitisiPrompt } from './koines.js';
-import { enotita_se_keimeno } from './koines.js';
+import { enotita_se_keimeno, perivale_dedomena } from './koines.js';
 
 export const LEITOURGIES_TUTOR = ['exigisi', 'exetasi_me', 'kathodigisi_askisis'] as const;
 export type LeitourgiaTutor = (typeof LEITOURGIES_TUTOR)[number];
+
+/** Ανώτατο πλήθος στροφών συζήτησης που περνά στο prompt (οι τελευταίες). */
+export const MEGISTO_MIKOS_ISTORIKOU = 12;
+export const KARTA_ROLON_SYZITISIS: Record<'xristis' | 'montelo', string> = {
+  xristis: '[ΧΡΗΣΤΗΣ]',
+  montelo: '[ΜΟΝΤΕΛΟΣ]',
+};
 
 export const TutorApotelesmaSchema = z.object({
   apantisi: z.string(),
@@ -34,14 +41,15 @@ const SISTIMA_P4 =
 export interface EisodosTutor {
   enotita: Enotita;
   odigos: string;
-  istorico: { rolos: 'xristis' | 'montelo'; keimeno: string }[];
+  istoriko: { rolos: 'xristis' | 'montelo'; keimeno: string }[];
   leitourgia: LeitourgiaTutor;
   erotisi: string;
 }
 
 export function prompt_tutor(eisodos: EisodosTutor): AitisiPrompt<TutorApotelesma> {
-  const istoriko = eisodos.istorico
-    .map((m) => `- ${m.rolos}: ${m.keimeno}`)
+  const istoriko = eisodos.istoriko
+    .slice(-MEGISTO_MIKOS_ISTORIKOU)
+    .map((m) => `${KARTA_ROLON_SYZITISIS[m.rolos]}: ${m.keimeno}`)
     .join('\n');
 
   return {
@@ -53,9 +61,9 @@ export function prompt_tutor(eisodos: EisodosTutor): AitisiPrompt<TutorApotelesm
         `έννοιες: ${eisodos.enotita.ennoies.join(', ')}`,
       ]) +
       enotita_se_keimeno('Λειτουργία', [`leitourgia: ${eisodos.leitourgia}`]) +
-      enotita_se_keimeno('Οδηγός ενότητας', [eisodos.odigos]) +
-      enotita_se_keimeno('Ιστορικό συζήτησης', [istoriko]) +
-      enotita_se_keimeno('Τρέχουσα ερώτηση μαθητή', [eisodos.erotisi]),
+      enotita_se_keimeno('Οδηγός ενότητας', [perivale_dedomena(eisodos.odigos)]) +
+      enotita_se_keimeno('Ιστορικό συζήτησης', [perivale_dedomena(istoriko)]) +
+      enotita_se_keimeno('Τρέχουσα ερώτηση μαθητή', [perivale_dedomena(eisodos.erotisi)]),
     sisma: TutorApotelesmaSchema,
     ekdosi_prompt: EKDOSI_PROMPT_P4,
   };

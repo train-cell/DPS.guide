@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { prompt_tutor, EKDOSI_PROMPT_P4 } from '../src/prompts/index.js';
+import { prompt_tutor, EKDOSI_PROMPT_P4, MEGISTO_MIKOS_ISTORIKOU } from '../src/prompts/index.js';
 import type { LeitourgiaTutor } from '../src/prompts/index.js';
 import { ftiaxe_enotita } from './voitheia.js';
 
@@ -9,7 +9,7 @@ function eisodos_tutor(leitourgia: LeitourgiaTutor) {
   return {
     enotita: ftiaxe_enotita(),
     odigos: '## 🎯 Στόχοι\nΝα ξέρεις τι είναι λίστα. [[arx-1:2]]',
-    istorico: [
+    istoriko: [
       { rolos: 'xristis' as const, keimeno: 'Τι είναι λίστα;' },
       { rolos: 'montelo' as const, keimeno: 'Λίστα είναι ακολουθία στοιχείων. [[arx-1:2]]' },
     ],
@@ -64,7 +64,7 @@ describe('prompt_tutor (P4)', () => {
     const { xristis } = prompt_tutor(eisodos_tutor('exigisi'));
     expect(xristis).toContain('enotita-1');
     expect(xristis).toContain('Δομές δεδομένων');
-    expect(xristis).toContain('## 🎯 Στόχοι');
+    expect(xristis).toContain('# # 🎯 Στόχοι');
     expect(xristis).toContain('Τι είναι λίστα;');
     expect(xristis).toContain('Λίστα είναι ακολουθία στοιχείων.');
     expect(xristis).toContain('Και οι δένδρες;');
@@ -75,6 +75,17 @@ describe('prompt_tutor (P4)', () => {
     const aitisi = prompt_tutor(eisodos_tutor('exetasi_me'));
     expect(aitisi.xristis).toContain('exetasi_me');
     expect(aitisi.xristis).toContain('Και οι δένδρες;');
+  });
+
+  it('περιορίζει το ιστορικό στις MEGISTO_MIKOS_ISTORIKOU τελευταίες στροφές', () => {
+    const megisto = MEGISTO_MIKOS_ISTORIKOU + 5;
+    const istoriko = Array.from({ length: megisto }, (_, i) => ({
+      rolos: (i % 2 === 0 ? 'xristis' : 'montelo') as const,
+      keimeno: `στροφή-${i}`,
+    }));
+    const { xristis } = prompt_tutor({ ...eisodos_tutor('exigisi'), istoriko });
+    expect(xristis).not.toContain('στροφή-0');
+    expect(xristis).toContain(`στροφή-${megisto - 1}`);
   });
 
   it('είναι ντετερμινιστικό για πανομοιότυπη είσοδο', () => {

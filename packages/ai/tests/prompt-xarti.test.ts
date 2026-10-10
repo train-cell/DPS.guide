@@ -92,6 +92,7 @@ describe('prompt_xarti (P2)', () => {
     expect(sistima).toContain('isxyri');
     expect(sistima).toContain('asthenis');
     expect(sistima).toContain('XartisMathimatos');
+    expect(sistima).toContain(EKDOSI_PROMPT_P2);
   });
 
   it('το sistima αναφέρει ότι ο αριθμός λεπτών υπολογίζεται έξω από το LLM', () => {

@@ -2,7 +2,7 @@ import { MAX_SELIDES_ANA_KLISI, MAX_XARAKTIRES_ANA_KLISI, PerigrammaSchema, apot
 import type { Apotelesma, Perigramma, Selida } from '@dps/core';
 import { EKDOSI_PROMPT_P1 } from './ekdoseis.js';
 import type { AitisiPrompt } from './koines.js';
-import { enotita_se_keimeno } from './koines.js';
+import { enotita_se_keimeno, perivale_dedomena } from './koines.js';
 
 export function kopse_se_kommatia(selides: Selida[]): Selida[][] {
   const taxinomimenes = [...selides].sort((a, b) => a.arithmos - b.arithmos);
@@ -111,7 +111,7 @@ export function prompt_perigrammatos(eisodos: EisodosPerigrammatos): AitisiPromp
         `titlos: ${eisodos.titlos}`,
       ]) +
       enotita_se_keimeno('Κομμάτι', [`κομμάτι ${eisodos.kommati.arithmos} από ${eisodos.kommati.synolo}`]) +
-      enotita_se_keimeno('Σελίδες με δείκτες', [keimeno_selidon(eisodos.selides)]),
+      enotita_se_keimeno('Σελίδες με δείκτες', [perivale_dedomena(keimeno_selidon(eisodos.selides))]),
     sisma: PerigrammaSchema,
     ekdosi_prompt: EKDOSI_PROMPT_P1,
   };
