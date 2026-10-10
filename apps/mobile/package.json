@@ -6,12 +6,31 @@
   "types": "./src/index.ts",
   "scripts": {
     "build": "tsc --build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev": "vite",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@dps/core": "workspace:*"
+    "@aparajita/capacitor-secure-storage": "^8.0.1",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/file-transfer": "^2.0.6",
+    "@capacitor/filesystem": "^8.1.4",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@dps/core": "workspace:*",
+    "@ionic/react": "^9.0.7",
+    "@ionic/react-router": "^9.0.7",
+    "pdfjs-dist": "^6.4.299",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-markdown": "^10.1.0",
+    "react-pdf": "^11.0.0",
+    "react-router-dom": "^6.30.6"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "typescript": "^5.8.2",
     "vitest": "^3.0.7"
   }

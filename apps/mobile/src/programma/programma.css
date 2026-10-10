@@ -1,0 +1,49 @@
+/*
+ * Programma - othoni rythmiseon tou programmatos meletis (karta P1).
+ * Monoxromatika tokens (D11): grammes formas panw se epifaneies kartas.
+ */
+
+.programma-grammi {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--diastima-2);
+  margin-bottom: var(--diastima-2);
+}
+
+.programma-gramma-onoma {
+  min-width: 96px;
+  color: var(--xroma-keimeno-defteron);
+  font-size: var(--grammatoseira-meso);
+}
+
+.programma-gramma {
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-mikro);
+  background: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: inherit;
+  font-size: var(--grammatoseira-meso);
+  padding: var(--diastima-1) var(--diastima-2);
+}
+
+.programma-gramma-kodikos {
+  flex: 1 1 120px;
+}
+
+.programma-gramma-imera {
+  flex: 0 0 auto;
+}
+
+.programma-gramma-tropos {
+  flex: 1 1 160px;
+}
+
+.programma-gramma-lepta {
+  width: 88px;
+}
+
+.programma-gramma-monada {
+  color: var(--xroma-apoxromatismeno);
+  font-size: var(--grammatoseira-mikro);
+}

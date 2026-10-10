@@ -1,7 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+
+const RIZA_PROJECT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+/** Εργαλεία Node που καλούνται μέσω του JS entry τους, ώστε να μην εξαρτώνται από το .bin shell shim. */
+const EISODOI_ERGALEION = Object.freeze({
+  vitest: 'vitest/vitest.mjs',
+  eslint: 'eslint/bin/eslint.js',
+  tsc: 'typescript/bin/tsc',
+});
 
 const LOCK_DIR = path.join(os.tmpdir(), 'DPS.guide-test-locks');
 const MAX_SLOTS = 4;
@@ -76,35 +86,18 @@ function releaseLock(lockPath) {
   }
 }
 
-/** Windows δεν μπορεί να κάνει spawn `.cmd`/`.bat` χωρίς shell (EINVAL). */
-function aparaitei_shell(command) {
-  return process.platform === 'win32' && /\.(cmd|bat)$/i.test(command);
-}
-
-/**
- * Επίλυση εκτελέσιμου: γυμνά ονόματα (π.χ. `vitest`) ψάχνονται πρώτα στο
- * `node_modules/.bin` που ανήκει στον τρέχοντα κατάλογο ή σε γονέα του, γιατί
- * ο φάκελος δεν είναι απαραίτητα στο PATH (editor, CI, `pnpm --filter`).
+/** Επιλέγει πώς να εκτελεστεί η εντολή: σε Windows το `vitest` υπάρχει μόνο ως vitest.cmd στο node_modules/.bin
+ *  και το spawn χωρίς shell επιστρέφει ENOENT, άρα τρέχουμε το JS entry με τον ίδιο τον Node.
  */
-function epilysi_entolis(command) {
-  if (command.includes('/') || command.includes('\\') || path.isAbsolute(command)) {
-    return command;
-  }
-  let dir = process.cwd();
-  while (true) {
-    const bin = path.join(dir, 'node_modules', '.bin');
-    for (const ext of process.platform === 'win32' ? ['.cmd', '.bat', '.ps1', ''] : ['']) {
-      const candidate = path.join(bin, `${command}${ext}`);
-      if (fs.existsSync(candidate)) {
-        return candidate;
-      }
+function dialekse_diergasia(command, commandArgs) {
+  const eisodos = EISODOI_ERGALEION[command];
+  if (eisodos !== undefined) {
+    const pliriDiadromi = path.join(RIZA_PROJECT, 'node_modules', eisodos);
+    if (fs.existsSync(pliriDiadromi)) {
+      return { file: process.execPath, args: [pliriDiadromi, ...commandArgs] };
     }
-    const goneas = path.dirname(dir);
-    if (goneas === dir) {
-      return command;
-    }
-    dir = goneas;
   }
+  return { file: command, args: commandArgs };
 }
 
 async function main() {
@@ -124,12 +117,11 @@ async function main() {
   process.on('SIGINT', () => { cleanup(); process.exit(130); });
   process.on('SIGTERM', () => { cleanup(); process.exit(143); });
 
-  const command = epilysi_entolis(args[0]);
-  const commandArgs = args.slice(1);
+  const { file, args: commandArgs } = dialekse_diergasia(args[0], args.slice(1));
 
-  const child = spawn(command, commandArgs, {
+  const child = spawn(file, commandArgs, {
     stdio: 'inherit',
-    shell: aparaitei_shell(command),
+    shell: false,
   });
 
   child.on('exit', (code, signal) => {

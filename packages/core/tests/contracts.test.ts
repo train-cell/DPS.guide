@@ -102,6 +102,22 @@ describe('Contracts & Core Smoke Tests', () => {
     }
   });
 
+  it('exercises MockLlm', async () => {
+    const llm = new MockLlm('mock-test-model');
+    expect(llm.montelo).toBe('mock-test-model');
+    llm.orise_keimeno('Geia', 'Geia sou');
+    const res = await llm.parage_keimeno({
+      systima: 'test',
+      minimata: [{ rolos: 'xristis', keimeno: 'Geia' }],
+      ekdosi_prompt: 'p1',
+      thermokrasia: 0.5,
+    });
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi).toBe('Geia sou');
+    }
+  });
+
   it('verifies default timezone constant', () => {
     expect(ZONE_ORAS).toBe('Europe/Athens');
   });

@@ -7,58 +7,62 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/dist/**',
       '**/coverage/**',
+      'pnpm-lock.yaml',
+      '**/*.css',
       '**/*.tsbuildinfo',
       'apps/mobile/ios/**',
-      'apps/mobile/android/**',
     ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parserOptions: {
-        ecmaVersion: 2022,
-        sourceType: 'module',
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/ban-ts-comment': 'error',
+      '@typescript-eslint/ban-ts-comment': [
+        'error',
+        {
+          'ts-expect-error': 'allow-with-description',
+          'ts-ignore': true,
+          'ts-nocheck': true,
+          'ts-check': true,
+          'minimumDescriptionLength': 3,
+        },
+      ],
       camelcase: 'off',
       'no-console': 'error',
     },
   },
   {
-    // Ο console.log είναι το κανονικό UI του CLI.
-    files: ['apps/cli/**/*.ts'],
+    files: ['apps/cli/**', 'scripts/**'],
     rules: {
       'no-console': 'off',
     },
   },
   {
-    // Τα tests επιτρέπεται να παίρνουν εσωτερικές καταστάσεις.
-    files: ['**/*.test.ts', '**/*.test.tsx', 'packages/core/src/testing/**'],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'error',
-    },
-  },
-  {
-    files: ['**/*.mjs', '**/*.js'],
+    files: ['scripts/**/*.mjs'],
     languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module',
       globals: {
         console: 'readonly',
         process: 'readonly',
         setTimeout: 'readonly',
-        clearTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearInterval: 'readonly',
-        Buffer: 'readonly',
-        URL: 'readonly',
-        URLSearchParams: 'readonly',
       },
     },
+  },
+  {
+    files: [
+      'scripts/**/*.mjs',
+      '*.mjs',
+      'vitest.config.ts',
+      'apps/mobile/*.config.ts',
+      'apps/mobile/e2e/**/*.ts',
+      'packages/core/tests/**/*.ts',
+    ],
+    extends: [tseslint.configs.disableTypeChecked],
   },
 );

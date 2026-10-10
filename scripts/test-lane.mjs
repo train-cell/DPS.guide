@@ -35,7 +35,9 @@ function filtra_apo_lane(lane) {
 }
 
 function main() {
-  const lane = process.argv[2];
+  const orismata = process.argv.slice(2);
+  const thesiLane = orismata.indexOf('--lane');
+  const lane = thesiLane >= 0 ? orismata[thesiLane + 1] : orismata[0];
   const args = ['run'];
   if (lane) {
     const filtra = filtra_apo_lane(lane);

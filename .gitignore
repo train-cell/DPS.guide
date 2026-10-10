@@ -6,6 +6,12 @@ coverage/
 .turbo/
 *.tsbuildinfo
 
+# E2E transient output (Playwright)
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
 # OS & Environment
 .env
 .env.*

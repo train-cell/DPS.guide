@@ -12,7 +12,10 @@
   "L09": ["packages/ai/src/cache/**", "packages/ai/src/mock/**", "fixtures/llm/**"],
   "L10": ["packages/adapters-node/src/storage/**", "packages/adapters-capacitor/src/storage/**"],
   "L11": ["packages/adapters-node/src/http/**", "packages/adapters-node/src/mystika/**", "packages/adapters-capacitor/src/http/**", "packages/adapters-capacitor/src/mystika/**"],
-  "L12": ["apps/mobile/src/**", "apps/mobile/e2e/**"],
+  "L12": ["apps/mobile/src/**", "apps/mobile/e2e/**", "docs/requests/**"],
+  "I3": ["apps/mobile/src/**", "apps/mobile/e2e/**", "docs/requests/**"],
+  "I4": ["apps/mobile/src/provoli-pdf/**", "apps/mobile/e2e/**", "docs/requests/**"],
+  "P1": ["apps/mobile/src/programma/**", "apps/mobile/e2e/**", "docs/requests/**"],
   "L13": ["packages/mock-eclass/**"],
   "L14": ["packages/eclass/src/auth/**"],
   "L15": ["packages/eclass/src/crawl/**"],
@@ -30,6 +33,6 @@
   "P3": ["packages/adapters-capacitor/src/eidopoiiseis/**", "apps/mobile/src/eidopoiiseis/**"],
   "stream/A": ["packages/core/**"],
   "stream/C": ["packages/extract/**", "packages/ai/**", "scripts/make-fixtures/**", "fixtures/**"],
-  "stream/D": ["apps/mobile/**"],
+  "stream/D": ["apps/mobile/**", "docs/requests/**"],
   "stream/E": [".github/workflows/**", "packages/adapters-node/**", "packages/adapters-capacitor/**"]
 }
