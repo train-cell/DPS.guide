@@ -22,7 +22,7 @@ const YPOXREOTIKES_ENOTITES_ODIGOU = [
 ] as const;
 
 /** Μορφή παραπομπής `[[arxeio_id:σελίδα]]` (§7.1 P3). */
-const PATTERN_PARAPOMPIS = /\[\[([^:\[\]]+):(\d+)\]\]/g;
+const PATTERN_PARAPOMPIS = /\[\[([^:[\]]+):(\d+)\]\]/g;
 
 /** Επικυρωμένο περίγραμμα με τις επισκευές και τις προειδοποιήσεις τους. */
 export interface EpikyromenoPerigramma {
@@ -62,8 +62,8 @@ export function epikyrose_perigramma(
   const proeidopoiiseis: string[] = [];
   const diorthomena: Tmima[] = [];
   for (const tmima of parsed.data.tmimata) {
-    let apo = Math.max(1, Math.min(tmima.selides.apo, arithmos_selidon));
-    let eos = Math.max(1, Math.min(tmima.selides.eos, arithmos_selidon));
+    const apo = Math.max(1, Math.min(tmima.selides.apo, arithmos_selidon));
+    const eos = Math.max(1, Math.min(tmima.selides.eos, arithmos_selidon));
     if (apo !== tmima.selides.apo || eos !== tmima.selides.eos) {
       proeidopoiiseis.push(
         `Clamp εύρους «${tmima.titlos}» [${tmima.selides.apo}, ${tmima.selides.eos}] σε [${apo}, ${eos}].`

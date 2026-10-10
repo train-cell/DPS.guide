@@ -56,7 +56,7 @@ describe('katagrafe_apotelesma', () => {
   });
 
   it('resets to box 1 on a wrong answer', () => {
-    let katastasi = arxikopoiisi_mathisis(['a'], '2026-10-12');
+    const katastasi = arxikopoiisi_mathisis(['a'], '2026-10-12');
     expect(katastasi.ok).toBe(true);
     if (!katastasi.ok) return;
     const sosto = katagrafe_apotelesma(katastasi.timi, 'a', true, '2026-10-13');

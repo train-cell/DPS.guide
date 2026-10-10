@@ -351,7 +351,6 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
             lepta: topothetisi,
           });
           prota.ypoloipo -= topothetisi;
-          ypoloipo_meras -= topothetisi;
         }
       }
     }

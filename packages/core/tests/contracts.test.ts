@@ -8,7 +8,6 @@ import {
   MnimiApothiki,
   FakeMystika,
   FakeHttp,
-  MockLlm,
   ZONE_ORAS,
 } from '../src/index.js';
 
