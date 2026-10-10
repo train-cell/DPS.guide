@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Periballon } from '../periballon/periballon.js';
-import { ftiaxe_periballon } from '../periballon/periballon.js';
+import { xrisiPeriballontos } from '../periballon/provolos.js';
 import type { Rytheseis, Proodhos } from './apothiki-typoi.js';
 import {
   fortose_proodho,
@@ -11,6 +11,7 @@ import {
   proedapes_proodhou,
   proedapes_rytheseis,
 } from './apothiki-ypiresies.js';
+import { sporse_deigma } from '../pseudomata/sporse.js';
 
 /** Τι εκθέτει ο πάροχος της κατάστασης αποθήκευσης στην εφαρμογή. */
 export interface ApothikiSyntheseon {
@@ -31,7 +32,7 @@ const ApothikiSunexo = createContext<ApothikiSyntheseon | null>(null);
 /** Ιδιότητες του παρόχου. */
 export interface ParoxeProps {
   readonly children: ReactNode;
-  /** Προαιρετικό Periballon για tests· προεπιλογή η in-memory στοίβα. */
+  /** Προαιρετικό Periballon για tests· προεπιλογή το περιβάλλον από τον πάροχο εφαρμογής. */
   readonly periballon?: Periballon;
   /** Ποιο μάθημα φορτώνει η αρχική πρόοδος. */
   readonly kodikosMathimatos?: string;
@@ -39,7 +40,11 @@ export interface ParoxeProps {
 
 /** Παρέχει τις ρυθμίσεις και την πρόοδο σε ολόκληρη την εφαρμογή, φορτωμένα από τη θύρα αποθήκευσης. */
 export function ParoxeApothekisis({ children, periballon, kodikosMathimatos = 'ΠΛΗ201' }: ParoxeProps) {
-  const pyles = useMemo(() => periballon ?? ftiaxe_periballon(), [periballon]);
+  const periballonEfarmogis = xrisiPeriballontos();
+  const pyles = useMemo(
+    () => periballon ?? periballonEfarmogis,
+    [periballon, periballonEfarmogis]
+  );
   const [rytheseis, setRytheseis] = useState<Rytheseis>(proedapes_rytheseis);
   const [proodhos, setProodhos] = useState<Proodhos>(proedapes_proodhou);
   const [fortizomeni, setFortizomeni] = useState(true);
@@ -47,6 +52,9 @@ export function ParoxeApothekisis({ children, periballon, kodikosMathimatos = '�
   useEffect(() => {
     let zalive = true;
     void (async () => {
+      if (pyles.deigma) {
+        await sporse_deigma(pyles.apothiki);
+      }
       const [fortesRytheseis, fortesProodhos] = await Promise.all([
         fortose_rytheseis(pyles.apothiki),
         fortose_proodho(pyles.apothiki, kodikosMathimatos),

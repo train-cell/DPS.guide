@@ -28,6 +28,8 @@ export interface Periballon extends PylesPeriballontos {
     kleidi: K,
     timi: PylesPeriballontos[K]
   ) => Periballon;
+  /** True όταν το περιβάλλον είναι το ψεύτικο· τότε επιτρέπεται μόνο το σπόρο δείγματος. */
+  readonly deigma: boolean;
 }
 
 /** Πρότυπο προεπιλεγμένων κατασκευαστών πυλών, από το οποίο προκύπτει και ο κατάλογος κλειδιών. */
@@ -80,20 +82,24 @@ function efarmose_antikatastaseis(
 }
 
 /** Φτιάχνει το αμετάβλητο περιβάλλον που κλείνει πάνω στο συγκεκριμένο σύνολο πυλών. */
-function ftiaxe_apo_pyles(pyles: PylesPeriballontos): Periballon {
+function ftiaxe_apo_pyles(pyles: PylesPeriballontos, deigma: boolean): Periballon {
   return {
     ...pyles,
+    deigma,
     me_antikatastasi: <K extends KleidiPyli>(
       kleidi: K,
       timi: PylesPeriballontos[K]
-    ): Periballon => ftiaxe_apo_pyles(antikatastise_pyli(pyles, kleidi, timi)),
+    ): Periballon => ftiaxe_apo_pyles(antikatastise_pyli(pyles, kleidi, timi), deigma),
   };
 }
 
 /** Φτιάχνει το περιβάλλον πυλών των οθονών, με προεπιλογή τα ψεύτικα προσαρμογείς και προαιρετικές αντικαταστάσεις. */
-export function ftiaxe_periballon(antikatastaseis?: Partial<PylesPeriballontos>): Periballon {
+export function ftiaxe_periballon(
+  antikatastaseis?: Partial<PylesPeriballontos>,
+  epiloges?: { readonly deigma?: boolean }
+): Periballon {
   const pyles = efarmose_antikatastaseis(dimiourgise_pyles(), antikatastaseis ?? {});
-  return ftiaxe_apo_pyles(pyles);
+  return ftiaxe_apo_pyles(pyles, epiloges?.deigma ?? true);
 }
 
 /** Επιστρέφει την πύλη του περιβάλλοντος με τύπο αντίστοιχο του κλειδιού που δίνεται σε χρόνο εκτέλεσης. */

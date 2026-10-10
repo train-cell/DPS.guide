@@ -162,11 +162,24 @@ describe('periballon — pare_pyli και KLEIDIA_PYLON', () => {
     }
   });
 
-  it('το περιβάλλον εκθέτει ακριβώς τις έξι πύλες και τον αντιστοιχιστή', () => {
+  it('το περιβάλλον εκθέτει ακριβώς τις έξι πύλες, τον αντιστοιχιστή και τη σήμανση δείγματος', () => {
     const periballon = ftiaxe_periballon();
     expect(Object.keys(periballon).sort()).toEqual(
-      [...KLEIDIA_PYLON, 'me_antikatastasi'].sort()
+      [...KLEIDIA_PYLON, 'me_antikatastasi', 'deigma'].sort()
     );
+  });
+
+  it('η σήμανση δείγματος είναι true από προεπιλογή και false μόνο με ρητή επιλογή', () => {
+    expect(ftiaxe_periballon().deigma).toBe(true);
+    expect(ftiaxe_periballon(undefined, { deigma: false }).deigma).toBe(false);
+  });
+
+  it('η σήμανση δείγματος διατηρείται στις αλυσιδωτές αντικαταστάσεις', () => {
+    const periballon = ftiaxe_periballon(undefined, { deigma: false }).me_antikatastasi(
+      'rologi',
+      new FakeRologi()
+    );
+    expect(periballon.deigma).toBe(false);
   });
 });
 

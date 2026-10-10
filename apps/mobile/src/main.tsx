@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { IonApp } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { OdoiNavigisis } from './navigasi/odoi.js';
+import { ParoxosPeriballontos } from './periballon/index.js';
+import { ParoxeApothekisis } from './apothiki/index.js';
 import '@ionic/react/css/core.css';
 import '@ionic/react/css/normalize.css';
 import '@ionic/react/css/structure.css';
@@ -21,10 +23,14 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <IonApp>
-      <IonReactRouter>
-        <OdoiNavigisis />
-      </IonReactRouter>
-    </IonApp>
+    <ParoxosPeriballontos>
+      <ParoxeApothekisis>
+        <IonApp>
+          <IonReactRouter>
+            <OdoiNavigisis />
+          </IonReactRouter>
+        </IonApp>
+      </ParoxeApothekisis>
+    </ParoxosPeriballontos>
   </StrictMode>,
 );

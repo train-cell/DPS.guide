@@ -406,6 +406,19 @@ button.pilegma:disabled {
   font-size: var(--grammatoseira-mikro);
 }
 
+.odigos-parapompi-koumpi {
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-kapsoula);
+  background: var(--xroma-epifaneia-ypsomeni);
+  padding: var(--diastima-1) var(--diastima-3);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.odigos-parapompi-koumpi:active {
+  background: var(--xroma-epifaneia-patimeni);
+}
+
 .enotita-kartela {
   border-left: var(--diastima-1) solid var(--xroma-entono);
   padding: var(--diastima-2) var(--diastima-3);

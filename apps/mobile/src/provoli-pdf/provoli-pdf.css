@@ -1,0 +1,50 @@
+/*
+ * Provoli PDF - othoni provolis eggrafou me pdf.js.
+ * Monoxromatika tokens (D11): o kanvas einai periexomeno (to xarti tou PDF),
+ * oti perivallon ephaplose einai xroma kartas i synorio.
+ */
+
+.provoli-odoni {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-4);
+  padding: var(--diastima-4);
+}
+
+.provoli-deiktis {
+  margin: 0;
+  color: var(--xroma-apoxromatismeno);
+  font-size: var(--grammatoseira-mikro);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.provoli-periohos {
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  background: var(--xroma-epifaneia-ypsomeni);
+  padding: var(--diastima-2);
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--diastima-2);
+}
+
+.provoli-kanvas {
+  width: 100%;
+  height: auto;
+  border-radius: var(--aktina-mikro);
+  background: var(--xroma-keimeno-prwtarxiko);
+  box-shadow: 0 8px 24px var(--xroma-epifaneia-patimeni);
+}
+
+.provoli-sfalma {
+  margin: 0;
+  color: var(--xroma-entono);
+  font-size: var(--grammatoseira-mikro);
+}
+
+.provoli-pligi {
+  justify-content: space-between;
+}

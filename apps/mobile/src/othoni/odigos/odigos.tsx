@@ -4,6 +4,7 @@ import { IonButton } from '@ionic/react';
 import { OloniKatastasis, ProskelesioOmonimas } from '../../koinima/index.js';
 import { fortosi, etimo, sfalma, type Katastasi } from '../../kathstasi/index.js';
 import { KATHYSTERISI_PSEDON_MS, pseudos_xartis } from '../../pseudomata/index.js';
+import { analise_parapompi, diadromi_provolis, stilise_parapompi } from '../../provoli-pdf/index.js';
 
 /** Οι υποχρεωτικές ενότητες ενός οδηγού μελέτης, με τη σειρά του προϊόντος. */
 export const LEKIKIA_TMIMATON = [
@@ -295,6 +296,27 @@ export async function fortose_odigo(enotita_id: string): Promise<Katastasi<Odigo
   return etimo({ enotita_id: enotita.id, titlos: enotita.titlos, tmimata: tmimata.tmimata });
 }
 
+/** Μία παραπομπή τμήματος οδηγού: tap ανοίγει το PDF στη σωστή σελίδα, αλλιώς μένει απλό κείμενο. */
+export function ParapompiTmimatos({ parapompi }: { readonly parapompi: string }) {
+  const navigate = useNavigate();
+  const analise = analise_parapompi(parapompi);
+  if (analise === null) {
+    return <p className="odigos-parapompi">{parapompi}</p>;
+  }
+  return (
+    <button
+      type="button"
+      className="odigos-parapompi odigos-parapompi-koumpi"
+      data-testid="odigos-parapompi"
+      onClick={() => {
+        navigate(diadromi_provolis(analise));
+      }}
+    >
+      {stilise_parapompi(analise)}
+    </button>
+  );
+}
+
 /** Οδηγός μελέτης της ενότητας από τη διαδρομή, με επιστροφή στον χάρτη και άσκηση στον tutor. */
 export default function OdigosMeletis() {
   const params = useParams<{ enotitaId: string }>();
@@ -374,7 +396,7 @@ export default function OdigosMeletis() {
                         <p key={keimeno}>{keimeno}</p>
                       ))}
                     </div>
-                    <p className="odigos-parapompi">{tmima.parapompi}</p>
+                    <ParapompiTmimatos parapompi={tmima.parapompi} />
                   </section>
                 );
               })}
