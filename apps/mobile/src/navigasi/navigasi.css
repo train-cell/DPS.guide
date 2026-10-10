@@ -1,0 +1,25 @@
+/* Navigasi - styles plis tis. Monon references se tokens.css. */
+
+/* I rizai tou dendrou prelei plires ypsos, allios to ion-app kollisei se 0. */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+/* To ion-app einai custom element: prelei block kai plires ypsos, allios to
+   ion-content sysmeygetai se 0 kai i othoni parmenai kato apo tin kapsoula. */
+ion-app,
+ion-router-outlet {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+ion-content.episkefsi {
+  --background: var(--xroma-fonto);
+  display: block;
+  width: 100%;
+  height: 100%;
+}

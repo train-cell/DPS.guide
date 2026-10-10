@@ -4,10 +4,9 @@ import path from 'path';
 
 const XROMA_FONTO = 'rgb(11, 11, 12)';
 
-test('DPS.guide app renders and is visible', async ({ page }) => {
+test('DPS.guide app renders the default screen', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByTestId('efarmogi-etoimi')).toBeVisible();
-  await expect(page.getByTestId('efarmogi-etoimi')).toHaveText('DPS.guide');
+  await expect(page.getByTestId('simera-ekran')).toBeVisible();
 });
 
 test('the app paints the dark background of the design system', async ({ page }) => {

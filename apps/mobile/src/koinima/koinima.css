@@ -1,0 +1,434 @@
+/*
+ * Koima (components) - styles tou FPS. Monon references se tokens.css, miden arbitrary xromata.
+ */
+
+.episkefsi {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background-color: var(--xroma-fonto);
+}
+
+.kanonika {
+  padding: var(--diastima-5) var(--diastima-4);
+  gap: var(--diastima-3);
+}
+
+.proskelesio {
+  display: flex;
+  flex-direction: column;
+  padding-top: var(--diastima-2);
+}
+
+.proskelesio-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-titlos);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  letter-spacing: -0.01em;
+}
+
+.proskelesio-ypokeimeno {
+  margin: var(--diastima-1) 0 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-apoxromatismeno);
+}
+
+/* Tactile card: raised surface above the background (visual language Bevel-inspired) */
+.karta {
+  display: block;
+  padding: var(--diastima-4);
+  border-radius: var(--aktina-meso);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  box-shadow: 0 1px 0 var(--xroma-epifaneia-ypsomeni), 0 var(--diastima-1) var(--diastima-3)
+    var(--xroma-epifaneia-patimeni);
+  text-decoration: none;
+  color: inherit;
+  transition: transform var(--diarkeia-grigori) ease-out;
+}
+
+.karta:active {
+  transform: scale(0.985);
+}
+
+.karta-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.karta-ypokeimeno {
+  margin: var(--diastima-1) 0 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.karta-metrika {
+  margin-top: var(--diastima-3);
+}
+
+.pilegma {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--diastima-1);
+  padding: var(--diastima-1) var(--diastima-3);
+  border-radius: var(--aktina-kapsoula);
+  border: 1px solid var(--xroma-synorio);
+  background-color: transparent;
+  color: var(--xroma-apoxromatismeno);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-mikro);
+  line-height: var(--grammatoseira-grammi-mikri);
+}
+
+/* Οταν το pilegma χρησιμοποιείται ως κουμπί, δεν πρέπει να κληρονομεί το light buttonface. */
+button.pilegma {
+  background-color: var(--xroma-fonto);
+  color: var(--xroma-apoxromatismeno);
+  cursor: pointer;
+}
+
+button.pilegma:hover {
+  border-color: var(--xroma-entono);
+}
+
+button.pilegma:disabled {
+  color: var(--xroma-keimeno-defteron);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.pilegma-entono {
+  border-color: var(--xroma-entono);
+  color: var(--xroma-entono);
+}
+
+/* Three-state surfaces */
+.katastasi-periochos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--diastima-3);
+  padding: var(--diastima-6) var(--diastima-4);
+  text-align: center;
+}
+
+.katastasi-mfto {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.katastasi-ypokeimeno {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-apoxromatismeno);
+}
+
+/* Sfaltiko epileftero: sxima + keimeno, oxi mono xrima (accessibility) */
+.sfalta {
+  border-left: var(--diastima-1) solid var(--xroma-entono);
+  background-color: var(--xroma-karta);
+  border-radius: var(--aktina-mikro);
+  padding: var(--diastima-3) var(--diastima-4);
+}
+
+.sfalta-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.sfalta-kodikos {
+  margin: var(--diastima-1) 0 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sfalta-minima {
+  margin: var(--diastima-2) 0 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.prosfekses {
+  margin-top: var(--diastima-3);
+  align-self: flex-start;
+}
+
+/* Ring metric */
+.ring {
+  display: flex;
+  align-items: center;
+  gap: var(--diastima-3);
+}
+
+.ring-svg {
+  display: block;
+}
+
+.ring-trail {
+  stroke: var(--xroma-synorio);
+}
+
+.ring-dromos {
+  stroke: var(--xroma-entono);
+  stroke-linecap: round;
+  transition: stroke-dashoffset var(--diarkeia-mesi) ease-out;
+}
+
+.ring-ypokeimeno {
+  margin: 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.ring-posostο {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+/* Capsule navigation: floating pill bar, pinned above the safe area.
+   To plisi einai flex column me ton ion-content na parei to ypoloipo ypos kai tin kapsoula
+   na einai teleutaios, xwris na kataptonetai apo to scroll. */
+.plisi {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.plisi-content {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Capsule navigation */
+.kapsouli {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: var(--diastima-1);
+  padding: var(--diastima-1);
+  margin: 0 var(--diastima-3)
+    calc(var(--diastima-3) + env(safe-area-inset-bottom, 0px));
+  border-radius: var(--aktina-kapsoula);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  box-shadow: 0 var(--diastima-1) var(--diastima-4) var(--xroma-epifaneia-patimeni);
+}
+
+.kapsouli-stoicheio {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--diastima-2) var(--diastima-1);
+  border-radius: var(--aktina-kapsoula);
+  text-decoration: none;
+  font-size: 10px;
+  color: var(--xroma-apoxromatismeno);
+  transition: background-color var(--diarkeia-grigori) ease-out;
+}
+
+.kapsouli-stoicheio-energo {
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.kapsouli-glyfi {
+  display: block;
+}
+
+/* Odonis */
+.odoni-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  padding: var(--diastima-4);
+  padding-bottom: 96px;
+}
+
+.odoni-xeiris {
+  display: flex;
+  align-items: center;
+  gap: var(--diastima-2);
+  padding: var(--diastima-3) var(--diastima-4);
+}
+
+.odoni-xeiris-zeugos {
+  color: var(--xroma-apoxromatismeno);
+  font-size: var(--grammatoseira-mikro);
+}
+
+/* Proedri */
+.proedri-plaka {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--diastima-5);
+  padding: var(--diastima-6) var(--diastima-4);
+}
+
+.proedri-megalo {
+  margin: 0;
+  font-size: 28px;
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  letter-spacing: -0.02em;
+}
+
+.proedri-keimeno {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  line-height: var(--grammatoseira-grammi-kanoniki);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.proedri-ypostirixtiki {
+  margin: var(--diastima-4) 0 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.proedri-travla {
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+}
+
+.proedri-travla-gramma {
+  display: block;
+  width: 100%;
+  padding: var(--diastima-3);
+  margin-bottom: var(--diastima-3);
+  border-radius: var(--aktina-mikro);
+  border: 1px solid var(--xroma-synorio);
+  background-color: var(--xroma-fonto);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-megalo);
+}
+
+.proedri-travla-gramma:focus {
+  outline: 2px solid var(--xroma-entono);
+  outline-offset: 1px;
+}
+
+/* Tutor chat */
+.imerologia {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  padding: var(--diastima-4);
+  padding-bottom: 96px;
+}
+
+.imerologia-gramma {
+  max-width: 82%;
+}
+
+.imerologia-bolakia {
+  align-self: flex-end;
+  padding: var(--diastima-3);
+  border-radius: var(--aktina-meso);
+  background-color: var(--xroma-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-size: var(--grammatoseira-meso);
+}
+
+.imerologia-apantisi {
+  align-self: flex-start;
+  padding: var(--diastima-3);
+  border-radius: var(--aktina-meso);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  color: var(--xroma-keimeno-defteron);
+  font-size: var(--grammatoseira-meso);
+}
+
+.imerologia-paixidi {
+  display: flex;
+  gap: var(--diastima-2);
+  padding: var(--diastima-3) var(--diastima-4);
+  border-top: 1px solid var(--xroma-synorio);
+  background-color: var(--xroma-karta);
+}
+
+.imerologia-paixidi-gramma {
+  flex: 1;
+  padding: var(--diastima-3);
+  border-radius: var(--aktina-kapsoula);
+  border: 1px solid var(--xroma-synorio);
+  background-color: var(--xroma-fonto);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-meso);
+}
+
+/* Odos meletis (markdown-ish) */
+.odigos-kyrio {
+  padding: var(--diastima-4);
+  padding-bottom: 96px;
+}
+
+.odigos-epikefalida {
+  font-size: var(--grammatoseira-titlos);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  margin: 0 0 var(--diastima-3);
+}
+
+.odigos-paragrafos {
+  font-size: var(--grammatoseira-megalo);
+  line-height: var(--grammatoseira-grammi-kanoniki);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.odigos-paragrafos p {
+  margin: 0 0 var(--diastima-3);
+}
+
+.odigos-parapompi {
+  color: var(--xroma-entono);
+  font-size: var(--grammatoseira-mikro);
+}
+
+.enotita-kartela {
+  border-left: var(--diastima-1) solid var(--xroma-entono);
+  padding: var(--diastima-2) var(--diastima-3);
+  margin-bottom: var(--diastima-2);
+}
+
+.enotita-xreomeni {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+/* Simera */
+.simera-stoxos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  padding: var(--diastima-3) var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border-radius: var(--aktina-meso);
+  border: 1px solid var(--xroma-synorio);
+}
+
+.simera-stoxos-titlos {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
