@@ -1,0 +1,90 @@
+[
+  {
+    "typos": "fakelos",
+    "onoma": "",
+    "diadromi": "",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/",
+    "megethos": null,
+    "imerominia": null
+  },
+  {
+    "typos": "fakelos",
+    "onoma": "01-eisagogi",
+    "diadromi": "01-eisagogi/",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/01-eisagogi/",
+    "megethos": null,
+    "imerominia": null
+  },
+  {
+    "typos": "fakelos",
+    "onoma": "02-theoria",
+    "diadromi": "02-theoria/",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/02-theoria/",
+    "megethos": null,
+    "imerominia": null
+  },
+  {
+    "typos": "fakelos",
+    "onoma": "03-askiseis",
+    "diadromi": "03-askiseis/",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/03-askiseis/",
+    "megethos": null,
+    "imerominia": null
+  },
+  {
+    "typos": "arxeio",
+    "onoma": "programmatismos.pdf",
+    "diadromi": "programmatismos.pdf",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/programmatismos.pdf",
+    "megethos": 1843200,
+    "imerominia": "2026-09-28T10:15:00+03:00"
+  },
+  {
+    "typos": "arxeio",
+    "onoma": "perigramma-mathimatos.pdf",
+    "diadromi": "perigramma-mathimatos.pdf",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/perigramma-mathimatos.pdf",
+    "megethos": 524288,
+    "imerominia": "2026-09-30T18:40:00+03:00"
+  },
+  {
+    "typos": "arxeio",
+    "onoma": "parousia-eisagogi.pptx",
+    "diadromi": "parousia-eisagogi.pptx",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/parousia-eisagogi.pptx",
+    "megethos": null,
+    "imerominia": null
+  },
+  {
+    "typos": "fakelos",
+    "onoma": "askiseis-2026",
+    "diadromi": "03-askiseis/askiseis-2026/",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/03-askiseis/askiseis-2026/",
+    "megethos": null,
+    "imerominia": null
+  },
+  {
+    "typos": "arxeio",
+    "onoma": "askisis-01.pdf",
+    "diadromi": "03-askiseis/askiseis-2026/askisis-01.pdf",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/03-askiseis/askiseis-2026/askisis-01.pdf",
+    "megethos": 262144,
+    "imerominia": "2026-10-02T09:05:00+03:00"
+  },
+  {
+    "typos": "arxeio",
+    "onoma": "askisis-02.docx",
+    "diadromi": "03-askiseis/askiseis-2026/askisis-02.docx",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/03-askiseis/askiseis-2026/askisis-02.docx",
+    "megethos": 38912,
+    "imerominia": "2026-10-02T09:07:00+03:00"
+  },
+  {
+    "typos": "arxeio",
+    "onoma": "odigies-ypodomes.docx",
+    "diadromi": "02-theoria/odigies-ypodomes.docx",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/document/02-theoria/odigies-ypodomes.docx",
+    "megethos": 30720,
+    "imerominia": "2026-09-29T12:00:00+03:00"
+  }
+]

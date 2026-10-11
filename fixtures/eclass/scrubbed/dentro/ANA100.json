@@ -1,0 +1,42 @@
+[
+  {
+    "typos": "fakelos",
+    "onoma": "",
+    "diadromi": "",
+    "url": "https://thales.cs.unipi.gr/courses/ANA100/document/",
+    "megethos": null,
+    "imerominia": null
+  },
+  {
+    "typos": "fakelos",
+    "onoma": "slides",
+    "diadromi": "slides/",
+    "url": "https://thales.cs.unipi.gr/courses/ANA100/document/slides/",
+    "megethos": null,
+    "imerominia": null
+  },
+  {
+    "typos": "fakelos",
+    "onoma": "arkheia",
+    "diadromi": "arkheia/",
+    "url": "https://thales.cs.unipi.gr/courses/ANA100/document/arkheia/",
+    "megethos": null,
+    "imerominia": null
+  },
+  {
+    "typos": "arxeio",
+    "onoma": "eisagogi-statistiki.pdf",
+    "diadromi": "slides/eisagogi-statistiki.pdf",
+    "url": "https://thales.cs.unipi.gr/courses/ANA100/document/slides/eisagogi-statistiki.pdf",
+    "megethos": 1310720,
+    "imerominia": "2026-09-20T09:00:00+03:00"
+  },
+  {
+    "typos": "arxeio",
+    "onoma": "datasets.zip",
+    "diadromi": "arkheia/datasets.zip",
+    "url": "https://thales.cs.unipi.gr/courses/ANA100/document/arkheia/datasets.zip",
+    "megethos": 52428800,
+    "imerominia": "2026-09-21T17:20:00+03:00"
+  }
+]

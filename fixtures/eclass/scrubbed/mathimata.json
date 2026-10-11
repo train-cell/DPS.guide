@@ -1,0 +1,20 @@
+[
+  {
+    "kodikos": "PLI101",
+    "titlos": "Προγραμματισμός και Βασικές Αρχές Υπολογιστών",
+    "url": "https://thales.cs.unipi.gr/courses/PLI101/",
+    "epilegmeno": true
+  },
+  {
+    "kodikos": "PLI200",
+    "titlos": "Δομές Δεδομένων και Αλγόριθμοι",
+    "url": "https://thales.cs.unipi.gr/courses/PLI200/",
+    "epilegmeno": true
+  },
+  {
+    "kodikos": "ANA100",
+    "titlos": "Εφαρμοσμένη Ανάλυση Δεδομένων",
+    "url": "https://thales.cs.unipi.gr/courses/ANA100/",
+    "epilegmeno": false
+  }
+]
