@@ -130,6 +130,8 @@ export function filtrare_panepistimia(
         p.tmima,
         p.poli,
         p.base_url,
+        p.kategoria,
+        p.kategoria === 'pliroforiki_stem' ? 'stem' : '',
       ].map(katharise_keimeno_anazitisis);
 
       const tairiazei = pedia.some((pedio) => pedio.includes(anazitisiKathari));

@@ -209,6 +209,11 @@ describe('Domain Module Panepistimia', () => {
       expect(resUrl.length).toBe(1);
       expect(resUrl[0]?.id).toBe('uoi_cs');
 
+      // Anazitisi me stem lektiko
+      const resStem = filtrare_panepistimia({ anazitisi: 'stem' });
+      expect(resStem.length).toBeGreaterThan(0);
+      expect(resStem.every((p) => p.kategoria === 'pliroforiki_stem')).toBe(true);
+
       // Keno anazitisi string
       const resKeno = filtrare_panepistimia({ anazitisi: '   ' });
       expect(resKeno.length).toBe(fere_ola_ta_panepistimia().length);
