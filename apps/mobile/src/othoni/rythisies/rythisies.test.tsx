@@ -18,6 +18,7 @@ const APOTELEMATA = [
   'rythisies-gramma-montelo',
   'rythisies-eidopoieseis',
   'rythisies-apothekeysto',
+  'rythisies-eidopoiseis-othoni',
 ] as const;
 
 /** Αποδίδει την οθόνη χωρίς Provider· ο γαντζότης πέφτει στις προεπιλογές της αποθήκευσης.
@@ -128,6 +129,13 @@ describe('Rythisies — επεξεργασία και αποθήκευση', () 
     expect(html).toContain('Ενεργές');
     expect(html).toContain('pilegma-entono');
     expect(ARXIKOS).not.toContain('type="checkbox"');
+  });
+
+  it('παρέχει σύνδεσμο προς την οθόνη ρυθμίσεων ειδοποιήσεων', () => {
+    const html = apostrophes_rythisi();
+    expect(html).toContain('href="/eidopoiseis"');
+    expect(html).toContain('data-testid="rythisies-eidopoiseis-othoni"');
+    expect(html).toContain('Ρυθμίσεις ειδοποιήσεων');
   });
 });
 

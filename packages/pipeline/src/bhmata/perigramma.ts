@@ -12,8 +12,7 @@
 
 import type { Apotelesma, Perigramma, Selida } from '@dps/core';
 import { kopse_se_kommatia, prompt_perigrammatos, synenose_merika_perigrammata } from '@dps/ai';
-import { apotyxia, ok } from '@dps/core';
-import { epikyrose_perigramma } from '@dps/core/src/epikyrosi/index.js';
+import { apotyxia, epikyrose_perigramma, ok } from '@dps/core';
 import type { EisodosPipeline } from '../porte.js';
 import { THERMOKRASIA_PERIGRAMMA, arxeio_perigrammatos, me_riza } from '../statheroi.js';
 import { diavase_keimeno, grapse_json } from '../grammata/apothiki-json.js';

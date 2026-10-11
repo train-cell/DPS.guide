@@ -16,6 +16,7 @@
     "@capacitor/file-transfer": "^2.0.6",
     "@capacitor/filesystem": "^8.1.4",
     "@capacitor/local-notifications": "^8.3.1",
+    "@dps/adapters-capacitor": "workspace:*",
     "@dps/core": "workspace:*",
     "@ionic/react": "^9.0.7",
     "@ionic/react-router": "^9.0.7",

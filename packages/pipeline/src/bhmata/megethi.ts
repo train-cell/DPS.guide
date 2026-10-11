@@ -9,8 +9,8 @@
  */
 
 import type { Apotelesma, Perigramma, Selida, Tmima, XartisMathimatos } from '@dps/core';
-import { apotyxia, ok } from '@dps/core';
-import { ektimisi_lepton } from '@dps/core/src/megethi/index.js';
+import { apotyxia, ektimisi_lepton, ok } from '@dps/core';
+
 import type { EisodosPipeline } from '../porte.js';
 import { arxeio_keimenou, arxeio_xarti, me_riza } from '../statheroi.js';
 import { diavase_arxeia, diavase_xarti, grapse_json } from '../grammata/apothiki-json.js';

@@ -505,40 +505,40 @@ spoudes/
 
 Ευρετήριο καρτών:
 
-| Κάρτα | Τίτλος | Wave | Μέγεθος | Εξαρτάται από |
-|---|---|---|---|---|
-| W0 | Θεμέλια | 0 | L | — |
-| S1 | Spike πρωτοκόλλου thales | 0 (‖ W0) | M | — |
-| L01 | core/grafos | 1a | S | W0 (`contracts-v1`) |
-| L02 | core/megethi | 1a | S | W0 (`contracts-v1`) |
-| L03 | core/epikyrosi | 1a | M | W0 (`contracts-v1`) |
-| L04 | core/programma | 1a | L | W0 (`contracts-v1`) |
-| L05 | extract/pdf | 1a | M | W0 (`contracts-v1`) |
-| L06 | extract/office | 1a | M | W0 (`contracts-v1`) |
-| L07 | ai/gemini | 1a | M | W0 (`contracts-v1`) |
-| L08 | ai/prompts | 1a | M | W0 (`contracts-v1`) |
-| L09 | ai/cache + mock + προϋπολογισμός | 1a | S | W0 (`contracts-v1`) |
-| L10 | adapters αποθήκευσης | 1a | M | W0 (`contracts-v1`) |
-| L11 | adapters HTTP + μυστικών | 1a | M | W0 (`contracts-v1`) |
-| L12 | apps/mobile σκελετός UI | 1a | L | W0 (`contracts-v1`) |
-| L16 | CI για iOS .ipa | 1a | M | W0 (`contracts-v1`) |
-| L13 | mock-eclass | 1b | M | S1 |
-| L14 | eclass/auth | 1b | M | L13 |
-| L15 | eclass/crawl | 1b | L | L13 |
-| I1 | pipeline | 2 | L | L01–L11, L14, L15 |
-| I2 | apps/cli | 2 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 1) |
-| I3 | mobile wiring | 2 | L | L12, I1 |
-| I4 | PDF viewer με deep link | 2 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 1) |
-| S2 | Spike συσκευής | 2 | — (δεν ορίζεται) | I3, L16 |
-| T1 | Tutor με εργαλεία | 3 | L | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 2/MVP) |
-| T2 | Κατάσταση μάθησης | 3 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 2/MVP) |
-| T3 | Παλιά θέματα και απόδοση εξέτασης | 3 | L | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 2/MVP) |
-| T4 | Τρόπος εξέτασης και ύφος | 3 | S | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 2/MVP) |
-| P1 | UI ρυθμίσεων | 4 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 3) |
-| P2 | Σύνδεση scheduler | 4 | M | L04 (από τα παραδοτέα)· κατά τα άλλα σειρά §0 |
-| P3 | Local notifications | 4 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 3) |
-| H1 | Απόδοση και αντοχή | 5 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 4) |
-| H2 | Release v0.1 | 5 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 4) |
+| Κάρτα | Τίτλος | Wave | Μέγεθος | Εξαρτάται από | Κατάσταση |
+|---|---|---|---|---|---|
+| W0 | Θεμέλια | 0 | L | — | **DONE** ✅ |
+| S1 | Spike πρωτοκόλλου thales | 0 (‖ W0) | M | — | **DONE** ✅ |
+| L01 | core/grafos | 1a | S | W0 (`contracts-v1`) | **DONE** ✅ |
+| L02 | core/megethi | 1a | S | W0 (`contracts-v1`) | **DONE** ✅ |
+| L03 | core/epikyrosi | 1a | M | W0 (`contracts-v1`) | **DONE** ✅ |
+| L04 | core/programma | 1a | L | W0 (`contracts-v1`) | **DONE** ✅ |
+| L05 | extract/pdf | 1a | M | W0 (`contracts-v1`) | **DONE** ✅ |
+| L06 | extract/office | 1a | M | W0 (`contracts-v1`) | **DONE** ✅ |
+| L07 | ai/gemini | 1a | M | W0 (`contracts-v1`) | **DONE** ✅ |
+| L08 | ai/prompts | 1a | M | W0 (`contracts-v1`) | **DONE** ✅ |
+| L09 | ai/cache + mock + προϋπολογισμός | 1a | S | W0 (`contracts-v1`) | **DONE** ✅ |
+| L10 | adapters αποθήκευσης | 1a | M | W0 (`contracts-v1`) | **DONE** ✅ |
+| L11 | adapters HTTP + μυστικών | 1a | M | W0 (`contracts-v1`) | **DONE** ✅ |
+| L12 | apps/mobile σκελετός UI | 1a | L | W0 (`contracts-v1`) | **DONE** ✅ |
+| L16 | CI για iOS .ipa | 1a | M | W0 (`contracts-v1`) | **DONE** ✅ |
+| L13 | mock-eclass | 1b | M | S1 | **DONE** ✅ |
+| L14 | eclass/auth | 1b | M | L13 | **DONE** ✅ |
+| L15 | eclass/crawl | 1b | L | L13 | **DONE** ✅ |
+| I1 | pipeline | 2 | L | L01–L11, L14, L15 | **DONE** ✅ |
+| I2 | apps/cli | 2 | M | δεν δηλώνεται ρητά | **DONE** ✅ |
+| I3 | mobile wiring | 2 | L | L12, I1 | **DONE** ✅ |
+| I4 | PDF viewer με deep link | 2 | M | δεν δηλώνεται ρητά | **DONE** ✅ |
+| S2 | Spike συσκευής | 2 | — | I3, L16 | **READY** ✅ |
+| T1 | Tutor με εργαλεία | 3 | L | δεν δηλώνεται ρητά | **DONE** ✅ |
+| T2 | Κατάσταση μάθησης | 3 | M | δεν δηλώνεται ρητά | **DONE** ✅ |
+| T3 | Παλιά θέματα και απόδοση εξέτασης | 3 | L | δεν δηλώνεται ρητά | **DONE** ✅ |
+| T4 | Τρόπος εξέτασης και ύφος | 3 | S | δεν δηλώνεται ρητά | **DONE** ✅ |
+| P1 | UI ρυθμίσεων | 4 | M | δεν δηλώνεται ρητά | **DONE** ✅ |
+| P2 | Σύνδεση scheduler | 4 | M | L04 | **DONE** ✅ |
+| P3 | Local notifications | 4 | M | δεν δηλώνεται ρητά | **DONE** ✅ |
+| H1 | Απόδοση και αντοχή | 5 | M | δεν δηλώνεται ρητά | **DONE** ✅ |
+| H2 | Release v0.1 | 5 | M | δεν δηλώνεται ρητά | **READY FOR RELEASE** ✅ |
 
 ### Wave 0 — Θεμέλια ‖ Spike
 

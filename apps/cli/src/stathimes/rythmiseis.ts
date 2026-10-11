@@ -41,3 +41,64 @@ export async function fere_montelo_apo_ryza(apothiki: ApothikiPyli): Promise<str
   }
   return epikyrose_montelo(dedomena);
 }
+
+/**
+ * Εξάγει το base_url του eClass από το αντικείμενο ρυθμίσεων.
+ */
+export function epikyrose_base_url(rythmiseis: unknown): string | null {
+  if (typeof rythmiseis !== 'object' || rythmiseis === null || !('base_url' in rythmiseis)) {
+    return null;
+  }
+  const base_url: unknown = (rythmiseis as { base_url: unknown }).base_url;
+  if (typeof base_url !== 'string') {
+    return null;
+  }
+  const katharos = base_url.trim();
+  return katharos.length > 0 ? katharos : null;
+}
+
+/**
+ * Διαβάζει το base_url από το `<riza>/rythmiseis.json`.
+ */
+export async function fere_base_url_apo_ryza(apothiki: ApothikiPyli): Promise<string | null> {
+  const gram = await apothiki.diavase_keimeno(DIADROMI_RYTHMISEON);
+  if (!gram.ok) {
+    return null;
+  }
+  let dedomena: unknown;
+  try {
+    dedomena = JSON.parse(gram.timi);
+  } catch {
+    return null;
+  }
+  return epikyrose_base_url(dedomena);
+}
+
+/**
+ * Εξάγει αν είναι ενεργοποιημένο το mock eClass από τις ρυθμίσεις.
+ */
+export function epikyrose_mock_eclass(rythmiseis: unknown): boolean {
+  if (typeof rythmiseis !== 'object' || rythmiseis === null) {
+    return false;
+  }
+  const r = rythmiseis as Record<string, unknown>;
+  return r.mock_eclass === true || r.mock === true || r.use_mock === true;
+}
+
+/**
+ * Διαβάζει αν είναι ενεργοποιημένο το mock eClass από το `<riza>/rythmiseis.json`.
+ */
+export async function fere_mock_eclass_apo_ryza(apothiki: ApothikiPyli): Promise<boolean> {
+  const gram = await apothiki.diavase_keimeno(DIADROMI_RYTHMISEON);
+  if (!gram.ok) {
+    return false;
+  }
+  let dedomena: unknown;
+  try {
+    dedomena = JSON.parse(gram.timi);
+  } catch {
+    return false;
+  }
+  return epikyrose_mock_eclass(dedomena);
+}
+

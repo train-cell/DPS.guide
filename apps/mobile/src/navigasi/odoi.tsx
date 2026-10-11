@@ -11,6 +11,9 @@ import Rythisies from '../othoni/rythisies/rythisies.js';
 import Proedri from '../othoni/proedri/proedri.js';
 import ProvoliPdf from '../provoli-pdf/provoli-pdf.js';
 import RythmiseisProgrammatos from '../programma/programma.js';
+import RythisiesEidopoiseon from '../eidopoiiseis/rythisies-eidopoiseon.js';
+import { dimiourgise_ypiresies_eidopoiseon } from '../eidopoiiseis/sindesi.js';
+import type { EidopoiisiYpiresies } from '../eidopoiiseis/eidopoiiseis-typoi.js';
 
 /** Οι διαδρομές της εφαρμογής, μία ανά οθόνη. */
 export const ODOI: readonly { readonly diadromi: string; readonly onoma: string }[] = [
@@ -23,6 +26,7 @@ export const ODOI: readonly { readonly diadromi: string; readonly onoma: string 
   { diadromi: '/proedri', onoma: 'Onboarding' },
   { diadromi: '/provoli/:arxeioId/:selida', onoma: 'Προβολή PDF' },
   { diadromi: '/programma', onoma: 'Πρόγραμμα' },
+  { diadromi: '/eidopoiseis', onoma: 'Ειδοποιήσεις' },
 ] as const;
 
 /** Περιτύλιγμα σελίδας με capsule navigation. */
@@ -30,12 +34,18 @@ function meNav(children: ReactNode, xronos = true) {
   return <PlisiOmonimas meNav={xronos}>{children}</PlisiOmonimas>;
 }
 
+export interface OdoiNavigisisProps {
+  readonly ypiresiesEidopoiseon?: EidopoiisiYpiresies;
+}
+
 /**
  * Ο χάρτης διαδρομών. Το <Routes> πρέπει να είναι ΑΜΕΣΟ child του <IonRouterOutlet>:
  * το Ionic διαβάζει τα children του outlet για να δημιουργήσει το page stack, και ένα
  * wrapper component αφήνει το outlet κενό.
  */
-export function OdoiNavigisis() {
+export function OdoiNavigisis({
+  ypiresiesEidopoiseon = dimiourgise_ypiresies_eidopoiseon(),
+}: OdoiNavigisisProps = {}) {
   return (
     <IonRouterOutlet>
       <Routes>
@@ -48,6 +58,10 @@ export function OdoiNavigisis() {
         <Route path="/programma" element={meNav(<RythmiseisProgrammatos />)} />
         <Route path="/tutor" element={meNav(<TutorChat />)} />
         <Route path="/rythisies" element={meNav(<Rythisies />)} />
+        <Route
+          path="/eidopoiseis"
+          element={meNav(<RythisiesEidopoiseon ypiresies={ypiresiesEidopoiseon} />)}
+        />
         <Route path="/proedri" element={meNav(<Proedri />, false)} />
         <Route path="*" element={meNav(<Proedri />, false)} />
       </Routes>

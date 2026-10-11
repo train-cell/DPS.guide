@@ -6,6 +6,8 @@ import { ok } from '@dps/core';
 import { dimiourgise_eisodos, DIADROMI_RYTHMISEON } from './eisodos-pipeline.js';
 import { epikyrose_montelo } from './rythmiseis.js';
 import { MiYpostirimenoEclassPyli } from './eclass-eksodon.js';
+import { DpsEclassPyli } from '@dps/eclass';
+import { MockEclassPyli } from '@dps/mock-eclass';
 import type { ParastatesEntolhs } from '../entoles/grammatikopoio-entolhs.js';
 
 const MONTELO = 'gemini-ypokpisteio';
@@ -153,9 +155,72 @@ describe('dimiourgise_eisodos — ανάγνωση rythmiseis.json', () => {
   });
 });
 
+describe('dimiourgise_eisodos — επιλογή EclassPyli', () => {
+  let riza = '';
+  const palioUser = process.env.ECLASS_USERNAME;
+  const palioPass = process.env.ECLASS_PASSWORD;
+  const palioMock = process.env.ECLASS_MOCK;
+  const palioBase = process.env.ECLASS_BASE_URL;
+
+  beforeEach(async () => {
+    riza = await mkdtemp(path.join(tmpdir(), 'dps-cli-eclass-'));
+    delete process.env.ECLASS_USERNAME;
+    delete process.env.ECLASS_PASSWORD;
+    delete process.env.ECLASS_MOCK;
+    delete process.env.ECLASS_BASE_URL;
+  });
+
+  afterEach(async () => {
+    if (palioUser !== undefined) process.env.ECLASS_USERNAME = palioUser;
+    else delete process.env.ECLASS_USERNAME;
+    if (palioPass !== undefined) process.env.ECLASS_PASSWORD = palioPass;
+    else delete process.env.ECLASS_PASSWORD;
+    if (palioMock !== undefined) process.env.ECLASS_MOCK = palioMock;
+    else delete process.env.ECLASS_MOCK;
+    if (palioBase !== undefined) process.env.ECLASS_BASE_URL = palioBase;
+    else delete process.env.ECLASS_BASE_URL;
+    await rm(riza, { recursive: true, force: true });
+  });
+
+  it('στήνει πραγματική DpsEclassPyli όταν υπάρχουν διαπιστευτήρια και base_url', async () => {
+    process.env.ECLASS_USERNAME = 'dokimi_xristis';
+    process.env.ECLASS_PASSWORD = 'dokimi_kodikos';
+    await writeFile(
+      path.join(riza, DIADROMI_RYTHMISEON),
+      JSON.stringify({ montelo: MONTELO, base_url: 'https://thales.cs.unipi.gr' }),
+      'utf8'
+    );
+    const apotelesma = await dimiourgise_eisodos(parastates(riza, null, false));
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) return;
+    expect(apotelesma.timi.eclass).toBeInstanceOf(DpsEclassPyli);
+  });
+
+  it('στήνει MockEclassPyli όταν έχει οριστεί mock_eclass: true στις ρυθμίσεις', async () => {
+    await writeFile(
+      path.join(riza, DIADROMI_RYTHMISEON),
+      JSON.stringify({ montelo: MONTELO, mock_eclass: true }),
+      'utf8'
+    );
+    const apotelesma = await dimiourgise_eisodos(parastates(riza, null, false));
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) return;
+    expect(apotelesma.timi.eclass).toBeInstanceOf(MockEclassPyli);
+  });
+
+  it('στήνει MockEclassPyli όταν έχει οριστεί ECLASS_MOCK=true στο περιβάλλον', async () => {
+    process.env.ECLASS_MOCK = 'true';
+    const apotelesma = await dimiourgise_eisodos(parastates(riza, MONTELO, false));
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) return;
+    expect(apotelesma.timi.eclass).toBeInstanceOf(MockEclassPyli);
+  });
+});
+
 describe('συμβατότητα αποτελεσμάτων', () => {
   it('το apotelesma επιστρέφει ok(true) όταν στηθεί', () => {
     const apotelesma = ok({ montelo: MONTELO });
     expect(apotelesma.ok).toBe(true);
   });
 });
+

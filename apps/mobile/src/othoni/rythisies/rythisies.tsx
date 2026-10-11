@@ -158,17 +158,26 @@ export default function Rythisies() {
         titlos="Ειδοποιήσεις"
         ypokeimeno="Οι ειδοποιήσεις είναι τοπικές· δεν αποστέλλονται δεδομένα σε διακομιστή."
         stoixeia={
-          <button
-            type="button"
-            role="switch"
-            aria-checked={grammata.einaiEidopoieseis}
-            aria-label="Τοπικές ειδοποιήσεις"
-            className={`pilegma${grammata.einaiEidopoieseis ? ' pilegma-entono' : ''}`}
-            data-testid="rythisies-eidopoieseis"
-            onClick={allaze_eidopoieseis}
-          >
-            {grammata.einaiEidopoieseis ? 'Ενεργές' : 'Ανενεργές'}
-          </button>
+          <div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={grammata.einaiEidopoieseis}
+              aria-label="Τοπικές ειδοποιήσεις"
+              className={`pilegma${grammata.einaiEidopoieseis ? ' pilegma-entono' : ''}`}
+              data-testid="rythisies-eidopoieseis"
+              onClick={allaze_eidopoieseis}
+            >
+              {grammata.einaiEidopoieseis ? 'Ενεργές' : 'Ανενεργές'}
+            </button>
+            <Link
+              to="/eidopoiseis"
+              className="pilegma pilegma-entono"
+              data-testid="rythisies-eidopoiseis-othoni"
+            >
+              Ρυθμίσεις ειδοποιήσεων
+            </Link>
+          </div>
         }
       />
 

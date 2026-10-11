@@ -84,6 +84,9 @@ importers:
       '@capacitor/local-notifications':
         specifier: ^8.3.1
         version: 8.3.1(@capacitor/core@8.5.3)
+      '@dps/adapters-capacitor':
+        specifier: workspace:*
+        version: link:../../packages/adapters-capacitor
       '@dps/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -191,6 +194,22 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.7
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.5)(lightningcss@1.33.0)(supports-color@7.2.0)
+
+  packages/eclass:
+    dependencies:
+      '@dps/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^22.13.9
+        version: 22.20.5
       typescript:
         specifier: ^5.8.2
         version: 5.9.3

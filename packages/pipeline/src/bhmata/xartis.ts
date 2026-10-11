@@ -9,9 +9,7 @@
 
 import type { Apotelesma, Perigramma, XartisMathimatos } from '@dps/core';
 import { prompt_xarti } from '@dps/ai';
-import { apotyxia, ok } from '@dps/core';
-import { epikyrose_xarti } from '@dps/core/src/epikyrosi/index.js';
-import { vres_kyklous } from '@dps/core/src/grafos/index.js';
+import { apotyxia, epikyrose_xarti, ok, vres_kyklous } from '@dps/core';
 import type { EisodosPipeline } from '../porte.js';
 import { THERMOKRASIA_XARTI, arxeio_xarti, me_riza } from '../statheroi.js';
 import { diavase_arxeia, grapse_json } from '../grammata/apothiki-json.js';

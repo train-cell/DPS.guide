@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MnimiApothiki } from '@dps/core';
-import type { Exetasi, XartisMathimatos } from '@dps/core';
+import type { Exetasi, Programma, XartisMathimatos } from '@dps/core';
 import { ArgiosLlm, FakeEclassPyli, KatagrafiDiamnemata, StatheriRologi } from '../testing/voirtheia.js';
 import { programma } from '../bhmata/programma.js';
 import type { EisodosPipeline } from '../porte.js';
@@ -12,7 +12,6 @@ import {
   arxeio_xarti,
 } from '../statheroi.js';
 import { grapse_json } from '../grammata/apothiki-json.js';
-import type { Programma } from '@dps/core/src/programma/index.js';
 
 function ftiaxe_eisodos(apothiki: MnimiApothiki, rologi: StatheriRologi): EisodosPipeline {
   return {

@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+import { main } from '../apps/cli/dist/index.js';
+
+main(process.argv.slice(2)).then(
+  (kodikos) => {
+    process.exitCode = kodikos;
+  },
+  (sfalma) => {
+    process.stderr.write(`Σφάλμα [AGNOSTO]: ${String(sfalma)}\n`);
+    process.exitCode = 1;
+  }
+);

@@ -10,9 +10,8 @@
  */
 
 import type { Apotelesma, Enotita, OdigosMeta, Pigi, Selida } from '@dps/core';
-import { OdigosMetaSchema, apotyxia, ok } from '@dps/core';
+import { OdigosMetaSchema, apotyxia, epikyrose_odigo, ok } from '@dps/core';
 import { prompt_odigou } from '@dps/ai';
-import { epikyrose_odigo } from '@dps/core/src/epikyrosi/index.js';
 import type { EisodosPipeline } from '../porte.js';
 import {
   THERMOKRASIA_ODIGOU,

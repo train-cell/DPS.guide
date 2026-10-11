@@ -13,16 +13,16 @@
  * εφαρμογής (§5.3), ώστε τα αρχεία να είναι συμβατά και προς τα δύο.
  */
 
-import type { Apotelesma, Exetasi } from '@dps/core';
-import { ExetasiSchema, apotyxia, ok } from '@dps/core';
-import { ftiaxe_programma } from '@dps/core/src/programma/index.js';
 import type {
+  Apotelesma,
   Checkin,
   Diathesimotita,
   EisodosProgrammatos,
+  Exetasi,
   MathimaProgrammatos,
   Programma,
-} from '@dps/core/src/programma/index.js';
+} from '@dps/core';
+import { ExetasiSchema, apotyxia, ftiaxe_programma, ok } from '@dps/core';
 import type { EisodosPipeline } from '../porte.js';
 import {
   ARXEIO_MATHIMATON,
