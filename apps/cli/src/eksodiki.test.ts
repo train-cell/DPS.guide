@@ -209,6 +209,39 @@ describe('mathimata', () => {
   });
 });
 
+describe('panepistimia', () => {
+  it('εμφανίζει τη λίστα των ελληνικών πανεπιστημίων και eClass portals', async () => {
+    const p = parastates();
+    const kodikos = await p.trexe(['panepistimia']);
+    expect(kodikos).toBe(KODIKOS_OK);
+    const oles = p.grammes.join('\n');
+    expect(oles).toContain('Υποστηριζόμενα Ελληνικά Ακαδημαϊκά Ιδρύματα');
+    expect(oles).toContain('unipi_cs');
+    expect(oles).toContain('https://thales.cs.unipi.gr');
+    expect(oles).toContain('uoa_dit');
+    expect(oles).toContain('ntua_mycourses');
+    expect(oles).toContain('aueb_cs');
+  });
+
+  it('φιλτράρει με βάση τον όρο αναζήτησης (π.χ. unipi)', async () => {
+    const p = parastates();
+    const kodikos = await p.trexe(['panepistimia', 'unipi']);
+    expect(kodikos).toBe(KODIKOS_OK);
+    const oles = p.grammes.join('\n');
+    expect(oles).toContain('ΠΑΠΕΙ');
+    expect(oles).toContain('unipi_cs');
+  });
+
+  it('επιστρέφει φιλικό μήνυμα αν δεν βρεθεί κανένα πανεπιστήμιο', async () => {
+    const p = parastates();
+    const kodikos = await p.trexe(['panepistimia', 'sxoli_agnwsti_xyz']);
+    expect(kodikos).toBe(KODIKOS_OK);
+    const oles = p.grammes.join('\n');
+    expect(oles).toContain('Δεν βρέθηκαν πανεπιστήμια με όρο αναζήτησης');
+    expect(oles).toContain('sxoli_agnwsti_xyz');
+  });
+});
+
 describe('sygxronismos', () => {
   it('με κωδικό καλεί το βήμα για αυτόν τον ένα κωδικό', async () => {
     const p = parastates();
@@ -469,7 +502,7 @@ describe('χρήση CLI', () => {
     expect(p.sfalmes).toHaveLength(0);
     const oles = p.grammes.join('\n');
     expect(oles).toContain('dps-guide');
-    for (const onoma of ['syndesi', 'mathimata', 'sygxronismos', 'analysi', 'odigos', 'programma', 'run']) {
+    for (const onoma of ['panepistimia', 'syndesi', 'mathimata', 'sygxronismos', 'analysi', 'odigos', 'programma', 'run']) {
       expect(oles).toContain(onoma);
     }
     expect(bima.anakalypsi).not.toHaveBeenCalled();

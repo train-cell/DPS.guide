@@ -8,9 +8,28 @@ import type { Katastasi } from '../../kathstasi/index.js';
 import { ftiaxe_periballon } from '../../periballon/index.js';
 import type { Periballon } from '../../periballon/index.js';
 import { fortose_mathimata_apo_apothiki } from '../../ypiresies/index.js';
+import {
+  EikonidioAsfaleias,
+  EikonidioPanepistimiou,
+  PANEPISTIMIA_LISTA,
+  type KatigoriaPanepistimiou,
+  type PanepistimioDedomena,
+} from '../../design/eikonidia-panepistimion.js';
+import { pare_tip_imeras } from './foititika-tips.js';
+import './proedri.css';
 
 /** Η προεπιλεγμένη διεύθυνση του eClass στο Πανεπιστήμιο Πειραιώς. */
 export const PROEDRI_BASE_URL = 'https://thales.cs.unipi.gr';
+
+/** Filtra kathgorion panepistimion gia tis kapsoules filtron. */
+const FILTRA_KATHGORION: readonly { readonly id: KatigoriaPanepistimiou; readonly titlos: string }[] = [
+  { id: 'ola', titlos: 'Όλα' },
+  { id: 'stem', titlos: 'Πληροφορική/STEM' },
+  { id: 'athina', titlos: 'Αθήνα' },
+  { id: 'thessaloniki', titlos: 'Θεσσαλονίκη' },
+  { id: 'perifereia', titlos: 'Περιφέρεια' },
+  { id: 'custom', titlos: 'Custom' },
+];
 
 /** Ιδιότητες της οθόνης πρώτης εκτέλεσης. */
 export interface ProedriProps {
@@ -27,8 +46,39 @@ export default function Proedri({ periballon }: ProedriProps) {
   const [anamemeni, setAnamemeni] = useState(false);
   const [epixeirithike, setEpixeirithike] = useState(false);
   const [katastasi, setKatastasi] = useState<Katastasi<readonly Mathima[]>>(adeio);
+  const [epilegmeniKatigoria, setEpilegmeniKatigoria] = useState<KatigoriaPanepistimiou>('ola');
+  const [epilegmenoPanepistimioId, setEpilegmenoPanepistimioId] = useState<string>('unipi');
+  const [anazitisi, setAnazitisi] = useState('');
+
+  const tipImeras = useMemo(() => pare_tip_imeras(), []);
+
+  const fildarismenaPanepistimia = useMemo(() => {
+    let lista =
+      epilegmeniKatigoria === 'ola'
+        ? PANEPISTIMIA_LISTA
+        : PANEPISTIMIA_LISTA.filter((pan) => pan.katigoria === epilegmeniKatigoria);
+
+    const lexi = anazitisi.trim().toLowerCase();
+    if (lexi.length > 0) {
+      lista = lista.filter(
+        (pan) =>
+          pan.onoma.toLowerCase().includes(lexi) ||
+          pan.syntomiOnomasia.toLowerCase().includes(lexi) ||
+          pan.perigrafi.toLowerCase().includes(lexi) ||
+          pan.id.toLowerCase().includes(lexi)
+      );
+    }
+    return lista;
+  }, [epilegmeniKatigoria, anazitisi]);
 
   const xekinisei = xristis.trim().length > 0 && kodikos.trim().length > 0;
+
+  function epilexe_panepistimio(panepistimio: PanepistimioDedomena): void {
+    setEpilegmenoPanepistimioId(panepistimio.id);
+    if (panepistimio.baseEclass.length > 0) {
+      setBase(panepistimio.baseEclass);
+    }
+  }
 
   async function pane_syndexi(): Promise<void> {
     setAnamemeni(true);
@@ -39,6 +89,8 @@ export default function Proedri({ periballon }: ProedriProps) {
       if (apotelesma.katastasi === 'etimo') {
         await pyles.mystika.vale('eclass_onoma_xristi', xristis.trim());
         await pyles.mystika.vale('eclass_kodikos', kodikos.trim());
+        await pyles.mystika.vale('eclass_panepistimio_id', epilegmenoPanepistimioId);
+        await pyles.mystika.vale('eclass_base_url', base.trim());
       }
       setKatastasi(apotelesma);
     } catch {
@@ -81,6 +133,102 @@ export default function Proedri({ periballon }: ProedriProps) {
           κινητό σου.
         </p>
       </div>
+
+      <div className="asfaleia-shma" data-testid="asfaleia-shma">
+        <span className="asfaleia-shma-eikonidio">
+          <EikonidioAsfaleias megethos={16} />
+        </span>
+        <span>Zero-Knowledge Hardware Vault • Κρυπτογραφημένα τοπικά</span>
+      </div>
+
+      <div className="foititiko-tip-kouti" data-testid="foititiko-tip-kouti">
+        <span aria-hidden="true">💡</span>
+        <p>{tipImeras}</p>
+      </div>
+
+      <div
+        className="kapsoules-filtra-mpara"
+        role="tablist"
+        aria-label="Φίλτρα πανεπιστημίων"
+        data-testid="filtra-panepistimion"
+      >
+        {FILTRA_KATHGORION.map((filtro) => {
+          const einaiEnergi = epilegmeniKatigoria === filtro.id;
+          return (
+            <button
+              key={filtro.id}
+              type="button"
+              role="tab"
+              aria-selected={einaiEnergi}
+              className={`kapsoula-filtrou${einaiEnergi ? ' energi' : ''}`}
+              onClick={() => setEpilegmeniKatigoria(filtro.id)}
+              data-testid={`filtro-${filtro.id}`}
+            >
+              {filtro.titlos}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="anazitisi-panepistimiou-perioxh">
+        <input
+          type="search"
+          className="anazitisi-panepistimiou-pedio"
+          placeholder="Αναζήτηση σχολής, τμήματος ή πόλης..."
+          value={anazitisi}
+          onChange={(erevma) => setAnazitisi(erevma.target.value)}
+          data-testid="anazitisi-panepistimiou-pedio"
+          aria-label="Αναζήτηση σχολής ή πανεπιστημίου"
+        />
+      </div>
+
+      {fildarismenaPanepistimia.length === 0 ? (
+        <div className="lista-panepistimion-keno" data-testid="lista-panepistimion-keno">
+          <p>Δεν βρέθηκε ίδρυμα με αυτόν τον όρο.</p>
+          <button
+            type="button"
+            className="kapsoula-filtrou energi"
+            onClick={() => {
+              setEpilegmeniKatigoria('custom');
+              setAnazitisi('');
+              setEpilegmenoPanepistimioId('custom');
+            }}
+            data-testid="koumpi-epilogi-custom"
+          >
+            Επιλογή Custom eClass URL
+          </button>
+        </div>
+      ) : (
+        <div className="lista-panepistimion-grid" data-testid="lista-panepistimion">
+          {fildarismenaPanepistimia.map((panepistimio) => {
+            const einaiEpilegmeno = epilegmenoPanepistimioId === panepistimio.id;
+            return (
+              <div
+                key={panepistimio.id}
+                role="button"
+                tabIndex={0}
+                className={`karta-panepistimiou${einaiEpilegmeno ? ' epilegmeni' : ''}`}
+                onClick={() => epilexe_panepistimio(panepistimio)}
+                onKeyDown={(erevma) => {
+                  if (erevma.key === 'Enter' || erevma.key === ' ') {
+                    epilexe_panepistimio(panepistimio);
+                  }
+                }}
+                data-testid={`karta-panepistimiou-${panepistimio.id}`}
+                aria-pressed={einaiEpilegmeno}
+              >
+                <EikonidioPanepistimiou id={panepistimio.id} megethos={32} />
+                <div className="karta-panepistimiou-periexomeno">
+                  <span className="karta-panepistimiou-titlos">
+                    {panepistimio.syntomiOnomasia} — {panepistimio.onoma}
+                  </span>
+                  <span className="karta-panepistimiou-ypotitlos">{panepistimio.perigrafi}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       <form className="proedri-travla" data-testid="proedri-forma" onSubmit={ypostiripse}>
         <label className="odoni-xeiris-zeugos" htmlFor="proedri-gramma-base">

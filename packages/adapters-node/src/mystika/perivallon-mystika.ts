@@ -3,6 +3,8 @@ import type { KleidiMystikou, MystikaPyli } from '@dps/core';
 const METAVLITES_PERIVALLONTOS: Record<KleidiMystikou, string> = {
   eclass_onoma_xristi: 'ECLASS_USERNAME',
   eclass_kodikos: 'ECLASS_PASSWORD',
+  eclass_panepistimio_id: 'ECLASS_PANEPISTIMIO_ID',
+  eclass_base_url: 'ECLASS_BASE_URL',
   llm_api_key: 'GEMINI_API_KEY',
 };
 

@@ -81,11 +81,54 @@ describe('Proedri — συμβόλαιο οθόνης', () => {
   it('η οθόνη δεν μπερδεύει το όνομα χρήστη με τον κωδικό στη μνήμη της συσκευής', () => {
     expect(ARXIKOS).toContain("vale('eclass_onoma_xristi'");
     expect(ARXIKOS).toContain("vale('eclass_kodikos'");
+    expect(ARXIKOS).toContain("vale('eclass_panepistimio_id'");
+    expect(ARXIKOS).toContain("vale('eclass_base_url'");
     expect(ARXIKOS).not.toContain('llm_api_key');
   });
 
   it('δεν εισάγει χρώματα ούτε inline styles', () => {
     expect(ARXIKOS).not.toContain('style={{');
     expect(ARXIKOS).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
+  });
+});
+
+describe('Proedri — Bevel x UniStudents UI & Visual Components', () => {
+  it('εμφανίζει το σήμα ασφαλείας του Zero-Knowledge Vault', () => {
+    const html = apotelesma_proedri();
+    expect(html).toContain('data-testid="asfaleia-shma"');
+    expect(html).toContain('Zero-Knowledge Hardware Vault');
+  });
+
+  it('εμφανίζει το φοιτητικό tip ημέρας', () => {
+    const html = apotelesma_proedri();
+    expect(html).toContain('data-testid="foititiko-tip-kouti"');
+    expect(html).toContain('💡');
+  });
+
+  it('εμφανίζει τις κάψουλες φίλτρων πανεπιστημίων με όλες τις κατηγορίες', () => {
+    const html = apotelesma_proedri();
+    expect(html).toContain('data-testid="filtra-panepistimion"');
+    expect(html).toContain('data-testid="filtro-ola"');
+    expect(html).toContain('data-testid="filtro-stem"');
+    expect(html).toContain('data-testid="filtro-athina"');
+    expect(html).toContain('data-testid="filtro-thessaloniki"');
+    expect(html).toContain('data-testid="filtro-perifereia"');
+    expect(html).toContain('data-testid="filtro-custom"');
+    expect(html).toContain('kapsoula-filtrou energi');
+  });
+
+  it('εμφανίζει το πεδίο αναζήτησης πανεπιστημίου / σχολής', () => {
+    const html = apotelesma_proedri();
+    expect(html).toContain('data-testid="anazitisi-panepistimiou-pedio"');
+    expect(html).toContain('placeholder="Αναζήτηση σχολής, τμήματος ή πόλης..."');
+  });
+
+  it('εμφανίζει τη λίστα καρτών πανεπιστημίων με tactile κάρτες και badges', () => {
+    const html = apotelesma_proedri();
+    expect(html).toContain('data-testid="lista-panepistimion"');
+    expect(html).toContain('data-testid="karta-panepistimiou-unipi"');
+    expect(html).toContain('karta-panepistimiou epilegmeni');
+    expect(html).toContain('data-testid="eikonidio-panepistimiou-unipi"');
+    expect(html).toContain('ΠΑΠΕΙ — Πανεπιστήμιο Πειραιώς');
   });
 });

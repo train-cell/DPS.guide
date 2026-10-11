@@ -24,3 +24,6 @@ export * as apodosi from './apodosi/index.js';
 
 export * from './imeres/index.js';
 export * as imeres from './imeres/index.js';
+
+export * from './panepistimia/index.js';
+export * as panepistimia from './panepistimia/index.js';

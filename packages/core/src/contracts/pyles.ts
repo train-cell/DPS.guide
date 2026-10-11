@@ -45,7 +45,12 @@ export interface ApothikiPyli {
   diagrafi(diadromi: string): Promise<Apotelesma<void>>;
 }
 
-export type KleidiMystikou = 'eclass_onoma_xristi' | 'eclass_kodikos' | 'llm_api_key';
+export type KleidiMystikou =
+  | 'eclass_onoma_xristi'
+  | 'eclass_kodikos'
+  | 'eclass_panepistimio_id'
+  | 'eclass_base_url'
+  | 'llm_api_key';
 
 export interface MystikaPyli {
   pare(k: KleidiMystikou): Promise<string | null>;

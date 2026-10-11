@@ -2,6 +2,7 @@ import type { GrammatikopoioEntolhs } from './grammatikopoio-entolhs.js';
 import { trexe_analysi } from './entole-analysi.js';
 import { trexe_mathimata } from './entole-mathimata.js';
 import { trexe_odigos } from './entole-odigos.js';
+import { trexe_panepistimia } from './entole-panepistimia.js';
 import { trexe_programma } from './entole-programma.js';
 import { trexe_run } from './entole-run.js';
 import { trexe_sygxronismos } from './entole-sygxronismos.js';
@@ -14,6 +15,19 @@ import { trexe_syndesi } from './entole-syndesi.js';
  * χρειάζεται LLM· η βοήθεια και η επικύρωση ορισμάτων παράγονται από εδώ.
  */
 export const ENTOLES: readonly GrammatikopoioEntolhs[] = [
+  {
+    onoma: 'panepistimia',
+    perigrafh: 'Λίστα υποστηριζόμενων ελληνικών πανεπιστημίων και eClass portals.',
+    argia: [
+      {
+        onoma: 'ANAZITISI',
+        upoxreitai: false,
+        perigrafh: 'Όρος αναζήτησης (όνομα, ίδρυμα, πόλη ή ID).',
+      },
+    ],
+    xreiazetai_llm: false,
+    trexe: (eisodos, _parastates, ori_arg) => trexe_panepistimia(eisodos, ori_arg),
+  },
   {
     onoma: 'syndesi',
     perigrafh: 'Σύνδεση με το eClass (μυστικά από το keyring ή το περιβάλλον).',
