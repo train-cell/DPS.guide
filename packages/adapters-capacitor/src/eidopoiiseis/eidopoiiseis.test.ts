@@ -65,6 +65,7 @@ function psefthiko_pugi() {
     async getPending() {
       kliseis.push('getPending');
       if (zotiko.sfalma_periousis) throw zotiko.sfalma ?? new Error('getPending');
+      if (zotiko.sfalma !== null) throw zotiko.sfalma;
       return { notifications: [...proedres] };
     },
     async registerActionTypes() {
