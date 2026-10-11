@@ -23,9 +23,9 @@ const PROTYPOS_TOKEN = /\b([a-z0-9_]*(?:token|key|secret|jwt)[a-z0-9_]*)\s*[=:]\
 function analysise_token(keimeno) {
   const found = [...keimeno.matchAll(new RegExp(PROTYPOS_TOKEN.source, 'gi'))];
   return found.map((m) => ({
-    πεδίο: m[1],
-    μήκος_τιμής: (m[2] ?? '').length,
-    τιμή: '<<SCRUBBED>>',
+    pedio: m[1],
+    mikos_timis: (m[2] ?? '').length,
+    timi: '<<SCRUBBED>>',
   }));
 }
 
@@ -50,9 +50,9 @@ async function main() {
     });
     stichia.push({
       url,
-      κατάσταση: apantisi.katastasi,
-      μορφή: morifi_kyriou(apantisi.keimeno),
-      μέγεθος: apantisi.bufe.byteLength,
+      katastasi: apantisi.katastasi,
+      morfi: morifi_kyriou(apantisi.keimeno),
+      megethos: apantisi.bufe.byteLength,
     });
     process.stdout.write(`## ${krige_url(url)}\n`);
     process.stdout.write(`- κατάσταση: ${apantisi.katastasi}\n`);
@@ -81,7 +81,7 @@ async function main() {
 
   process.stdout.write('## Σύνοψη\n');
   for (const s of stichia) {
-    process.stdout.write(`- ${s.κατάσταση} ${s.μορφή} ${s.μέγεθος}B ${krige_url(s.url)}\n`);
+    process.stdout.write(`- ${s.katastasi} ${s.morfi} ${s.megethos}B ${krige_url(s.url)}\n`);
   }
   process.stdout.write(
     '\n⚠️ ΕΠΑΛΗΘΕΥΣΗ: τα ονόματα παραμέτρων/πεδίων/στοιχείων του mobile API ΔΕΝ προέρχονται από τεκμηριωμένη πηγή.\n' +
