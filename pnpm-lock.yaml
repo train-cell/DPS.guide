@@ -53,9 +53,15 @@ importers:
       '@dps/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@dps/eclass':
+        specifier: workspace:*
+        version: link:../../packages/eclass
       '@dps/extract':
         specifier: workspace:*
         version: link:../../packages/extract
+      '@dps/mock-eclass':
+        specifier: workspace:*
+        version: link:../../packages/mock-eclass
       '@dps/pipeline':
         specifier: workspace:*
         version: link:../../packages/pipeline
