@@ -3,8 +3,12 @@
   "references": [
     { "path": "./packages/core" },
     { "path": "./packages/extract" },
+    { "path": "./packages/ai" },
     { "path": "./packages/adapters-node" },
     { "path": "./packages/adapters-capacitor" },
+    { "path": "./packages/mock-eclass" },
+    { "path": "./packages/pipeline" },
+    { "path": "./apps/cli" },
     { "path": "./apps/mobile" }
   ]
 }

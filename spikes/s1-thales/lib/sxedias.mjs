@@ -191,7 +191,6 @@ export async function akolouthisi(url, epiloges = {}, chain = []) {
 const PROTYPOS_FORMA = /<form\b([^>]*)>/gi;
 const PROTYPOS_PEDIO = /<input\b([^>]*)>/gi;
 const PROTYPOS_GRAMMI = /<(?:a|button)\b([^>]*)>/gi;
-const PROTYPOS_SYMBOLEION = /([\w-]+)\s*=\s*"([^"]*)"/g;
 const PROTYPOS_MYSTIKES_PEDIO = /(?:pass|token|secret|session|csrf|authenticity)/i;
 
 export function paremvoloi_formas(keimeno) {

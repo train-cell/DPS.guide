@@ -178,7 +178,7 @@ const ekdotis_capacitor = (
 ): EkdotisAitimaton => {
   const epitrepomeno_orios = xronos_orio_ms > 0 ? xronos_orio_ms + PERITHORIO_XRONIKOU_ORIOU_MS : undefined;
   const typos_apantisis: HttpResponseType = typos === 'dyadiko' ? 'arraybuffer' : 'text';
-  return async (aitima, _sima) => {
+  return async (aitima) => {
     const apantisi: HttpResponse = await CapacitorHttp.request({
       url: aitima.url,
       method: aitima.methodos,

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { prompt_xarti, EKDOSI_PROMPT_P2 } from '../src/prompts/index.js';
-import { EnotitaSchema } from '@dps/core';
 import { ftiaxe_enotita, ftiaxe_perigramma, ftiaxe_tmima } from './voitheia.js';
 
 function eisodos_xarti() {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Encoding, Filesystem } from '@capacitor/filesystem';
+import { Filesystem } from '@capacitor/filesystem';
 import { CapacitorApothiki, apo_base64, se_base64 } from '../src/storage/apothiki.js';
 
 /** Κοινό in-memory filesystem για το mock του plugin. */

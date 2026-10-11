@@ -36,6 +36,16 @@ export default tseslint.config(
       ],
       camelcase: 'off',
       'no-console': 'error',
+      // Οι παράμετροι με πρόθεμα `_` είναι σκόπιμα αχρησίαστες (π.χ. mocks που
+      // αγνοούν το αίτημα) — δεν είναι λάθος, είναι σύμβαση.
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
     },
   },
   {
@@ -45,10 +55,15 @@ export default tseslint.config(
     },
   },
   {
-    files: ['scripts/**/*.mjs'],
+    files: ['scripts/**/*.mjs', 'spikes/**/*.mjs'],
     languageOptions: {
       globals: {
+        AbortSignal: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
+        URLSearchParams: 'readonly',
         console: 'readonly',
+        fetch: 'readonly',
         process: 'readonly',
         setTimeout: 'readonly',
       },
@@ -61,7 +76,12 @@ export default tseslint.config(
       'vitest.config.ts',
       'apps/mobile/*.config.ts',
       'apps/mobile/e2e/**/*.ts',
-      'packages/core/tests/**/*.ts',
+      'packages/*/tests/**/*.ts',
+      'packages/*/src/**/*.test.ts',
+      'apps/cli/src/**/*.test.ts',
+      'apps/mobile/src/**/*.test.ts',
+      'scripts/**/*.test.ts',
+      'spikes/**/*.mjs',
     ],
     extends: [tseslint.configs.disableTypeChecked],
   },

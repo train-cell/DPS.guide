@@ -42,25 +42,6 @@ const POUTSA_MATHIMATON = JSON.stringify([
   { kodikos: 'PLI101', titlos: 'Μάθημα δοκιμής', url: 'https://thales.cs.unipi.gr/courses/PLI101/', epilegmeno: true },
 ]);
 
-const POUTSO_DENTRO = JSON.stringify([
-  {
-    typos: 'fakelos',
-    onoma: '',
-    diadromi: '',
-    url: 'https://thales.cs.unipi.gr/courses/PLI101/document/',
-    megethos: null,
-    imerominia: null,
-  },
-  {
-    typos: 'arxeio',
-    onoma: 'dokimio.pdf',
-    diadromi: 'dokimio.pdf',
-    url: 'https://thales.cs.unipi.gr/courses/PLI101/document/dokimio.pdf',
-    megethos: 1024,
-    imerominia: '2026-09-28T10:15:00+03:00',
-  },
-]);
-
 describe('MockEclassPyli — σύνδεση', () => {
   it('συνδέεται όταν τα scrubbed fixtures υπάρχουν', async () => {
     const pyli = new MockEclassPyli();
