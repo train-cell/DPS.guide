@@ -1,0 +1,1597 @@
+================================================================================
+ΕΙΣΑΙ Ο: ORCHESTRATOR STREAM D — UI & MOBILE APP (apps/mobile)cd C:\Users\skyd3\antigarvity\DPS.guide-wt\D
+
+================================================================================
+
+ΡΟΛΟΣ & ΑΠΟΣΤΟΛΗ:
+Είσαι ο αποκλειστικός υπεύθυνος για το Stream D. Η αποστολή σου είναι το στήσιμο 
+του frontend (Ionic React + Capacitor) ακολουθώντας αυστηρά το σκοτεινό, 
+ανάγλυφο Bevel-inspired design system (tokens, tactile cards, ring metrics, capsule navigation).
+
+ΑΠΟΚΛΕΙΣΤΙΚΟ OWNERSHIP (Δουλεύεις ΜΟΝΟ εδώ):
+- apps/mobile/src/** (L12: screens, I3: wiring, I4: pdf viewer, P1: settings)
+- apps/mobile/e2e/** (Playwright UI tests)
+
+ΑΠΑΡΑΒΑΤΟΙ ΚΑΝΟΝΕΣ (NON-NEGOTIABLE):
+1. DARK-ONLY DESIGN SYSTEM (D11): Αυστηρή χρήση των συγκεκριμένων CSS tokens 
+   (Background: #0B0B0C, Cards: #161618, Accents: #3B82F6, Muted text: #9D9DA2). 
+   Μηδέν light mode στο MVP. Μηδέν αυθαίρετα χρώματα.
+2. FAKE ADAPTERS FIRST: Στο αρχικό στάδιο (L12) όλες οι οθόνες συνδέονται με 
+   fakes/mocks μέσω Dependency Injection (ftiaxe_periballon).
+3. THREE-STATE UI: Κάθε οθόνη και widget ΠΡΕΠΕΙ να χειρίζεται και τις 3 καταστάσεις: 
+   Loading, Empty, Error. Ποτέ λευκή οθόνη ή unhandled exceptions.
+4. ZERO CONFIG TOUCH: ΑΠΑΓΟΡΕΥΕΤΑΙ να αλλάξεις τα root package.json ή tsconfig.
+5. NO BEVEL ASSETS: Αντιγράφουμε ΜΟΝΟ το visual language (tactile cards, capsule bar, rings). 
+   Κανένα asset, λογότυπο ή trademark του Bevel.
+6. TESTING: Έλεγχος UI με Playwright σε viewport iPhone με screenshots ανά οθόνη.
+
+ΑΜΕΣΑ TASKS ΕΚΚΙΝΗΣΗΣ:
+- L12 (apps/mobile: σκελετός UI, Ionic routing, Design System tokens, Fakes injection).
+- Οθόνες: Onboarding, Μαθήματα, Χάρτης Ενοτήτων, Οδηγός Μελέτης, Tutor Chat, Σήμερα.
+
+ΣΤΟ ΤΕΛΟΣ ΚΑΘΕ TASK ΠΑΡΑΔΙΔΕΙΣ REPORT:
+- Κατάσταση: DONE | BLOCKED
+- Screenshots οθονών
+- Output εντολών: pnpm test:lane L12, pnpm typecheck, pnpm lint
+================================================================================
+[ΑΚΟΛΟΥΘΕΙ ΤΟ ΠΛΗΡΕΣ ΠΛΑΝΟ ΤΟΥ PROJECT]
+
+Ο φάκελος και το GitHub repository δημιουργήθηκαν επιτυχώς:
+
+Τοπικός Φάκελος: 
+
+c:/Users/skyd3/antigarvity/DPS.guide
+Αρχικό Commit: 
+
+README.md
+GitHub Repository: train-cell/DPS.guide (Public)
+Remote & Push: Το branch main συνδέθηκε με το origin/main και έγινε push. 
+
+
+---
+name: study-agent-idea-2026-10-09
+description: "Ιδέα study-agent (eClass→ύλη→energy-aware πρόγραμμα→Telegram) από Gemini· αναλύθηκε 2026-10-09, τίποτα δεν χτίστηκε· επαληθευμένα facts Open eClass."
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 0ce7de72-883d-4619-905e-2c9a4172fa8c
+  modified: 2026-10-09T17:50:35.486Z
+---
+
+2026-10-09: ο owner έφερε ανάλυση του Gemini για agent που μπαίνει στο eClass, κατεβάζει υλικό, χτίζει ύλη και πρόγραμμα με βάση το προπονητικό φορτίο και κάνει check-in στο Telegram. Έγινε μόνο ανάλυση· δεν γράφτηκε κώδικας.
+
+Επαληθευμένα στο gunet/openeclass:
+- Το `modules/work_units` ΔΕΝ υπάρχει. Υπάρχουν `units` (ενότητες) και `work` (εργασίες/deadlines).
+- Υπάρχουν `announcements/rss.php`, `modules/mobile/` (mlogin/mtoken/mcourses/mtools/munits/mportfolio) και `offline`.
+
+Λάθη του Gemini που εντοπίστηκαν:
+- Το SHA-256 δεν γλιτώνει downloads, γιατί το hash θέλει πρώτα το αρχείο.
+- Το LLM βγάζει λεπτά και δυσκολία, κάτι που σπάει το 50/50.
+- Λείπει το exam-yield από τα παλιά θέματα.
+- Τα taper windows συγκρούονται μέσα στην εξεταστική.
+- Δεν προβλέπει ότι η ύλη ανεβαίνει σταδιακά.
+
+Προτάθηκε:
+- Ανεστραμμένο roadmap: Φάση 0 spike login thales → Φάση 1 pure scheduler + Telegram check-in με «πόσο κράτησε».
+- Readiness από `ypologismos_etoimotitas_proponisis`. Δεν υπάρχει `/api/` route που να το εκθέτει.
+
+Απόφαση owner (ίδια μέρα): προσωπικό **open-source standalone iOS app** με sideload μέσω Sideloadly, **ΟΧΙ μέσα στο R0lling** (ρητό «όχι το rolling»). Δεν γίνεται Telegram/server.
+
+Συνέπειες:
+- Delivery = local notifications με actions. Δωρεάν Apple ID: χωρίς APNs, υπογραφή 7 ημερών, 3 ενεργές apps.
+- Credentials στο Keychain της συσκευής.
+- Readiness από HealthKit· το LoggedIn μένει εκτός open-source repo.
+
+**Ίδια μέρα, αργότερα:**
+- Όνομα project/repo = **DPS.guide**.
+- Πλάνο v2: `PLANS/PLAN_2026-10-09_DPS_GUIDE.md`. Το v1 `PLAN_2026-10-09_STUDY_AGENT.md` αντικαταστάθηκε.
+- Εκτέλεση: 5 OpenCode orchestrators × ≤4 subagents, ένα stream ο καθένας (A Πυρήνας, B eClass, C Εξαγωγή/AI, D UI, E Πλατφόρμα).
+- Stack: TypeScript + Capacitor + Ionic React + Node CLI, ΟΧΙ Swift. Λόγος: οι παράλληλοι agents με δωρεάν μοντέλο στα Windows πρέπει να επαληθεύουν τοπικά.
+
+**UI σαν το Bevel**, από τον φάκελο `ui understanding/`:
+- IMG_0475–0490 = Bevel, IMG_0491–0497 = άλλες αναφορές.
+- Τα tokens βγήκαν με δειγματοληψία pixel (Pillow, χωρίς `-I`). Το muted γκρι `#7F8084` του Bevel αποτυγχάνει AA (3.1–4.1:1) → αντικαταστάθηκε με `#9D9DA2`.
+- Το `BEVEL_UI_HYPERANALYSIS.md` γράφτηκε για το LoggedIn (navy mapping) και ΔΕΝ ισχύει για το DPS.guide.
+
+**Why:** αν ο owner επανέλθει, τα facts και οι αποφάσεις δεν χρειάζεται να ξαναβγούν.
+**How to apply:**
+- Μην ξαναπροτείνεις ενσωμάτωση στο R0lling· μόνο το build recipe (macOS runner → unsigned .ipa → Sideloadly) είναι κοινό.
+- Ανοιχτά: λογαριασμός local ή CAS· δωρεάν ή paid Apple ID· Swift native (πρόταση) ή Capacitor.
+
+Βλ. [[foititis-pliroforikis-unipi]].
+
+
+# PLAN 2026-10-09 — «spoudes»: Study Agent / Tutor για Open eClass (iOS μέσω Sideloadly + CLI για Windows)
+
+| Πεδίο | Τιμή |
+|---|---|
+| Ημερομηνία | 2026-10-09 |
+| Όνομα εργασίας | `spoudes` — placeholder· αλλάζει με global replace ΠΡΙΝ το W0 (§14, απόφαση 3) |
+| Repo | `C:\Users\skyd3\spoudes\` · worktrees στο `C:\Users\skyd3\spoudes-wt\` (§2, D8) |
+| Άδεια | MIT (§2, D10) |
+| Κοινό | Owner = integrator (ενορχήστρωση, review, merge) · AI coding agents σε παράλληλα terminals OpenCode με δωρεάν μοντέλο |
+
+## §0 TL;DR και πώς διαβάζεται
+
+**Τι χτίζουμε.** Το «spoudes» (όνομα εργασίας) είναι open-source iOS εφαρμογή, εγκατεστημένη με Sideloadly, συν ένα Node CLI για Windows. Κάνει τα εξής:
+
+1. Login στο Open eClass του Τμήματος Πληροφορικής ΠαΠει (`https://thales.cs.unipi.gr`) με τα στοιχεία του χρήστη, που αποθηκεύονται στο Keychain.
+2. Κατεβάζει όλα τα αρχεία σε φάκελο ανά μάθημα, ορατό στην εφαρμογή «Αρχεία» του iOS.
+3. Αναλύει με AI την ύλη του μαθήματος που επιλέγει ο χρήστης σε ενότητες με προαπαιτούμενα.
+4. Παράγει study guide ανά ενότητα με παραπομπές σε σελίδες.
+5. Δίνει tutor chat grounded στο υλικό.
+6. Σε 2η φάση: ημερήσιο πρόγραμμα μέχρι την εξεταστική, με ειδοποιήσεις και check-in.
+
+**Εκτέλεση.**
+
+| Σειρά | Wave | Περιεχόμενο |
+|---|---|---|
+| 1 | Wave 0 ‖ S1 | Θεμέλια (W0: σειριακά, ισχυρό μοντέλο) παράλληλα με το S1 (ο owner καταγράφει το πρωτόκολλο του thales). |
+| 2 | Wave 1 | Έως 13 παράλληλα lanes (1a)· μετά το S1 ακολουθεί το 1b. |
+| 3 | Wave 2 | Integration → MVP. |
+| 4 | Waves 3–5 | Tutor/εξατομίκευση · πρόγραμμα/ειδοποιήσεις · σκλήρυνση. |
+
+**Ρεαλισμός.** Τα ~15 terminals ΔΕΝ δίνουν 15× ταχύτητα. Bottleneck είναι το review/merge του integrator, που γίνεται σειριακά. Το μέγιστο πραγματικό πλάτος είναι 13 lanes, στο Wave 1a.
+
+**Οδηγός ανάγνωσης.**
+
+| Ρόλος | Διαβάζει |
+|---|---|
+| Owner | §0–§2, §10, §12–§14 |
+| Agent | §3, §5, §6, §7 και ΜΟΝΟ τη δική του κάρτα στο §9 |
+
+## §1 Στόχος, MVP, εκτός scope
+
+### MVP — Definition of Done (end-to-end στο iPhone)
+
+1. Onboarding (base URL, στοιχεία, Gemini key) και login.
+2. Λίστα μαθημάτων και επιλογή ποια συγχρονίζονται.
+3. «Συγχρονισμός»: φάκελοι με τα αρχεία στο Files.
+4. Επιλογή μαθήματος και «Ανάλυση»: εμφανίζεται ο χάρτης ενοτήτων.
+5. Άνοιγμα ενότητας: οδηγός με παραπομπές· tap σε παραπομπή ανοίγει το PDF στη σελίδα.
+6. Tutor chat για την ενότητα.
+
+### Εκτός scope MVP
+
+| Εκτός scope | Σημείωση |
+|---|---|
+| Άλλα πανεπιστήμια | Το base URL όμως είναι ρύθμιση και όχι hardcoded. |
+| Video και ηχογραφήσεις | — |
+| Push notifications | Αδύνατο με δωρεάν Apple ID. |
+| Πολλοί χρήστες | — |
+| Server ή backend | — |
+| Android build | Εφικτό αργότερα. |
+| Αποσυμπίεση zip | — |
+| Παλιά `.ppt`/`.doc` | — |
+
+## §2 Αποφάσεις (ADR σύνοψη)
+
+| # | Απόφαση | Γιατί | Τι θα την άλλαζε |
+|---|---|---|---|
+| D1 | **Stack:** TypeScript monorepo (pnpm) + Capacitor (iOS) + Ionic React UI + Node CLI. Αντικαθιστά την προηγούμενη σύσταση για Swift. **Κόστος:** plugins για Keychain, CORS που λύνεται με CapacitorHttp, λιγότερο «native» UX. | (α) Έως 15 παράλληλοι agents στα Windows πρέπει να επαληθεύουν τη δουλειά τους τοπικά. (β) Με Swift, το UI και ό,τι αγγίζει Apple frameworks δεν χτίζεται στα Windows και επαληθεύεται μόνο σε macOS CI. (γ) Ο TS core τρέχει ίδιος σε Node (tests/CLI) και στο WebView. (δ) Το UI ελέγχεται στον browser με Playwright. | Το νέο δεδομένο που την επέβαλε: παράλληλοι agents με δωρεάν μοντέλο. Αν ο owner επιλέξει Swift, ο σχεδιασμός (ports, contracts, κάρτες) ισχύει, αλλά τα lanes UI/adapters επαληθεύονται μόνο στο macOS CI. |
+| D2 | **Local-first, χωρίς backend.** Όλα τρέχουν στη συσκευή. Τα στοιχεία σύνδεσης μένουν στο Keychain. | — | — |
+| D3 | **BYOK AI.** Ο χρήστης φέρνει το δικό του Gemini API key (secure storage). Υπάρχει provider port, ώστε αργότερα να μπει και OpenAI-compatible provider. | — | — |
+| D4 | **50/50 boundary.** Το LLM κάνει μόνο NLP: περιγράμματα, συγχώνευση, κείμενο οδηγού, tutor. Ό,τι αριθμητικό (λεπτά, σειρά, ημερομηνίες, `apodosi_exetasis`, κατάσταση μάθησης) υπολογίζεται deterministic στο `packages/core`. Το LLM δεν βγάζει αριθμούς εμπιστοσύνης· χρησιμοποιεί enums (π.χ. `isxys: 'isxyri' \| 'asthenis'`). | — | — |
+| D5 | **Storage = αρχεία JSON + Markdown** με σταθερό layout (§5.3). Το layout είναι ίδιο σε Node fs και Capacitor Filesystem, και ορατό στο Files. | — | — |
+| D6 | **Cache ανά content hash** σε κάθε LLM βήμα: ίδιο input → καμία νέα κλήση. Οι οδηγοί παράγονται lazily. | — | — |
+| D7 | **Δωρεάν Apple ID.** Μόνο local notifications. Χωρίς extensions/widgets. Σταθερό bundle ID που δεν αλλάζει ποτέ, αλλιώς χάνονται τα δεδομένα. Υπογραφή 7 ημερών, με Sideloadly auto-refresh. | — | Ανοιχτή απόφαση §14 (2): δωρεάν ή paid Apple ID. |
+| D8 | **Repo.** Θέση `C:\Users\skyd3\spoudes\`, worktrees στο `C:\Users\skyd3\spoudes-wt\`. PRIVATE μέχρι το H2, όπου γίνεται sweep PII/copyright σε όλο το history· μετά PUBLIC. Σε private repo τα macOS λεπτά του CI μετράνε στο δωρεάν όριο με πολλαπλασιαστή (⚠️ επαλήθευση τρέχουσας τιμολόγησης GitHub Actions). Λίγα IPA builds αρκούν. | Εκτός του `C:\Users\skyd3\antigarvity\`, γιατί εκεί απαγορεύεται νέο version control. | Ανοιχτή απόφαση §14 (4): πότε γίνεται public (πρόταση: στο H2). |
+| D9 | **Naming**, με υποχρεωτικό glossary §5.1: συναρτήσεις, μεταβλητές, πεδία JSON σε snake_case Greeklish (`fere_mathimata`, `kodikos_mathimatos`)· types/interfaces σε PascalCase Greeklish (`XartisMathimatos`)· σταθερές UPPER_SNAKE· φάκελοι modules όπως στο §6. Το ESLint `camelcase` είναι off. | Κανόνας owner. | — |
+| D10 | **Άδεια MIT.** Απαγορεύεται αντιγραφή κώδικα από GPL projects (π.χ. το `sdi2200262/eclass-mcp-server`, GPL-3.0). Επιτρέπεται μόνο ανάγνωση για κατανόηση της ροής CAS. | — | — |
+
+## §3 Κανόνες για ΟΛΟΥΣ τους agents (non-negotiable)
+
+1. Δουλεύεις ΜΟΝΟ στο worktree/branch της κάρτας σου και ΜΟΝΟ στα paths του Ownership της. Αν χρειάζεσαι αλλαγή αλλού, γράφεις `docs/requests/<ID>.md` και σταματάς.
+2. Τα contracts (`packages/core/src/contracts/**`) είναι FROZEN από το tag `contracts-v1`. Αλλαγή γίνεται μόνο από τον integrator (§10).
+3. ΑΠΑΓΟΡΕΥΕΤΑΙ να αγγίξεις `package.json`, `pnpm-lock.yaml`, `tsconfig*.json`, ESLint/Vitest config. Όλα τα dependencies εγκαθίστανται στο W0. Νέο dependency ζητείται με request.
+4. Test-first: πρώτα τα tests της κάρτας, τα βλέπεις κόκκινα, μετά υλοποίηση.
+5. Μηδέν network στα tests. eClass μόνο μέσω `packages/mock-eclass` ή fixtures. LLM μόνο μέσω `MockLlm` (record/replay).
+6. ΠΟΤΕ πραγματικά credentials, ΠΟΤΕ αίτημα προς thales από agent. Μόνο ο owner τρέχει το S1 και το real smoke.
+7. Zero guessing:
+   - Κανένα CSS selector, endpoint ή πεδίο φόρμας χωρίς fixture στο `fixtures/eclass/scrubbed/` και αναφορά στο `docs/eclass-protocol.md`.
+   - Κανένα API βιβλιοθήκης πριν ελέγξεις τα `.d.ts` στο `node_modules`.
+   - Ό,τι έχει «⚠️ επαλήθευση» το επιβεβαιώνεις πριν το χρησιμοποιήσεις.
+8. TypeScript strict. Μηδέν `any` (χρησιμοποιείς `unknown` + zod), μηδέν `@ts-ignore`/`@ts-expect-error`.
+9. Σε αποτυχία ΠΟΤΕ ψεύτικα ή default δεδομένα που μοιάζουν αληθινά. Επιστρέφεις `Apotelesma` με `Sfalma`· το UI δείχνει error state.
+10. Μηδέν magic numbers. Σταθερές UPPER_SNAKE στο `packages/core/src/statheres.ts` ή στην κορυφή του αρχείου.
+11. Logs: ποτέ κωδικοί, cookies, API keys, Authorization headers. Το logger κάνει scrub.
+12. Windows: τα tests τρέχουν ΜΟΝΟ μέσω `pnpm test:lane`, που περνά από το `scripts/test-lock.mjs` (4 ταυτόχρονα test runs σε όλο το μηχάνημα, vitest pool threads, ≤2 workers). Αλλιώς εμφανίζονται ψεύτικες αποτυχίες (π.χ. 0xC0000142).
+13. Αν αποτύχεις 2 φορές στο ίδιο πρόβλημα: γράφεις BLOCKED στο report και σταματάς. ΠΟΤΕ δεν χαλαρώνεις ή διαγράφεις tests για να περάσουν.
+14. Commits με Conventional Commits, μόνο στο lane branch. ΠΟΤΕ push στο main, ΠΟΤΕ merge.
+15. Στο repo δεν μπαίνει ΚΑΝΕΝΑ αρχείο υλικού μαθήματος (PDF/PPTX/θέματα) ούτε μη-scrubbed HTML. Τα `data/` και `fixtures/eclass/raw/` είναι στο `.gitignore`.
+16. Στο τέλος γράφεις report κατά το πρότυπο του §10.
+
+## §4 Αρχιτεκτονική
+
+```
+apps/mobile (Ionic React + Capacitor)          apps/cli (Node, Windows)
+        │ adapters-capacitor                          │ adapters-node
+        └──────────────────────┬──────────────────────┘
+                     packages/pipeline (ορχήστρωση, idempotent βήματα, cache)
+        ┌──────────────┬───────────────┬──────────────┬──────────────┐
+  packages/eclass  packages/extract  packages/ai   packages/mock-eclass (μόνο tests)
+        └──────────────┴───────────────┴──────────────┘
+                     packages/core (contracts, pure λογική: grafos, megethi, epikyrosi, programma, mathisi, apodosi)
+```
+
+**Ports & adapters.**
+
+- Ο core ορίζει τα ports: `HttpPyli`, `KatevasmaPyli`, `ApothikiPyli`, `MystikaPyli`, `LlmPyli`, `RologiPyli`, `KatagrafiPyli`, `EclassPyli` (κώδικας στο §5.2).
+- Node adapters: undici + tough-cookie, fs, Windows Credential Manager.
+- Capacitor adapters: CapacitorHttp + CapacitorCookies, `@capacitor/filesystem`, `@capacitor/file-transfer`, secure storage plugin, `@capacitor/local-notifications`.
+
+Αντιστοίχιση port → adapter → κάρτα (σύνοψη από τις κάρτες του §9):
+
+| Port | Node adapter | Capacitor adapter | Κάρτα |
+|---|---|---|---|
+| `HttpPyli` | undici + tough-cookie | CapacitorHttp + CapacitorCookies | L11 |
+| `KatevasmaPyli` | undici (streaming) | `@capacitor/file-transfer` | L10 |
+| `ApothikiPyli` | fs/promises | `@capacitor/filesystem` (`Directory.Documents`) | L10 |
+| `MystikaPyli` | Windows Credential Manager (`@napi-rs/keyring` ⚠️) | secure storage plugin / Keychain (⚠️) | L11 |
+| `LlmPyli` | Gemini REST μέσω `HttpPyli` (κοινή υλοποίηση) | ίδια | L07 (wrappers cache/προϋπολογισμού: L09) |
+| `EclassPyli` | `packages/eclass` (κοινή υλοποίηση) | ίδια | L14, L15 |
+| `RologiPyli` | δεν ανατίθεται σε κάρτα (μόνο `FakeRologi` στο W0) | — | — |
+| `KatagrafiPyli` | δεν ανατίθεται σε κάρτα | — | — |
+| (ειδοποιήσεις — χωρίς port στον core) | — | `@capacitor/local-notifications` | P3 |
+
+**Pipeline.**
+
+| # | Βήμα | Είσοδος | Έξοδος | Τύπος | Κλειδί cache |
+|---|---|---|---|---|---|
+| 1 | `syndesi` | στοιχεία από `MystikaPyli` | session cookies | deterministic | — |
+| 2 | `anakalypsi` | — | `mathimata.json` | deterministic | — |
+| 3 | `sygxronismos` | — | αρχεία + `eurethrio-arxeion.json` | deterministic | delta μεγέθους/ημερομηνίας/ETag |
+| 4 | `exagogi` | αρχείο | `keimeno/<arxeio_id>.json` | deterministic | sha256 περιεχομένου |
+| 5 | `perigramma` | σελίδες αρχείου | `perigrammata/<arxeio_id>.json` | LLM, ανά αρχείο | hash εισόδου |
+| 6 | `xartis` | όλα τα περιγράμματα, σε συντομία | `xartis.json` + deterministic DAG/επικύρωση | LLM, ανά μάθημα | hash εισόδου |
+| 7 | `megethi` | xartis + σελίδες | `lepta_ektimisi` στον χάρτη | deterministic | — |
+| 8 | `odigos` | κείμενο πηγών της ενότητας | `odigoi/<enotita_id>.md` + `.meta.json` | LLM, lazy | hash εισόδου |
+| 9 | `tutor` | ενότητα + οδηγός + ιστορικό | `synomilies/<enotita_id>.jsonl` | LLM | — |
+| 10 | `programma` (Φάση 2) | ενότητες + εξετάσεις + διαθεσιμότητα | `programma.json` | deterministic | — |
+
+## §5 Contracts
+
+### §5.1 Glossary (υποχρεωτικά ονόματα)
+
+| Έννοια | Type | Βασικά πεδία |
+|---|---|---|
+| μάθημα | `Mathima` | `kodikos`, `titlos`, `url`, `epilegmeno` |
+| αρχείο | `Arxeio` | `id`, `diadromi`, `url`, `megethos`, `imerominia`, `etag`, `sha256` (πλήρης ορισμός στο §5.2: επιπλέον `kodikos_mathimatos`, `diplotypo_tou`) |
+| σελίδα | `Selida` | `arxeio_id`, `arithmos`, `keimeno`, `lekseis`, `xoris_keimeno` |
+| εύρος πηγής | `Pigi` | `arxeio_id`, `apo`, `eos` |
+| περίγραμμα αρχείου | `Perigramma` | `arxeio_id`, `titlos`, `tmimata` (§5.2) |
+| τμήμα περιγράμματος | `Tmima` | `titlos`, `selides`, `typos`, `ennoies`, `proapaitoumena` (§5.2) |
+| ενότητα μελέτης | `Enotita` | `id`, `titlos`, `piges`, `ennoies`, `proapaitoumenes`, `seira`, `lepta_ektimisi`, `apodosi_exetasis` (§5.2) |
+| χάρτης μαθήματος | `XartisMathimatos` | `kodikos_mathimatos`, `enotites`, `ekdosi_prompt`, `dimiourgithike` (§5.2) |
+| παραπομπή | `Parapompi` | `arxeio_id`, `selida` (§5.2) |
+| μεταδεδομένα οδηγού | `OdigosMeta` | `enotita_id`, `parapompes`, `montelo`, `ekdosi_prompt`, `hash_eisodou`, `proeidopoiiseis` (§5.2) |
+| εξέταση | `Exetasi` | `kodikos_mathimatos`, `imerominia`, `tropos` (§5.2) |
+| τρόπος εξέτασης | `TroposExetasis` | enum: `anoixta_vivlia`, `kleista_vivlia`, `polapli_epilogi_arnitiki`, `ergasia` (§5.2) |
+| σφάλμα | `Sfalma` | `kodikos`, `minima`, `aitia?` (§5.2) |
+| αποτέλεσμα | `Apotelesma<T>` | `{ ok: true; timi }` ή `{ ok: false; sfalma }` (§5.2) |
+| κατάσταση μάθησης | `KatastasiMathisis` | — (δεν ορίζεται στο §5.2· χρήση στο T2) |
+| συνεδρία μελέτης | `SynedriaMeletis` | — (δεν ορίζεται στο §5.2) |
+| πρόγραμμα | `Programma` | — (δεν ορίζεται στο §5.2· χρήση στο L04) |
+
+Ρήματα συναρτήσεων: `fere_`, `katevase_`, `exagage_`, `ftiaxe_`, `ypologise_`, `epikyrose_`, `parage_`.
+
+### §5.2 Κώδικας contracts (FROZEN από το tag `contracts-v1`)
+
+```ts
+// packages/core/src/contracts/apotelesma.ts
+export type KodikosSfalmatos =
+  | 'AUTH_APOTYXIA' | 'SESSION_LIXI' | 'DIKTYO' | 'TIMEOUT' | 'RATE_LIMIT'
+  | 'MI_EGKYRO_SXIMA' | 'DEN_VRETHIKE' | 'MI_YPOSTIRIZOMENO' | 'PROYPOLOGISMOS'
+  | 'AKYROTHIKE' | 'AGNOSTO';
+export interface Sfalma { kodikos: KodikosSfalmatos; minima: string; aitia?: unknown }
+export type Apotelesma<T> = { ok: true; timi: T } | { ok: false; sfalma: Sfalma };
+
+// packages/core/src/contracts/montela.ts  (zod schemas· τα types με z.infer)
+export type TyposTmimatos =
+  | 'eisagogi' | 'orismoi' | 'theoria' | 'apodeixi'
+  | 'algorithmos' | 'paradeigma' | 'askiseis' | 'anakefalaiosi';
+export interface Mathima { kodikos: string; titlos: string; url: string; epilegmeno: boolean }
+export interface Arxeio {
+  id: string; kodikos_mathimatos: string; diadromi: string; url: string;
+  megethos: number | null; imerominia: string | null; etag: string | null;
+  sha256: string | null; diplotypo_tou: string | null;
+}
+export interface Selida { arxeio_id: string; arithmos: number; keimeno: string; lekseis: number; xoris_keimeno: boolean }
+export interface Pigi { arxeio_id: string; apo: number; eos: number }
+export interface Tmima {
+  titlos: string; selides: { apo: number; eos: number }; typos: TyposTmimatos;
+  ennoies: string[]; proapaitoumena: string[];
+}
+export interface Perigramma { arxeio_id: string; titlos: string; tmimata: Tmima[] }
+export interface Proapaitoumeno { enotita_id: string; isxys: 'isxyri' | 'asthenis' }
+export interface Enotita {
+  id: string; titlos: string; piges: Pigi[]; ennoies: string[];
+  proapaitoumenes: Proapaitoumeno[]; seira: number;
+  lepta_ektimisi: number | null; apodosi_exetasis: number | null;
+}
+export interface XartisMathimatos { kodikos_mathimatos: string; enotites: Enotita[]; ekdosi_prompt: string; dimiourgithike: string }
+export interface Parapompi { arxeio_id: string; selida: number }
+export interface OdigosMeta {
+  enotita_id: string; parapompes: Parapompi[]; montelo: string;
+  ekdosi_prompt: string; hash_eisodou: string; proeidopoiiseis: string[];
+}
+export type TroposExetasis = 'anoixta_vivlia' | 'kleista_vivlia' | 'polapli_epilogi_arnitiki' | 'ergasia';
+export interface Exetasi { kodikos_mathimatos: string; imerominia: string | null; tropos: TroposExetasis }
+
+// packages/core/src/contracts/pyles.ts
+import type { ZodType } from 'zod';
+export interface HttpAitima {
+  methodos: 'GET' | 'POST' | 'HEAD'; url: string;
+  kefalides?: Record<string, string>; soma_forma?: Record<string, string>; soma_json?: unknown;
+  akolouthise_anakateuthinseis: boolean; xronos_orio_ms: number;
+  typos_apantisis: 'keimeno' | 'dyadiko'; simatodotis?: AbortSignal;
+}
+export interface HttpApantisi {
+  katastasi: number; kefalides: Record<string, string>; teliko_url: string;
+  keimeno?: string; dyadiko?: Uint8Array;
+}
+export interface HttpPyli { aitima(a: HttpAitima): Promise<Apotelesma<HttpApantisi>> }
+export interface KatevasmaPyli {
+  katevase(url: string, proorismos: string, kefalides: Record<string, string>,
+           simatodotis?: AbortSignal): Promise<Apotelesma<{ megethos: number }>>;
+}
+export interface ApothikiPyli {
+  diavase_keimeno(diadromi: string): Promise<Apotelesma<string>>;
+  grapse_keimeno(diadromi: string, periexomeno: string): Promise<Apotelesma<void>>;   // atomic
+  diavase_dyadiko(diadromi: string): Promise<Apotelesma<Uint8Array>>;
+  grapse_dyadiko(diadromi: string, dedomena: Uint8Array): Promise<Apotelesma<void>>;  // atomic
+  yparxei(diadromi: string): Promise<boolean>;
+  lista(fakelos: string): Promise<Apotelesma<string[]>>;
+  diagrafi(diadromi: string): Promise<Apotelesma<void>>;
+}
+export type KleidiMystikou = 'eclass_onoma_xristi' | 'eclass_kodikos' | 'llm_api_key';
+export interface MystikaPyli {
+  pare(k: KleidiMystikou): Promise<string | null>;
+  vale(k: KleidiMystikou, timi: string): Promise<void>;
+  svise(k: KleidiMystikou): Promise<void>;
+}
+export interface LlmAitimaJson<T> {
+  systima: string; xristis: string; sxima: ZodType<T>;
+  ekdosi_prompt: string; thermokrasia: number; simatodotis?: AbortSignal;
+}
+export interface LlmAitimaKeimenou {
+  systima: string; minimata: { rolos: 'xristis' | 'montelo'; keimeno: string }[];
+  ekdosi_prompt: string; thermokrasia: number; simatodotis?: AbortSignal;
+}
+export interface LlmPyli {
+  readonly montelo: string;
+  parage_json<T>(a: LlmAitimaJson<T>): Promise<Apotelesma<T>>;
+  parage_keimeno(a: LlmAitimaKeimenou): Promise<Apotelesma<string>>;
+}
+export interface RologiPyli { tora(): Date }
+export interface KatagrafiPyli {
+  pliroforia(minima: string, dedomena?: Record<string, unknown>): void;
+  proeidopoiisi(minima: string, dedomena?: Record<string, unknown>): void;
+  sfalma(minima: string, dedomena?: Record<string, unknown>): void;
+}
+export interface KomvosArxeiou {
+  typos: 'fakelos' | 'arxeio'; onoma: string; diadromi: string; url: string;
+  megethos: number | null; imerominia: string | null;
+}
+export interface EclassPyli {
+  syndesi(): Promise<Apotelesma<void>>;
+  fere_mathimata(): Promise<Apotelesma<Mathima[]>>;
+  fere_dentro_arxeion(kodikos: string): Promise<Apotelesma<KomvosArxeiou[]>>;
+}
+```
+
+### §5.3 Layout αποθήκευσης
+
+```
+<riza>/                         iOS: Documents/ (ορατό στο Files) · CLI: ./data/
+  mathimata.json
+  rythmiseis.json               μη-μυστικές ρυθμίσεις: base_url, exetaseis, diathesimotita, montelo
+  <KODIKOS_MATHIMATOS>/
+    arxeia/<ίδια δομή φακέλων με το eClass>/<αρχείο>
+    themata/                    ο χρήστης ρίχνει εδώ PDF παλιών θεμάτων (Wave 3)
+    .spoudes/
+      eurethrio-arxeion.json
+      keimeno/<arxeio_id>.json
+      perigrammata/<arxeio_id>.json
+      xartis.json
+      odigoi/<enotita_id>.md
+      odigoi/<enotita_id>.meta.json
+      synomilies/<enotita_id>.jsonl
+      cache/llm/<hash>.json
+```
+
+Κανόνες ID και διαδρομών:
+
+- `arxeio_id` = sha256(`kodikos_mathimatos` + `diadromi`). Είναι σταθερό ID, ανεξάρτητο από το περιεχόμενο. Το `sha256` του περιεχομένου είναι ξεχωριστό πεδίο.
+- Οι διαδρομές κανονικοποιούνται σε Unicode NFC.
+- Αφαιρούνται οι χαρακτήρες `/ \ : * ? " < > |`.
+- Απαγορεύεται το `..`.
+
+## §6 Repo layout, ownership, dependencies
+
+### §6.1 Δομή
+
+```
+spoudes/
+  package.json · pnpm-workspace.yaml · tsconfig.base.json · eslint.config.mjs · vitest.workspace.ts
+  .gitignore · .gitattributes · .editorconfig · LICENSE · ownership.json
+  scripts/  test-lock.mjs · check-ownership.mjs · scrub-fixtures.mjs · make-fixtures/ · ios/
+  docs/     PLAN.md · eclass-protocol.md · requests/
+  fixtures/ eclass/raw/ (gitignored) · eclass/scrubbed/ · pdf/ · office/ · llm/
+  spikes/   s1-thales/
+  packages/ core · eclass · extract · ai · adapters-node · adapters-capacitor · pipeline · mock-eclass
+  apps/     cli · mobile
+  .github/workflows/
+```
+
+### §6.2 Ownership
+
+| Lane | Globs |
+|---|---|
+| W0 | όλο το repo, ΜΟΝΟ στο Wave 0 |
+| S1 | `spikes/s1-thales/**`, `scripts/scrub-fixtures.mjs`, `fixtures/eclass/**`, `docs/eclass-protocol.md` |
+| L01 | `packages/core/src/grafos/**` |
+| L02 | `packages/core/src/megethi/**` |
+| L03 | `packages/core/src/epikyrosi/**` |
+| L04 | `packages/core/src/programma/**` |
+| L05 | `packages/extract/src/pdf/**`, `scripts/make-fixtures/pdf.mjs`, `fixtures/pdf/**` |
+| L06 | `packages/extract/src/office/**`, `scripts/make-fixtures/office.mjs`, `fixtures/office/**` |
+| L07 | `packages/ai/src/gemini/**` |
+| L08 | `packages/ai/src/prompts/**` |
+| L09 | `packages/ai/src/cache/**`, `packages/ai/src/mock/**`, `fixtures/llm/**` |
+| L10 | `packages/adapters-node/src/storage/**`, `packages/adapters-capacitor/src/storage/**` |
+| L11 | `packages/adapters-node/src/http/**`, `packages/adapters-node/src/mystika/**`, `packages/adapters-capacitor/src/http/**`, `packages/adapters-capacitor/src/mystika/**` |
+| L12 | `apps/mobile/src/**` (εκτός `apps/mobile/src/provoli-pdf/**`), `apps/mobile/e2e/**` |
+| L13 | `packages/mock-eclass/**` |
+| L14 | `packages/eclass/src/auth/**` |
+| L15 | `packages/eclass/src/crawl/**` |
+| L16 | `.github/workflows/**`, `scripts/ios/**` |
+| I1 | `packages/pipeline/**` (εκτός `src/themata/**` και `src/programma/**`) |
+| I2 | `apps/cli/**` |
+| I3 | `apps/mobile/src/**` (εκτός `provoli-pdf/`, `tutor/`, `programma/`, `eidopoiiseis/`) |
+| I4 | `apps/mobile/src/provoli-pdf/**` |
+| T1 | `packages/ai/src/tutor/**`, `apps/mobile/src/tutor/**` |
+| T2 | `packages/core/src/mathisi/**` |
+| T3 | `packages/pipeline/src/themata/**`, `packages/core/src/apodosi/**` |
+| T4 | `packages/ai/src/prompts/tropos/**` |
+| P1 | `apps/mobile/src/programma/**` |
+| P2 | `packages/pipeline/src/programma/**` |
+| P3 | `packages/adapters-capacitor/src/eidopoiiseis/**`, `apps/mobile/src/eidopoiiseis/**` |
+
+Κοινά αρχεία:
+
+- Τα barrel `index.ts` κάθε module τα δημιουργεί το W0. Κάθε lane γεμίζει ΜΟΝΟ το `src/<module>/index.ts` του.
+- Τα `package.json`/lockfile δεν τα αγγίζει κανένα lane.
+
+### §6.3 Dependencies που εγκαθιστά το W0
+
+Τελευταίες σταθερές εκδόσεις· ⚠️ επαλήθευση συντήρησης/συμβατότητας.
+
+| Κατηγορία | Πακέτα | ⚠️ επαλήθευση |
+|---|---|---|
+| Βασικά | typescript, zod (v4) | `z.toJSONSchema` |
+| Tests και ποιότητα | vitest, @vitest/coverage-v8, eslint, typescript-eslint, prettier, @playwright/test | — |
+| Εξαγωγή κειμένου και fixtures | pdfjs-dist, pdf-lib, @pdf-lib/fontkit, jszip, fast-xml-parser, mammoth, pptxgenjs, docx | — |
+| Node adapters, CLI, mock server | undici, tough-cookie, @napi-rs/keyring, commander, fastify | @napi-rs/keyring |
+| UI | react, react-dom, @ionic/react, @ionic/react-router + react-router, vite, @vitejs/plugin-react, react-markdown, react-pdf | react-router (συμβατή έκδοση με Ionic), react-pdf |
+| Capacitor | @capacitor/core, @capacitor/cli, @capacitor/ios, @capacitor/filesystem, @capacitor/file-transfer, @capacitor/local-notifications, @aparajita/capacitor-secure-storage | @aparajita/capacitor-secure-storage |
+| Γραμματοσειρά για fixtures | Noto Sans (άδεια OFL), στο `fixtures/fonts/` | — |
+
+## §7 AI ροή και deterministic λογική
+
+### §7.1 Prompts (υλοποίηση στο L08)
+
+| Prompt | Builder | Εμβέλεια | Είσοδος | Έξοδος (§4) |
+|---|---|---|---|---|
+| P1 | `prompt_perigrammatos` | ανά αρχείο | σελίδες αρχείου, με δείκτες `[σ.N]` | `perigrammata/<arxeio_id>.json` (βήμα 5) |
+| P2 | `prompt_xarti` | ανά μάθημα | ΜΟΝΟ τίτλοι, εύρη, έννοιες και τύποι από όλα τα περιγράμματα | `XartisMathimatos` → `xartis.json` (βήμα 6) |
+| P3 | `prompt_odigou` | lazy, ανά ενότητα | κείμενο πηγών της ενότητας | `odigoi/<enotita_id>.md` + `.meta.json` (βήμα 8) |
+| P4 | `prompt_tutor` | ανά ενότητα | ενότητα + οδηγός + ιστορικό | `synomilies/<enotita_id>.jsonl` (βήμα 9) |
+
+**P1 — `prompt_perigrammatos`, ανά αρχείο.**
+
+- Κείμενο με δείκτες `[σ.N]`.
+- Εύρη σελίδων ΜΟΝΟ από τους δείκτες.
+- `typos` από το enum `TyposTmimatos`.
+- ≤8 έννοιες ανά τμήμα.
+- «Μην επινοείς».
+- Μεγάλα αρχεία κόβονται με `MAX_SELIDES_ANA_KLISI = 40` και `MAX_XARAKTIRES_ANA_KLISI = 60000`. Τα μερικά περιγράμματα ενώνονται deterministic.
+
+**P2 — `prompt_xarti`, ανά μάθημα.**
+
+- Είσοδος: ΜΟΝΟ τίτλοι, εύρη, έννοιες και τύποι από όλα τα περιγράμματα, όχι πλήρες κείμενο.
+- Έξοδος: `XartisMathimatos`. Συγχωνεύει τμήματα διαφορετικών αρχείων που καλύπτουν το ίδιο θέμα. Τα προαπαιτούμενα γράφονται με id και `isxys`.
+
+**P3 — `prompt_odigou`, lazy ανά ενότητα.**
+
+- Υποχρεωτικές ενότητες: 🎯 Στόχοι · 👶 ELI5 · 🔬 Θεωρία · 🧪 Λυμένο παράδειγμα · ⚠️ Παγίδες · 🔗 Συνδέσεις · ✅ Αυτοέλεγχος.
+- Το λυμένο παράδειγμα προέρχεται ΜΟΝΟ από την πηγή· αν δεν υπάρχει, γράφει «Δεν υπάρχει λυμένο παράδειγμα στο υλικό».
+- Ο αυτοέλεγχος έχει 3–5 ερωτήσεις με κρυφές απαντήσεις.
+- Κάθε παράγραφος κλείνει με παραπομπή `[[arxeio_id:σελίδα]]`.
+- Αριθμητικός υπολογισμός που δεν υπάρχει αυτούσιος στην πηγή σημειώνεται «⚠️ μη επαληθευμένο» (50/50).
+- Το ύφος ακολουθεί τη μέθοδο που ήδη δουλεύει για τον owner: ELI5 → θεωρία → μοτίβα εξετάσεων → παγίδες.
+
+**P4 — `prompt_tutor`.**
+
+- Λειτουργίες:
+  - `exigisi`: εξήγηση.
+  - `exetase_me`: μία ερώτηση τη φορά· περιμένει απάντηση και την αξιολογεί με παραπομπή.
+  - `kathodigisi_askisis`: υποδείξεις, όχι πλήρης λύση εκτός αν ζητηθεί.
+- Απαντά «Δεν υπάρχει στο υλικό» όταν κάτι δεν τεκμηριώνεται.
+- Αριθμητικές απαντήσεις δεν τις βαθμολογεί το LLM:
+  - Αν η αναμενόμενη τιμή υπάρχει στην πηγή, γίνεται deterministic σύγκριση.
+  - Αλλιώς απαντά «δεν μπορώ να επαληθεύσω».
+
+Κοινός κανόνας: το `ekdosi_prompt` αυξάνει σε κάθε αλλαγή κειμένου prompt, ώστε το cache να ακυρώνεται σκόπιμα.
+
+### §7.2 Έλεγχος κόστους
+
+- Cache: κλειδί = sha256(`ekdosi_prompt` + `montelo` + κανονικοποιημένο input).
+- Lazy οδηγοί.
+- Ημερήσιο όριο κλήσεων σε ώρα Europe/Athens· όταν ξεπεραστεί, επιστρέφεται `PROYPOLOGISMOS`.
+- Timeout `LLM_TIMEOUT_MS = 150000` ανά κλήση.
+- Retry μόνο σε 429/5xx, με exponential backoff + jitter, `MEGISTES_EPANALIPSEIS = 3`.
+- Σε τελική αποτυχία: error state, ποτέ ψεύτικη έξοδος.
+- Το μοντέλο ορίζεται στις ρυθμίσεις, όχι hardcoded.
+
+| Σταθερά | Τιμή |
+|---|---|
+| `LLM_TIMEOUT_MS` | 150000 |
+| `MEGISTES_EPANALIPSEIS` | 3 |
+
+### §7.3 Deterministic λογική (core)
+
+**Μεγέθη (L02).**
+
+- `lepta = Σ_σελίδες RYTHMOS_LEPTA_ANA_TYPO[typos] × clamp(lekseis / MESES_LEKSEIS_SELIDAS, ELAXISTO_KLASMA, MEGISTO_KLASMA) × syntelestis_xristi`.
+- Αρχικές τιμές σε λεπτά ανά σελίδα. ΕΙΝΑΙ ΥΠΟΘΕΣΕΙΣ ΕΚΚΙΝΗΣΗΣ που καλιμπράρονται, όχι μετρήσεις:
+
+| typos | λεπτά/σελίδα |
+|---|---|
+| eisagogi | 1.5 |
+| orismoi | 2 |
+| theoria | 3 |
+| apodeixi | 5 |
+| algorithmos | 4 |
+| paradeigma | 4 |
+| askiseis | 8 |
+| anakefalaiosi | 1.5 |
+
+- `MESES_LEKSEIS_SELIDAS = 120`, `ELAXISTO_KLASMA = 0.3`, `MEGISTO_KLASMA = 3`.
+- Calibration με EWMA: `neos = (1 − ALFA)·palios + ALFA·(pragmatika / ektimisi)`, με `ALFA = 0.3` και clamp [0.5, 3.0].
+
+**Πρόγραμμα (L04, Φάση 2).** Αναλυτικά στην κάρτα L04 (§9).
+
+**Κατάσταση μάθησης (T2).** Leitner 5 κουτιών στο MVP, deterministic.
+
+**Απόδοση εξέτασης (T3).** `apodosi_exetasis = Σ συχνότητα εμφάνισης × μονάδες`, από αντιστοίχιση θεμάτων σε ενότητες.
+
+## §8 Ενσωμάτωση eClass
+
+**Επαληθευμένο στις 2026-10-09:**
+
+- Η σελίδα `https://thales.cs.unipi.gr/main/login_form.php` έχει τοπική φόρμα «Σύνδεση με eclass» (username/password) και σύνδεσμο CAS `https://thales.cs.unipi.gr/modules/auth/cas.php`. Καμία ένδειξη 2FA.
+- Μετά το login η αρχική είναι η `/main/portfolio.php`.
+- Το Open eClass (gunet/openeclass) έχει modules `document`, `announcements` (με `rss.php`), `units`, `work`, `course_description` και `mobile` (`mlogin.php`, `mtoken.php`, `mcourses.php`, `mtools.php`, `munits.php`, `mportfolio.php`).
+- Το thales παραπέμπει στο επίσημο Open eClass Mobile app.
+- Σε άλλο Open eClass φάνηκε μοτίβο αρχείων `modules/document/file.php/<ΚΩΔΙΚΟΣ>/<διαδρομή>` (⚠️ επαλήθευση στο thales).
+
+**Όλα τα υπόλοιπα** (πεδία φορμών, selectors, παράμετροι φακέλων, μορφή του mobile API) = ⚠️ επαλήθευση μέσω S1. Κανένας agent δεν τα υποθέτει.
+
+**Στρατηγικές auth** (υλοποιούνται μόνο όσες επιβεβαιώσει το S1):
+
+| Στρατηγική | Μηχανισμός |
+|---|---|
+| `TopikiSyndesi` | form POST |
+| `CasSyndesi` | GET σελίδας CAS → hidden πεδία → POST → redirects |
+| `KinitoApiSyndesi` | token |
+
+**Ευγένεια crawler:**
+
+| Κανόνας | Τιμή |
+|---|---|
+| `KATHYSTERISI_METAXY_AITIMATON_MS` | 500 |
+| `MEGISTI_PARALLILIA_LIPSEON` | 2 |
+| User-Agent | `spoudes/<έκδοση>` |
+| Retry | μόνο σε 5xx |
+| 401 / λήξη session | ΜΙΑ επανασύνδεση |
+| Λάθος κωδικός | καμία επανάληψη, για να μην κλειδώσει ο λογαριασμός |
+
+**Όρια αρχείων:**
+
+- `MEGISTO_MEGETHOS_ARXEIOU_MB = 100`· μεγαλύτερο αρχείο παραλείπεται με προειδοποίηση.
+- Allowlist επεκτάσεων: pdf, pptx, ppt, docx, doc, txt, png, jpg, zip. Το zip κατεβαίνει αλλά δεν αποσυμπιέζεται στο MVP.
+
+## §9 Κάρτες εργασίας
+
+Κάθε κάρτα είναι αυτοτελής και έχει τα ίδια 9 πεδία. Ο agent διαβάζει §3, §5, §6, §7 και ΜΟΝΟ τη δική του κάρτα. Το DoD κάθε κάρτας περιέχει πάντα τις 4 κοινές εντολές (`pnpm test:lane <ID>`, `pnpm typecheck`, `pnpm lint`, `pnpm check:ownership --lane <ID>`) και από κάτω τα ειδικά κριτήρια της κάρτας.
+
+Ευρετήριο καρτών:
+
+| Κάρτα | Τίτλος | Wave | Μέγεθος | Εξαρτάται από |
+|---|---|---|---|---|
+| W0 | Θεμέλια | 0 | L | — |
+| S1 | Spike πρωτοκόλλου thales | 0 (‖ W0) | M | — |
+| L01 | core/grafos | 1a | S | W0 (`contracts-v1`) |
+| L02 | core/megethi | 1a | S | W0 (`contracts-v1`) |
+| L03 | core/epikyrosi | 1a | M | W0 (`contracts-v1`) |
+| L04 | core/programma | 1a | L | W0 (`contracts-v1`) |
+| L05 | extract/pdf | 1a | M | W0 (`contracts-v1`) |
+| L06 | extract/office | 1a | M | W0 (`contracts-v1`) |
+| L07 | ai/gemini | 1a | M | W0 (`contracts-v1`) |
+| L08 | ai/prompts | 1a | M | W0 (`contracts-v1`) |
+| L09 | ai/cache + mock + προϋπολογισμός | 1a | S | W0 (`contracts-v1`) |
+| L10 | adapters αποθήκευσης | 1a | M | W0 (`contracts-v1`) |
+| L11 | adapters HTTP + μυστικών | 1a | M | W0 (`contracts-v1`) |
+| L12 | apps/mobile σκελετός UI | 1a | L | W0 (`contracts-v1`) |
+| L16 | CI για iOS .ipa | 1a | M | W0 (`contracts-v1`) |
+| L13 | mock-eclass | 1b | M | S1 |
+| L14 | eclass/auth | 1b | M | L13 |
+| L15 | eclass/crawl | 1b | L | L13 |
+| I1 | pipeline | 2 | L | L01–L11, L14, L15 |
+| I2 | apps/cli | 2 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 1) |
+| I3 | mobile wiring | 2 | L | L12, I1 |
+| I4 | PDF viewer με deep link | 2 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 1) |
+| S2 | Spike συσκευής | 2 | — (δεν ορίζεται) | I3, L16 |
+| T1 | Tutor με εργαλεία | 3 | L | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 2/MVP) |
+| T2 | Κατάσταση μάθησης | 3 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 2/MVP) |
+| T3 | Παλιά θέματα και απόδοση εξέτασης | 3 | L | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 2/MVP) |
+| T4 | Τρόπος εξέτασης και ύφος | 3 | S | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 2/MVP) |
+| P1 | UI ρυθμίσεων | 4 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 3) |
+| P2 | Σύνδεση scheduler | 4 | M | L04 (από τα παραδοτέα)· κατά τα άλλα σειρά §0 |
+| P3 | Local notifications | 4 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 3) |
+| H1 | Απόδοση και αντοχή | 5 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 4) |
+| H2 | Release v0.1 | 5 | M | δεν δηλώνεται ρητά (σειρά §0: μετά το Wave 4) |
+
+### Wave 0 — Θεμέλια ‖ Spike
+
+#### W0 — Θεμέλια
+
+- **Wave:** 0 — ΣΕΙΡΙΑΚΑ, 1 agent, προτείνεται ισχυρό μοντέλο.
+- **Μέγεθος:** L.
+- **Εξαρτάται από:** — (τρέχει παράλληλα με το S1).
+- **Ownership:** όλο το repo, ΜΟΝΟ στο Wave 0.
+- **Διάβασε:** ολόκληρο το πλάνο (§0–§14)· ειδικά §5.2 (contracts), §6.1–§6.3 (δομή, globs, dependencies) και όλες τις σταθερές του plan (§7.1, §7.2, §7.3, §8, κάρτες §9) για το `statheres.ts`.
+- **Παραδοτέα:**
+  1. Git repo στο `C:\Users\skyd3\spoudes\` με MIT LICENSE.
+     - `.gitignore`: `node_modules`, `dist`, `coverage`, `data/`, `fixtures/eclass/raw/`, `*.ipa`, `apps/mobile/ios/`.
+     - `.gitattributes`: `* text=auto eol=lf`, και `-text` για `*.pdf *.pptx *.docx *.png *.jpg *.ttf`.
+     - `.editorconfig`: LF, utf-8.
+  2. pnpm workspace με root scripts `test`, `test:lane`, `typecheck`, `lint`, `check:ownership`, `fixtures:make`.
+  3. `tsconfig.base.json` με `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`· project references.
+  4. ESLint flat config: `@typescript-eslint/no-explicit-any: error`, `@typescript-eslint/ban-ts-comment: error`, `camelcase: off`, `no-console: error` (εκτός `apps/cli`).
+  5. Vitest workspace με pool `threads`, ≤2 workers, coverage v8.
+  6. `scripts/test-lock.mjs`: διεργασιακός semaphore 4 θέσεων.
+     - Αρχεία `%TEMP%\spoudes-test-locks\slot-N.lock` με PID.
+     - Lock με νεκρό PID καθαρίζεται αυτόματα.
+     - Τυλίγει κάθε `vitest run`.
+  7. `ownership.json` (globs του §6.2) και `scripts/check-ownership.mjs --lane <ID>`, που ελέγχει το `git diff --name-only contracts-v1...HEAD`.
+  8. Εγκατάσταση ΟΛΩΝ των dependencies του §6.3.
+  9. Σκελετός όλων των packages/apps:
+     - `package.json`, `tsconfig.json`, `src/index.ts` και `src/<module>/index.ts` για κάθε module του §6.2.
+     - 1 smoke test ανά package.
+  10. Contracts του §5.2 με zod schemas, το `statheres.ts` με όλες τις σταθερές του plan, και helpers `ok()`/`apotyxia()`.
+  11. Test doubles στο `packages/core/src/testing/**`: `FakeRologi`, `MnimiApothiki`, `FakeMystika`, `FakeHttp` (scripted), `MockLlm` (χάρτης hash→JSON).
+  12. Shared contract suites `apothiki.contract.ts`, `http.contract.ts`, `mystika.contract.ts`, που τρέχουν πάνω σε οποιονδήποτε adapter.
+  13. Σκελετός `apps/mobile`: Vite + React + Ionic + `capacitor.config.ts`.
+      - `appId` σταθερό, π.χ. `io.github.<user>.spoudes` — δεν αλλάζει ΠΟΤΕ.
+      - `plugins.CapacitorHttp.enabled: true` και `plugins.CapacitorCookies.enabled: true`.
+  14. Tag `contracts-v1`.
+- **Tests (ελάχιστα):**
+  - 1 smoke test ανά package (παραδοτέο 9).
+  - Οι shared contract suites του παραδοτέου 12.
+  - Απόδειξη ότι ο φρουρός ownership ΑΠΟΤΥΓΧΑΝΕΙ σε dummy branch που πειράζει ξένο path.
+- **DoD:**
+  - Κοινά: `pnpm test:lane W0` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane W0`.
+  - `pnpm install` καθαρό.
+  - typecheck/lint/test πράσινα.
+  - Απόδειξη ότι ο φρουρός ownership ΑΠΟΤΥΓΧΑΝΕΙ σε dummy branch που πειράζει ξένο path.
+- **Σημειώσεις:** Ο owner αντιγράφει το παρόν πλάνο σε `docs/PLAN.md`. Το placeholder `spoudes` αντικαθίσταται με global replace ΠΡΙΝ το W0 (§14, απόφαση 3).
+
+#### S1 — Spike πρωτοκόλλου thales
+
+- **Wave:** 0 (παράλληλα με το W0).
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** —.
+- **Ownership:** `spikes/s1-thales/**`, `scripts/scrub-fixtures.mjs`, `fixtures/eclass/**`, `docs/eclass-protocol.md` (§6.2).
+- **Διάβασε:** §3, §5, §6, §7 · §8 · κάρτα S1 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - Βήματα (ο agent γράφει τα scripts· ΜΟΝΟ ο owner τα τρέχει):
+    1. GET login_form: πεδία φόρμας (names, hidden, action).
+    2. Δοκιμή local login POST και δοκιμή ροής CAS· καταγραφή όλων των 30x και των Set-Cookie.
+    3. GET `/main/portfolio.php`: μαθήματα (κωδικοί, τίτλοι, URLs).
+    4. Για 1 μάθημα: λίστα εγγράφων ρίζας και 1 υποφακέλου, και 1 download. Καταγραφή Content-Length, Last-Modified, ETag, Content-Disposition, Content-Type.
+    5. RSS ανακοινώσεων: λειτουργεί σε κλειστό μάθημα; θέλει token;
+    6. Mobile API: `mlogin.php` → token· `mcourses.php`· μορφή (XML/JSON)· δουλεύει με τον λογαριασμό;
+    7. Λήξη session μετά από αδράνεια (2–3 μετρήσεις).
+  - Έξοδοι:
+    - `fixtures/eclass/raw/**` (gitignored).
+    - `scripts/scrub-fixtures.mjs` με tests: αντικαθιστά ονοματεπώνυμο, ΑΜ, email, user id, tokens, cookies και session ids με σταθερά placeholders. ΑΠΟΤΥΓΧΑΝΕΙ αν μείνει pattern email/ΑΜ.
+    - `fixtures/eclass/scrubbed/**`, σε commit ΜΟΝΟ μετά από χειροκίνητο έλεγχο PII του owner.
+    - `docs/eclass-protocol.md`: endpoints, παράμετροι, πεδία φορμών, selectors (με αναφορά στο fixture), ροές redirect, headers, λήξη session, και η ΑΠΟΦΑΣΗ HTML scraping ή mobile API.
+- **Tests (ελάχιστα):**
+  - Tests του `scripts/scrub-fixtures.mjs`: αντικατάσταση όλων των κατηγοριών PII με σταθερά placeholders· ΑΠΟΤΥΧΙΑ αν μείνει pattern email/ΑΜ.
+- **DoD:**
+  - Κοινά: `pnpm test:lane S1` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane S1`.
+  - Checkbox του owner «έλεγχος PII έγινε».
+  - Το protocol doc καλύπτει και τα 7 βήματα.
+- **Σημειώσεις:** Ποιος: ο owner και 1 agent. Ο agent γράφει τα scripts· ΜΟΝΟ ο owner τα τρέχει, τοπικά, με env vars `SPOUDES_USER`/`SPOUDES_PASS`. Τα στοιχεία ΠΟΤΕ δεν μπαίνουν σε αρχείο ή prompt. Ελάχιστες προσπάθειες login, για να μην κλειδώσει ο λογαριασμός.
+
+### Wave 1a — μετά το tag `contracts-v1`, έως 13 παράλληλα: L01–L12 και L16
+
+#### L01 — core/grafos
+
+- **Wave:** 1a.
+- **Μέγεθος:** S.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/core/src/grafos/**`.
+- **Διάβασε:** §3, §5, §6, §7 · κάρτα L01 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `topologiki_taxinomisi(enotites): Apotelesma<string[]>`, με σταθερή ισοβαθμία: πρώτα `seira`, μετά `id`.
+  - `vres_kyklous`.
+  - `episkevi_kyklon`: αφαιρεί πρώτα ακμή `asthenis`, αλλιώς τη λεξικογραφικά μικρότερη· επιστρέφει `afairemenes_akmes`.
+  - `elegxos_kalypsis(perigrammata, xartis)`: επιστρέφει `akalypta_tmimata`.
+- **Tests (ελάχιστα):**
+  - γραμμική αλυσίδα
+  - διακλάδωση
+  - κύκλοι 2 και 3 κόμβων
+  - self-loop
+  - ανύπαρκτη αναφορά → σφάλμα
+  - κενή είσοδος
+  - ντετερμινισμός με ανακατεμένη είσοδο
+- **DoD:**
+  - Κοινά: `pnpm test:lane L01` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L01`.
+  - Όλα τα παραπάνω tests πράσινα· coverage core ≥95% lines/branches (§11).
+- **Σημειώσεις:** —
+
+#### L02 — core/megethi
+
+- **Wave:** 1a.
+- **Μέγεθος:** S.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/core/src/megethi/**`.
+- **Διάβασε:** §3, §5, §6, §7 (ειδικά §7.3 «Μεγέθη») · κάρτα L02 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `ektimisi_lepton` και `enimerosi_syntelesti`, κατά το §7.3 (τύπος, πίνακας λεπτών/σελίδα, `MESES_LEKSEIS_SELIDAS`, `ELAXISTO_KLASMA`, `MEGISTO_KLASMA`, EWMA με `ALFA`).
+- **Tests (ελάχιστα):**
+  - 0 σελίδες → 0
+  - NaN ή αρνητικές λέξεις → `MI_EGKYRO_SXIMA`
+  - clamp ορίων
+  - clamp συντελεστή
+  - ντετερμινισμός
+- **DoD:**
+  - Κοινά: `pnpm test:lane L02` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L02`.
+  - Όλα τα παραπάνω tests πράσινα· coverage core ≥95% lines/branches (§11).
+- **Σημειώσεις:** Οι αρχικές τιμές λεπτών/σελίδα είναι υποθέσεις εκκίνησης που καλιμπράρονται, όχι μετρήσεις (§7.3).
+
+#### L03 — core/epikyrosi
+
+- **Wave:** 1a.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/core/src/epikyrosi/**`.
+- **Διάβασε:** §3, §5, §6, §7 (ειδικά §7.1 P3 για τις υποχρεωτικές ενότητες του οδηγού) · κάρτα L03 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `epikyrose_perigramma(raw: unknown, arithmos_selidon)`:
+    - zod parse.
+    - Κανόνες: εύρη μέσα στα όρια, `apo ≤ eos`, ταξινόμηση, επικαλύψεις > `ANOXI_EPIKALYPSIS_SELIDON = 1`.
+    - Επισκευή (clamp, συγχώνευση) με λίστα `proeidopoiiseis`.
+  - `epikyrose_xarti(raw, perigrammata)`: οι πηγές υπάρχουν, τα ids είναι μοναδικά, τα προαπαιτούμενα υπάρχουν.
+  - `epikyrose_odigo(markdown, epitrepomenes: Pigi[])`: υποχρεωτικές ενότητες και παραπομπές ⊆ επιτρεπόμενων σελίδων.
+- **Tests (ελάχιστα):**
+  - άκυρο JSON
+  - λάθος τύποι
+  - εκτός ορίων
+  - επικαλύψεις
+  - ανύπαρκτες πηγές
+  - παραπομπή εκτός πηγών
+  - οδηγός χωρίς ενότητα
+- **DoD:**
+  - Κοινά: `pnpm test:lane L03` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L03`.
+  - Όλα τα παραπάνω tests πράσινα· coverage core ≥95% lines/branches (§11).
+- **Σημειώσεις:** —
+
+#### L04 — core/programma
+
+- **Wave:** 1a.
+- **Μέγεθος:** L. Προτείνεται ισχυρό μοντέλο ή διάσπαση σε L04a (χωρητικότητα/EDF) και L04b (reviews/slack/επιβίωση).
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/core/src/programma/**`.
+- **Διάβασε:** §3, §5, §6, §7 (ειδικά §7.3 και §5.3 `rythmiseis.json`) · κάρτα L04 · πρότυπο report §10.
+- **Παραδοτέα:** pure `ftiaxe_programma(eisodos): Apotelesma<Programma>`.
+  - Είσοδοι:
+    - ενότητες (λεπτά, προαπαιτούμενα, προαιρετικό `apodosi_exetasis`)
+    - εξετάσεις: ημερομηνία, ή `arxi_exetastikis` από τις ρυθμίσεις αν είναι άγνωστη
+    - διαθεσιμότητα: λεπτά ανά ημέρα εβδομάδας + overrides ανά ημερομηνία
+    - ιστορικό check-ins
+    - σήμερα
+    - ρυθμίσεις
+  - Κανόνες:
+    - Χωρητικότητα ημέρας = λεπτά × `POSOSTO_XORITIKOTITAS = 0.8`.
+    - Reviews στις +1/+3/+7 ημέρες από την πρώτη μελέτη, χρεώνονται ΠΡΩΤΑ (review debt).
+    - Νέα ύλη με EDF ανάμεσα στα μαθήματα και τοπολογική σειρά μέσα στο μάθημα.
+    - Όλη η νέα ύλη τελειώνει πριν την `arxi_exetastikis`.
+    - Τα κενά ανάμεσα στις εξετάσεις πηγαίνουν σε επανάληψη για την επόμενη εξέταση.
+    - Παραλειπόμενη μέρα → επαναϋπολογισμός από την τρέχουσα κατάσταση, ΧΩΡΙΣ καμία μέρα πάνω από τη χωρητικότητα.
+    - `slack` ανά μάθημα = 0.8 × διαθέσιμα λεπτά μέχρι το deadline − (υπόλοιπα + reviews).
+    - `slack < 0` → `protasi_epiviosis`: ενότητες χαμηλής `apodosi_exetasis` προς αφαίρεση. Είναι ΠΡΟΤΑΣΗ, όχι εφαρμογή.
+    - Όλα σε Europe/Athens.
+- **Tests (ελάχιστα):**
+  - 1 μάθημα / 1 εξέταση
+  - 5 εξετάσεις σε 3 εβδομάδες
+  - παραλειπόμενη μέρα
+  - reviews χρεώνονται πρώτα
+  - slack < 0 → πρόταση
+  - αλλαγή ώρας 25/10/2026 με `FakeRologi`
+  - ντετερμινισμός
+- **DoD:**
+  - Κοινά: `pnpm test:lane L04` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L04`.
+  - Όλα τα παραπάνω tests πράσινα· coverage core ≥95% lines/branches (§11).
+- **Σημειώσεις:** Λογική Φάσης 2 (§7.3), αλλά υλοποιείται ως pure core στο Wave 1a. Ο τύπος `Programma` δεν ορίζεται στο §5.2 (βλ. §5.1).
+
+#### L05 — extract/pdf
+
+- **Wave:** 1a.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/extract/src/pdf/**`, `scripts/make-fixtures/pdf.mjs`, `fixtures/pdf/**`.
+- **Διάβασε:** §3, §5, §6 (ειδικά §6.3: pdfjs-dist, pdf-lib, @pdf-lib/fontkit, Noto Sans), §7 · κάρτα L05 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `exagage_pdf(dedomena, arxeio_id): Promise<Apotelesma<Selida[]>>` με pdfjs-dist (Node: legacy build — ⚠️ επαλήθευση import path στα types).
+    - Κανονικοποίηση: NFC, ένωση συλλαβισμού στο τέλος γραμμής, συμπίεση κενών.
+    - `xoris_keimeno` όταν λέξεις < `ELAXISTES_LEKSEIS_SELIDAS = 5`.
+  - Fixtures:
+    - Συνθετικά PDF από `scripts/make-fixtures/pdf.mjs`, με pdf-lib + @pdf-lib/fontkit και ενσωματωμένη Noto Sans. Οι standard γραμματοσειρές του PDF ΔΕΝ έχουν ελληνικά.
+    - ΚΑΝΕΝΑ πραγματικό υλικό μαθήματος.
+- **Tests (ελάχιστα):**
+  - αριθμός σελίδων
+  - ελληνικά με τόνους
+  - κενή σελίδα → `xoris_keimeno`
+  - κατεστραμμένο αρχείο → σφάλμα
+  - ντετερμινισμός
+- **DoD:**
+  - Κοινά: `pnpm test:lane L05` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L05`.
+  - Όλα τα παραπάνω tests πράσινα· coverage ≥85% (§11).
+- **Σημειώσεις:** —
+
+#### L06 — extract/office
+
+- **Wave:** 1a.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/extract/src/office/**`, `scripts/make-fixtures/office.mjs`, `fixtures/office/**`.
+- **Διάβασε:** §3, §5, §6 (ειδικά §6.3: jszip, fast-xml-parser, mammoth, pptxgenjs, docx), §7 · κάρτα L06 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `exagage_pptx`: jszip + fast-xml-parser· διαβάζει `ppt/slides/slideN.xml` και τα κείμενα `<a:t>` με τη σειρά τους. Σελίδα = αριθμός slide, με ΑΡΙΘΜΗΤΙΚΗ ταξινόμηση (το slide10 μετά το slide9).
+  - `exagage_docx`: mammoth· «σελίδες» = τμήματα ανά επικεφαλίδα.
+  - `.ppt`/`.doc` → `MI_YPOSTIRIZOMENO`.
+  - Fixtures: από script, με pptxgenjs/docx.
+- **Tests (ελάχιστα):**
+  - σειρά slides 1..12
+  - ελληνικά
+  - κενό slide
+  - άκυρο zip → σφάλμα
+  - .ppt → μη υποστηριζόμενο
+- **DoD:**
+  - Κοινά: `pnpm test:lane L06` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L06`.
+  - Όλα τα παραπάνω tests πράσινα· coverage ≥85% (§11).
+- **Σημειώσεις:** —
+
+#### L07 — ai/gemini
+
+- **Wave:** 1a.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/ai/src/gemini/**`.
+- **Διάβασε:** §3, §5, §6, §7 (ειδικά §7.2) · κάρτα L07 · πρότυπο report §10.
+- **Παραδοτέα:** `ftiaxe_gemini_llm(http, mystika, rologi, rythmiseis): LlmPyli`.
+  - Πάνω στο REST `generateContent`, ΟΧΙ SDK, ώστε να περνά από το `HttpPyli` και να δουλεύει μέσω CapacitorHttp.
+  - Structured output με JSON schema από zod (⚠️ επαλήθευση στην επίσημη τεκμηρίωση Gemini: `responseMimeType` και `responseSchema`/`responseJsonSchema` — καμία υπόθεση).
+  - API key σε header αν υποστηρίζεται (⚠️ επαλήθευση), ποτέ σε logs ή μηνύματα σφάλματος.
+  - Timeout με AbortController.
+  - Retry/backoff κατά το §7.2. Καμία επανάληψη σε 400/401/403.
+  - Αντιστοίχιση σε `KodikosSfalmatos`.
+- **Tests (ελάχιστα)** (με `FakeHttp`):
+  - επιτυχία JSON
+  - άκυρο JSON → `MI_EGKYRO_SXIMA`
+  - 429 → 429 → 200
+  - timeout → `TIMEOUT`
+  - 401 → `AUTH_APOTYXIA` χωρίς retry
+  - το key δεν εμφανίζεται πουθενά σε logs/σφάλματα
+- **DoD:**
+  - Κοινά: `pnpm test:lane L07` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L07`.
+  - Όλα τα παραπάνω tests πράσινα· coverage ≥85% (§11).
+- **Σημειώσεις:** Τα σημεία με «⚠️ επαλήθευση» επιβεβαιώνονται πριν τη χρήση (§3, κανόνας 7).
+
+#### L08 — ai/prompts
+
+- **Wave:** 1a.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/ai/src/prompts/**`.
+- **Διάβασε:** §3, §5, §6, §7 (ολόκληρο το §7.1 και ο κανόνας `ekdosi_prompt`) · κάρτα L08 · πρότυπο report §10.
+- **Παραδοτέα:** pure builders P1–P4 του §7.1 που επιστρέφουν `{ systima, xristis, sxima, ekdosi_prompt }`, μαζί με `kopse_se_kommatia` και `synenose_merika_perigrammata`.
+- **Tests (ελάχιστα):**
+  - Λειτουργικά: δείκτες σελίδων, όρια κομματιών, σωστή συγχώνευση, υποχρεωτικοί κανόνες μέσα στο κείμενο του prompt.
+  - 1 snapshot ανά builder.
+- **DoD:**
+  - Κοινά: `pnpm test:lane L08` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L08`.
+  - Όλα τα παραπάνω tests πράσινα· coverage ≥85% (§11).
+- **Σημειώσεις:** Το `ekdosi_prompt` αυξάνει σε κάθε αλλαγή κειμένου prompt (§7.1).
+
+#### L09 — ai/cache + mock + προϋπολογισμός
+
+- **Wave:** 1a.
+- **Μέγεθος:** S.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/ai/src/cache/**`, `packages/ai/src/mock/**`, `fixtures/llm/**`.
+- **Διάβασε:** §3, §5, §6, §7 (ειδικά §7.2) · κάρτα L09 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `me_cache(llm, apothiki): LlmPyli`, κατά το §7.2.
+  - `me_proypologismo(llm, apothiki, rologi, orio_klisewn_imeras)`, με μετρητή ανά ημέρα σε Europe/Athens.
+  - `MockLlm` record/replay από `fixtures/llm/<hash>.json`. Αν λείπει fixture: σαφές σφάλμα, ΠΟΤΕ ψεύτικη απάντηση.
+- **Tests (ελάχιστα):**
+  - hit/miss
+  - διαφορετικό `ekdosi_prompt` → miss
+  - όριο ημέρας και reset τα μεσάνυχτα Αθήνας
+  - λείπει fixture → σφάλμα
+- **DoD:**
+  - Κοινά: `pnpm test:lane L09` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L09`.
+  - Όλα τα παραπάνω tests πράσινα· coverage ≥85% (§11).
+- **Σημειώσεις:** —
+
+#### L10 — adapters αποθήκευσης
+
+- **Wave:** 1a.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/adapters-node/src/storage/**`, `packages/adapters-capacitor/src/storage/**`.
+- **Διάβασε:** §3, §5 (ειδικά §5.2 `ApothikiPyli`/`KatevasmaPyli` και §5.3 κανόνες διαδρομών), §6, §7 · κάρτα L10 · πρότυπο report §10.
+- **Παραδοτέα:** `ApothikiPyli` και `KatevasmaPyli`.
+  - Node: fs/promises· atomic write (tmp + rename)· streaming download με undici.
+  - Capacitor: `@capacitor/filesystem` με `Directory.Documents`· download με `@capacitor/file-transfer` και ρητό header Cookie (⚠️ επαλήθευση στο S2).
+  - Κανονικοποίηση διαδρομών κατά το §5.3.
+- **Tests (ελάχιστα):**
+  - shared contract suite και για τους δύο (ο Capacitor με mocked plugin modules)
+  - ελληνικά ονόματα με τόνους
+  - path traversal → σφάλμα
+  - διακοπή στη μέση δεν αφήνει μισό αρχείο
+- **DoD:**
+  - Κοινά: `pnpm test:lane L10` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L10`.
+  - Όλα τα παραπάνω tests πράσινα· coverage ≥85% (§11).
+- **Σημειώσεις:** Η ρητή κεφαλίδα Cookie στο download έχει σήμανση ⚠️ επαλήθευση στο S2, που τρέχει μετά τα I3/L16· καταγράφεται στο report ως ανοιχτό.
+
+#### L11 — adapters HTTP + μυστικών
+
+- **Wave:** 1a.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `packages/adapters-node/src/http/**`, `packages/adapters-node/src/mystika/**`, `packages/adapters-capacitor/src/http/**`, `packages/adapters-capacitor/src/mystika/**`.
+- **Διάβασε:** §3, §5 (ειδικά §5.2 `HttpPyli`/`MystikaPyli`), §6, §7 · §8 (ροή CAS με redirects) · κάρτα L11 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `HttpPyli` για Node: undici + tough-cookie jar, που αποθηκεύεται σε αρχείο για το CLI.
+    - ΧΕΙΡΟΚΙΝΗΤΟΣ βρόχος redirects (μέγιστο 10), ώστε να αποθηκεύονται τα Set-Cookie κάθε ενδιάμεσου 30x — απαραίτητο για CAS.
+  - `HttpPyli` για Capacitor: CapacitorHttp + CapacitorCookies, με ίδια σημασιολογία redirects (contract suite).
+  - `MystikaPyli` για Node: Windows Credential Manager μέσω `@napi-rs/keyring` (⚠️ επαλήθευση), με fallback σε env vars.
+  - `MystikaPyli` για Capacitor: secure storage plugin με Keychain (⚠️ επαλήθευση plugin).
+- **Tests (ελάχιστα):**
+  - contract suites
+  - Set-Cookie σε 302 διατηρείται
+  - βρόχος redirects → σφάλμα
+  - κανένα cookie/μυστικό σε logs
+- **DoD:**
+  - Κοινά: `pnpm test:lane L11` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L11`.
+  - Όλα τα παραπάνω tests πράσινα· coverage ≥85% (§11).
+- **Σημειώσεις:** Τα σημεία με «⚠️ επαλήθευση» επιβεβαιώνονται πριν τη χρήση (§3, κανόνας 7).
+
+#### L12 — apps/mobile σκελετός UI
+
+- **Wave:** 1a.
+- **Μέγεθος:** L.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `apps/mobile/src/**` (εκτός `apps/mobile/src/provoli-pdf/**`), `apps/mobile/e2e/**`.
+- **Διάβασε:** §3, §5, §6, §7 · §1 (οθόνες MVP) · §5.3 · κάρτα L12 · πρότυπο report §10.
+- **Παραδοτέα:** οθόνες Ionic React με DI (`ftiaxe_periballon(adapters)`):
+  1. Onboarding: base URL με προεπιλογή `https://thales.cs.unipi.gr`, στοιχεία ή CAS, Gemini key.
+  2. Μαθήματα: επιλογή + συγχρονισμός με πρόοδο.
+  3. Αρχεία μαθήματος (δέντρο).
+  4. Χάρτης ύλης: ενότητες, προαπαιτούμενα, λεπτά, κατάσταση.
+  5. Οδηγός: Markdown, παραπομπές ως links.
+  6. Tutor (chat).
+  7. Ρυθμίσεις.
+  - Σε αυτή τη φάση όλα δουλεύουν με fake adapters.
+  - Καταστάσεις loading/empty/error σε κάθε οθόνη.
+- **Tests (ελάχιστα):**
+  - Playwright σε Vite dev server, viewport iPhone, screenshot ανά οθόνη.
+  - Ροή onboarding → μαθήματα με fakes.
+- **DoD:**
+  - Κοινά: `pnpm test:lane L12` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L12`.
+  - Όλα τα παραπάνω tests πράσινα· screenshots ανά οθόνη παραδίδονται.
+- **Σημειώσεις:** —
+
+#### L16 — CI για iOS .ipa
+
+- **Wave:** 1a.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** W0 (tag `contracts-v1`).
+- **Ownership:** `.github/workflows/**`, `scripts/ios/**`.
+- **Διάβασε:** §3, §5, §6 (ειδικά §6.3 Capacitor), §7 · §2 (D7, D8) · κάρτα L16 · πρότυπο report §10.
+- **Παραδοτέα:** workflow σε macOS runner:
+  1. pnpm install
+  2. build του `apps/mobile`
+  3. `npx cap add ios`, αν λείπει. Το `apps/mobile/ios/` ΔΕΝ μπαίνει σε commit.
+  4. `npx cap sync ios`
+  5. `scripts/ios/patch-plist.mjs`: `UIFileSharingEnabled=YES`, `LSSupportsOpeningDocumentsInPlace=YES`, εμφανιζόμενο όνομα.
+  6. `xcodebuild` Release, `-destination generic/platform=iOS`, `CODE_SIGNING_ALLOWED=NO`.
+  7. `Payload/App.app` → zip σε `.ipa` → artifact.
+  - ⚠️ επαλήθευση: CocoaPods ή SPM ανάλογα με την έκδοση Capacitor, άρα `-workspace` ή `-project`.
+- **Tests (ελάχιστα):** Δεν ορίζονται unit tests στο brief· η απόδειξη είναι το πράσινο run του workflow με artifact `.ipa`.
+- **DoD:**
+  - Κοινά: `pnpm test:lane L16` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L16`.
+  - Πράσινο run με κατεβάσιμο `.ipa`.
+  - Ο owner το εγκαθιστά με Sideloadly.
+- **Σημειώσεις:** Σε private repo τα macOS λεπτά μετράνε με πολλαπλασιαστή (§2, D8 — ⚠️ επαλήθευση)· λίγα IPA builds αρκούν.
+
+### Wave 1b — μετά το S1
+
+#### L13 — mock-eclass
+
+- **Wave:** 1b.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** S1.
+- **Ownership:** `packages/mock-eclass/**`.
+- **Διάβασε:** §3, §5, §6, §7 · §8 · `docs/eclass-protocol.md` · `fixtures/eclass/scrubbed/**` · κάρτα L13 · πρότυπο report §10.
+- **Παραδοτέα:** Node server που σερβίρει τα scrubbed fixtures με κατάσταση:
+  - Το login (local και/ή CAS κατά το protocol doc) βάζει cookie.
+  - Χωρίς cookie, οι protected σελίδες κάνουν redirect στο login.
+  - Λήξη session μετά από N αιτήματα/λεπτά.
+  - Έγχυση 500, timeout και αργών αποκρίσεων.
+  - Δυαδικά αρχεία με Content-Length/Last-Modified/ETag.
+- **Tests (ελάχιστα):**
+  - κάθε route του protocol doc
+  - λήξη session
+  - σφάλματα
+- **DoD:**
+  - Κοινά: `pnpm test:lane L13` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L13`.
+  - Όλα τα παραπάνω tests πράσινα· coverage ≥85% (§11).
+- **Σημειώσεις:** Μόνο για tests (§4). Κανένας selector/endpoint χωρίς fixture και αναφορά στο protocol doc (§3, κανόνας 7).
+
+#### L14 — eclass/auth
+
+- **Wave:** 1b.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** L13.
+- **Ownership:** `packages/eclass/src/auth/**`.
+- **Διάβασε:** §3, §5, §6, §7 · §8 · `docs/eclass-protocol.md` · κάρτα L14 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - Στρατηγικές του §8, μόνο όσες επιβεβαίωσε το S1.
+  - Ανίχνευση λήξης (redirect σε login_form) → ΜΙΑ επανασύνδεση → αλλιώς `SESSION_LIXI`.
+  - Λάθος κωδικός → `AUTH_APOTYXIA` με 1 μόνο αίτημα.
+- **Tests (ελάχιστα):**
+  - επιτυχία
+  - λάθος κωδικός
+  - λήξη → επανασύνδεση
+  - διπλή λήξη → σφάλμα
+- **DoD:**
+  - Κοινά: `pnpm test:lane L14` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L14`.
+  - Όλα τα παραπάνω tests πράσινα (έναντι mock-eclass)· coverage ≥85% (§11).
+- **Σημειώσεις:** ΠΟΤΕ αίτημα προς thales από agent (§3, κανόνας 6).
+
+#### L15 — eclass/crawl
+
+- **Wave:** 1b.
+- **Μέγεθος:** L.
+- **Εξαρτάται από:** L13.
+- **Ownership:** `packages/eclass/src/crawl/**`.
+- **Διάβασε:** §3, §5 (ειδικά §5.3 `eurethrio-arxeion.json` και κανόνες ID), §6, §7 · §8 (ευγένεια, όρια αρχείων) · `docs/eclass-protocol.md` · κάρτα L15 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `fere_mathimata`.
+  - `fere_dentro_arxeion` (BFS).
+  - `sygxronise_mathima`:
+    - Delta με (diadromi, megethos, imerominia/ETag) έναντι του `eurethrio-arxeion.json`.
+    - Λήψη μόνο νέων/αλλαγμένων.
+    - sha256 μετά τη λήψη και σήμανση `diplotypo_tou`.
+  - Ευγένεια και όρια κατά το §8.
+- **Tests (ελάχιστα):**
+  - εμφωλευμένοι φάκελοι
+  - ελληνικά ονόματα
+  - αμετάβλητο αρχείο → καμία λήψη
+  - αλλαγμένο → λήψη
+  - 404 → προειδοποίηση και συνέχεια
+  - τεράστιο → παράλειψη
+  - διακοπή → το επόμενο run συνεχίζει
+- **DoD:**
+  - Κοινά: `pnpm test:lane L15` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane L15`.
+  - Όλα τα παραπάνω tests πράσινα (έναντι mock-eclass)· coverage ≥85% (§11).
+- **Σημειώσεις:** —
+
+### Wave 2 — Integration, μέχρι το MVP
+
+#### I1 — pipeline
+
+- **Wave:** 2.
+- **Μέγεθος:** L.
+- **Εξαρτάται από:** L01–L11, L14, L15.
+- **Ownership:** `packages/pipeline/**` (εκτός `src/themata/**` και `src/programma/**`).
+- **Διάβασε:** §3, §5 (ειδικά §5.3), §6, §7 (ειδικά §7.2) · §4 (πίνακας pipeline) · κάρτα I1 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `trekse_analysi(kodikos, epiloges)`, βήματα 4–7 του §4. Τα περιγράμματα τρέχουν παράλληλα, ≤2 κλήσεις.
+  - `parage_odigo(enotita_id)`, lazy.
+  - Κάθε βήμα idempotent, με hash εισόδου.
+  - Events `ProodosEvent`.
+  - Ακύρωση με AbortSignal.
+  - Συνέχιση μετά από crash.
+- **Tests (ελάχιστα)** (mock-eclass + `MockLlm` + `MnimiApothiki`):
+  - πλήρης ροή
+  - 2ο run → μηδέν κλήσεις LLM
+  - crash στη μέση → συνέχιση
+  - σφάλμα LLM → error state χωρίς μισά αρχεία
+- **DoD:**
+  - Κοινά: `pnpm test:lane I1` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane I1`.
+  - Όλα τα παραπάνω tests πράσινα· coverage ≥85% (§11).
+- **Σημειώσεις:** —
+
+#### I2 — apps/cli
+
+- **Wave:** 2.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** δεν δηλώνεται ρητά στο brief· σειρά §0 (μετά το Wave 1).
+- **Ownership:** `apps/cli/**`.
+- **Διάβασε:** §3, §5 (ειδικά §5.3: CLI riza `./data/`), §6, §7 · §4 · κάρτα I2 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - Εντολές: `spoudes login`, `spoudes mathimata`, `spoudes sync [kodikos]`, `spoudes analyse <kodikos>`, `spoudes odigos <enotita_id>`, `spoudes tutor <enotita_id>` (REPL), `spoudes katastasi`.
+  - Επιλογή `--riza`, με προεπιλογή `./data`.
+- **Tests (ελάχιστα):**
+  - E2E έναντι mock-eclass + `MockLlm`.
+  - Το real smoke το τρέχει ΜΟΝΟ ο owner.
+- **DoD:**
+  - Κοινά: `pnpm test:lane I2` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane I2`.
+  - E2E πράσινα· coverage ≥85% (§11).
+- **Σημειώσεις:** Το `no-console: error` δεν ισχύει στο `apps/cli` (W0, παραδοτέο 4).
+
+#### I3 — mobile wiring
+
+- **Wave:** 2.
+- **Μέγεθος:** L.
+- **Εξαρτάται από:** L12, I1.
+- **Ownership:** `apps/mobile/src/**` (εκτός `provoli-pdf/`, `tutor/`, `programma/`, `eidopoiiseis/`).
+- **Διάβασε:** §3, §5 (ειδικά §5.3), §6, §7 · §1 (MVP DoD) · §4 · κάρτα I3 · πρότυπο report §10.
+- **Παραδοτέα:** πραγματικοί Capacitor adapters στις οθόνες, συγχρονισμός με πρόοδο, Χάρτης/Οδηγός/Tutor από τα αρχεία του §5.3.
+- **Tests (ελάχιστα):**
+  - Playwright με fakes.
+  - Έλεγχος στη συσκευή (S2).
+- **DoD:**
+  - Κοινά: `pnpm test:lane I3` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane I3`.
+  - Playwright πράσινα· checklist S2 από τον owner.
+- **Σημειώσεις:** —
+
+#### I4 — PDF viewer με deep link
+
+- **Wave:** 2.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** δεν δηλώνεται ρητά στο brief· σειρά §0 (μετά το Wave 1).
+- **Ownership:** `apps/mobile/src/provoli-pdf/**`.
+- **Διάβασε:** §3, §5, §6, §7 (ειδικά §7.1 P3: μορφή παραπομπής `[[arxeio_id:σελίδα]]`) · §1 (βήμα 5) · κάρτα I4 · πρότυπο report §10.
+- **Παραδοτέα:** viewer με pdf.js. Το tap σε `[[arxeio_id:σελίδα]]` ανοίγει το PDF σε εκείνη τη σελίδα.
+- **Tests (ελάχιστα):** Playwright με συνθετικό PDF.
+- **DoD:**
+  - Κοινά: `pnpm test:lane I4` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane I4`.
+  - Playwright πράσινο: tap σε παραπομπή → PDF στη σωστή σελίδα.
+- **Σημειώσεις:** —
+
+#### S2 — Spike συσκευής
+
+- **Wave:** 2.
+- **Μέγεθος:** — (δεν ορίζεται στο brief).
+- **Εξαρτάται από:** I3, L16.
+- **Ownership:** — (δεν ορίζεται στο §6.2· checklist owner, χωρίς κώδικα).
+- **Διάβασε:** §8, §12, κάρτα S2.
+- **Παραδοτέα:** Checklist (ο owner):
+  - εγκατάσταση με Sideloadly
+  - login
+  - sync: τα downloads στέλνουν cookies;
+  - φάκελοι ορατοί στο Files
+  - το Keychain επιβιώνει μετά από re-sign
+  - κλήση Gemini μέσω CapacitorHttp
+  - PDF 50MB χωρίς crash
+  - λήξη session κατά το sync
+- **Tests (ελάχιστα):** Η ίδια η checklist, στη συσκευή (§11: Συσκευή · iPhone · owner · IPA + Sideloadly).
+- **DoD:**
+  - Κοινά: `pnpm test:lane S2` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane S2`.
+  - Όλα τα σημεία της checklist επιβεβαιωμένα από τον owner.
+- **Σημειώσεις:** Ποιος: ο owner. Επιβεβαιώνει τα ⚠️ του L10 (header Cookie στο download) και του L11 (Keychain plugin).
+
+### Wave 3 — Tutor και εξατομίκευση
+
+#### T1 — Tutor με εργαλεία
+
+- **Wave:** 3.
+- **Μέγεθος:** L.
+- **Εξαρτάται από:** δεν δηλώνεται ρητά στο brief· σειρά §0 (μετά το Wave 2/MVP).
+- **Ownership:** `packages/ai/src/tutor/**`, `apps/mobile/src/tutor/**`.
+- **Διάβασε:** §3, §5, §6, §7 (ειδικά §7.1 P4) · §2 (D4) · κάρτα T1 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - Gemini function calling (⚠️ επαλήθευση API) με εργαλεία `anoixe_selida(arxeio_id, selida)`, `vres_ennoia(ennoia)`, `ftiaxe_erotisi(enotita_id)`.
+  - Οι λειτουργίες του P4.
+- **Tests (ελάχιστα):** Δεν ορίζονται στο brief· ισχύουν §3 (κανόνας 4, test-first) και §11.
+- **DoD:**
+  - Κοινά: `pnpm test:lane T1` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane T1`.
+  - Οι λειτουργίες `exigisi`, `exetase_me`, `kathodigisi_askisis` του P4 λειτουργούν έναντι `MockLlm`.
+- **Σημειώσεις:** Αριθμητικές απαντήσεις δεν τις βαθμολογεί το LLM (§7.1 P4, 50/50).
+
+#### T2 — Κατάσταση μάθησης
+
+- **Wave:** 3.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** δεν δηλώνεται ρητά στο brief· σειρά §0 (μετά το Wave 2/MVP).
+- **Ownership:** `packages/core/src/mathisi/**`.
+- **Διάβασε:** §3, §5, §6, §7 (ειδικά §7.3 «Κατάσταση μάθησης») · κάρτα T2 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `KatastasiMathisis` ανά έννοια, με Leitner 5 κουτιών από τα αποτελέσματα ερωτήσεων.
+  - Ο tutor εστιάζει στις αδύναμες έννοιες.
+- **Tests (ελάχιστα):** Δεν ορίζονται στο brief· ισχύουν §3 (κανόνας 4, test-first) και §11 (core ≥95%).
+- **DoD:**
+  - Κοινά: `pnpm test:lane T2` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane T2`.
+  - Deterministic Leitner 5 κουτιών· coverage core ≥95% (§11).
+- **Σημειώσεις:** Ο τύπος `KatastasiMathisis` δεν ορίζεται στο §5.2 (βλ. §5.1).
+
+#### T3 — Παλιά θέματα και απόδοση εξέτασης
+
+- **Wave:** 3.
+- **Μέγεθος:** L.
+- **Εξαρτάται από:** δεν δηλώνεται ρητά στο brief· σειρά §0 (μετά το Wave 2/MVP).
+- **Ownership:** `packages/pipeline/src/themata/**`, `packages/core/src/apodosi/**`.
+- **Διάβασε:** §3, §5 (ειδικά §5.3 `themata/`), §6, §7 (ειδικά §7.3 «Απόδοση εξέτασης») · §2 (D4) · κάρτα T3 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - Τα PDF που ρίχνει ο χρήστης στο `<KODIKOS>/themata/`: το LLM αντιστοιχίζει κάθε ερώτηση σε ενότητα(ες) και μονάδες, ΑΠΟ ΤΟ ΚΕΙΜΕΝΟ.
+  - Deterministic `apodosi_exetasis` κατά το §7.3.
+  - Χρήση στην προτεραιότητα και στο `protasi_epiviosis`.
+- **Tests (ελάχιστα):** Δεν ορίζονται στο brief· ισχύουν §3 (κανόνας 4, test-first) και §11.
+- **DoD:**
+  - Κοινά: `pnpm test:lane T3` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane T3`.
+  - `apodosi_exetasis` deterministic (ίδια είσοδος → ίδια έξοδος)· coverage core ≥95% για το `apodosi/` (§11).
+- **Σημειώσεις:** Η αντιστοίχιση (NLP) γίνεται από το LLM, ο υπολογισμός από τον core (50/50, §2 D4).
+
+#### T4 — Τρόπος εξέτασης και ύφος
+
+- **Wave:** 3.
+- **Μέγεθος:** S.
+- **Εξαρτάται από:** δεν δηλώνεται ρητά στο brief· σειρά §0 (μετά το Wave 2/MVP).
+- **Ownership:** `packages/ai/src/prompts/tropos/**`.
+- **Διάβασε:** §3, §5 (ειδικά `TroposExetasis` και §5.3 `rythmiseis.json`), §6, §7 (ειδικά §7.1 P3) · κάρτα T4 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `TroposExetasis` ανά μάθημα, που αλλάζει το prompt του οδηγού. Στα ανοιχτά βιβλία: ευρετήριο και ταχύτητα σε ασκήσεις αντί για αποστήθιση.
+  - `yfos_exigisis: 'apla' | 'kanoniko' | 'texniko'` από τις ρυθμίσεις.
+- **Tests (ελάχιστα):** Δεν ορίζονται στο brief· ισχύουν §3 (κανόνας 4, test-first) και §11.
+- **DoD:**
+  - Κοινά: `pnpm test:lane T4` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane T4`.
+  - Αλλαγή `TroposExetasis` ή `yfos_exigisis` → διαφορετικό prompt οδηγού.
+- **Σημειώσεις:** —
+
+### Wave 4 — Πρόγραμμα και ειδοποιήσεις
+
+#### P1 — UI ρυθμίσεων
+
+- **Wave:** 4.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** δεν δηλώνεται ρητά στο brief· σειρά §0 (μετά το Wave 3).
+- **Ownership:** `apps/mobile/src/programma/**`.
+- **Διάβασε:** §3, §5 (ειδικά §5.3 `rythmiseis.json`: `exetaseis`, `diathesimotita`), §6, §7 · κάρτα L04 (είσοδοι) · κάρτα P1 · πρότυπο report §10.
+- **Παραδοτέα:** ημερομηνίες εξετάσεων ή αρχή εξεταστικής, εβδομαδιαίο template λεπτών, overrides.
+- **Tests (ελάχιστα):** Δεν ορίζονται στο brief· ισχύουν §3 (κανόνας 4, test-first) και §11 (UI: Playwright, viewport iPhone).
+- **DoD:**
+  - Κοινά: `pnpm test:lane P1` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane P1`.
+  - Οι ρυθμίσεις αποθηκεύονται στο `rythmiseis.json` (§5.3)· καταστάσεις loading/empty/error.
+- **Σημειώσεις:** —
+
+#### P2 — Σύνδεση scheduler
+
+- **Wave:** 4.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** L04 (από τα παραδοτέα)· κατά τα άλλα σειρά §0 (μετά το Wave 3).
+- **Ownership:** `packages/pipeline/src/programma/**`.
+- **Διάβασε:** §3, §5 (ειδικά §5.3), §6, §7 (ειδικά §7.3) · §4 (βήμα 10) · κάρτα L04 · κάρτα P2 · πρότυπο report §10.
+- **Παραδοτέα:** L04 + check-ins → `programma.json`· επαναϋπολογισμός σε κάθε άνοιγμα της εφαρμογής.
+- **Tests (ελάχιστα):** Δεν ορίζονται στο brief· ισχύουν §3 (κανόνας 4, test-first) και §11.
+- **DoD:**
+  - Κοινά: `pnpm test:lane P2` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane P2`.
+  - `programma.json` παράγεται deterministic από L04 + check-ins· επαναϋπολογισμός σε κάθε άνοιγμα.
+- **Σημειώσεις:** Η θέση του `programma.json` δεν εμφανίζεται στο layout του §5.3 (μόνο στον πίνακα του §4, βήμα 10).
+
+#### P3 — Local notifications
+
+- **Wave:** 4.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** δεν δηλώνεται ρητά στο brief· σειρά §0 (μετά το Wave 3).
+- **Ownership:** `packages/adapters-capacitor/src/eidopoiiseis/**`, `apps/mobile/src/eidopoiiseis/**`.
+- **Διάβασε:** §3, §5, §6 (ειδικά §6.3 `@capacitor/local-notifications`), §7 · §2 (D7) · κάρτα P3 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - `@capacitor/local-notifications` με action types: Έγινε / Μισά / Όχι.
+  - Πρωινό brief και βραδινό check-in.
+  - Κυλιόμενο παράθυρο ≤60 εκκρεμών ειδοποιήσεων (όριο iOS 64).
+  - ⚠️ επαλήθευση: αν τα actions τρέχουν JS στο background. Fallback: καταγραφή της απάντησης και replan στο επόμενο άνοιγμα.
+- **Tests (ελάχιστα):** Δεν ορίζονται στο brief· ισχύουν §3 (κανόνας 4, test-first) και §11 (Capacitor με mocked plugin modules, όπως στο L10).
+- **DoD:**
+  - Κοινά: `pnpm test:lane P3` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane P3`.
+  - Το παράθυρο εκκρεμών ειδοποιήσεων δεν ξεπερνά ποτέ τις 60.
+- **Σημειώσεις:** Μόνο local notifications με δωρεάν Apple ID (§2, D7)· push notifications εκτός scope (§1).
+
+### Wave 5 — Σκλήρυνση
+
+#### H1 — Απόδοση και αντοχή
+
+- **Wave:** 5.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** δεν δηλώνεται ρητά στο brief· σειρά §0 (μετά το Wave 4).
+- **Ownership:** — (δεν ορίζεται στο §6.2).
+- **Διάβασε:** §3, §5, §6, §7 · §11 · κάρτα H1 · πρότυπο report §10.
+- **Παραδοτέα:** απόδοση σε μαθήματα 500+ σελίδων, μνήμη, ακύρωση, error states παντού, a11y.
+- **Tests (ελάχιστα):** Δεν ορίζονται στο brief· προαιρετικό mutation testing στον core (§11).
+- **DoD:**
+  - Κοινά: `pnpm test:lane H1` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane H1`.
+  - Μάθημα 500+ σελίδων χωρίς crash· ακύρωση λειτουργεί· error states σε κάθε οθόνη.
+- **Σημειώσεις:** —
+
+#### H2 — Release v0.1
+
+- **Wave:** 5.
+- **Μέγεθος:** M.
+- **Εξαρτάται από:** δεν δηλώνεται ρητά στο brief· σειρά §0 (μετά το Wave 4).
+- **Ownership:** — (δεν ορίζεται στο §6.2).
+- **Διάβασε:** §3, §5, §6, §7 · §2 (D8, D10) · §14 · κάρτα H2 · πρότυπο report §10.
+- **Παραδοτέα:**
+  - README σε EN και EL.
+  - Οδηγίες εγκατάστασης με Sideloadly.
+  - CHANGELOG.
+  - Tag.
+  - Sweep PII/copyright σε ΟΛΟ το history ΠΡΙΝ το repo γίνει public.
+- **Tests (ελάχιστα):** Δεν ορίζονται στο brief· ισχύει το §11.
+- **DoD:**
+  - Κοινά: `pnpm test:lane H2` · `pnpm typecheck` · `pnpm lint` · `pnpm check:ownership --lane H2`.
+  - Sweep PII/copyright ολοκληρωμένο ΠΡΙΝ γίνει public το repo (§2, D8).
+- **Σημειώσεις:** Το repo γίνεται PUBLIC μετά το H2 (§2 D8, §14 απόφαση 4).
+
+## §10 Εκτέλεση με παράλληλα terminals (OpenCode)
+
+Setup ανά lane (PowerShell):
+
+```powershell
+cd C:\Users\skyd3\spoudes
+git worktree add ..\spoudes-wt\L05 -b lane/L05-extract-pdf contracts-v1
+cd ..\spoudes-wt\L05
+pnpm install --frozen-lockfile
+opencode
+```
+
+Prompt template για κάθε session:
+
+```
+Είσαι ο agent της κάρτας {ID} του docs/PLAN.md.
+1. Διάβασε §3, §5, §6, §7 και ΜΟΝΟ την κάρτα {ID} στο §9.
+2. Δούλεψε ΜΟΝΟ στα paths του Ownership της κάρτας. Μην αγγίξεις package.json, pnpm-lock.yaml, configs ή contracts.
+3. TDD: πρώτα τα tests της κάρτας, τρέξε τα (κόκκινα), μετά υλοποίηση.
+4. Πριν χρησιμοποιήσεις API βιβλιοθήκης, έλεγξε τα .d.ts στο node_modules.
+5. DoD: pnpm test:lane {ID} · pnpm typecheck · pnpm lint · pnpm check:ownership --lane {ID}
+6. Commit στο branch σου (Conventional Commits). ΟΧΙ push, ΟΧΙ merge.
+7. Αν αποτύχεις 2 φορές στο ίδιο σημείο: BLOCKED + αιτία, σταμάτα.
+8. Τέλος: report κατά το πρότυπο του §10.
+```
+
+Πρότυπο report:
+
+```
+## Report {ID}
+- Κατάσταση: DONE | BLOCKED
+- Αρχεία που άλλαξαν:
+- DoD output (τελευταίες γραμμές κάθε εντολής):
+- Υποθέσεις / ανοιχτά:
+- Αιτήματα αλλαγής contracts / dependencies:
+```
+
+**Integrator loop** (owner + ισχυρό μοντέλο για review). Τα merges γίνονται ΣΕΙΡΙΑΚΑ:
+
+1. Διαβάζεις το report.
+2. `git log contracts-v1..HEAD` και `git diff --stat` στο worktree.
+3. `pnpm check:ownership --lane <ID>`.
+4. Ξανατρέχεις ο ίδιος όλο το DoD. Δεν εμπιστεύεσαι το report.
+5. Review του diff για:
+   - εφευρημένα APIs
+   - σφάλματα που «καταπίνονται»
+   - ψεύτικα defaults
+   - χαλαρωμένα tests
+   - `any`
+6. `git rebase main` στο lane.
+7. `merge --no-ff` στο main.
+8. `pnpm test` σε όλο το main.
+9. Επόμενο lane.
+
+**Αλλαγές contracts.** Συλλογή των `docs/requests/*.md` → ο integrator αλλάζει τα contracts → tag `contracts-v2` → τα ενεργά lanes κάνουν rebase.
+
+**Agent που έπεσε ή κόλλησε:**
+
+- `git -C <worktree> status`.
+- Μισές αλλαγές: είτε απόρριψη είτε νέος agent με το ίδιο prompt + «συνέχισε από την τρέχουσα κατάσταση».
+- Έλεγχος για stale test lock (νεκρός PID).
+
+**Ταυτόχρονα sessions:**
+
+- Έως 13 στο Wave 1a.
+- Αν εμφανιστούν 0xC0000142 ή τυχαία crashes του node: μειώνεις τα ταυτόχρονα sessions.
+
+**Μοντέλα:**
+
+| Εργασία | Μοντέλο |
+|---|---|
+| W0, L04, integrator review | ισχυρό μοντέλο |
+| Όλα τα υπόλοιπα | το δωρεάν μοντέλο του OpenCode |
+
+## §11 Testing και επαλήθευση
+
+| Επίπεδο | Πού | Ποιος | Εργαλεία |
+|---|---|---|---|
+| Unit | Windows | κάθε lane | vitest |
+| Contract (ports) | Windows | L10, L11 | shared suites |
+| Integration eClass | Windows | L14, L15, I1 | mock-eclass |
+| LLM pipeline | Windows | I1 | MockLlm |
+| UI | Windows browser | L12, I3, I4 | Playwright, viewport iPhone, screenshots |
+| E2E CLI | Windows | I2 | mock-eclass + MockLlm |
+| Real smoke | Windows | ΜΟΝΟ owner | πραγματικό thales + Gemini key |
+| Συσκευή | iPhone | owner | IPA + Sideloadly, checklist S2 |
+
+Κανόνες:
+
+- Coverage: core ≥95% lines/branches, υπόλοιπα ≥85%.
+- Μόνο λειτουργικά assertions, ποτέ tests που κάνουν grep στον πηγαίο κώδικα.
+- Κάθε bug αποκτά πρώτα regression test.
+- Προαιρετικό mutation testing στον core (H1).
+
+## §12 Κίνδυνοι
+
+| Κίνδυνος | Πιθανότητα | Αντιμετώπιση |
+|---|---|---|
+| Το CAS θέλει JS/2FA και το HTTP login αποτυγχάνει | Μ | S1 νωρίς· fallback login σε WebView, που θέλει custom native plugin για κοινά cookies (μεγαλύτερο κόστος) |
+| Τα downloads στο iOS δεν στέλνουν cookies | Μ | S2· ρητό header Cookie· fallback CapacitorHttp για μικρά αρχεία |
+| Το δωρεάν μοντέλο εφευρίσκει APIs | Υ | frozen contracts, φρουρός ownership, DoD, review integrator, κανόνας BLOCKED |
+| Merge conflicts από 13 lanes | Μ | ownership ανά φάκελο, dependencies στο W0, σειριακά merges |
+| Ψεύτικες αποτυχίες tests στα Windows | Υ | threads pool, ≤2 workers, test lock 4 θέσεων |
+| Όρια free tier του Gemini (429) | Υ | cache, lazy οδηγοί, chunking, backoff, ημερήσιο όριο |
+| Hallucinations στον οδηγό | Μ | υποχρεωτικές παραπομπές + validator, «Δεν υπάρχει στο υλικό» |
+| Δωρεάν Apple ID: λήξη 7 ημερών, όριο 3 εφαρμογών | Υ | Sideloadly auto-refresh, σταθερό bundle ID, export δεδομένων |
+| PII/copyright στο repo | Μ | gitignore, scrubber, έλεγχος owner, sweep στο H2 πριν γίνει public |
+| Αλλαγή HTML μετά από αναβάθμιση του eClass | Χ/Μ | selectors μόνο στο `packages/eclass`, fixtures, γρήγορο re-spike |
+| Κλείδωμα λογαριασμού από αποτυχημένα login | Χ | 1 auto re-login, κανένα login από agents/tests |
+
+## §13 Χρονοδιάγραμμα
+
+Ενδεικτικό· bottleneck = ο χρόνος review του integrator.
+
+| Πότε | Τι |
+|---|---|
+| Μέρα 1 | W0 ‖ S1 |
+| Μέρες 2–3 | Wave 1a με σειριακά merges |
+| Μέρα 4 | Wave 1b (L13 → L14 ‖ L15) |
+| Μέρες 5–6 | Wave 2 + S2 = MVP στο iPhone |
+| Εβδομάδα 2 | Wave 3 |
+| Εβδομάδα 3 | Wave 4 |
+| Μετά | Wave 5 |
+
+## §14 Ανοιχτές αποφάσεις owner
+
+Καμία δεν μπλοκάρει το W0, εκτός από την 3.
+
+1. Τοπικός λογαριασμός ή CAS στο thales; Το S1 θα το δείξει ούτως ή άλλως.
+2. Δωρεάν ή paid Apple ID;
+3. Όνομα project: το `spoudes` είναι placeholder και αλλάζει με global replace ΠΡΙΝ το W0.
+4. Πότε γίνεται public το repo (πρόταση: στο H2).
+5. Ποιο ισχυρό μοντέλο για W0, L04 και integrator review.
+
+
+# PLAN 2026-10-09 — DPS.guide (v2): Study Agent / Tutor για Open eClass (iOS μέσω Sideloadly + CLI για Windows)
+
+| Πεδίο | Τιμή |
+|---|---|
+| Ημερομηνία | 2026-10-09 |
+| Έκδοση πλάνου | v2, αυτοτελές. Αντικαθιστά το `PLAN_2026-10-09_STUDY_AGENT.md` (v1), που δεν διαβάζεται από κανέναν agent. |
+| Όνομα | `DPS.guide` (πλήρης πίνακας ονομάτων στο §6.0) |
+| Repo | `C:\Users\skyd3\DPS.guide\` · worktrees `C:\Users\skyd3\DPS.guide-wt\<A..E>\` (§2 D8, §10.2) |
+| Άδεια | MIT (§2 D10) |
+| Κοινό | Owner = integrator (merges, S1/S2, οπτική έγκριση UI, contracts) · 5 orchestrators + subagents στο OpenCode με δωρεάν μοντέλο (§10) |
+| Γλώσσα | Ελληνικά· τεχνικοί όροι στα Αγγλικά· χωρίς φλυαρία |
+
+## §0 TL;DR και πώς διαβάζεται
+
+**Τι είναι το DPS.guide.** Open-source iOS εφαρμογή (εγκατάσταση με Sideloadly) και Node CLI για Windows. Κάνει τα εξής:
+
+- login στο Open eClass του Τμήματος Πληροφορικής ΠαΠει (`https://thales.cs.unipi.gr`) με τα στοιχεία του χρήστη στο Keychain
+- κατέβασμα όλων των αρχείων σε φάκελο ανά μάθημα, ορατό στα «Αρχεία» του iOS
+- AI ανάλυση της ύλης σε ενότητες με προαπαιτούμενα
+- study guide ανά ενότητα με παραπομπές σε σελίδες
+- tutor grounded στο υλικό
+- UI στο ύφος του Bevel: σκούρο charcoal, ανάγλυφες κάρτες, δαχτυλίδια μετρικών, αιωρούμενη capsule πλοήγηση
+- Φάση 2: ημερήσιο πρόγραμμα με ειδοποιήσεις.
+
+**Εκτέλεση.** 5 terminals OpenCode = 5 orchestrators, ο καθένας με ένα stream:
+
+- A Πυρήνας
+- B eClass
+- C Εξαγωγή & AI
+- D UI
+- E Πλατφόρμα
+
+Κάθε orchestrator τρέχει ≤4 subagents ανά work package. Milestones M0a, M0–M5. Integrator = ο owner.
+
+**Γιατί είναι optimal:**
+
+- Από την πρώτη ώρα δουλεύουν και τα 5 streams. Κανένα δεν περιμένει τα contracts: το B1 είναι το spike, τα C1/E1 είναι επαληθεύσεις, το D1 είναι το design system σε σκέτο HTML/CSS.
+- Το tooling (A1.1) γίνεται merge αμέσως (M0a), ώστε όλοι να έχουν dependencies μέσα σε λίγες ώρες.
+- Το πρώτο `.ipa` βγαίνει στο M0, άρα η διαδρομή εγκατάστασης αποδεικνύεται από την πρώτη μέρα.
+- Το S1 (ο owner) τρέχει την 1η μέρα, γιατί είναι στο critical path.
+
+**Οδηγός ανάγνωσης:**
+
+- Owner: §0–§2, §10, §13–§15.
+- Orchestrator: §3, §10 και το stream του στο §11. Επιπλέον §5/§6/§9 όπου χρειάζεται.
+- Subagent: §3, §5, §6, την ενότητα που ορίζει η κάρτα του (§7, §8 ή §9) και ΜΟΝΟ την κάρτα του task του.
+
+## §1 Στόχος, MVP, εκτός scope
+
+### §1.1 Στόχος
+
+Ο χρήστης συνδέεται στο Open eClass, κατεβάζει το υλικό του τοπικά, το αναλύει με το δικό του Gemini key σε ενότητες με προαπαιτούμενα, διαβάζει οδηγούς με παραπομπές σε σελίδες, συζητά με tutor grounded στο υλικό και, σε 2η φάση, ακολουθεί ημερήσιο πρόγραμμα μέχρι την εξεταστική με ειδοποιήσεις και check-in. Όλα τρέχουν στη συσκευή, χωρίς backend (§2 D2).
+
+### §1.2 MVP — Definition of Done (στο iPhone, με το UI του §9)
+
+1. Onboarding → login → μαθήματα → sync → φάκελοι στο Files.
+2. Ανάλυση → χάρτης ενοτήτων.
+3. Οδηγός ενότητας: οι παραπομπές ανοίγουν το PDF στη σελίδα.
+4. Βασικό tutor chat (χωρίς εργαλεία, 3 λειτουργίες).
+5. Οθόνη «Σήμερα» με 3 δαχτυλίδια (Ύλη αναλυμένη % · Ενότητες μελετημένες % · Αυτοέλεγχος %, όλα deterministic) και «Συνέχισε από την τελευταία ενότητα».
+6. Οθόνη Διαγνωστικά.
+
+### §1.3 Εκτός scope MVP
+
+| Εκτός scope | Σημείωση |
+|---|---|
+| Άλλα πανεπιστήμια | Το base URL όμως είναι ρύθμιση και όχι hardcoded. |
+| Video και ηχογραφήσεις | — |
+| Push notifications | Αδύνατο με δωρεάν Apple ID. |
+| Πολλοί χρήστες | — |
+| Server ή backend | — |
+| Android build | Εφικτό αργότερα. |
+| Αποσυμπίεση zip | Το zip κατεβαίνει, δεν αποσυμπιέζεται (§8). |
+| Παλιά `.ppt`/`.doc` | Κατεβαίνουν· η εξαγωγή επιστρέφει `MI_YPOSTIRIZOMENO` (§8). |
+| Light mode | Dark-only στο MVP (§2 D11, §9.1). |
+| Layout για iPad | — |
+| Assets, λογότυπα, ονόματα και promo στοιχεία του Bevel | Μόνο το ύφος (§9.1). |
+| Ανάλυση εικόνων png/jpg | Κατεβαίνουν, δεν αναλύονται (§8). |
+
+## §2 Αποφάσεις (ADR σύνοψη)
+
+| # | Απόφαση | Γιατί | Τι θα την άλλαζε |
+|---|---|---|---|
+| D1 | **Stack:** TypeScript monorepo (pnpm) + Capacitor (iOS) + Ionic React UI + Node CLI. **Κόστος:** plugins για Keychain, CORS που λύνεται με CapacitorHttp, λιγότερο «native» UX. | (α) Έως 20 παράλληλοι workers (§10.7) στα Windows πρέπει να επαληθεύουν τη δουλειά τους τοπικά. (β) Με Swift, το UI και ό,τι αγγίζει Apple frameworks δεν χτίζεται στα Windows και επαληθεύεται μόνο σε macOS CI. (γ) Ο TS core τρέχει ίδιος σε Node (tests/CLI) και στο WebView. (δ) Το UI ελέγχεται στον browser με Playwright. | Αν το S2/Διαγνωστικά (E3.2, E3.3) δείξουν ότι CapacitorHttp/file-transfer δεν κάνουν login/downloads στο thales → native plugin σε Swift μόνο για το δίκτυο· ο υπόλοιπος κώδικας μένει. |
+| D2 | **Local-first, χωρίς backend.** Όλα τρέχουν στη συσκευή. Τα στοιχεία σύνδεσης μένουν στο Keychain. | Μηδενικό κόστος λειτουργίας, μηδενικά δεδομένα χρήστη εκτός συσκευής. | Συγχρονισμός πολλών συσκευών ή push (θέλει paid Apple ID + server). |
+| D3 | **BYOK AI.** Ο χρήστης φέρνει το δικό του Gemini API key (secure storage). Υπάρχει provider port (`LlmPyli`), ώστε αργότερα να μπει και OpenAI-compatible provider. | Κανένα κόστος/ευθύνη για keys από το project. | Άλλος default provider· το port το επιτρέπει χωρίς αλλαγές αλλού. |
+| D4 | **50/50 boundary.** Το LLM κάνει μόνο NLP: περιγράμματα, συγχώνευση, κείμενο οδηγού, tutor. Ό,τι αριθμητικό (λεπτά, σειρά, ημερομηνίες, `apodosi_exetasis`, κατάσταση μάθησης, σύγκριση αριθμητικών απαντήσεων) υπολογίζεται deterministic στο `packages/core`. Το LLM δεν βγάζει αριθμούς εμπιστοσύνης· χρησιμοποιεί enums (π.χ. `isxys: 'isxyri' \| 'asthenis'`). | Ντετερμινισμός, ελεγξιμότητα, μηδέν hallucinated αριθμοί. | Ποτέ (κανόνας owner). |
+| D5 | **Storage = αρχεία JSON + Markdown** με σταθερό layout (§5.3). Το layout είναι ίδιο σε Node fs και Capacitor Filesystem, και ορατό στο Files. | Απλότητα, διαφάνεια για τον χρήστη, ίδιος κώδικας σε CLI και iOS. | Μέγεθος ή αναζητήσεις (π.χ. >10.000 ενότητες ή full-text search) → SQLite πίσω από το ίδιο `ApothikiPyli`. |
+| D6 | **Cache ανά content hash** σε κάθε LLM βήμα: ίδιο input → καμία νέα κλήση. Οι οδηγοί παράγονται lazily. | Έλεγχος κόστους και ορίων free tier (§7.2). | Αλλάζει μόνο το κλειδί cache, αν αλλάξει το API του provider. |
+| D7 | **Δωρεάν Apple ID.** Μόνο local notifications. Χωρίς extensions/widgets. Σταθερό bundle ID που δεν αλλάζει ποτέ, αλλιώς χάνονται τα δεδομένα. Υπογραφή 7 ημερών, με Sideloadly auto-refresh. | Μηδενικό κόστος· ο owner δεν έχει paid λογαριασμό. | Paid → υπογραφή 1 έτους, push, widgets. Ανοιχτή απόφαση §15 (2). |
+| D8 | **Repo.** Θέση `C:\Users\skyd3\DPS.guide\`, worktrees στο `C:\Users\skyd3\DPS.guide-wt\<A..E>\`. PRIVATE μέχρι το A5.2, όπου γίνεται sweep PII/copyright σε όλο το history· μετά PUBLIC. Σε private repo τα macOS λεπτά του CI μετράνε στο δωρεάν όριο με πολλαπλασιαστή (⚠️ επαλήθευση τρέχουσας τιμολόγησης GitHub Actions). Λίγα IPA builds αρκούν. | Εκτός του `C:\Users\skyd3\antigarvity\`, γιατί εκεί απαγορεύεται νέο version control. | Αν τα macOS λεπτά του private CI δεν αρκούν → public νωρίτερα, ΜΟΝΟ μετά από sweep PII. Ανοιχτή απόφαση §15 (4). |
+| D9 | **Naming**, με υποχρεωτικό glossary §5.1: συναρτήσεις, μεταβλητές, πεδία JSON σε snake_case Greeklish (`fere_mathimata`, `kodikos_mathimatos`)· types/interfaces σε PascalCase Greeklish (`XartisMathimatos`)· σταθερές UPPER_SNAKE· φάκελοι modules όπως στο §6. Το ESLint `camelcase` είναι off. | Κανόνας owner. | Ποτέ. |
+| D10 | **Άδεια MIT.** Απαγορεύεται αντιγραφή κώδικα από GPL projects (π.χ. το `sdi2200262/eclass-mcp-server`, GPL-3.0). Επιτρέπεται μόνο ανάγνωση για κατανόηση της ροής CAS. | Μέγιστη επαναχρησιμοποίηση από τρίτους. | Αν χρειαστεί αυτούσιος GPL κώδικας → όλο το repo GPL-3.0 (απόφαση owner). |
+| D11 | **UI: dark-only design system στο ύφος του Bevel** (§9). | Το δωρεάν μοντέλο δεν βλέπει εικόνες· χρειάζεται αριθμητικά tokens και μετρήσεις (§9.2) για να δουλέψει χωρίς εικόνα. | Ο owner θέλει light mode ή άλλο brand. |
+| D12 | **Εκτέλεση: 5 orchestrators × ≤4 subagents** (§10). | Λιγότερα branches και σταθερό ownership (βλ. παρακάτω). | 0xC0000142 ή τυχαία crashes από φόρτο → 2–3 subagents ανά orchestrator. |
+
+**D11 αναλυτικά:**
+
+- Tokens από δειγματοληψία pixel των screenshots, με διορθώσεις για WCAG AA.
+- Ionic για πλοήγηση, overlays, gestures και safe areas· δικά μας components για την όψη.
+- Μόνο το ύφος· όχι assets, λογότυπα, ονόματα ή εικονογράφηση του Bevel.
+
+**D12 αναλυτικά:**
+
+- Ένα stream ανά orchestrator, με σταθερό ownership σε όλα τα milestones.
+- Merges στο main μόνο στα milestones.
+- Γιατί: λιγότερα branches → λιγότερο merge overhead από 13 lanes, και δεν υπάρχουν επικαλύψεις ownership ανάμεσα στα waves.
+
+

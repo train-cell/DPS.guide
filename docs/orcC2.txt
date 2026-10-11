@@ -1,0 +1,100 @@
+===============================================================================
+ORCHESTRATOR BRIEF — STREAM C, ΚΥΚΛΟΣ 2 (v2, 2026-10-10)
+Αντικαθιστά το docs/orcC.txt (κύκλος 1). Διάβασε ΚΑΙ τα δύο· εδώ μπαίνει η
+τρέχουσα κατάσταση και ό,τι απομένει για το Stream C.
+===============================================================================
+cd C:\Users\skyd3\antigarvity\DPS.guide-wt\C   (branch: stream/C)
+
+ΡΟΛΟΣ & ΑΠΟΚΛΕΙΣΤΙΚΟ OWNERSHIP (αναλλοίωτο από orcC.txt):
+- packages/extract/** (L05 pdf, L06 office)
+- packages/ai/** (L07 gemini, L08 prompts, L09 cache/mock, T1 tutor, T4 tropos)
+- scripts/make-fixtures/**  ·  fixtures/pdf/**, fixtures/office/**, fixtures/llm/**
+
+ΑΠΑΡΑΒΑΤΟΙ ΚΑΝΟΝΕΣ (from orcC.txt §3, ΤΗΡΟΥΝΤΑΙ):
+ZERO NETWORK στα tests (μόνο MockLlm/MockLlmArchiou + synthetic fixtures) ·
+ZERO REAL COURSE DATA (συνθετικά fixtures μόνο, Noto Sans embedded) ·
+ZERO CONFIG TOUCH (package.json/tsconfig/eslint configs — μόνο με αιτούσα) ·
+FROZEN CONTRACTS (LlmPyli, Selida — χωρίς τροποποίηση) ·
+NO GEMINI SDK (REST μέσω HttpPyli) · TDD (tests πρώτα, κόκκινα, μετά κώδικας)
+
+-------------------------------------------------------------------------------
+ΚΑΤΑΣΤΑΣΗ: DONE (επαληθευμένο 2026-10-10, branch stream/C @ HEAD)
+-------------------------------------------------------------------------------
+| Lane   | Τι έγινε | Commit |
+| L05    | exagage_pdf (pdfjs-dist) — 7/7 ✅ | 63f19fb |
+| L06    | exagage_pptx + exagage_docx (jszip, fast-xml-parser) — 7/7 ✅ | ffa1af7 |
+| L05+06 | fixtures e2e (skip όταν λείπουν τα binaries) | c80fbe9 |
+| L08    | prompts ολοκληρώθηκαν: perivale_dedomena (anti-injection), istoriko rename, φρουράς ορίων P3 — 235/235 ✅ | 0b2d097 |
+| L07/L09/T1 | αναθεωρήσεις naming (istorico→istoriko), καμία αλλαγή συμπεριφοράς | 0b2d097 |
+| deps   | pdfjs-dist, jszip, fast-xml-parser, pdf-lib, @pdf-lib/fontkit, pptxgenjs, docx, zod | 1bf693e, 9ebd646 |
+| fixtures | scripts/make-fixtures/{pdf,office}.mjs + NotoSans OFL (4515 glyphs) + READMEs | 47217ed |
+| docs   | αιτήματα C1/C2/C3 προς owner/integrator | 2b30340 |
+
+| T4     | odigies tropou eksetasis (odos_tropou/enotita_tropou) — 13/13 ✅, 248/235 συνολικά @dps/ai | ΤΕΛΕΥΤΑΙΟ |
+
+ΕΝΤΟΛΕΣ ΠΟΥ ΔΟΥΛΕΥΟΥΝ ΤΩΡΑ (το root test:lane είναι ΣΠΑΣΜΕΝΟ — C1 αιτ. 6):
+  npx vitest run --root packages/extract      → 17/17 ✅
+  npx vitest run --root packages/ai           → 248/248 ✅ (235 + 13 T4)
+  npx tsc --build packages/extract packages/ai → exit 0 ✅ (root: tsc --build ✅)
+  node scripts/make-fixtures/pdf.mjs          → fixtures/pdf/notosans-*.pdf ✅
+  node scripts/make-fixtures/office.mjs       → fixtures/office/slides-tessera.pptx, enotites-tria.docx ✅
+  pnpm test:lane L05                          → ❌ spawn vitest ENOENT (W0 gap, μην το διορθώσεις — request C1.6)
+  node scripts/check-ownership.mjs --lane stream/C → 4 violations, ΟΛΑ προ-δεδηλωμένα στο C3
+    (docs/requests/C1-C3.md, pnpm-lock.yaml — request C3 αιτ. 1)
+
+-------------------------------------------------------------------------------
+ΕΝΕΡΓΕΙΕΣ ΠΟΥ ΑΠΑΙΤΟΥΝΤΑΙ ΑΠΟ ΤΟΝ C (με σειρά)
+-------------------------------------------------------------------------------
+E1 — T4 (packages/ai/src/prompts/tropos/**) → ✅ DONE (2026-10-10):
+     odos_tropou / enotita_tropou pure builders για τους 4 τρόπους + κοινούς
+     κανόνες (50/50, μην επινοείς)· άγνωστος τρόπος → MI_EGKYRO_SXIMA.
+     Τα P1–P4 ΔΕΝ τροποποιήθηκαν ακόμα: η ενσωμάτωση (προαιρετικό `tropos` στα
+     Eisodos + άνοδο εκδόσεων p1–p4) είναι ξεχωριστό task, μόνο αφού οριστεί
+     από τον owner πού περνάει ο τρόπος (settings → pipeline).
+
+E2 — Lint sweep, ΜΟΝΙΑ αφού ο owner φτιιάξει το eslint.config.mjs (C1 αιτ. 5):
+  pnpm lint · διόρθωσε ΜΟΝΟ αρχεία του ownership σου · αν αποτύχεις 2 φορές στο
+  ίδιο lint issue → BLOCKED, σταμάτα (κανένα eslint-disable).
+
+E3 — Όταν ο owner βάλει τις εξαιρέσεις .gitignore για fixtures (C1 αιτ. 8 / C3 αιτ. 2):
+  1) node scripts/make-fixtures/pdf.mjs && node scripts/make-fixtures/office.mjs
+  2) npx vitest run --root packages/extract   (τα fixtures-e2e tests ενεργοποιούνται)
+  3) commit τα binaries (git add -f για τα fixtures dirs μόνο — ΟΧΙ data/, ΟΧΙ raw)
+
+E4 — Όταν ο integrator βγάλει contracts-v2 με εγγενές tool calling (C2 αιτ. 2):
+  L07: υλοποίησε parage_json_me_ergaleia στο LlmPyli (REST πάνω από HttpPyli)
+  T1: μετανάστευσε τον βρόχο εργαλείων από structured JSON σε native function calling
+      (deterministic εκτέλεση εργαλείων ΜΕΙΝΕΙ εκτός LLM — D4). Έλεγξε τα
+      tutor-ergaleia/tutor-michania tests μετά τη μετανάστευση.
+
+E5 — Όταν ο stream A φτιιάξει το MockLlm του core (C2 αιτ. 3):
+  Επίσημο mock για I1/I2 μένει το MockLlmArchiou (packages/ai/src/mock/)· επανέλεγξε
+  τα mock-llm tests και τα fixtures/llm (hash/montelo/typos ελέγχονται αυτόματα).
+
+E6 — fixtures/llm record/replay: ΜΟΝΟ ο owner τρέχει πραγματικό Gemini (rule: ποτέ
+  αιτήματα σε agent). Ο C επαληθεύει ότι τα hashes ταιριάζουν (πηγή: fixtures/llm/README.md)
+  και ότι το MockLlmArchiou επιστρέφει DEN_VRETHIKE σε missing fixture — ποτέ fake data.
+
+E7 — Κάθε αλλαγή κειμένου prompt → αύξηση εκδόσεων στο packages/ai/src/prompts/ekdoseis.ts
+  (εξαναγκασμένο cache invalidation, §7.1). Τα fixtures που αλλάζανε κλειδί θεωρούνται καμένα.
+
+-------------------------------------------------------------------------------
+ΤΙ ΔΕΝ ΚΑΝΕΙ Ο C (αιτήματα ανοιχτά προς owner/integrator)
+-------------------------------------------------------------------------------
+- ΔΕΝ διορθώνει root configs: eslint.config.mjs, vitest.workspace.ts,
+  scripts/test-lock.mjs, root tsconfig.json reference για packages/ai,
+  script fixtures:make (C1 αιτ. 3-7, 10 · C3 αιτ. 3-5).
+- ΔΕΝ πειράζει ownership.json (C3 αιτ. 1: λείπει κάλυψη για tests/**, src/koines.ts,
+  docs/requests/**, fixtures/fonts/**).
+- ΔΕΝ τροποποιεί τα frozen contracts (C2 αιτ. 2/3/4 κρατούνται για A/integrator).
+- Τα αρχεία .tsbuildinfo μένουν untracked (C1 αιτ. 9).
+- Τοπικό hack για fixtures scripts (junctions στο root node_modules) ΔΕΝ μπαίνει ποτέ commit.
+
+-------------------------------------------------------------------------------
+ΤΕΛΟΣ ΚΑΘΕ TASK — REPORT (§10 πρότυπο)
+-------------------------------------------------------------------------------
+- Κατάσταση: DONE | BLOCKED
+- Αρχεία που άλλαξαν
+- Output εντολών: vitest ανά package · tsc --build · lint (όταν υπάρξει config)
+- Νέα αιτήματα (αν χρειάστηκαν) σε docs/requests/C<Ν>.md
+===============================================================================
