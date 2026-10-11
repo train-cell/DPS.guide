@@ -6,6 +6,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
+    "build": "tsc --build",
     "test": "node scripts/test-lock.mjs vitest run",
     "test:lane": "node scripts/test-lane.mjs --lane",
     "test:e2e": "playwright test --config apps/mobile/playwright.config.ts",

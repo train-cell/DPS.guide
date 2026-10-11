@@ -28,10 +28,29 @@ function filtra_apo_lane(lane) {
     console.error(`Άγνωστο lane: ${lane}. Διαθέσιμα: ${Object.keys(ownership).join(', ')}`);
     process.exit(1);
   }
-  return globs
-    .map((g) => g.replace(/\/\*\*$/, '').replace(/^\*\*$/, ''))
-    .map((g) => g.split(path.sep).join('/'))
-    .filter((g) => g.length > 0 && fs.existsSync(path.resolve(EDOFI, '..', g)));
+  const filtra = [];
+  for (const g of globs) {
+    const katharo = g.replace(/\/\*\*$/, '').replace(/^\*\*$/, '');
+    if (!katharo) continue;
+    const absPath = path.resolve(EDOFI, '..', katharo);
+    if (fs.existsSync(absPath)) {
+      filtra.push(katharo);
+    }
+    if (katharo.includes('/src/')) {
+      const testsDir = katharo.replace(/\/src\//, '/tests/');
+      const absTests = path.resolve(EDOFI, '..', testsDir);
+      if (fs.existsSync(absTests)) {
+        filtra.push(testsDir);
+      } else {
+        const testFile = `${testsDir}.test.ts`;
+        const absTestFile = path.resolve(EDOFI, '..', testFile);
+        if (fs.existsSync(absTestFile)) {
+          filtra.push(testFile);
+        }
+      }
+    }
+  }
+  return [...new Set(filtra)];
 }
 
 function main() {
