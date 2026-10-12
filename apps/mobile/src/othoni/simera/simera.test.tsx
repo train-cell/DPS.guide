@@ -194,4 +194,19 @@ describe('simera — ένδειξη ενεργού μαθήματος και ε�
     expect(markup).toContain('ΠΛΗ101');
     expect(markup).toContain('ΠΛΗ204');
   });
+
+  it('αποδίδει το έμβλημα του πανεπιστημίου και το κέντρο γρήγορων ενεργειών', () => {
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <Simera />
+      </MemoryRouter>
+    );
+    expect(markup).toContain('simera-panepistimio-badge');
+    expect(markup).toContain('ΠΑΠΕΙ');
+    expect(markup).toContain('simera-draseis-plegma');
+    expect(markup).toContain('🚀 Μελέτη');
+    expect(markup).toContain('🤖 AI Tutor');
+    expect(markup).toContain('🗺️ Ύλη');
+    expect(markup).toContain('📅 Πρόγραμμα');
+  });
 });

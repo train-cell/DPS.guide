@@ -1,4 +1,4 @@
-﻿import type { ApothikiPyli, Apotelesma } from '@dps/core';
+import type { ApothikiPyli, Apotelesma } from '@dps/core';
 import type { Rytheseis, Proodhos } from './apothiki-typoi.js';
 import { DIALOMI_RYTHMISEON, dialomos_proodhou } from './apothiki-typoi.js';
 import { PROEDAFO_TEMPLATE } from '../programma/programma-vohthia.js';
@@ -7,6 +7,7 @@ import { PROEDAFO_TEMPLATE } from '../programma/programma-vohthia.js';
 export function proedapes_rytheseis(): Rytheseis {
   return {
     baseUrl: 'https://thales.cs.unipi.gr',
+    panepistimioId: 'unipi',
     mathimataSynch: [],
     onomaMontelou: 'gemini-2.5-flash',
     exeiKleidiLlm: false,

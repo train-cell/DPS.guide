@@ -11,7 +11,7 @@ import {
   Pilegma,
   ProskelesioOmonimas,
 } from '../../koinima/index.js';
-import { fortosi, type Katastasi } from '../../kathstasi/index.js';
+import { fortosi, xoris_katastasi, type Katastasi } from '../../kathstasi/index.js';
 import {
   fortose_mathimata_apo_apothiki,
   fortose_xartis_apo_apothiki,
@@ -21,6 +21,9 @@ import {
   pososto_aristeias,
   pseudos_mathimata,
 } from '../../pseudomata/index.js';
+import { EikonidioPanepistimiou, PANEPISTIMIA_LISTA } from '../../design/eikonidia-panepistimion.js';
+import type { PanepistimioId } from '../../design/eikonidia-panepistimion.js';
+import { stilise_imerominia } from '../../programma/programma-vohthia.js';
 
 /** Πόσες ενότητες του χάρτη προτείνονται ως στόχοι της ημέρας. */
 const PLITOS_STOCHOIS = 3;
@@ -188,12 +191,89 @@ export function Simera() {
     ? `${apothiki.kodikosMathimatos} - Μάθημα`
     : 'ΠΛΗ201 - Προγραμματισμός';
 
+  const panepistimioId = (apothiki.rytheseis.panepistimioId ?? 'unipi') as PanepistimioId;
+  const panepistimio =
+    PANEPISTIMIA_LISTA.find((p) => p.id === panepistimioId) ?? {
+      id: 'unipi' as PanepistimioId,
+      onoma: 'Πανεπιστήμιο Πειραιώς',
+      syntomiOnomasia: 'ΠΑΠΕΙ',
+      baseEclass: 'https://thales.cs.unipi.gr',
+      katigoria: 'athina' as const,
+      perigrafi: 'Τμήμα Πληροφορικής & eClass ΠΑΠΕΙ',
+    };
+
+  const xartisDedomena = xoris_katastasi(katastasi);
+  const telies = apothiki.proodhos.aristeiesEnotiton;
+  const protiMiOlokliromeni =
+    xartisDedomena?.enotites.find((e) => !telies.includes(e.id))?.id ??
+    xartisDedomena?.enotites[0]?.id ??
+    'en-1';
+
+  const exetaseis = apothiki.rytheseis.exetaseis ?? [];
+  const simeraImerominia = new Date().toISOString().slice(0, 10);
+  const mellontikesExetaseis = [...exetaseis]
+    .filter((e) => (e.imerominia ?? '') >= simeraImerominia)
+    .sort((a, b) => (a.imerominia ?? '').localeCompare(b.imerominia ?? ''));
+  const epomeniEksetasi = mellontikesExetaseis[0];
+  const imeresGiaEksetasi = epomeniEksetasi
+    ? Math.max(
+        0,
+        Math.ceil(
+          (new Date(epomeniEksetasi.imerominia ?? '').getTime() -
+            new Date(simeraImerominia).getTime()) /
+            (1000 * 60 * 60 * 24)
+        )
+      )
+    : null;
+
   return (
     <div className="odoni-lista" data-testid="simera-ekran">
       <ProskelesioOmonimas
         titlos="Σήμερα"
         ypokeimeno="Η πρόοδός σου στο μάθημα, με μία ματιά"
+        akseis={
+          <div className="simera-panepistimio-badge">
+            <EikonidioPanepistimiou id={panepistimioId} megethos={18} />
+            <span>{panepistimio.syntomiOnomasia}</span>
+          </div>
+        }
       />
+
+      <div className="simera-draseis-plegma">
+        <Link to={`/odigos/${protiMiOlokliromeni}`} className="simera-drasis-karta">
+          <span className="simera-drasis-titlos">🚀 Μελέτη</span>
+          <span className="simera-drasis-ypotitlos">Συνέχιση επόμενης ενότητας</span>
+        </Link>
+        <Link to="/tutor" className="simera-drasis-karta">
+          <span className="simera-drasis-titlos">🤖 AI Tutor</span>
+          <span className="simera-drasis-ypotitlos">Ερωτήσεις &amp; Quiz</span>
+        </Link>
+        <Link to="/xartis" className="simera-drasis-karta">
+          <span className="simera-drasis-titlos">🗺️ Ύλη</span>
+          <span className="simera-drasis-ypotitlos">Χάρτης προόδου</span>
+        </Link>
+        <Link to="/programma" className="simera-drasis-karta">
+          <span className="simera-drasis-titlos">📅 Πρόγραμμα</span>
+          <span className="simera-drasis-ypotitlos">Εξεταστική &amp; Στόχοι</span>
+        </Link>
+      </div>
+
+      {epomeniEksetasi !== undefined && (
+        <Link to="/programma" className="simera-eksetasi-tile">
+          <div className="simera-eksetasi-plirofories">
+            <span className="simera-eksetasi-titlos">
+              Επόμενη εξέταση: {epomeniEksetasi.kodikos_mathimatos}
+            </span>
+            <span className="simera-eksetasi-ypotitlos">
+              {stilise_imerominia(epomeniEksetasi.imerominia) ?? epomeniEksetasi.imerominia}
+            </span>
+          </div>
+          <div className="simera-eksetasi-imeres">
+            <span>{imeresGiaEksetasi === 0 ? 'Σήμερα' : `${imeresGiaEksetasi}ημ.`}</span>
+          </div>
+        </Link>
+      )}
+
       <div className="simera-energo-perioxhi">
         <div className="simera-energo-karta">
           <div className="simera-energo-header">

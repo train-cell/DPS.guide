@@ -9,6 +9,8 @@ import {
   thete_thema,
   type ThemaId,
 } from '../../design/themata.js';
+import { EikonidioPanepistimiou, PANEPISTIMIA_LISTA } from '../../design/eikonidia-panepistimion.js';
+import type { PanepistimioId } from '../../design/eikonidia-panepistimion.js';
 
 /** Επιλογές διαθέσιμων θεμάτων εμφάνισης. */
 const THEMATA_EPILOGES: readonly { readonly id: ThemaId; readonly titlos: string }[] = [
@@ -87,6 +89,16 @@ export default function Rythisies() {
   }
 
   const exeiKleidiLlm = apothiki.rytheseis.exeiKleidiLlm;
+  const panepistimioId = (apothiki.rytheseis.panepistimioId ?? 'unipi') as PanepistimioId;
+  const panepistimio =
+    PANEPISTIMIA_LISTA.find((p) => p.id === panepistimioId) ?? {
+      id: 'unipi' as PanepistimioId,
+      onoma: 'Πανεπιστήμιο Πειραιώς',
+      syntomiOnomasia: 'ΠΑΠΕΙ',
+      baseEclass: 'https://thales.cs.unipi.gr',
+      katigoria: 'athina' as const,
+      perigrafi: 'Τμήμα Πληροφορικής & eClass ΠΑΠΕΙ',
+    };
 
   return (
     <form className="odoni-lista" data-testid="rythisies-ekran" onSubmit={ypostiripse}>
@@ -100,6 +112,10 @@ export default function Rythisies() {
         ypokeimeno="Διεύθυνση του eClass και μαθήματα που συγχρονίζονται."
         stoixeia={
           <div>
+            <div className="simera-panepistimio-badge">
+              <EikonidioPanepistimiou id={panepistimioId} megethos={18} />
+              <span>{panepistimio.onoma} ({panepistimio.syntomiOnomasia})</span>
+            </div>
             <div className="odoni-xeiris">
               <Link to="/proedri" className="pilegma pilegma-entono" data-testid="rythisies-allagi-panepistimiou">
                 Αλλαγή Πανεπιστημίου / Επανασύνδεση →

@@ -712,3 +712,103 @@ button.pilegma:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Simera - Panepistimio Badge */
+.simera-panepistimio-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--diastima-2);
+  padding: var(--diastima-1) var(--diastima-3);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-kapsoula);
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+  width: fit-content;
+}
+
+/* Simera - Grigores Draseis Hub */
+.simera-draseis-plegma {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: var(--diastima-2);
+  width: 100%;
+}
+
+.simera-drasis-karta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+  padding: var(--diastima-3);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  text-decoration: none;
+  box-shadow: 0 1px 0 var(--xroma-epifaneia-ypsomeni), 0 2px 8px var(--xroma-epifaneia-patimeni);
+  transition: transform var(--diarkeia-grigori) ease, border-color var(--diarkeia-grigori) ease;
+}
+
+.simera-drasis-karta:hover {
+  transform: translateY(-2px);
+  border-color: var(--xroma-entono);
+}
+
+.simera-drasis-karta:active {
+  transform: translateY(0);
+}
+
+.simera-drasis-titlos {
+  font-size: var(--grammatoseira-meso);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.simera-drasis-ypotitlos {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+/* Simera - Eksetasi Banner */
+.simera-eksetasi-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--diastima-3);
+  padding: var(--diastima-3) var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-left: 3px solid var(--xroma-entono);
+  border-radius: var(--aktina-meso);
+  text-decoration: none;
+}
+
+.simera-eksetasi-plirofories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.simera-eksetasi-titlos {
+  font-size: var(--grammatoseira-meso);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.simera-eksetasi-ypotitlos {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.simera-eksetasi-imeres {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--diastima-1) var(--diastima-3);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-kapsoula);
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-entono);
+  white-space: nowrap;
+}

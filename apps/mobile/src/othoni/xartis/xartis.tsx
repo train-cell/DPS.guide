@@ -187,9 +187,34 @@ export default function XartisEnotiton() {
     setProspatheies((prospathia) => prospathia + 1);
   }, []);
 
+  const sygxronismena =
+    apothiki.rytheseis.mathimataSynch.length > 0
+      ? apothiki.rytheseis.mathimataSynch
+      : ['ΠΛΗ201', 'ΠΛΗ101', 'ΠΛΗ204'];
+
   return (
     <div className="episkefsi" data-testid="xartis-ekran">
       <ProskelesioOmonimas titlos="Χάρτης" ypokeimeno={apothiki.kodikosMathimatos} />
+      {sygxronismena.length > 1 && (
+        <div className="kapsoules-filtra-mpara">
+          {sygxronismena.map((kodikos) => {
+            const einaiEnergo = kodikos === apothiki.kodikosMathimatos;
+            return (
+              <button
+                key={kodikos}
+                type="button"
+                className={einaiEnergo ? 'kapsoula-filtrou energi' : 'kapsoula-filtrou'}
+                onClick={() => {
+                  apothiki.allaxe_kodiko_mathimatos(kodikos);
+                }}
+                aria-pressed={einaiEnergo}
+              >
+                {kodikos}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_XARTI} epanalipsi={epanalipsi}>
         {(xartis) => (
           <OdomosEnotiton

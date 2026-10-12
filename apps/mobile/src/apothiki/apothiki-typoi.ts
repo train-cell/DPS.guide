@@ -11,6 +11,8 @@ import type { OverrideLepton, TemplateLepton } from '../programma/programma-typo
 export interface Rytheseis {
   /** Διεύθυνση του eClass. */
   readonly baseUrl: string;
+  /** Αναγνωριστικό πανεπιστημίου (π.χ. unipi, uoa). */
+  readonly panepistimioId?: string;
   /** Κωδικοί μαθημάτων που συγχρονίζονται. */
   readonly mathimataSynch: readonly string[];
   /** Όνομα μοντέλου AI, από ρύθμιση — όχι hardcoded. */
