@@ -131,4 +131,28 @@ describe('Proedri — Bevel x UniStudents UI & Visual Components', () => {
     expect(html).toContain('data-testid="eikonidio-panepistimiou-unipi"');
     expect(html).toContain('ΠΑΠΕΙ — Πανεπιστήμιο Πειραιώς');
   });
+
+  it('εμφανίζει την Bevel 4-Segmented Progress Bar στην κορυφή', () => {
+    const html = apotelesma_proedri();
+    expect(html).toContain('class="onboarding-vima-mpara"');
+    expect(html).toContain('role="progressbar"');
+    expect(html).toContain('aria-valuenow="1"');
+    expect(html).toContain('aria-valuemax="4"');
+    expect(html.split('class="vima-tmima').length - 1).toBe(4);
+  });
+
+  it('εμφανίζει το Bevel fixed bottom navigation dock με πίσω και επόμενο κουμπιά', () => {
+    const html = apotelesma_proedri();
+    expect(html).toContain('class="onboarding-ploigisi-mpara"');
+    expect(html).toContain('class="onboarding-koumpi-piso aoratos"');
+    expect(html).toContain('data-testid="onboarding-epomeno-koumpi"');
+    expect(html).toContain('Επόμενο: Ίδρυμα →');
+  });
+
+  it('εμφανίζει την κάρτα επιβεβαίωσης πλάνου (Plan Receipt) στο Βήμα 4', () => {
+    const html = apotelesma_proedri();
+    expect(html).toContain('onboarding-apodeixi-karta');
+    expect(html).toContain('Το ακαδημαϊκό σου προφίλ είναι έτοιμο');
+    expect(html).toContain('Zero-Knowledge Hardware Vault');
+  });
 });

@@ -48,9 +48,15 @@ class MockStorage {
   }
 }
 
-if (typeof globalThis.document === 'undefined') {
+if (typeof globalThis.document === 'undefined' || typeof (globalThis.document as any).addEventListener !== 'function') {
+  const mockDoc = {
+    documentElement: new MockElement(),
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    createElement: () => new MockElement(),
+  };
   Object.defineProperty(globalThis, 'document', {
-    value: { documentElement: new MockElement() },
+    value: mockDoc,
     configurable: true,
     writable: true,
   });

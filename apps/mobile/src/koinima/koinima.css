@@ -2,6 +2,11 @@
  * Koima (components) - styles tou FPS. Monon references se tokens.css, miden arbitrary xromata.
  */
 
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
 .episkefsi {
   display: flex;
   flex-direction: column;
@@ -46,6 +51,18 @@
   text-decoration: none;
   color: inherit;
   transition: transform var(--diarkeia-grigori) ease-out;
+}
+
+.karta-mathimatos-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.karta-mathimatos-akseis {
+  display: flex;
+  gap: var(--diastima-2);
+  align-items: center;
 }
 
 .karta:active {
@@ -190,6 +207,7 @@ button.pilegma:disabled {
   color: var(--xroma-apoxromatismeno);
 }
 
+.ring-pososto,
 .ring-posostο {
   margin: 0;
   font-size: var(--grammatoseira-megalo);

@@ -1,8 +1,192 @@
 /*
- * Bevel x UniStudents UI - styles gia tin othoni proedri (onboarding)
- * Pisti efarmogi ton tokens tou xromata.ts kai tokens.css (kanonas D11).
+ * Bevel x UniStudents UI - styles gia tin othoni proedri (onboarding & login wizard)
+ * Pisti efarmogi ton tokens tou xromata.ts kai tokens.css.
  * Kamia aytthaireti timi hex, skoura epifaneia mono.
  */
+
+/* Onboarding plaka - plires container */
+.proedri-plaka {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  padding: var(--diastima-3) var(--diastima-4);
+  padding-bottom: calc(var(--diastima-4) + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+}
+
+/* Bevel 4-Segmented Progress Bar stin koryfi */
+.onboarding-vima-mpara {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--diastima-2);
+  width: 100%;
+  margin-top: calc(var(--diastima-4) + 18px);
+  margin-bottom: var(--diastima-2);
+}
+
+.vima-tmima {
+  flex: 1;
+  height: 4px;
+  border-radius: var(--aktina-kapsoula);
+  background-color: var(--xroma-synorio);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  outline: none;
+  transition: background-color var(--diarkeia-grigori) ease-out, box-shadow var(--diarkeia-grigori) ease-out;
+}
+
+.vima-tmima.energo {
+  background-color: var(--xroma-entono);
+}
+
+.vima-tmima.trexon {
+  background-color: var(--xroma-entono);
+  box-shadow: 0 0 8px var(--xroma-entono);
+}
+
+/* Deiktis trexontos vimatos */
+.onboarding-vima-deiktis {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--diastima-1);
+  padding: var(--diastima-1) var(--diastima-3);
+  border-radius: var(--aktina-kapsoula);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-entono);
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+  letter-spacing: 0.02em;
+  align-self: flex-start;
+}
+
+/* Enafsi kai apokrypsi vimaton */
+.onboarding-vima-periexomeno {
+  width: 100%;
+}
+
+.vima-krifo {
+  display: none;
+}
+
+.vima-energo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-4);
+}
+
+/* Epikefalida vimatos */
+.onboarding-vima-epikefalida {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.onboarding-vima-epikefalida h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  letter-spacing: -0.02em;
+}
+
+.onboarding-vima-epikefalida p {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-apoxromatismeno);
+  line-height: var(--grammatoseira-grammi-kanoniki);
+}
+
+/* Hero container me aigli */
+.onboarding-iroas-kouti {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  padding: var(--diastima-3) 0;
+}
+
+.proedri-megalo {
+  margin: 0;
+  font-size: 32px;
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  letter-spacing: -0.03em;
+}
+
+.proedri-keimeno {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  line-height: var(--grammatoseira-grammi-kanoniki);
+  color: var(--xroma-apoxromatismeno);
+}
+
+/* Bevel Explanatory Cards (opws IMG_0475, IMG_0477) */
+.onboarding-xaraktiristika-karta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  padding: var(--diastima-4);
+  border-radius: 20px;
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  box-shadow: 0 1px 0 var(--xroma-epifaneia-ypsomeni), 0 var(--diastima-1) var(--diastima-3) var(--xroma-epifaneia-patimeni);
+}
+
+.onboarding-karta-ypotitlos {
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--xroma-apoxromatismeno);
+}
+
+.onboarding-xaraktiristiko-grammi {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--diastima-3);
+  padding: var(--diastima-2) 0;
+  border-bottom: 1px solid var(--xroma-synorio);
+}
+
+.onboarding-xaraktiristiko-grammi:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.onboarding-eikonidio-kouti {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.onboarding-xaraktiristiko-keimeno {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.onboarding-xaraktiristiko-keimeno h3 {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.onboarding-xaraktiristiko-keimeno p {
+  margin: 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+  line-height: var(--grammatoseira-grammi-kanoniki);
+}
 
 /* Bevel-style tactile karta panepistimiou */
 .karta-panepistimiou {
@@ -197,6 +381,151 @@
   background-color: var(--xroma-epifaneia-ypsomeni);
 }
 
+/* Forma Syndesis (Step 3) */
+.proedri-forma-kouti {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+}
+
+.epilegmeno-panepistimio-proepiskopisi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--diastima-3) var(--diastima-4);
+  border-radius: var(--aktina-meso);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+}
+
+.panepistimio-tautotita {
+  display: flex;
+  align-items: center;
+  gap: var(--diastima-3);
+}
+
+.panepistimio-onomasia-sygk {
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-size: var(--grammatoseira-megalo);
+}
+
+.allagi-panepistimiou-koumpi {
+  background: transparent;
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-kapsoula);
+  color: var(--xroma-entono);
+  padding: var(--diastima-1) var(--diastima-3);
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+  cursor: pointer;
+}
+
+.proedri-travla {
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+}
+
+.proedri-travla-gramma {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--diastima-3);
+  margin-top: var(--diastima-1);
+  margin-bottom: var(--diastima-3);
+  border-radius: var(--aktina-mikro);
+  border: 1px solid var(--xroma-synorio);
+  background-color: var(--xroma-fonto);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-megalo);
+}
+
+.proedri-travla-gramma:focus {
+  outline: 2px solid var(--xroma-entono);
+  outline-offset: 1px;
+}
+
+.proedri-ypostirixtiki {
+  margin: var(--diastima-3) 0 var(--diastima-4);
+  font-size: var(--grammatoseira-mikro);
+  line-height: var(--grammatoseira-grammi-kanoniki);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.proedri-parakampsis-koumpi {
+  background: transparent;
+  border: none;
+  color: var(--xroma-apoxromatismeno);
+  font-size: var(--grammatoseira-meso);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: var(--diastima-2);
+  margin: var(--diastima-2) auto 0;
+  display: block;
+  text-align: center;
+}
+
+/* Epivevaiosi & Receipt (Step 4 - opws IMG_0495) */
+.onboarding-apodeixi-karta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  padding: var(--diastima-4);
+  border-radius: 22px;
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  box-shadow: 0 1px 0 var(--xroma-epifaneia-ypsomeni), 0 var(--diastima-2) var(--diastima-4) var(--xroma-epifaneia-patimeni);
+}
+
+.onboarding-apodeixi-koryfi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+  text-align: center;
+  padding-bottom: var(--diastima-3);
+  border-bottom: 1px solid var(--xroma-synorio);
+}
+
+.onboarding-apodeixi-sygxaritiria {
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-entono);
+  font-weight: var(--grammatoseira-baros-entono);
+}
+
+.onboarding-apodeixi-titlos {
+  margin: 0;
+  font-size: 20px;
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.onboarding-apodeixi-grammes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.onboarding-apodeixi-grammi {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--diastima-1) 0;
+}
+
+.apodeixi-etiketa {
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.apodeixi-timi {
+  font-size: var(--grammatoseira-meso);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
 .proedri-epityxia-perioxh {
   display: flex;
   flex-direction: column;
@@ -207,3 +536,62 @@
   margin-top: var(--diastima-2);
 }
 
+/* Bevel Fixed Bottom Navigation Dock */
+.onboarding-ploigisi-mpara {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--diastima-3);
+  margin-top: auto;
+  padding-top: var(--diastima-4);
+  position: sticky;
+  bottom: 0;
+  background-color: var(--xroma-fonto);
+  z-index: 10;
+}
+
+.onboarding-koumpi-piso {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--xroma-synorio);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform var(--diarkeia-grigori) ease-out, background-color var(--diarkeia-grigori) ease-out;
+}
+
+.onboarding-koumpi-piso:active {
+  transform: scale(0.92);
+}
+
+.onboarding-koumpi-piso.aoratos {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.onboarding-koumpi-epomeno {
+  flex: 1;
+  height: 48px;
+  border-radius: var(--aktina-kapsoula);
+  border: none;
+  background-color: var(--xroma-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px var(--xroma-epifaneia-patimeni);
+  transition: transform var(--diarkeia-grigori) ease-out, opacity var(--diarkeia-grigori) ease-out;
+}
+
+.onboarding-koumpi-epomeno:active {
+  transform: scale(0.97);
+}

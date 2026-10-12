@@ -25,7 +25,7 @@ export const KODIKOS_SFALMATOS_DIKTYOU = 'DIKTYO';
 /** Κάρτα ενός μαθήματος που οδηγεί στον χάρτη ενοτήτων του με πλούσια UniStudents μεταδεδομένα. */
 export function KartaMathimatos({ mathima }: { readonly mathima: Mathima }) {
   const akseis = (
-    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+    <div className="karta-mathimatos-akseis">
       {mathima.ects !== undefined && <Pilegma keimeno={`${mathima.ects} ECTS`} />}
       {mathima.epilegmeno ? (
         <Pilegma entono keimeno={MINIMA_SYNXRONISMENOU} />
@@ -44,7 +44,7 @@ export function KartaMathimatos({ mathima }: { readonly mathima: Mathima }) {
     .join(' • ');
 
   return (
-    <Link to="/xartis" data-testid="mathimata-karta" style={{ textDecoration: 'none' }}>
+    <Link to="/xartis" data-testid="mathimata-karta" className="karta-mathimatos-link">
       <Karta titlos={mathima.titlos} ypokeimeno={ypokeimeno} akseis={akseis} />
     </Link>
   );
