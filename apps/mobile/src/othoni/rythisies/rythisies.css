@@ -1,0 +1,134 @@
+/*
+ * Rythisies CSS - UI styles gia tin othoni Rythmiseon sto Bevel x UniStudents design.
+ * Akolouthei ta design tokens tou tokens.css kai themata.css (Kanonas D11).
+ */
+
+.rythisies-panepistimio-grammi {
+  display: flex;
+  align-items: center;
+  gap: var(--diastima-3);
+  padding: var(--diastima-3);
+  margin-bottom: var(--diastima-3);
+  border-radius: 14px;
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+}
+
+.rythisies-panepistimio-stoixeia {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.rythisies-panepistimio-onoma {
+  font-size: var(--grammatoseira-meso);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rythisies-panepistimio-perigrafi {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.rythisies-paroxoi-mpara {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--diastima-2);
+  margin: var(--diastima-2) 0 var(--diastima-3);
+}
+
+.rythisies-paroxos-koumpi {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: var(--diastima-1) var(--diastima-3);
+  border-radius: var(--aktina-kapsoula);
+  font-size: var(--grammatoseira-mikro);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-defteron);
+  border: 1px solid var(--xroma-synorio);
+  cursor: pointer;
+  transition: all var(--diarkeia-grigori) ease-out;
+}
+
+.rythisies-paroxos-koumpi.energo {
+  background-color: var(--xroma-entono);
+  color: #ffffff;
+  border-color: var(--xroma-entono);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.rythisies-kleidi-pedio-perioxh {
+  display: flex;
+  gap: var(--diastima-2);
+  align-items: center;
+  margin: var(--diastima-2) 0;
+}
+
+.rythisies-kleidi-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.rythisies-kleidi-orasi-koumpi {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--diastima-2) var(--diastima-3);
+  border-radius: 12px;
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+  border: 1px solid var(--xroma-synorio);
+  cursor: pointer;
+  font-size: var(--grammatoseira-meso);
+}
+
+.rythisies-themata-mpara {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--diastima-2);
+  margin-top: var(--diastima-2);
+}
+
+.rythisies-thema-epilogi {
+  display: flex;
+  align-items: center;
+  gap: var(--diastima-2);
+  padding: var(--diastima-3);
+  border-radius: 14px;
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+  cursor: pointer;
+  transition: all var(--diarkeia-grigori) ease-out;
+  text-align: left;
+}
+
+.rythisies-thema-epilogi.energo {
+  border-color: var(--xroma-entono);
+  background-color: var(--xroma-karta);
+  box-shadow: 0 0 0 1px var(--xroma-entono), 0 4px 12px var(--xroma-epifaneia-patimeni);
+}
+
+.rythisies-thema-kiklos {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--xroma-synorio);
+  flex-shrink: 0;
+}
+
+.rythisies-thema-keimena {
+  display: flex;
+  flex-direction: column;
+}
+
+.rythisies-thema-titlos {
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}

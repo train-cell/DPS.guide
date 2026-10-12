@@ -1,11 +1,49 @@
 import type { Mathima, Enotita, XartisMathimatos } from '@dps/core';
 
-const MATHIMA_MOCK: Mathima = {
-  kodikos: 'ΠΛΗ201',
-  titlos: 'Πληροφορική & Προγραμματισμός',
-  url: 'https://thales.cs.unipi.gr/courses/PPLI201',
-  epilegmeno: true,
-};
+const MATHIMATA_MOCK: readonly Mathima[] = [
+  {
+    kodikos: 'ΠΛΗ201',
+    titlos: 'Προγραμματισμός',
+    url: 'https://thales.cs.unipi.gr/courses/PPLI201',
+    epilegmeno: true,
+    examino: '1ο Εξάμηνο',
+    ects: 6,
+    kathigitis: 'Καθ. Νικόλαος Γεωργίου',
+    katastasi_sygxronismou: 'Συγχρονισμένο',
+  },
+  {
+    kodikos: 'ΠΛΗ101',
+    titlos: 'Δομές Δεδομένων',
+    url: 'https://thales.cs.unipi.gr/courses/PPLI101',
+    epilegmeno: true,
+    examino: '2ο Εξάμηνο',
+    ects: 6,
+    kathigitis: 'Αναπλ. Καθ. Μαρία Παπαδοπούλου',
+    katastasi_sygxronismou: 'Συγχρονισμένο',
+  },
+  {
+    kodikos: 'ΠΛΗ302',
+    titlos: 'Βάσεις Δεδομένων',
+    url: 'https://thales.cs.unipi.gr/courses/PPLI302',
+    epilegmeno: false,
+    examino: '3ο Εξάμηνο',
+    ects: 6,
+    kathigitis: 'Καθ. Ιωάννης Δημητρίου',
+    katastasi_sygxronismou: 'Εκκρεμεί',
+  },
+  {
+    kodikos: 'ΠΛΗ204',
+    titlos: 'Αρχιτεκτονική Υπολογιστών',
+    url: 'https://thales.cs.unipi.gr/courses/PPLI204',
+    epilegmeno: true,
+    examino: '2ο Εξάμηνο',
+    ects: 5,
+    kathigitis: 'Επικ. Καθ. Κωνσταντίνος Αντωνίου',
+    katastasi_sygxronismou: 'Συγχρονισμένο',
+  },
+];
+
+const MATHIMA_MOCK: Mathima = MATHIMATA_MOCK[0]!;
 
 const ENOTITES_MOCK: readonly Enotita[] = [
   {
@@ -60,9 +98,9 @@ export function pseudos_xartis(): XartisMathimatos {
   };
 }
 
-/** Το mock μάθημα της λίστας. */
+/** Τα mock μαθήματα της λίστας (UniStudents Informatics Set). */
 export function pseudos_mathimata(): readonly Mathima[] {
-  return [MATHIMA_MOCK];
+  return MATHIMATA_MOCK;
 }
 
 /** Υπολογισμός ανεξάρτητου κόστους σε λεπτά (Τζένκι της οθόνης Σήμερα). */

@@ -91,6 +91,15 @@ export default function Proedri({ periballon }: ProedriProps) {
         await pyles.mystika.vale('eclass_kodikos', kodikos.trim());
         await pyles.mystika.vale('eclass_panepistimio_id', epilegmenoPanepistimioId);
         await pyles.mystika.vale('eclass_base_url', base.trim());
+        if (typeof localStorage !== 'undefined') {
+          try {
+            localStorage.setItem('eclass_panepistimio_id', epilegmenoPanepistimioId);
+            localStorage.setItem('eclass_onoma_xristi', xristis.trim());
+            localStorage.setItem('dps_sindesi_energi', 'true');
+          } catch {
+            // Ignored se private mode
+          }
+        }
       }
       setKatastasi(apotelesma);
     } catch {
@@ -116,11 +125,22 @@ export default function Proedri({ periballon }: ProedriProps) {
 
   function akriveia(mathimata: readonly Mathima[]) {
     return (
-      <Karta
-        titlos="Επιτυχής σύνδεση"
-        ypokeimeno="Η σύνδεση με το eClass ολοκληρώθηκε. Τα διαπιστευτήρια αποθηκεύτηκαν μόνο στη συσκευή σου."
-        stoixeia={<Pilegma keimeno={`Μαθήματα: ${mathimata.length}`} entono />}
-      />
+      <div className="proedri-epityxia-perioxh">
+        <Karta
+          titlos="Επιτυχής σύνδεση"
+          ypokeimeno="Η σύνδεση με το eClass ολοκληρώθηκε. Τα διαπιστευτήρια αποθηκεύτηκαν μόνο στη συσκευή σου."
+          stoixeia={<Pilegma keimeno={`Μαθήματα: ${mathimata.length}`} entono />}
+        />
+        <IonButton
+          expand="block"
+          routerLink="/simera"
+          routerDirection="forward"
+          className="proedri-eisodos-koumpi"
+          data-testid="proedri-eisodos-koumpi"
+        >
+          Είσοδος στην Εφαρμογή →
+        </IonButton>
+      </div>
     );
   }
 

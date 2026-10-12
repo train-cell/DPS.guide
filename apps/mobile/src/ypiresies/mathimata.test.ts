@@ -11,7 +11,7 @@ describe('fortose_mathimata_apo_apothiki', () => {
     const apokrisis = await fortose_mathimata_apo_apothiki(apothiki);
     expect(apokrisis.katastasi).toBe('etimo');
     if (apokrisis.katastasi === 'etimo') {
-      expect(apokrisis.dedomena).toHaveLength(1);
+      expect(apokrisis.dedomena).toHaveLength(pseudos_mathimata().length);
       expect(apokrisis.dedomena[0]?.kodikos).toBe('ΠΛΗ201');
     }
   });

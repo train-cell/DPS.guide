@@ -23,3 +23,78 @@ ion-content.episkefsi {
   width: 100%;
   height: 100%;
 }
+
+/*
+ * Responsive Mobile Frame για desktop προβολές (>768px).
+ * Στο desktop (>768px), η εφαρμογή κεντράρεται κομψά σε πλαίσιο smartphone:
+ * max-width: 480px, ύψος ~94vh, margin auto, border-radius 36px,
+ * διακριτικό σκούρο bezel, drop-shadow 0 25px 60px rgba(0,0,0,0.8), notch στο πάνω μέρος.
+ * Στο κινητό (<768px), παραμένει 100% full screen.
+ */
+@media (min-width: 769px) {
+  html,
+  body {
+    min-height: 100vh;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #060709;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  [data-theme='light'] body {
+    background-color: #e2e8f0;
+  }
+
+  [data-theme='unistudents'] body {
+    background-color: #050814;
+  }
+
+  [data-theme='emerald'] body {
+    background-color: #040e0b;
+  }
+
+  #root {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Smartphone Frame */
+  ion-app {
+    position: relative;
+    max-width: 480px;
+    width: 100%;
+    height: 94vh;
+    max-height: 94vh;
+    margin: auto;
+    border-radius: 36px;
+    border: 10px solid #16181d;
+    outline: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+    overflow: hidden;
+    contain: paint;
+    box-sizing: border-box;
+  }
+
+  /* Notch στο πάνω μέρος */
+  ion-app::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 110px;
+    height: 24px;
+    background-color: #000000;
+    border-radius: 20px;
+    z-index: 99999;
+    pointer-events: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6), inset 0 0 2px rgba(255, 255, 255, 0.12);
+  }
+}

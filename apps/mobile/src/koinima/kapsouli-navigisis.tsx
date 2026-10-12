@@ -13,6 +13,7 @@ export interface StoicheioKapsoulis {
 export const STOIXEIA_KAPSOULIS: readonly StoicheioKapsoulis[] = [
   { kleidi: 'simera', etiketa: 'Σήμερα', glyph: '◉' },
   { kleidi: 'mathimata', etiketa: 'Μαθήματα', glyph: '❐' },
+  { kleidi: 'programma', etiketa: 'Πρόγραμμα', glyph: '☷' },
   { kleidi: 'xartis', etiketa: 'Χάρτης', glyph: '❖' },
   { kleidi: 'tutor', etiketa: 'Tutor', glyph: '❝' },
   { kleidi: 'rythisies', etiketa: 'Ρυθμίσεις', glyph: '⚙' },

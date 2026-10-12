@@ -1,0 +1,96 @@
+/*
+ * DPS.guide - Theme System
+ * 4 Themes:
+ * - midnight: OLED Pure Dark
+ * - unistudents: Academic Navy & Electric Blue
+ * - emerald: Campus Forest / Mint Green
+ * - light: Academic Paper Light / Minimal Light
+ */
+
+/* 1. Midnight: OLED Pure Dark (Default) */
+:root,
+[data-theme='midnight'] {
+  --xroma-fonto: #0B0B0C;
+  --xroma-karta: #161618;
+  --xroma-entono: #3B82F6;
+  --xroma-apoxromatismeno: #9D9DA2;
+
+  --xroma-keimeno-prwtarxiko: rgb(255 255 255 / 92%);
+  --xroma-keimeno-defteron: rgb(255 255 255 / 64%);
+  --xroma-synorio: rgb(255 255 255 / 12%);
+  --xroma-epifaneia-ypsomeni: rgb(255 255 255 / 8%);
+  --xroma-epifaneia-patimeni: rgb(0 0 0 / 32%);
+
+  --ion-background-color: var(--xroma-fonto);
+  --ion-text-color: var(--xroma-keimeno-prwtarxiko);
+  --ion-color-primary: var(--xroma-entono);
+  --ion-color-primary-contrast: var(--xroma-keimeno-prwtarxiko);
+  --ion-toolbar-background: var(--xroma-karta);
+  --ion-item-background: var(--xroma-karta);
+}
+
+/* 2. UniStudents: Academic Navy & Electric Blue */
+[data-theme='unistudents'] {
+  --xroma-fonto: #0A1128;
+  --xroma-karta: #132247;
+  --xroma-entono: #2563EB;
+  --xroma-defterevon: #38BDF8;
+  --xroma-apoxromatismeno: #94A3B8;
+
+  --xroma-keimeno-prwtarxiko: rgb(255 255 255 / 94%);
+  --xroma-keimeno-defteron: rgb(203 213 225 / 75%);
+  --xroma-synorio: rgba(56, 189, 248, 0.18);
+  --xroma-epifaneia-ypsomeni: rgba(37, 99, 235, 0.14);
+  --xroma-epifaneia-patimeni: rgba(0, 0, 0, 0.36);
+
+  --ion-background-color: var(--xroma-fonto);
+  --ion-text-color: var(--xroma-keimeno-prwtarxiko);
+  --ion-color-primary: var(--xroma-entono);
+  --ion-color-primary-contrast: #ffffff;
+  --ion-toolbar-background: var(--xroma-karta);
+  --ion-item-background: var(--xroma-karta);
+}
+
+/* 3. Emerald: Campus Emerald / Forest & Mint Green */
+[data-theme='emerald'] {
+  --xroma-fonto: #081C15;
+  --xroma-karta: #112F24;
+  --xroma-entono: #10B981;
+  --xroma-defterevon: #34D399;
+  --xroma-apoxromatismeno: #85A396;
+
+  --xroma-keimeno-prwtarxiko: rgb(255 255 255 / 94%);
+  --xroma-keimeno-defteron: rgb(167 243 208 / 75%);
+  --xroma-synorio: rgba(16, 185, 129, 0.18);
+  --xroma-epifaneia-ypsomeni: rgba(16, 185, 129, 0.12);
+  --xroma-epifaneia-patimeni: rgba(0, 0, 0, 0.36);
+
+  --ion-background-color: var(--xroma-fonto);
+  --ion-text-color: var(--xroma-keimeno-prwtarxiko);
+  --ion-color-primary: var(--xroma-entono);
+  --ion-color-primary-contrast: #ffffff;
+  --ion-toolbar-background: var(--xroma-karta);
+  --ion-item-background: var(--xroma-karta);
+}
+
+/* 4. Light: Academic Paper Light / Clean Paper */
+[data-theme='light'] {
+  --xroma-fonto: #F8FAFC;
+  --xroma-karta: #FFFFFF;
+  --xroma-entono: #2563EB;
+  --xroma-defterevon: #38BDF8;
+  --xroma-apoxromatismeno: #64748B;
+
+  --xroma-keimeno-prwtarxiko: #0F172A;
+  --xroma-keimeno-defteron: #475569;
+  --xroma-synorio: rgba(0, 0, 0, 0.12);
+  --xroma-epifaneia-ypsomeni: rgba(0, 0, 0, 0.04);
+  --xroma-epifaneia-patimeni: rgba(0, 0, 0, 0.08);
+
+  --ion-background-color: var(--xroma-fonto);
+  --ion-text-color: var(--xroma-keimeno-prwtarxiko);
+  --ion-color-primary: var(--xroma-entono);
+  --ion-color-primary-contrast: #ffffff;
+  --ion-toolbar-background: var(--xroma-karta);
+  --ion-item-background: var(--xroma-karta);
+}

@@ -197,3 +197,13 @@
   background-color: var(--xroma-epifaneia-ypsomeni);
 }
 
+.proedri-epityxia-perioxh {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+}
+
+.proedri-eisodos-koumpi {
+  margin-top: var(--diastima-2);
+}
+

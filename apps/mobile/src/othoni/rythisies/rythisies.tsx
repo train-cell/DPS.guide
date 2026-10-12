@@ -4,6 +4,19 @@ import { Link } from 'react-router-dom';
 import { xrisiApothekisis } from '../../apothiki/index.js';
 import type { Rytheseis } from '../../apothiki/index.js';
 import { Karta, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
+import {
+  pare_trexon_thema,
+  thete_thema,
+  type ThemaId,
+} from '../../design/themata.js';
+
+/** Επιλογές διαθέσιμων θεμάτων εμφάνισης. */
+const THEMATA_EPILOGES: readonly { readonly id: ThemaId; readonly titlos: string }[] = [
+  { id: 'midnight', titlos: 'Midnight OLED' },
+  { id: 'unistudents', titlos: 'UniStudents Blue' },
+  { id: 'emerald', titlos: 'Emerald Green' },
+  { id: 'light', titlos: 'Clean Light' },
+];
 
 /** Τα πεδία των ρυθμίσεων που ο χρήστης μπορεί να αλλάξει από την οθόνη. */
 export interface GrammataRythmiseon {
@@ -32,6 +45,7 @@ export default function Rythisies() {
     pare_editable_rytheseis(apothiki.rytheseis)
   );
   const [apothikefthike, setApothikefthike] = useState(false);
+  const [trexonThema, setTrexonThema] = useState<ThemaId>(() => pare_trexon_thema());
 
   useEffect(() => {
     setGrammata({ baseUrl, onomaMontelou, einaiEidopoieseis });
@@ -61,6 +75,11 @@ export default function Rythisies() {
     void apothikefse({ ...apothiki.rytheseis, ...nees });
   }
 
+  function allaxe_thema(themaId: ThemaId): void {
+    thete_thema(themaId);
+    setTrexonThema(themaId);
+  }
+
   function ypostiripse(erevma: FormEvent<HTMLFormElement>): void {
     erevma.preventDefault();
     setApothikefthike(false);
@@ -81,6 +100,11 @@ export default function Rythisies() {
         ypokeimeno="Διεύθυνση του eClass και μαθήματα που συγχρονίζονται."
         stoixeia={
           <div>
+            <div className="odoni-xeiris">
+              <Link to="/proedri" className="pilegma pilegma-entono" data-testid="rythisies-allagi-panepistimiou">
+                Αλλαγή Πανεπιστημίου / Επανασύνδεση →
+              </Link>
+            </div>
             <label className="odoni-xeiris-zeugos" htmlFor="rythisies-gramma-base">
               Διεύθυνση eClass
             </label>
@@ -130,6 +154,26 @@ export default function Rythisies() {
               keimeno={exeiKleidiLlm ? 'Κλειδί: Ρυθμισμένο' : 'Κλειδί: Μη ρυθμισμένο'}
               entono={exeiKleidiLlm}
             />
+          </div>
+        }
+      />
+
+      <Karta
+        titlos="Εμφάνιση"
+        ypokeimeno="Επιλογή θέματος για άνετη μελέτη μέρα και νύχτα."
+        stoixeia={
+          <div className="odoni-xeiris">
+            {THEMATA_EPILOGES.map((th) => (
+              <button
+                key={th.id}
+                type="button"
+                className={`pilegma${trexonThema === th.id ? ' pilegma-entono' : ''}`}
+                onClick={() => allaxe_thema(th.id)}
+                data-testid={`thema-${th.id}`}
+              >
+                {th.titlos}
+              </button>
+            ))}
           </div>
         }
       />

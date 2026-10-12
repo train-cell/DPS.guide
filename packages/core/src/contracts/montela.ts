@@ -17,6 +17,10 @@ export const MathimaSchema = z.object({
   titlos: z.string(),
   url: z.string(),
   epilegmeno: z.boolean(),
+  examino: z.string().optional(),
+  ects: z.number().optional(),
+  kathigitis: z.string().optional(),
+  katastasi_sygxronismou: z.string().optional(),
 });
 export type Mathima = z.infer<typeof MathimaSchema>;
 

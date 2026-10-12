@@ -12,8 +12,13 @@ import '@ionic/react/css/typography.css';
 import '@ionic/react/css/padding.css';
 import '@ionic/react/css/text-alignment.css';
 import './design/tokens.css';
+import './design/themata.css';
 import './navigasi/navigasi.css';
 import './koinima/koinima.css';
+import { arxikopoiisi_thematos } from './design/themata.js';
+
+// Αρχικοποίηση θέματος από localStorage
+arxikopoiisi_thematos();
 
 const rootElement = document.getElementById('root');
 

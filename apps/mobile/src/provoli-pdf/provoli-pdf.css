@@ -33,9 +33,10 @@
 
 .provoli-kanvas {
   width: 100%;
+  max-width: 100%;
   height: auto;
   border-radius: var(--aktina-mikro);
-  background: var(--xroma-keimeno-prwtarxiko);
+  background: #ffffff;
   box-shadow: 0 8px 24px var(--xroma-epifaneia-patimeni);
 }
 

@@ -34,6 +34,16 @@ function meNav(children: ReactNode, xronos = true) {
   return <PlisiOmonimas meNav={xronos}>{children}</PlisiOmonimas>;
 }
 
+/** Έξυπνη αρχική δρομολόγηση: Onboarding για νέους χρήστες, Σήμερα για συνδεδεμένους. */
+function ArxikiDromologisi() {
+  const exeiSindesi =
+    typeof localStorage !== 'undefined' &&
+    (Boolean(localStorage.getItem('eclass_panepistimio_id')) ||
+      Boolean(localStorage.getItem('dps_sindesi_energi')));
+
+  return exeiSindesi ? meNav(<Simera />) : meNav(<Proedri />, false);
+}
+
 export interface OdoiNavigisisProps {
   readonly ypiresiesEidopoiseon?: EidopoiisiYpiresies;
 }
@@ -49,7 +59,7 @@ export function OdoiNavigisis({
   return (
     <IonRouterOutlet>
       <Routes>
-        <Route path="/" element={meNav(<Simera />, false)} />
+        <Route path="/" element={<ArxikiDromologisi />} />
         <Route path="/simera" element={meNav(<Simera />)} />
         <Route path="/mathimata" element={meNav(<Mathimata />)} />
         <Route path="/xartis" element={meNav(<XartisEnotiton />)} />

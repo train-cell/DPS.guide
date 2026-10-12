@@ -22,12 +22,30 @@ export const MINIMA_SFALMATOS_LISTAS = 'Δεν ήταν δυνατή η φόρτ
 /** Κωδικός σφάλματος δικτύου, κοινός σε όλα τα φορτωτά δεδομένα. */
 export const KODIKOS_SFALMATOS_DIKTYOU = 'DIKTYO';
 
-/** Κάρτα ενός μαθήματος που οδηγεί στον χάρτη ενοτήτων του. */
+/** Κάρτα ενός μαθήματος που οδηγεί στον χάρτη ενοτήτων του με πλούσια UniStudents μεταδεδομένα. */
 export function KartaMathimatos({ mathima }: { readonly mathima: Mathima }) {
-  const akseis = mathima.epilegmeno ? <Pilegma entono keimeno={MINIMA_SYNXRONISMENOU} /> : null;
+  const akseis = (
+    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+      {mathima.ects !== undefined && <Pilegma keimeno={`${mathima.ects} ECTS`} />}
+      {mathima.epilegmeno ? (
+        <Pilegma entono keimeno={MINIMA_SYNXRONISMENOU} />
+      ) : (
+        <Pilegma keimeno="Εκκρεμεί" />
+      )}
+    </div>
+  );
+
+  const ypokeimeno = [
+    mathima.kodikos,
+    mathima.examino,
+    mathima.kathigitis ? `Καθ.: ${mathima.kathigitis}` : undefined,
+  ]
+    .filter(Boolean)
+    .join(' • ');
+
   return (
-    <Link to="/xartis" data-testid="mathimata-karta">
-      <Karta titlos={mathima.titlos} ypokeimeno={mathima.kodikos} akseis={akseis} />
+    <Link to="/xartis" data-testid="mathimata-karta" style={{ textDecoration: 'none' }}>
+      <Karta titlos={mathima.titlos} ypokeimeno={ypokeimeno} akseis={akseis} />
     </Link>
   );
 }
