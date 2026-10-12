@@ -5,6 +5,7 @@ import { Karta, OloniKatastasis, Pilegma, ProskelesioOmonimas } from '../../koin
 import type { Katastasi } from '../../kathstasi/index.js';
 import { fortosi, sfalma } from '../../kathstasi/index.js';
 import { xrisiPeriballontos } from '../../periballon/index.js';
+import { xrisiApothekisis } from '../../apothiki/index.js';
 import { fortose_mathimata_apo_apothiki } from '../../ypiresies/index.js';
 
 /** Ετικέτα που σημαίνει ότι το μάθημα είναι ήδη συγχρονισμένο. */
@@ -23,9 +24,19 @@ export const MINIMA_SFALMATOS_LISTAS = 'Δεν ήταν δυνατή η φόρτ
 export const KODIKOS_SFALMATOS_DIKTYOU = 'DIKTYO';
 
 /** Κάρτα ενός μαθήματος που οδηγεί στον χάρτη ενοτήτων του με πλούσια UniStudents μεταδεδομένα. */
-export function KartaMathimatos({ mathima }: { readonly mathima: Mathima }) {
+export function KartaMathimatos({
+  mathima,
+  einaiTrexon,
+}: {
+  readonly mathima: Mathima;
+  readonly einaiTrexon?: boolean;
+}) {
+  const { allaxe_kodiko_mathimatos, kodikosMathimatos } = xrisiApothekisis();
+  const energos = einaiTrexon ?? (kodikosMathimatos === mathima.kodikos);
+
   const akseis = (
     <div className="karta-mathimatos-akseis">
+      {energos && <Pilegma entono keimeno="Ενεργό" />}
       {mathima.ects !== undefined && <Pilegma keimeno={`${mathima.ects} ECTS`} />}
       {mathima.epilegmeno ? (
         <Pilegma entono keimeno={MINIMA_SYNXRONISMENOU} />
@@ -44,7 +55,14 @@ export function KartaMathimatos({ mathima }: { readonly mathima: Mathima }) {
     .join(' • ');
 
   return (
-    <Link to="/xartis" data-testid="mathimata-karta" className="karta-mathimatos-link">
+    <Link
+      to="/xartis"
+      data-testid="mathimata-karta"
+      className="karta-mathimatos-link"
+      onClick={() => {
+        allaxe_kodiko_mathimatos(mathima.kodikos);
+      }}
+    >
       <Karta titlos={mathima.titlos} ypokeimeno={ypokeimeno} akseis={akseis} />
     </Link>
   );
@@ -53,6 +71,7 @@ export function KartaMathimatos({ mathima }: { readonly mathima: Mathima }) {
 /** Λίστα μαθημάτων με φόρτωση, κενό, σφάλμα και δεδομένα πάνω από το OloniKatastasis. */
 export default function Mathimata() {
   const periballon = xrisiPeriballontos();
+  const { kodikosMathimatos } = xrisiApothekisis();
   const [katastasi, setKatastasi] = useState<Katastasi<readonly Mathima[]>>(fortosi<readonly Mathima[]>());
   const [prospatheies, setProspatheies] = useState(0);
 
@@ -86,7 +105,11 @@ export default function Mathimata() {
         {(mathimata) => (
           <div className="odoni-lista" data-testid="mathimata-lista">
             {mathimata.map((mathima) => (
-              <KartaMathimatos key={mathima.kodikos} mathima={mathima} />
+              <KartaMathimatos
+                key={mathima.kodikos}
+                mathima={mathima}
+                einaiTrexon={mathima.kodikos === kodikosMathimatos}
+              />
             ))}
           </div>
         )}

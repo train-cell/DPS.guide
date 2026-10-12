@@ -610,3 +610,48 @@ button.pilegma:disabled {
   grid-template-columns: 1fr;
   gap: var(--diastima-2);
 }
+
+/* Simera - Energo Mathima kai Enallagi */
+.simera-energo-perioxhi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.simera-energo-karta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  padding: var(--diastima-3) var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border-radius: var(--aktina-meso);
+  border: 1px solid var(--xroma-synorio);
+  box-shadow: 0 1px 0 var(--xroma-epifaneia-ypsomeni), 0 var(--diastima-1) var(--diastima-3) var(--xroma-epifaneia-patimeni);
+}
+
+.simera-energo-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.simera-energo-etiketa {
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-entono);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.simera-energo-titlos {
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.energi {
+  border-color: var(--xroma-entono);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-weight: var(--grammatoseira-baros-entono);
+}

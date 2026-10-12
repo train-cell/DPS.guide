@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { MouseEvent as GeventoPedomati } from 'react';
 import { Link } from 'react-router-dom';
-import type { Enotita, XartisMathimatos } from '@dps/core';
+import type { Enotita, Mathima, XartisMathimatos } from '@dps/core';
 import { xrisiApothekisis } from '../../apothiki/index.js';
 import { xrisiPeriballontos } from '../../periballon/index.js';
 import {
@@ -12,8 +12,15 @@ import {
   ProskelesioOmonimas,
 } from '../../koinima/index.js';
 import { fortosi, type Katastasi } from '../../kathstasi/index.js';
-import { fortose_xartis_apo_apothiki } from '../../ypiresies/index.js';
-import { lepita_aristeias, pososto_aristeias } from '../../pseudomata/index.js';
+import {
+  fortose_mathimata_apo_apothiki,
+  fortose_xartis_apo_apothiki,
+} from '../../ypiresies/index.js';
+import {
+  lepita_aristeias,
+  pososto_aristeias,
+  pseudos_mathimata,
+} from '../../pseudomata/index.js';
 
 /** Πόσες ενότητες του χάρτη προτείνονται ως στόχοι της ημέρας. */
 const PLITOS_STOCHOIS = 3;
@@ -131,6 +138,19 @@ export function Simera() {
     fortosi<XartisMathimatos>()
   );
   const [proseis, set_proseis] = useState(0);
+  const [mathimata, setMathimata] = useState<readonly Mathima[]>(pseudos_mathimata);
+
+  useEffect(() => {
+    let zontas = true;
+    void fortose_mathimata_apo_apothiki(periballon.apothiki).then((fortotiki) => {
+      if (zontas && fortotiki.katastasi === 'etimo' && fortotiki.dedomena.length > 0) {
+        setMathimata(fortotiki.dedomena);
+      }
+    });
+    return () => {
+      zontas = false;
+    };
+  }, [periballon.apothiki]);
 
   const epanalipsi = useCallback(() => {
     set_katastasi(fortosi<XartisMathimatos>());
@@ -151,12 +171,57 @@ export function Simera() {
     };
   }, [periballon.apothiki, apothiki.kodikosMathimatos, proseis]);
 
+  const sygxronismena = mathimata.filter(
+    (m) =>
+      apothiki.rytheseis.mathimataSynch.includes(m.kodikos) ||
+      m.katastasi_sygxronismou === 'Συγχρονισμένο' ||
+      m.epilegmeno
+  );
+
+  const energo =
+    mathimata.find((m) => m.kodikos === apothiki.kodikosMathimatos) ??
+    pseudos_mathimata().find((m) => m.kodikos === apothiki.kodikosMathimatos);
+
+  const titlosEnergou = energo
+    ? `${energo.kodikos} - ${energo.titlos}`
+    : apothiki.kodikosMathimatos
+    ? `${apothiki.kodikosMathimatos} - Μάθημα`
+    : 'ΠΛΗ201 - Προγραμματισμός';
+
   return (
     <div className="odoni-lista" data-testid="simera-ekran">
       <ProskelesioOmonimas
         titlos="Σήμερα"
         ypokeimeno="Η πρόοδός σου στο μάθημα, με μία ματιά"
       />
+      <div className="simera-energo-perioxhi">
+        <div className="simera-energo-karta">
+          <div className="simera-energo-header">
+            <span className="simera-energo-etiketa">ΕΝΕΡΓΟ ΜΑΘΗΜΑ</span>
+            <span className="simera-energo-titlos">{titlosEnergou}</span>
+          </div>
+          {sygxronismena.length > 1 && (
+            <div className="kapsoules-filtra-mpara">
+              {sygxronismena.map((m) => {
+                const einaiEnergo = m.kodikos === apothiki.kodikosMathimatos;
+                return (
+                  <button
+                    key={m.kodikos}
+                    type="button"
+                    className={einaiEnergo ? 'kapsoula-filtrou energi' : 'kapsoula-filtrou'}
+                    onClick={() => {
+                      apothiki.allaxe_kodiko_mathimatos(m.kodikos);
+                    }}
+                    aria-pressed={einaiEnergo}
+                  >
+                    {m.kodikos}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
       <OloniKatastasis
         katastasi={katastasi}
         adeioMinima="Δεν υπάρχουν ενότητες για να προτείνουμε σήμερα."

@@ -4,7 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import { lepita_aristeias, pososto_aristeias, pseudos_xartis } from '../../pseudomata/index.js';
-import { KEIMENO_STOXOU, KEIMENO_TELIOU, MetrikesSimeras, StochoiSimeras, StoxosEnotitas } from './simera.js';
+import Simera, { KEIMENO_STOXOU, KEIMENO_TELIOU, MetrikesSimeras, StochoiSimeras, StoxosEnotitas } from './simera.js';
 
 const KODIKOS_SIMERAS = readFileSync(new URL('./simera.tsx', import.meta.url), 'utf8');
 
@@ -170,5 +170,28 @@ describe('simera — στόχοι σήμερα', () => {
       </MemoryRouter>
     );
     expect(markup).toContain('χωρίς εκτίμηση');
+  });
+});
+
+describe('simera — ένδειξη ενεργού μαθήματος και εναλλαγή', () => {
+  it('αποδίδει την ένδειξη ενεργού μαθήματος στην κορυφή της οθόνης', () => {
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <Simera />
+      </MemoryRouter>
+    );
+    expect(markup).toContain('ΕΝΕΡΓΟ ΜΑΘΗΜΑ');
+    expect(markup).toContain('ΠΛΗ201 - Προγραμματισμός');
+  });
+
+  it('περιέχει κουμπιά εναλλαγής για τα συγχρονισμένα μαθήματα', () => {
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <Simera />
+      </MemoryRouter>
+    );
+    expect(markup).toContain('ΠΛΗ201');
+    expect(markup).toContain('ΠΛΗ101');
+    expect(markup).toContain('ΠΛΗ204');
   });
 });

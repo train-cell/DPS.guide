@@ -1,43 +1,167 @@
 /*
  * Provoli PDF - othoni provolis eggrafou me pdf.js.
- * Monoxromatika tokens (D11): o kanvas einai periexomeno (to xarti tou PDF),
- * oti perivallon ephaplose einai xroma kartas i synorio.
+ * Luxury Dark Wellness / Bevel aesthetic (kanonas D11):
+ * - Epifaneia kartas me tactile bezels kai layered shadows
+ * - Monoxromatika tokens me ypsomenes kai patimenes epifaneies
+ * - Kapsoules navigisis, zoom cluster kai docked bar me backdrop blur
  */
 
 .provoli-odoni {
   display: flex;
   flex-direction: column;
-  gap: var(--diastima-4);
-  padding: var(--diastima-4);
+  gap: var(--diastima-3);
+  padding: var(--diastima-3);
+  max-width: 860px;
+  margin: 0 auto;
+  width: 100%;
 }
 
-.provoli-deiktis {
-  margin: 0;
-  color: var(--xroma-apoxromatismeno);
+/* Toolbar koryfis me breadcrumbs, pill badge kai zoom */
+.provoli-ergaleia-mpara {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--diastima-2);
+  padding: var(--diastima-2) var(--diastima-3);
+  background: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  box-shadow: 0 4px 16px var(--xroma-epifaneia-patimeni), inset 0 1px 0 rgb(255 255 255 / 8%);
+}
+
+.provoli-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--diastima-1);
   font-size: var(--grammatoseira-mikro);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+  color: var(--xroma-keimeno-defteron);
 }
 
+.provoli-breadcrumb-mathima {
+  color: var(--xroma-entono);
+  font-weight: var(--grammatoseira-baros-entono);
+}
+
+.provoli-breadcrumb-diaxoristis {
+  color: var(--xroma-apoxromatismeno);
+  opacity: 0.7;
+}
+
+.provoli-breadcrumb-arxeio {
+  color: var(--xroma-keimeno-prwtarxiko);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tactile pill badge deikti selidas */
+.provoli-deiktis.provoli-pill-badge {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  background: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-kapsoula);
+  padding: var(--diastima-1) var(--diastima-3);
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  letter-spacing: 0.02em;
+  text-transform: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 2px 6px rgb(0 0 0 / 25%);
+}
+
+/* Tactile Segmented Zoom Controls Cluster */
+.provoli-zoom-cluster {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--xroma-epifaneia-patimeni);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-kapsoula);
+  padding: 2px 4px;
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 40%);
+}
+
+.provoli-zoom-koumpi,
+.provoli-zoom-fit-koumpi {
+  background: transparent;
+  border: none;
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+  border-radius: var(--aktina-kapsoula);
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: background var(--diarkeia-grigori) ease, transform var(--diarkeia-grigori) ease;
+}
+
+.provoli-zoom-koumpi:hover:not(:disabled),
+.provoli-zoom-fit-koumpi:hover:not(:disabled) {
+  background: var(--xroma-epifaneia-ypsomeni);
+}
+
+.provoli-zoom-koumpi:active:not(:disabled),
+.provoli-zoom-fit-koumpi:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.provoli-zoom-koumpi:disabled,
+.provoli-zoom-fit-koumpi:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.provoli-zoom-pososto {
+  font-size: var(--grammatoseira-mikro);
+  font-variant-numeric: tabular-nums;
+  min-width: 38px;
+  text-align: center;
+  color: var(--xroma-keimeno-defteron);
+}
+
+/* Kentrarismeni perioxi kanva me luxury bevel kai skiasmo */
 .provoli-periohos {
   border: 1px solid var(--xroma-synorio);
   border-radius: var(--aktina-meso);
-  background: var(--xroma-epifaneia-ypsomeni);
-  padding: var(--diastima-2);
-  min-height: 320px;
+  background: radial-gradient(circle at 50% 15%, rgb(30 30 34) 0%, var(--xroma-fonto) 85%);
+  padding: var(--diastima-5) var(--diastima-3);
+  min-height: 480px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--diastima-2);
+  justify-content: center;
+  gap: var(--diastima-3);
+  overflow-x: auto;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%);
+}
+
+/* Bevel perivlima vivliou / eggrafou */
+.provoli-vivlio-plaisio {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--diastima-3);
+  background: linear-gradient(160deg, #1f1f23 0%, #111113 100%);
+  border: 1px solid rgb(255 255 255 / 16%);
+  border-radius: var(--aktina-meso);
+  box-shadow:
+    0 24px 64px -8px rgb(0 0 0 / 80%),
+    0 6px 18px rgb(0 0 0 / 50%),
+    inset 0 1px 0 rgb(255 255 255 / 16%),
+    inset 0 -1px 0 rgb(0 0 0 / 60%);
 }
 
 .provoli-kanvas {
+  display: block;
   width: 100%;
   max-width: 100%;
   height: auto;
   border-radius: var(--aktina-mikro);
   background: #ffffff;
-  box-shadow: 0 8px 24px var(--xroma-epifaneia-patimeni);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 30%);
 }
 
 .provoli-sfalma {
@@ -46,6 +170,56 @@
   font-size: var(--grammatoseira-mikro);
 }
 
+/* Floating / Docked bottom bar navigisis me glassmorphism & bevel */
+.provoli-katw-mpara {
+  position: sticky;
+  bottom: var(--diastima-3);
+  z-index: 10;
+  background: rgb(22 22 24 / 92%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-kapsoula);
+  padding: var(--diastima-2) var(--diastima-3);
+  box-shadow: 0 16px 36px rgb(0 0 0 / 65%), inset 0 1px 0 rgb(255 255 255 / 12%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--diastima-2);
+}
+
 .provoli-pligi {
   justify-content: space-between;
+}
+
+/* Jump to page forma & input */
+.provoli-metavasi-forma {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--diastima-1);
+}
+
+.provoli-metavasi-etiketa,
+.provoli-metavasi-synolo {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.provoli-metavasi-eisodos {
+  width: 44px;
+  height: 28px;
+  background: var(--xroma-epifaneia-patimeni);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-mikro);
+  color: var(--xroma-keimeno-prwtarxiko);
+  text-align: center;
+  font-size: var(--grammatoseira-meso);
+  font-weight: var(--grammatoseira-baros-entono);
+  box-shadow: inset 0 1px 3px rgb(0 0 0 / 50%);
+  outline: none;
+  transition: border-color var(--diarkeia-grigori) ease;
+}
+
+.provoli-metavasi-eisodos:focus {
+  border-color: var(--xroma-entono);
 }

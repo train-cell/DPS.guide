@@ -17,6 +17,12 @@ describe('odoi — χάρτης διαδρομών εφαρμογής', () => {
     expect(eidopoiseisOdos?.onoma).toBe('Ειδοποιήσεις');
   });
 
+  it('περιλαμβάνει τη διαδρομή /rythisies/ai με ελληνικό όνομα', () => {
+    const aiOdos = ODOI.find((o) => o.diadromi === '/rythisies/ai');
+    expect(aiOdos).toBeDefined();
+    expect(aiOdos?.onoma).toBe('Ρυθμίσεις AI & Vault');
+  });
+
   it('αποδίδεται στατικά χωρίς σφάλμα με MemoryRouter', () => {
     const ypiresies = dimiourgise_ypiresies_eidopoiseon();
     const html = renderToStaticMarkup(

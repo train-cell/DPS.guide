@@ -25,6 +25,8 @@ export interface ApothikiSyntheseon {
   readonly allaxe_telia: (enotitaId: string) => Promise<void>;
   /** Αποθηκεύει νέες ρυθμίσεις. */
   readonly allaxe_rytheseis: (rytheseis: Rytheseis) => Promise<void>;
+  /** Αλλάζει το ενεργό μάθημα και επαναφορτώνει την πρόοδο. */
+  readonly allaxe_kodiko_mathimatos: (kodikos: string) => void;
 }
 
 const ApothikiSunexo = createContext<ApothikiSyntheseon | null>(null);
@@ -39,7 +41,7 @@ export interface ParoxeProps {
 }
 
 /** Παρέχει τις ρυθμίσεις και την πρόοδο σε ολόκληρη την εφαρμογή, φορτωμένα από τη θύρα αποθήκευσης. */
-export function ParoxeApothekisis({ children, periballon, kodikosMathimatos = 'ΠΛΗ201' }: ParoxeProps) {
+export function ParoxeApothekisis({ children, periballon, kodikosMathimatos: arxikosKodikos = 'ΠΛΗ201' }: ParoxeProps) {
   const periballonEfarmogis = xrisiPeriballontos();
   const pyles = useMemo(
     () => periballon ?? periballonEfarmogis,
@@ -47,7 +49,12 @@ export function ParoxeApothekisis({ children, periballon, kodikosMathimatos = '�
   );
   const [rytheseis, setRytheseis] = useState<Rytheseis>(proedapes_rytheseis);
   const [proodhos, setProodhos] = useState<Proodhos>(proedapes_proodhou);
+  const [kodikosMathimatos, setKodikosMathimatos] = useState<string>(arxikosKodikos);
   const [fortizomeni, setFortizomeni] = useState(true);
+
+  useEffect(() => {
+    setKodikosMathimatos(arxikosKodikos);
+  }, [arxikosKodikos]);
 
   useEffect(() => {
     let zalive = true;
@@ -91,9 +98,26 @@ export function ParoxeApothekisis({ children, periballon, kodikosMathimatos = '�
     [pyles]
   );
 
+  const allaxe_kodiko_mathimatos = useCallback(
+    (kodikos: string) => {
+      setKodikosMathimatos(kodikos);
+      void fortose_proodho(pyles.apothiki, kodikos).then((neaProodhos) => {
+        setProodhos(neaProodhos);
+      });
+    },
+    [pyles]
+  );
+
   const timi = useMemo<ApothikiSyntheseon>(
-    () => ({ rytheseis, proodhos, kodikosMathimatos, allaxe_telia, allaxe_rytheseis: allaxe_rytheseis_cb }),
-    [rytheseis, proodhos, kodikosMathimatos, allaxe_telia, allaxe_rytheseis_cb]
+    () => ({
+      rytheseis,
+      proodhos,
+      kodikosMathimatos,
+      allaxe_telia,
+      allaxe_rytheseis: allaxe_rytheseis_cb,
+      allaxe_kodiko_mathimatos,
+    }),
+    [rytheseis, proodhos, kodikosMathimatos, allaxe_telia, allaxe_rytheseis_cb, allaxe_kodiko_mathimatos]
   );
 
   if (fortizomeni) {
@@ -111,5 +135,6 @@ export function xrisiApothekisis(): ApothikiSyntheseon {
     kodikosMathimatos: '',
     allaxe_telia: async () => undefined,
     allaxe_rytheseis: async () => undefined,
+    allaxe_kodiko_mathimatos: () => undefined,
   };
 }

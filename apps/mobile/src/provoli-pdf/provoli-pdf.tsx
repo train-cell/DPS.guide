@@ -33,6 +33,8 @@ export default function ProvoliPdf() {
   const { kodikosMathimatos } = xrisiApothekisis();
   const [katastasi, setKatastasi] = useState<Katastasi<EgrafoPdf>>(fortosi<EgrafoPdf>());
   const [trexousa, setTrexousa] = useState(arithmosZitisis);
+  const [klimaka, setKlimaka] = useState<number>(KLIMAKA_SELIDAS);
+  const [eisagomeniSelida, setEisagomeniSelida] = useState<string>(String(arithmosZitisis));
   const [proseis, setProseis] = useState(0);
   const [sfalmaApostolis, setSfalmaApostolis] = useState<Sfalma | null>(null);
   const kanvasRef = useRef<HTMLCanvasElement>(null);
@@ -67,7 +69,9 @@ export default function ProvoliPdf() {
         return;
       }
       setKatastasi(etimo<EgrafoPdf>({ dyadiko: dyadiko.timi, selides: selides.timi }));
-      setTrexousa(kilise_selida(arithmosZitisis, selides.timi));
+      const kathorismeni = kilise_selida(arithmosZitisis, selides.timi);
+      setTrexousa(kathorismeni);
+      setEisagomeniSelida(String(kathorismeni));
     })();
     return () => {
       zontas = false;
@@ -83,7 +87,7 @@ export default function ProvoliPdf() {
     }
     let akirio = false;
     void (async () => {
-      const apotelesma = await stilise_selida(eggrafo.dyadiko, trexousa, kanvas, KLIMAKA_SELIDAS);
+      const apotelesma = await stilise_selida(eggrafo.dyadiko, trexousa, kanvas, klimaka);
       if (!akirio) {
         setSfalmaApostolis(apotelesma.ok ? null : apotelesma.sfalma);
       }
@@ -92,15 +96,50 @@ export default function ProvoliPdf() {
       akirio = true;
       akirose_trexousa_apostoli();
     };
-  }, [eggrafo, trexousa]);
+  }, [eggrafo, trexousa, klimaka]);
+
+  useEffect(() => {
+    setEisagomeniSelida(String(trexousa));
+  }, [trexousa]);
 
   const metallo = eggrafo !== undefined ? { trexon: trexousa, synolo: eggrafo.selides } : null;
+
+  const megenthinsi = useCallback(() => {
+    setKlimaka((palaia) => Math.min(3.0, Number((palaia + 0.25).toFixed(2))));
+  }, []);
+
+  const smikrynsi = useCallback(() => {
+    setKlimaka((palaia) => Math.max(0.75, Number((palaia - 0.25).toFixed(2))));
+  }, []);
+
+  const epanafora_klimakas = useCallback(() => {
+    setKlimaka(KLIMAKA_SELIDAS);
+  }, []);
+
+  const metavasi_se_selida = useCallback(
+    (timiKeimenou: string) => {
+      if (metallo === null) {
+        return;
+      }
+      const arithmos = Number.parseInt(timiKeimenou, 10);
+      if (Number.isFinite(arithmos)) {
+        const neaSelida = kilise_selida(arithmos, metallo.synolo);
+        setTrexousa(neaSelida);
+        setEisagomeniSelida(String(neaSelida));
+      } else {
+        setEisagomeniSelida(String(metallo.trexon));
+      }
+    },
+    [metallo]
+  );
+
+  const onomaArxeiou = arxeioId.length > 0 ? arxeioId : 'Άγνωστο αρχείο';
 
   return (
     <div className="provoli-odoni" data-testid="provoli-ekran">
       <ProskelesioOmonimas
         titlos="Προβολή PDF"
-        ypokeimeno={arxeioId.length > 0 ? arxeioId : 'Άγνωστο αρχείο'}
+        ypokeimeno={onomaArxeiou}
         akseis={
           <IonButton
             size="small"
@@ -114,6 +153,60 @@ export default function ProvoliPdf() {
           </IonButton>
         }
       />
+
+      <div className="provoli-ergaleia-mpara" data-testid="provoli-toolbar">
+        <div className="provoli-breadcrumb">
+          <span className="provoli-breadcrumb-mathima">
+            {kodikosMathimatos.length > 0 ? kodikosMathimatos : 'PLI201'}
+          </span>
+          <span className="provoli-breadcrumb-diaxoristis">/</span>
+          <span className="provoli-breadcrumb-arxeio" title={onomaArxeiou}>
+            {onomaArxeiou}
+          </span>
+        </div>
+
+        <div className="provoli-deiktis provoli-pill-badge" data-testid="provoli-selida">
+          {metallo !== null ? `Σελίδα ${metallo.trexon} από ${metallo.synolo}` : 'Φόρτωση σελίδας…'}
+        </div>
+
+        <div className="provoli-zoom-cluster" role="group" aria-label="Έλεγχος μεγέθυνσης">
+          <button
+            type="button"
+            className="provoli-zoom-koumpi"
+            onClick={smikrynsi}
+            disabled={klimaka <= 0.75}
+            data-testid="provoli-smikrynsi"
+            title="Σμίκρυνση"
+            aria-label="Σμίκρυνση"
+          >
+            −
+          </button>
+          <span className="provoli-zoom-pososto" data-testid="provoli-klimaka-endeixi">
+            {Math.round(klimaka * 100)}%
+          </span>
+          <button
+            type="button"
+            className="provoli-zoom-koumpi"
+            onClick={megenthinsi}
+            disabled={klimaka >= 3.0}
+            data-testid="provoli-megenthinsi"
+            title="Μεγέθυνση"
+            aria-label="Μεγέθυνση"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            className="provoli-zoom-fit-koumpi"
+            onClick={epanafora_klimakas}
+            data-testid="provoli-epanaphora-klimakas"
+            title="Προσαρμογή πλάτους"
+          >
+            Fit
+          </button>
+        </div>
+      </div>
+
       <OloniKatastasis
         katastasi={katastasi}
         adeioMinima="Το έγγραφο δεν έχει σελίδες."
@@ -122,18 +215,18 @@ export default function ProvoliPdf() {
       >
         {() => (
           <>
-            <p className="provoli-deiktis" data-testid="provoli-selida">
-              {metallo !== null ? `Σελίδα ${metallo.trexon} από ${metallo.synolo}` : 'Φόρτωση σελίδας…'}
-            </p>
             <div className="provoli-periohos">
-              <canvas ref={kanvasRef} className="provoli-kanvas" data-testid="provoli-kanvas" />
+              <div className="provoli-vivlio-plaisio">
+                <canvas ref={kanvasRef} className="provoli-kanvas" data-testid="provoli-kanvas" />
+              </div>
               {sfalmaApostolis !== null && (
                 <p className="provoli-sfalma" data-testid="provoli-sfalma-apostolis">
                   {sfalmaApostolis.minima}
                 </p>
               )}
             </div>
-            <div className="odoni-xeiris provoli-pligi">
+
+            <div className="odoni-xeiris provoli-pligi provoli-katw-mpara" data-testid="provoli-docked-bar">
               <IonButton
                 size="small"
                 fill="outline"
@@ -145,6 +238,29 @@ export default function ProvoliPdf() {
               >
                 ‹ Προηγούμενη
               </IonButton>
+
+              <form
+                className="provoli-metavasi-forma"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  metavasi_se_selida(eisagomeniSelida);
+                }}
+              >
+                <span className="provoli-metavasi-etiketa">Σελ.</span>
+                <input
+                  type="number"
+                  min={PROTI_SELIDA}
+                  max={metallo?.synolo ?? PROTI_SELIDA}
+                  value={eisagomeniSelida}
+                  onChange={(e) => setEisagomeniSelida(e.target.value)}
+                  onBlur={() => metavasi_se_selida(eisagomeniSelida)}
+                  className="provoli-metavasi-eisodos"
+                  data-testid="provoli-metavasi-selidas"
+                  aria-label="Μετάβαση σε σελίδα"
+                />
+                <span className="provoli-metavasi-synolo">/ {metallo?.synolo ?? '—'}</span>
+              </form>
+
               <IonButton
                 size="small"
                 disabled={metallo === null || metallo.trexon >= metallo.synolo}

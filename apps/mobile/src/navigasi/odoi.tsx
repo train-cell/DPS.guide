@@ -8,6 +8,7 @@ import XartisEnotiton from '../othoni/xartis/xartis.js';
 import OdigosMeletis from '../othoni/odigos/odigos.js';
 import TutorChat from '../othoni/tutor/tutor.js';
 import Rythisies from '../othoni/rythisies/rythisies.js';
+import RythisiesAi from '../othoni/rythisies/rythisies-ai.js';
 import Proedri from '../othoni/proedri/proedri.js';
 import ProvoliPdf from '../provoli-pdf/provoli-pdf.js';
 import RythmiseisProgrammatos from '../programma/programma.js';
@@ -23,6 +24,7 @@ export const ODOI: readonly { readonly diadromi: string; readonly onoma: string 
   { diadromi: '/odigos/:enotitaId', onoma: 'Οδηγός Μελέτης' },
   { diadromi: '/tutor', onoma: 'Tutor Chat' },
   { diadromi: '/rythisies', onoma: 'Ρυθμίσεις' },
+  { diadromi: '/rythisies/ai', onoma: 'Ρυθμίσεις AI & Vault' },
   { diadromi: '/proedri', onoma: 'Onboarding' },
   { diadromi: '/provoli/:arxeioId/:selida', onoma: 'Προβολή PDF' },
   { diadromi: '/programma', onoma: 'Πρόγραμμα' },
@@ -68,6 +70,7 @@ export function OdoiNavigisis({
         <Route path="/programma" element={meNav(<RythmiseisProgrammatos />)} />
         <Route path="/tutor" element={meNav(<TutorChat />)} />
         <Route path="/rythisies" element={meNav(<Rythisies />)} />
+        <Route path="/rythisies/ai" element={meNav(<RythisiesAi />)} />
         <Route
           path="/eidopoiseis"
           element={meNav(<RythisiesEidopoiseon ypiresies={ypiresiesEidopoiseon} />)}

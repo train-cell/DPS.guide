@@ -136,6 +136,15 @@ export default function Rythisies() {
         ypokeimeno="Το μοντέλο που χρησιμοποιείται για απαντήσεις και περιλήψεις."
         stoixeia={
           <div data-testid="rythisies-seira-montelo">
+            <div className="odoni-xeiris">
+              <Link
+                to="/rythisies/ai"
+                className="pilegma pilegma-entono"
+                data-testid="rythisies-link-ai"
+              >
+                Ρύθμιση Παρόχου &amp; Κλειδιού Vault →
+              </Link>
+            </div>
             <label className="odoni-xeiris-zeugos" htmlFor="rythisies-gramma-montelo">
               Όνομα μοντέλου
             </label>

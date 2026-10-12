@@ -46,4 +46,18 @@ describe('mathimata — οθόνη λίστας μαθημάτων', () => {
       expect(pigi).toContain(`"${testid}"`);
     }
   });
+
+  it('η κάρτα δείχνει την ετικέτα Ενεργό όταν einaiTrexon είναι true', () => {
+    const mathima = pseudos_mathimata()[0];
+    expect(mathima).toBeDefined();
+    if (mathima === undefined) return;
+    const html = apoidefsi(<KartaMathimatos mathima={mathima} einaiTrexon={true} />);
+    expect(html).toContain('Ενεργό');
+  });
+
+  it('η οθόνη χρησιμοποιεί το xrisiApothekisis και καλεί allaxe_kodiko_mathimatos', () => {
+    const pigi = readFileSync(MONI_PIGIS, 'utf8');
+    expect(pigi).toContain('xrisiApothekisis');
+    expect(pigi).toContain('allaxe_kodiko_mathimatos(mathima.kodikos)');
+  });
 });
