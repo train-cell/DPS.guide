@@ -12,6 +12,7 @@ import {
   proedapes_rytheseis,
 } from './apothiki-ypiresies.js';
 import { sporse_deigma } from '../pseudomata/sporse.js';
+import { fortose_mathimata_apo_apothiki } from '../ypiresies/mathimata.js';
 
 /** Τι εκθέτει ο πάροχος της κατάστασης αποθήκευσης στην εφαρμογή. */
 export interface ApothikiSyntheseon {
@@ -62,10 +63,21 @@ export function ParoxeApothekisis({ children, periballon, kodikosMathimatos: arx
       if (pyles.deigma) {
         await sporse_deigma(pyles.apothiki);
       }
-      const [fortesRytheseis, fortesProodhos] = await Promise.all([
+      const [fortesRytheseis, mathimataKatastasi] = await Promise.all([
         fortose_rytheseis(pyles.apothiki),
-        fortose_proodho(pyles.apothiki, kodikosMathimatos),
+        fortose_mathimata_apo_apothiki(pyles.apothiki),
       ]);
+
+      let trexonKodikos = kodikosMathimatos;
+      if (mathimataKatastasi.katastasi === 'etimo' && mathimataKatastasi.dedomena.length > 0) {
+        const yparxei = mathimataKatastasi.dedomena.some((m) => m.kodikos === trexonKodikos);
+        if (!yparxei && trexonKodikos === 'ΠΛΗ201') {
+          trexonKodikos = mathimataKatastasi.dedomena[0]?.kodikos ?? trexonKodikos;
+          setKodikosMathimatos(trexonKodikos);
+        }
+      }
+
+      const fortesProodhos = await fortose_proodho(pyles.apothiki, trexonKodikos);
       if (zalive) {
         setRytheseis(fortesRytheseis);
         setProodhos(fortesProodhos);

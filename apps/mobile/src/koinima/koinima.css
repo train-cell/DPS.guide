@@ -655,3 +655,38 @@ button.pilegma:disabled {
   color: var(--xroma-keimeno-prwtarxiko);
   font-weight: var(--grammatoseira-baros-entono);
 }
+
+/* Tutor - Quick Action Bar */
+.tutor-draseis-mpara {
+  display: flex;
+  gap: var(--diastima-2);
+  padding: var(--diastima-2) var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border-top: 1px solid var(--xroma-synorio);
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tutor-drasis-koumpi {
+  cursor: pointer;
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+  border: 1px solid var(--xroma-synorio);
+  transition: transform var(--diarkeia-grigori) ease-out, background-color var(--diarkeia-grigori) ease-out;
+  flex-shrink: 0;
+}
+
+.tutor-drasis-koumpi:hover:not(:disabled) {
+  background-color: var(--xroma-epifaneia-patimeni);
+  border-color: var(--xroma-keimeno-defteron);
+}
+
+.tutor-drasis-koumpi:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.tutor-drasis-koumpi:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

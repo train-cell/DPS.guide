@@ -3,11 +3,11 @@ import type { FormEvent } from 'react';
 import { IonButton } from '@ionic/react';
 import type { Mathima } from '@dps/core';
 import { Karta, OloniKatastasis, Pilegma } from '../../koinima/index.js';
-import { adeio, fortosi, sfalma } from '../../kathstasi/index.js';
+import { adeio, etimo, fortosi, sfalma } from '../../kathstasi/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
 import { ftiaxe_periballon } from '../../periballon/index.js';
 import type { Periballon } from '../../periballon/index.js';
-import { fortose_mathimata_apo_apothiki } from '../../ypiresies/index.js';
+import { fortose_mathimata_apo_apothiki, syndesi_kai_anaktisi_mathimaton } from '../../ypiresies/index.js';
 import {
   EikonidioAsfaleias,
   EikonidioPanepistimiou,
@@ -133,8 +133,15 @@ export default function Proedri({ periballon }: ProedriProps) {
     setEpixeirithike(true);
     setKatastasi(fortosi());
     try {
-      const apotelesma = await fortose_mathimata_apo_apothiki(pyles.apothiki);
-      if (apotelesma.katastasi === 'etimo') {
+      const apotelesmaScraping = await syndesi_kai_anaktisi_mathimaton({
+        periballon: pyles,
+        base_url: base.trim(),
+        onoma_xristi: xristis.trim(),
+        kodikos: kodikos.trim(),
+        panepistimio_id: epilegmenoPanepistimioId,
+      });
+
+      if (apotelesmaScraping.ok) {
         await pyles.mystika.vale('eclass_onoma_xristi', xristis.trim());
         await pyles.mystika.vale('eclass_kodikos', kodikos.trim());
         await pyles.mystika.vale('eclass_panepistimio_id', epilegmenoPanepistimioId);
@@ -148,9 +155,26 @@ export default function Proedri({ periballon }: ProedriProps) {
             // Ignored se private mode
           }
         }
+        setKatastasi(etimo(apotelesmaScraping.timi));
         setTrexonVima(4);
+      } else {
+        const apotelesma = await fortose_mathimata_apo_apothiki(pyles.apothiki);
+        if (apotelesma.katastasi === 'etimo' && (pyles.deigma || xristis.trim() === 'demo')) {
+          await pyles.mystika.vale('eclass_onoma_xristi', xristis.trim());
+          await pyles.mystika.vale('eclass_kodikos', kodikos.trim());
+          await pyles.mystika.vale('eclass_panepistimio_id', epilegmenoPanepistimioId);
+          await pyles.mystika.vale('eclass_base_url', base.trim());
+          setKatastasi(apotelesma);
+          setTrexonVima(4);
+        } else {
+          setKatastasi(
+            sfalma({
+              kodikos: apotelesmaScraping.sfalma.kodikos,
+              minima: apotelesmaScraping.sfalma.minima,
+            })
+          );
+        }
       }
-      setKatastasi(apotelesma);
     } catch {
       setKatastasi(
         sfalma({

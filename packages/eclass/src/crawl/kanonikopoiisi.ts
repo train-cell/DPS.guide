@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { sha256_bytes, sha256_keimeno } from './sha256.js';
 import type { Apotelesma } from '@dps/core';
 import { apotyxia, ok } from '@dps/core';
 import {
@@ -69,14 +69,12 @@ export function ftiaxe_arxeio_id(
   kodikos_mathimatos: string,
   kanonikopoiimeni_diadromi: string
 ): string {
-  return createHash('sha256')
-    .update(kodikos_mathimatos + kanonikopoiimeni_diadromi, 'utf8')
-    .digest('hex');
+  return sha256_keimeno(kodikos_mathimatos + kanonikopoiimeni_diadromi);
 }
 
 /**
  * Υπολογίζει το SHA-256 hash του δυαδικού περιεχομένου ενός αρχείου.
  */
 export function hash_periexomenou(dedomena: Uint8Array): string {
-  return createHash('sha256').update(dedomena).digest('hex');
+  return sha256_bytes(dedomena);
 }

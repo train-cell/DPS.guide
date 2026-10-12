@@ -96,6 +96,9 @@ importers:
       '@dps/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@dps/eclass':
+        specifier: workspace:*
+        version: link:../../packages/eclass
       '@ionic/react':
         specifier: ^9.0.7
         version: 9.0.7(@stencil/core@4.45.2)(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)

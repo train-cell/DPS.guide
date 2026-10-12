@@ -18,6 +18,7 @@
     "@capacitor/local-notifications": "^8.3.1",
     "@dps/adapters-capacitor": "workspace:*",
     "@dps/core": "workspace:*",
+    "@dps/eclass": "workspace:*",
     "@ionic/react": "^9.0.7",
     "@ionic/react-router": "^9.0.7",
     "pdfjs-dist": "^6.4.299",
