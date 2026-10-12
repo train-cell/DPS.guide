@@ -265,10 +265,32 @@ button.pilegma:disabled {
 }
 
 .kapsouli-glyfi {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+}
+
+.kapsouli-glyfi svg {
   display: block;
+  transition: transform var(--diarkeia-grigori) ease, stroke var(--diarkeia-grigori) ease;
+}
+
+.kapsouli-stoicheio-energo .kapsouli-glyfi svg {
+  transform: scale(1.08);
+  stroke: var(--xroma-entono);
 }
 
 /* Odonis */
+.mathimata-anazitisi-kouti {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  padding: 0 var(--diastima-4) var(--diastima-2);
+}
+
 .odoni-lista {
   display: flex;
   flex-direction: column;

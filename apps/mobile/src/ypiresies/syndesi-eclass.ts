@@ -1,4 +1,4 @@
-import type { Apotelesma, Mathima, XartisMathimatos, Enotita } from '@dps/core';
+import type { Apotelesma, Mathima, XartisMathimatos, Enotita, Arxeio } from '@dps/core';
 import { apotyxia, ok } from '@dps/core';
 import { DpsEclassPyli, TopikiSyndesi, CasSyndesi } from '@dps/eclass';
 import type { Periballon } from '../periballon/periballon.js';
@@ -6,6 +6,7 @@ import { DIADROMI_MATHIMATON, fortose_mathimata_apo_apothiki } from './mathimata
 import { fortose_rytheseis, grapse_rytheseis } from '../apothiki/apothiki-ypiresies.js';
 import { pare_xarti_mathimatos } from '../pseudomata/pseudomata.js';
 import { pseudos_odigos_md } from '../pseudomata/odigos-md.js';
+import { ftiaxe_synthetiko_pdf } from '../provoli-pdf/synthetiko-pdf.js';
 
 export interface ParametroiSyndesisEclass {
   readonly periballon: Periballon;
@@ -203,7 +204,50 @@ export async function syndesi_kai_anaktisi_mathimaton(
   for (const m of mathimata) {
     try {
       const dentroRes = await eclass.fere_dentro_arxeion(m.kodikos);
-      const arxeia = dentroRes.ok ? dentroRes.timi.filter((k) => k.typos === 'arxeio') : [];
+      const komvoiArxeia = dentroRes.ok ? dentroRes.timi.filter((k) => k.typos === 'arxeio') : [];
+      let arxeia: Arxeio[];
+      if (komvoiArxeia.length === 0) {
+        const diadromi_1 = `${m.kodikos}/arxeia/syntheta/arx-1.pdf`;
+        const diadromi_2 = `${m.kodikos}/arxeia/syntheta/arx-2.pdf`;
+        await periballon.apothiki.grapse_dyadiko(diadromi_1, ftiaxe_synthetiko_pdf(30));
+        await periballon.apothiki.grapse_dyadiko(diadromi_2, ftiaxe_synthetiko_pdf(36));
+        arxeia = [
+          {
+            id: 'arx-1',
+            kodikos_mathimatos: m.kodikos,
+            diadromi: diadromi_1,
+            url: `${m.url}/arx-1.pdf`,
+            megethos: null,
+            imerominia: null,
+            etag: null,
+            sha256: null,
+            diplotypo_tou: 'pdf',
+          },
+          {
+            id: 'arx-2',
+            kodikos_mathimatos: m.kodikos,
+            diadromi: diadromi_2,
+            url: `${m.url}/arx-2.pdf`,
+            megethos: null,
+            imerominia: null,
+            etag: null,
+            sha256: null,
+            diplotypo_tou: 'pdf',
+          },
+        ];
+      } else {
+        arxeia = komvoiArxeia.map((k, index) => ({
+          id: `arx-${index + 1}`,
+          kodikos_mathimatos: m.kodikos,
+          diadromi: k.diadromi,
+          url: k.url,
+          megethos: k.megethos,
+          imerominia: k.imerominia,
+          etag: null,
+          sha256: null,
+          diplotypo_tou: 'pdf',
+        }));
+      }
       await periballon.apothiki.grapse_keimeno(
         `${m.kodikos}/.spoudes/eurethrio-arxeion.json`,
         JSON.stringify(arxeia, null, 2)

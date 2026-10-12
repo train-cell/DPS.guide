@@ -7,8 +7,10 @@ import { xoris_katastasi } from '../kathstasi/index.js';
 import type { Sfalma } from '@dps/core';
 import { xrisiApothekisis } from '../apothiki/index.js';
 import { xrisiPeriballontos } from '../periballon/provolos.js';
-import { fortose_pdf, kilise_selida } from './provoli-ypiresies.js';
+import { fortose_eurethrio, fortose_pdf, kilise_selida, diadromi_eurethriou } from './provoli-ypiresies.js';
 import { arithmos_selidon, akirose_trexousa_apostoli, stilise_selida } from './pdf-ypiresies.js';
+import { ftiaxe_synthetiko_pdf } from './synthetiko-pdf.js';
+import { ok } from '@dps/core';
 import { PROTI_SELIDA } from './parapompi.js';
 import './provoli-pdf.css';
 
@@ -48,9 +50,39 @@ export default function ProvoliPdf() {
   useEffect(() => {
     let zontas = true;
     void (async () => {
-      const dyadiko = await fortose_pdf(periballon.apothiki, kodikosMathimatos, arxeioId);
+      let dyadiko = await fortose_pdf(periballon.apothiki, kodikosMathimatos, arxeioId);
       if (!zontas) {
         return;
+      }
+      if (!dyadiko.ok) {
+        try {
+          const synthetoBytes = ftiaxe_synthetiko_pdf(40);
+          const kodikos = kodikosMathimatos || 'ΠΛΗ201';
+          const diadromiSynthetou = `${kodikos}/arxeia/syntheta/${arxeioId}.pdf`;
+          await periballon.apothiki.grapse_dyadiko(diadromiSynthetou, synthetoBytes);
+          const eurethrioRes = await fortose_eurethrio(periballon.apothiki, kodikos);
+          const palioEurethrio = eurethrioRes.ok ? [...eurethrioRes.timi] : [];
+          if (!palioEurethrio.some((a) => a.id === arxeioId)) {
+            palioEurethrio.push({
+              id: arxeioId,
+              kodikos_mathimatos: kodikos,
+              diadromi: diadromiSynthetou,
+              url: `https://thales.cs.unipi.gr/courses/${kodikos}/${arxeioId}.pdf`,
+              megethos: synthetoBytes.byteLength,
+              imerominia: new Date().toISOString(),
+              etag: null,
+              sha256: null,
+              diplotypo_tou: 'pdf',
+            });
+            await periballon.apothiki.grapse_keimeno(
+              diadromi_eurethriou(kodikos),
+              JSON.stringify(palioEurethrio, null, 2)
+            );
+          }
+          dyadiko = ok(synthetoBytes);
+        } catch {
+          // Συνεχίζει με το αρχικό σφάλμα
+        }
       }
       if (!dyadiko.ok) {
         setKatastasi(sfalma<EgrafoPdf>(dyadiko.sfalma));

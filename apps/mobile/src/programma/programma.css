@@ -47,3 +47,10 @@
   color: var(--xroma-apoxromatismeno);
   font-size: var(--grammatoseira-mikro);
 }
+
+.programma-taxy-prosthesi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+  margin-top: var(--diastima-2);
+}

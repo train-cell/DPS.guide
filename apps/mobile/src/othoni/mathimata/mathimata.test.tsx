@@ -60,4 +60,13 @@ describe('mathimata — οθόνη λίστας μαθημάτων', () => {
     expect(pigi).toContain('xrisiApothekisis');
     expect(pigi).toContain('allaxe_kodiko_mathimatos(mathima.kodikos)');
   });
+
+  it('η οθόνη περιλαμβάνει πεδίο αναζήτησης και κάψουλες φιλτραρίσματος', () => {
+    const pigi = readFileSync(MONI_PIGIS, 'utf8');
+    expect(pigi).toContain('mathimata-anazitisi-kouti');
+    expect(pigi).toContain('type="search"');
+    expect(pigi).toContain('kapsoules-filtra-mpara');
+    expect(pigi).toContain('Συγχρονισμένα');
+    expect(pigi).toContain('Εκκρεμή');
+  });
 });

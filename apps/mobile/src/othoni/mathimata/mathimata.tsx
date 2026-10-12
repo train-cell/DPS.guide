@@ -74,6 +74,8 @@ export default function Mathimata() {
   const { kodikosMathimatos } = xrisiApothekisis();
   const [katastasi, setKatastasi] = useState<Katastasi<readonly Mathima[]>>(fortosi<readonly Mathima[]>());
   const [prospatheies, setProspatheies] = useState(0);
+  const [anazitisi, setAnazitisi] = useState('');
+  const [filtro, setFiltro] = useState<'ola' | 'sygxronismena' | 'ekkremei'>('ola');
 
   useEffect(() => {
     let zontas = true;
@@ -102,17 +104,84 @@ export default function Mathimata() {
     <div className="episkefsi" data-testid="mathimata-ekran">
       <ProskelesioOmonimas titlos="Μαθήματα" ypokeimeno={YPOKEIMENO_MATHIMATON} />
       <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_LISTAS} epanalipsi={epanalipsi}>
-        {(mathimata) => (
-          <div className="odoni-lista" data-testid="mathimata-lista">
-            {mathimata.map((mathima) => (
-              <KartaMathimatos
-                key={mathima.kodikos}
-                mathima={mathima}
-                einaiTrexon={mathima.kodikos === kodikosMathimatos}
-              />
-            ))}
-          </div>
-        )}
+        {(mathimata) => {
+          const kathara = anazitisi.trim().toLowerCase();
+          const filtroMathimata = mathimata.filter((m) => {
+            const tairiaseiKeimeno =
+              kathara.length === 0 ||
+              m.kodikos.toLowerCase().includes(kathara) ||
+              m.titlos.toLowerCase().includes(kathara) ||
+              (m.kathigitis && m.kathigitis.toLowerCase().includes(kathara));
+
+            if (!tairiaseiKeimeno) {
+              return false;
+            }
+
+            if (filtro === 'sygxronismena') {
+              return m.epilegmeno || m.katastasi_sygxronismou === MINIMA_SYNXRONISMENOU;
+            }
+            if (filtro === 'ekkremei') {
+              return !m.epilegmeno && m.katastasi_sygxronismou !== MINIMA_SYNXRONISMENOU;
+            }
+            return true;
+          });
+
+          return (
+            <>
+              {mathimata.length > 1 && (
+                <div className="mathimata-anazitisi-kouti">
+                  <input
+                    type="search"
+                    className="proedri-travla-gramma"
+                    placeholder="🔍 Αναζήτηση μαθήματος (π.χ. ΠΛΗ, Αλγόριθμοι)..."
+                    value={anazitisi}
+                    onChange={(e) => setAnazitisi(e.target.value)}
+                    aria-label="Αναζήτηση μαθήματος"
+                  />
+                  <div className="kapsoules-filtra-mpara">
+                    <button
+                      type="button"
+                      className={filtro === 'ola' ? 'kapsoula-filtrou energi' : 'kapsoula-filtrou'}
+                      onClick={() => setFiltro('ola')}
+                    >
+                      Όλα ({mathimata.length})
+                    </button>
+                    <button
+                      type="button"
+                      className={filtro === 'sygxronismena' ? 'kapsoula-filtrou energi' : 'kapsoula-filtrou'}
+                      onClick={() => setFiltro('sygxronismena')}
+                    >
+                      Συγχρονισμένα
+                    </button>
+                    <button
+                      type="button"
+                      className={filtro === 'ekkremei' ? 'kapsoula-filtrou energi' : 'kapsoula-filtrou'}
+                      onClick={() => setFiltro('ekkremei')}
+                    >
+                      Εκκρεμή
+                    </button>
+                  </div>
+                </div>
+              )}
+              <div className="odoni-lista" data-testid="mathimata-lista">
+                {filtroMathimata.length === 0 ? (
+                  <Karta
+                    titlos="Δεν βρέθηκαν μαθήματα"
+                    ypokeimeno="Δεν υπάρχει μάθημα που να ταιριάζει με την αναζήτηση."
+                  />
+                ) : (
+                  filtroMathimata.map((mathima) => (
+                    <KartaMathimatos
+                      key={mathima.kodikos}
+                      mathima={mathima}
+                      einaiTrexon={mathima.kodikos === kodikosMathimatos}
+                    />
+                  ))
+                )}
+              </div>
+            </>
+          );
+        }}
       </OloniKatastasis>
     </div>
   );

@@ -254,6 +254,42 @@ export default function RythmiseisProgrammatos() {
                     >
                       {KEIMENO_PROSTHESIS_EXETASIS}
                     </IonButton>
+                    {rytheseis && rytheseis.mathimataSynch.filter((k) => !draft.exetaseis.some((e) => e.kodikos === k)).length > 0 && (
+                      <div className="programma-taxy-prosthesi">
+                        <span className="odoni-xeiris-zeugos">Γρήγορη προσθήκη από τα μαθήματά σου:</span>
+                        <div className="kapsoules-filtra-mpara">
+                          {rytheseis.mathimataSynch
+                            .filter((k) => !draft.exetaseis.some((e) => e.kodikos === k))
+                            .map((kodikos) => (
+                              <button
+                                key={kodikos}
+                                type="button"
+                                className="kapsoula-filtrou"
+                                onClick={() => {
+                                  setDraft((palio) =>
+                                    palio === null
+                                      ? palio
+                                      : {
+                                          ...palio,
+                                          exetaseis: [
+                                            ...palio.exetaseis,
+                                            {
+                                              kodikos,
+                                              imerominia: '2027-01-20',
+                                              tropos: 'kleista_vivlia',
+                                            },
+                                          ],
+                                        }
+                                  );
+                                  setApothikefthike(false);
+                                }}
+                              >
+                                + {kodikos}
+                              </button>
+                            ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 }
               />
