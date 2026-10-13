@@ -65,8 +65,9 @@ const KAPSOULI_OTHONES = OTHONES.filter((othoni) => othoni.kapsouli);
 
 /** Περιμένει να φορτωθεί η οθόνη: το κατάσταση φόρτωσης εξαφανίζεται και τα δεδομένα εμφανίζονται. */
 async function perimene_na_fortothei(page: import('@playwright/test').Page, ekran: string) {
-  await expect(page.getByTestId(ekran)).toBeVisible();
-  await expect(page.getByTestId('katastasi-fortosi')).toBeHidden({ timeout: 10_000 });
+  const activeScreen = page.getByRole('main').getByTestId(ekran);
+  await expect(activeScreen).toBeVisible();
+  await expect(page.getByRole('main').getByTestId('katastasi-fortosi')).toBeHidden({ timeout: 10_000 });
 }
 
 for (const othoni of OTHONES) {
