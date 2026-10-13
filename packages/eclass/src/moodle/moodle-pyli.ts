@@ -289,11 +289,18 @@ export class MoodlePyli implements EclassPyli {
 
   private async webservice<T>(functionName: string, parameters: Record<string, string>): Promise<Apotelesma<T>> {
     const url = new URL('/webservice/rest/server.php', this.base_url);
-    url.searchParams.set('wstoken', this.options.webservice_token?.trim() ?? '');
-    url.searchParams.set('wsfunction', functionName);
-    url.searchParams.set('moodlewsrestformat', 'json');
-    for (const [key, value] of Object.entries(parameters)) url.searchParams.set(key, value);
-    const response = await this.request({ methodos: 'GET', url: url.href, typos_apantisis: 'keimeno' });
+    const form: Record<string, string> = {
+      wstoken: this.options.webservice_token?.trim() ?? '',
+      wsfunction: functionName,
+      moodlewsrestformat: 'json',
+      ...parameters,
+    };
+    const response = await this.request({
+      methodos: 'POST',
+      url: url.href,
+      soma_forma: form,
+      typos_apantisis: 'keimeno',
+    });
     if (!response.ok) return response;
     try {
       return ok(JSON.parse(response.timi.keimeno ?? '') as T);
