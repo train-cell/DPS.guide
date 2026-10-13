@@ -1,7 +1,7 @@
 /**
  * Test doubles της ροής (§3 κανόνας 5: μηδέν network, LLM ΜΟΝΟ μέσω MockLlmArchiou,
- * eClass ΜΟΝΟ μέσω του δικού μας FakeEclassPyli — το `packages/mock-eclass` δεν είναι
- * merged στο branch και δεν πρέπει να γίνεται import).
+ * eClass ΜΟΝΟ μέσω του δικού μας FakeEclassPyli — ο ξεχωριστός `@dps/mock-eclass`
+ * adapter δεν χρειάζεται σε αυτό το self-contained harness).
  *
  * Το `LigmaArchiou` ΔΕΝ επινοεί απαντήσεις: στρέφεται στο κανονικό
  * `MockLlmArchiou` του `@dps/ai` και τροφοδοτείται με ηχογραφημένα fixtures, στη σειρά
