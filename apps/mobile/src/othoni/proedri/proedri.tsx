@@ -282,7 +282,7 @@ export default function Proedri({ periballon }: ProedriProps) {
             </div>
             <div className="onboarding-xaraktiristiko-keimeno">
               <h3>Tutor με επιλογή παρόχου</h3>
-              <p>Χρησιμοποίησε τοπικό Ollama ή Gemini. Για Gemini απαιτείται συγκατάθεση ανά μάθημα και πριν από κάθε δημιουργία.</p>
+              <p>Σε Windows/macOS μπορείς να χρησιμοποιήσεις Ollama στον ίδιο υπολογιστή. Στα iPhone και Android, επίλεξε Gemini με opt-in ανά μάθημα και επιβεβαίωση πριν από κάθε δημιουργία ή απενεργοποίησε την AI.</p>
             </div>
           </div>
         </div>

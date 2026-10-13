@@ -34,12 +34,20 @@ export class BrowserHttpPyli implements HttpPyli {
   private readonly cookieJar = new CookieJar();
 
   async aitima(request: HttpAitima): Promise<Apotelesma<HttpApantisi>> {
+    const isLoopbackPage =
+      typeof location !== 'undefined' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+    if (!isLoopbackPage) {
+      return apotyxia(
+        'MI_YPOSTIRIZOMENO',
+        'Η browser έκδοση υποστηρίζει συγχρονισμό μόνο στο localhost του υπολογιστή. Σε iPhone ή Android χρησιμοποίησε την εγκατεστημένη native εφαρμογή, η οποία συνδέεται απευθείας με το LMS.'
+      );
+    }
     let body: string | null = null;
     if (request.soma_forma !== undefined) body = new URLSearchParams(request.soma_forma).toString();
     else if (request.soma_json !== undefined) body = JSON.stringify(request.soma_json);
     const token = getLocalBridgeToken();
     if (token === null) {
-      return apotyxia('DIKTYO', 'Ο browser δεν έχει συνδεθεί με τον τοπικό υπολογιστή. Πληκτρολόγησε τον pairing code από το terminal στις Ρυθμίσεις ή στο onboarding.');
+      return apotyxia('DIKTYO', 'Ο browser δεν έχει συνδεθεί με το localhost bridge. Πληκτρολόγησε τον pairing code από το terminal στις Ρυθμίσεις ή στο onboarding.');
     }
 
     return anakateuthinsi(

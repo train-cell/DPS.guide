@@ -3,13 +3,15 @@ import { Capacitor } from '@capacitor/core';
 import { Karta } from '../koinima/index.js';
 import { getLocalBridgeToken, pairLocalBridge } from './local-bridge-client.js';
 
-/** One-time terminal code pairing for trusted browsers on the local network. */
+/** One-time terminal code pairing for the browser running on this localhost computer. */
 export function BridgePairingCard() {
   const [code, setCode] = useState('');
   const [paired, setPaired] = useState(() => getLocalBridgeToken() !== null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  if (Capacitor.isNativePlatform()) return null;
+  const isLoopbackPage =
+    typeof location !== 'undefined' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+  if (Capacitor.isNativePlatform() || !isLoopbackPage) return null;
 
   async function pair(): Promise<void> {
     setBusy(true);
@@ -18,7 +20,7 @@ export function BridgePairingCard() {
       await pairLocalBridge(code);
       setPaired(true);
       setCode('');
-      setMessage('Η συσκευή συνδέθηκε με αυτόν τον τοπικό server. Το pairing ισχύει μέχρι την επανεκκίνηση του server.');
+      setMessage('Ο browser συνδέθηκε με τον localhost server. Το pairing ισχύει μέχρι την επανεκκίνηση του server.');
     } catch (reason) {
       setMessage(reason instanceof Error ? reason.message : 'Δεν έγινε pairing με τον τοπικό server.');
     } finally {
@@ -28,11 +30,11 @@ export function BridgePairingCard() {
 
   return (
     <Karta
-      titlos="Σύνδεση με τον τοπικό υπολογιστή"
-      ypokeimeno="Απαιτείται για συγχρονισμό LMS και πρόσβαση στο bridge από browser ή iPhone στο ίδιο δίκτυο."
+      titlos="Σύνδεση browser με localhost"
+      ypokeimeno="Απαιτείται για LMS και AI συνδέσεις από browser που εκτελείται στο localhost αυτού του υπολογιστή. Οι native εφαρμογές iPhone και Android συνδέονται απευθείας και δεν χρειάζονται τοπικό certificate."
       stoixeia={
         <div className="odoni-xeiris">
-          <p>{paired ? 'Η συσκευή είναι paired με τον τρέχοντα server.' : 'Άνοιξε το terminal του υπολογιστή και πληκτρολόγησε τον κωδικό που εμφανίζει το DPS local bridge.'}</p>
+          <p>{paired ? 'Ο browser είναι paired με τον τρέχοντα localhost server.' : 'Άνοιξε το terminal σε αυτόν τον υπολογιστή και πληκτρολόγησε τον κωδικό που εμφανίζει το DPS local bridge.'}</p>
           {!paired && (
             <>
               <label className="odoni-xeiris-zeugos" htmlFor="local-bridge-pairing-code">Κωδικός από το terminal</label>
