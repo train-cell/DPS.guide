@@ -90,7 +90,7 @@ pnpm test
 
 Τα test doubles και τα fixtures είναι απομονωμένα σε test-only packages/exports και test paths. Δεν εισάγονται από την παραγωγική εφαρμογή.
 
-Οι παλιές προδιαγραφές, τα orchestration prompts και οι αναφορές στα `docs/` είναι ιστορικό αρχείο· δες το [ευρετήριο τεκμηρίωσης](docs/README.md).
+Οι παλιές προδιαγραφές, τα orchestration prompts, τα handoff snapshots και οι αναφορές στα `docs/` είναι ιστορικό αρχείο· δες το [ευρετήριο τεκμηρίωσης](docs/README.md).
 
 ## Άδεια
 
