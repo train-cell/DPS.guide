@@ -32,7 +32,7 @@
 
 ## Εκτέλεση σε Windows/macOS
 
-Απαιτούνται Node.js και pnpm. Από τη ρίζα του repository:
+Απαιτούνται Node.js 22 ή νεότερο και pnpm 10 ή νεότερο. Από τη ρίζα του repository:
 
 ```bash
 pnpm install
@@ -49,7 +49,7 @@ pnpm mobile:dev
 
 ### Android APK
 
-Χρειάζονται JDK και Android SDK/Build Tools. Εκτέλεσε:
+Χρειάζονται JDK 21, Android SDK Platform 36 και Build Tools 36, μαζί με αποδεκτές άδειες SDK. Εκτέλεσε:
 
 ```bash
 pnpm mobile:android
@@ -59,7 +59,7 @@ pnpm mobile:android
 
 ### iPhone IPA
 
-Η κατασκευή απαιτεί macOS και Xcode. Εκτέλεσε σε Mac:
+Η κατασκευή απαιτεί macOS και Xcode 16 ή νεότερο. Εκτέλεσε σε Mac:
 
 ```bash
 pnpm mobile:ios
