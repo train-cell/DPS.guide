@@ -186,7 +186,14 @@ async function readHeader(storage: ApothikiPyli): Promise<VaultHeader | null> {
 }
 
 /** Δημιουργεί τυχαίο κλειδί δεδομένων και δύο ανεξάρτητους τρόπους ανάκτησής του. */
-export async function createVault(
+export function createVault(
+  storage: ApothikiPyli,
+  masterPassword: string,
+): Promise<{ readonly session: VaultSession; readonly recoveryKey: string }> {
+  return withVaultStorageLock(() => createVaultUnlocked(storage, masterPassword));
+}
+
+async function createVaultUnlocked(
   storage: ApothikiPyli,
   masterPassword: string,
 ): Promise<{ readonly session: VaultSession; readonly recoveryKey: string }> {
@@ -315,7 +322,15 @@ async function encryptBackupChunk(key: CryptoKey, bytes: Uint8Array, aad: string
 }
 
 /** Creates an authenticated, chunk-encrypted backup. All vault paths stay encrypted inside it. */
-export async function createEncryptedBackup(
+export function createEncryptedBackup(
+  storage: ApothikiPyli,
+  secrets: MystikaPyli,
+  backupPassword: string,
+): Promise<Blob> {
+  return withVaultStorageLock(() => createEncryptedBackupUnlocked(storage, secrets, backupPassword));
+}
+
+async function createEncryptedBackupUnlocked(
   storage: ApothikiPyli,
   secrets: MystikaPyli,
   backupPassword: string,
@@ -517,7 +532,16 @@ function validSecretEnvelope(value: string): boolean {
 }
 
 /** Restores a backup only into an empty device vault; biometric unlock keys are never transferred. */
-export async function restoreEncryptedBackup(
+export function restoreEncryptedBackup(
+  storage: ApothikiPyli,
+  secrets: MystikaPyli,
+  backup: Blob,
+  backupPassword: string,
+): Promise<void> {
+  return withVaultStorageLock(() => restoreEncryptedBackupUnlocked(storage, secrets, backup, backupPassword));
+}
+
+async function restoreEncryptedBackupUnlocked(
   storage: ApothikiPyli,
   secrets: MystikaPyli,
   backup: Blob,

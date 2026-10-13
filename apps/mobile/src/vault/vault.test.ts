@@ -121,6 +121,17 @@ describe('encrypted vault backup/restore', () => {
     expect(parsed.recovery.iterations).toBe(600_000);
   });
 
+  it('αποτρέπει δύο ταυτόχρονες αρχικές ρυθμίσεις από το να αντικαταστήσουν η μία την άλλη', async () => {
+    const storage = new MnimiApothiki();
+    const attempts = await Promise.allSettled([
+      createVault(storage, MASTER_PASSWORD),
+      createVault(storage, MASTER_PASSWORD),
+    ]);
+
+    expect(attempts.filter((attempt) => attempt.status === 'fulfilled')).toHaveLength(1);
+    await expect(unlockVault(storage, MASTER_PASSWORD)).resolves.toBeDefined();
+  });
+
   it('διατηρεί κάθε αρχείο όταν γίνονται ταυτόχρονες εγγραφές στο vault', async () => {
     const storage = new MnimiApothiki();
     const created = await createVault(storage, MASTER_PASSWORD);
