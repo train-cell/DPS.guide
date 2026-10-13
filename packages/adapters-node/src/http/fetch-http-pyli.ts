@@ -1,15 +1,9 @@
-/** Υλοποίηση `HttpPyli` πάνω στο GLOBAL fetch του Node 22 (undici-based), με
+/** Υλοποίηση `HttpPyli` πάνω στο global `fetch` του Node 22+, με
  *  `redirect: 'manual'` και χειροκίνητο βρόχο (βλ. `anakateuthinsi.ts`).
  *
- *  ΑΠΟΦΑΣΗ TRANSPORT (με βάση το πλάνο και το docs/requests/E-L10-01 #3):
- *  «Το πλάνο (§6.3 και κάρτα L11) ορίζει `undici` + `tough-cookie` για τα
- *  adapters-node. Τα dependencies εγκαθίστανται ΜΟΝΟ στο W0. Ζητάμε προσθήκη
- *  `undici` (για `KatevasmaPyli` L10 και `HttpPyli` L11).» — το dependency είναι
- *  ακόμη pending, οπότε οδηγούμαστε με το native fetch (undici εσωτερικά). Το
- *  transport παραμένει ΜΕΜΟΝΩΜΕΝΟ: ολόκληρο το `fetch`/`Headers` βρίσκεται σε αυτό
- *  το αρχείο (συναρτήσεις `ekdotis_fetch` και `se_polla_kefalides`), ώστε η
- *  αντικατάσταση με `undici` να απαιτεί αλλαγή σε ένα μόνο σημείο. Η λογική
- *  ανακατευθύνσεων, το cookie jar και τα μηνύματα σφαλμάτων παραμένουν αναλλοίωτα.
+ *  Το `fetch` και τα `Headers` παρέχονται από το Node και βασίζονται εσωτερικά στο
+ *  Undici. Η λογική transport είναι απομονωμένη στο adapter· οι ανακατευθύνσεις,
+ *  το cookie jar και τα μηνύματα σφαλμάτων υλοποιούνται από τα δικά μας modules.
  *
  *  ΜΗΔΕΝΙΣΜΟΣ ΜΥΣΤΙΚΩΝ: τα cookies δεν εμφανίζονται ποτέ σε μηνύματα σφάλματος ή
  *  καταγραφές· μόνο ως δεδομένα απάντησης (`HttpApantisi`). */
