@@ -1,25 +1,20 @@
-/**
- * Foititika Tips & Memes gia tin othoni proedri (onboarding).
- * Afthentika tips foititikis zois me Bevel x UniStudents aisthetiki.
- * Ypostirizei stathero tip imeras kai tyxaia enallagi.
- */
-
-/** Proepilegmeno tip gia periptosi kenis syllogis i anapantexou apotelesmatos. */
+/** Practical onboarding tips that describe only implemented DPS.guide behavior. */
+/** Default tip used if the daily date calculation receives an invalid date. */
 export const PROEPILOGMENO_TIP =
-  '☕ Ο διπλός freddo espresso δεν αντικαθιστά τον ύπνο, αλλά στο 23:58 πριν την παράδοση στο eClass κάνει θαύματα.';
+  '📥 Συγχρόνισε ένα μάθημα όσο έχεις σύνδεση· η λήψη και η εξαγωγή αρχείων γίνονται στη συσκευή.';
 
-/** Pinakas me 10 afthentika foititika tips kai memes gia to DPS.guide. */
+/** Locally stored as a frozen collection so the onboarding tip remains deterministic for the day. */
 export const FOITITIKA_TIPS: readonly string[] = Object.freeze([
   PROEPILOGMENO_TIP,
-  '⏱️ 23:59:00: Η πιο πολυσύχναστη ώρα στους ελληνικούς ακαδημαϊκούς servers. Ανέβασε στις 23:45 να έχεις το κεφάλι σου ήσυχο!',
-  '🔒 Zero-Cloud Local Vault: Τα διαπιστευτήρια και οι βαθμοί σου κρυπτογραφούνται μόνο στη συσκευή σου. Κανένας διακομιστής δεν έχει πρόσβαση.',
-  '📊 EWMA & Προβλέψεις: Αν το εκθετικό κινητό μέσο της επίδοσής σου πέσει κάτω από 5.0, το DPS.guide θα σημάνει κόκκινο συναγερμό για διάβασμα.',
-  '📚 Παλιά θέματα + διαφάνειες καθηγητή = 80% της επιτυχίας στην εξεταστική. Ο κανόνας Pareto σε πλήρη εφαρμογή.',
-  '💡 Το Wi-Fi της σχολής είναι σαν τον γάτο του Schrödinger: υπάρχει και δεν υπάρχει ταυτόχρονα, μέχρι να ανοίξεις το eClass.',
-  '🛡️ Hardware-backed keystore: Κανένα cloud, κανένα telemetry. Τα sessions σου μένουν κλειδωμένα στο secure enclave του κινητού.',
-  '🍕 2 φέτες χθεσινή πίτσα και debugging στις 3 το πρωί: Η διαχρονική ιεροτελεστία κάθε φοιτητή πληροφορικής.',
-  '🎯 Pro-tip: Μην αφήνεις τις δηλώσεις συγγραμμάτων στον Εύδοξο για την τελευταία μέρα της τρίτης παράτασης.',
-  '🧠 Spaced Repetition: 15 λεπτά την ημέρα στο DPS.guide νικάνε 14 ώρες πανικού την παραμονή της εξέτασης.',
+  '📴 Τα μαθήματα και τα αρχεία που έχουν ήδη συγχρονιστεί παραμένουν διαθέσιμα στη συσκευή και χωρίς σύνδεση.',
+  '🔐 Το master password προστατεύει κρυπτογραφικά τα μαθήματα, τις ρυθμίσεις και τα αρχεία του τοπικού vault.',
+  '🗝️ Φύλαξε το recovery key χωριστά από τη συσκευή· μπορεί να ξεκλειδώσει το vault αν ξεχάσεις το master password.',
+  '💾 Το backup είναι χειροκίνητο και κρυπτογραφημένο. Για μεταφορά σε άλλη συσκευή χρειάζεσαι το backup και τον κωδικό του.',
+  '🌐 Το Gemini λαμβάνει περιεχόμενο μαθήματος μόνο με opt-in ανά μάθημα και επιβεβαίωση κάθε ακριβούς prompt.',
+  '🖥️ Το Ollama λειτουργεί μόνο στον ίδιο Windows/macOS υπολογιστή· οι native εφαρμογές κινητού δεν συνδέονται σε αυτό.',
+  '🔎 Το OCR για σαρωμένα PDF εκτελείται τοπικά και υποστηρίζει ελληνικά και αγγλικά.',
+  '🔔 Οι native εφαρμογές μπορούν να προγραμματίζουν ειδοποιήσεις όταν είναι κλειστές· στον browser λειτουργούν όσο μένει ενεργή η σελίδα.',
+  '🏫 Υποστηρίζονται τα standard Open eClass και Moodle. Τα SSO-only και custom portals εμφανίζονται ως μη υποστηριζόμενα.',
 ]);
 
 /**

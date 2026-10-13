@@ -193,7 +193,7 @@ export interface EikonidioPanepistimiouProps {
   readonly titlos?: string;
 }
 
-/** Eikonidio asfaleias hardware vault gia to zero-cloud storage. */
+/** Εικονίδιο για το κρυπτογραφημένο τοπικό vault, ανεξάρτητα από την πλατφόρμα. */
 export function EikonidioAsfaleias({
   megethos = 16,
   className,
@@ -208,7 +208,7 @@ export function EikonidioAsfaleias({
       viewBox="0 0 16 16"
       fill="none"
       role="img"
-      aria-label="Ασφαλές hardware vault"
+      aria-label="Ασφάλεια κρυπτογραφημένου vault"
       className={className}
       data-testid="eikonidio-asfaleias"
     >
