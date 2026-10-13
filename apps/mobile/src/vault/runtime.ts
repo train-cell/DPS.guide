@@ -13,7 +13,6 @@ import {
   CapacitorHttpPyli,
   CapacitorMystikaPyli,
 } from '@dps/adapters-capacitor';
-import { ftiaxe_gemini_llm, ftiaxe_ollama_llm } from '@dps/ai';
 import type { Periballon } from '../periballon/periballon.js';
 import { ftiaxe_periballon } from '../periballon/periballon.js';
 import { KatagrafiMnimis } from '../periballon/katagrafi-mnimis.js';
@@ -113,6 +112,7 @@ export function createProductionPeriballon(
     }
     activeModel = model;
     if (isGeminiModel(model)) {
+      const { ftiaxe_gemini_llm } = await import('@dps/ai');
       return ftiaxe_gemini_llm(http, mystika, rologi, katagrafi, { montelo: model });
     }
     if (!isOllamaModel(model)) {
@@ -125,6 +125,7 @@ export function createProductionPeriballon(
       return unsupportedLlm(model, 'Για χρήση από κινητό επίλεξε Gemini ή απενεργοποίησε την AI. Το Ollama παραμένει μόνο στον ίδιο υπολογιστή.');
     }
     try {
+      const { ftiaxe_ollama_llm } = await import('@dps/ai');
       return ftiaxe_ollama_llm(http, model, ollamaUrl, katagrafi);
     } catch (reason) {
       return unsupportedLlm(model, reason instanceof Error ? reason.message : 'Η ρύθμιση Ollama δεν είναι έγκυρη.');
