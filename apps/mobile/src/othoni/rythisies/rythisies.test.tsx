@@ -63,7 +63,7 @@ describe('Rythisies — τιμές από την αποθήκευση, όχι ha
     const html = apostrophes_rythisi();
     expect(html).toContain(proedapes.baseUrl);
     expect(html).toContain(proedapes.onomaMontelou);
-    expect(html).toContain(proedapes.onomasApothikefsis);
+    expect(html).toContain('Τοπικό κρυπτογραφημένο vault στη συσκευή');
   });
 
   it('η οθόνη δεν έχει σταθερό μοντέλο: το όνομα έρχεται από το store', () => {
@@ -77,7 +77,6 @@ describe('Rythisies — τιμές από την αποθήκευση, όχι ha
       mathimataSynch: ['ΠΛΗ201'],
       onomaMontelou: 'montelo-alfa',
       exeiKleidiLlm: true,
-      onomasApothikefsis: 'Documents/DPS.guide',
       einaiEidopoieseis: false,
       exetaseis: [{ kodikos_mathimatos: 'ΠΛΗ201', imerominia: '2027-01-18', tropos: 'kleista_vivlia' }],
       arxiExetastikis: '2027-01-11',

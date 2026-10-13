@@ -23,8 +23,6 @@ export interface Rytheseis {
   readonly urlOllama?: string;
   /** Αν έχει οριστεί κλειδί LLM· η τιμή του δεν φτάνει ποτέ στην οθόνη. */
   readonly exeiKleidiLlm: boolean;
-  /** Θέση αποθήκευσης αρχείων στη συσκευή. */
-  readonly onomasApothikefsis: string;
   /** Αν οι τοπικές ειδοποιήσεις είναι ενεργές. */
   readonly einaiEidopoieseis: boolean;
   /** Εξετάσεις που εισάγει ο χρήστης (κάρτα P1, §5.3). */

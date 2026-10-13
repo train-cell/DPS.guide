@@ -209,7 +209,7 @@ export default function Rythisies() {
         ypokeimeno="Τα αρχεία και οι πόροι των μαθημάτων μένουν στη συσκευή σου."
         stoixeia={
           <div data-testid="rythisies-apothikeysi">
-            <Pilegma keimeno={apothiki.rytheseis.onomasApothikefsis} />
+            <Pilegma keimeno="Τοπικό κρυπτογραφημένο vault στη συσκευή" />
           </div>
         }
       />

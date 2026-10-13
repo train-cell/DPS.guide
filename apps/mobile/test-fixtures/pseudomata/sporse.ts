@@ -101,7 +101,6 @@ export async function sporse_deigma(apothiki: ApothikiPyli): Promise<void> {
     mathimataSynch: ['ΠΛΗ201', 'ΠΛΗ101', 'ΠΛΗ204'],
     onomaMontelou: 'gemini-2.5-flash',
     exeiKleidiLlm: false,
-    onomasApothikefsis: 'Documents/DPS.guide',
     einaiEidopoieseis: true,
     exetaseis: [
       { kodikos_mathimatos: KODIKOS_DEIGMATOS, imerominia: '2027-01-18', tropos: 'kleista_vivlia' },

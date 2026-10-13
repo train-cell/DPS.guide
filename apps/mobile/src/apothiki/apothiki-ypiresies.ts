@@ -12,7 +12,6 @@ export function proedapes_rytheseis(): Rytheseis {
     onomaMontelou: 'gemini-2.5-flash',
     urlOllama: 'http://localhost:11434',
     exeiKleidiLlm: false,
-    onomasApothikefsis: 'Documents/DPS.guide',
     einaiEidopoieseis: true,
     exetaseis: [],
     arxiExetastikis: null,
