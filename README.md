@@ -32,7 +32,7 @@
 
 ## Εκτέλεση σε Windows/macOS
 
-Απαιτούνται Node.js 22 ή νεότερο και pnpm 10 ή νεότερο. Από τη ρίζα του repository:
+Απαιτούνται Node.js 22.12 ή νεότερο και pnpm 10 ή νεότερο. Από τη ρίζα του repository:
 
 ```bash
 pnpm install
