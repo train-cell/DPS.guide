@@ -27,10 +27,6 @@
 
 Ο χάρτης δημιουργείται όταν ζητήσεις ανάλυση από την οθόνη του μαθήματος. Ο οδηγός ενότητας δημιουργείται ξεχωριστά όταν τον ζητήσεις. Η εξαγωγή κειμένου και το OCR παραμένουν τοπικά· μόνο οι μη αποθηκευμένες αιτήσεις σε Gemini φεύγουν από τη συσκευή.
 
-### Browser στο ίδιο Wi‑Fi με iPhone
-
-Ο browser του iPhone χρειάζεται τοπικό HTTPS certificate και τον υπολογιστή διαθέσιμο ως bridge για συγχρονισμό LMS ή AI. Στο terminal εμφανίζεται ένας προσωρινός pairing code· καταχώρισέ τον στο onboarding ή στις ρυθμίσεις. Ο κωδικός αλλάζει σε κάθε επανεκκίνηση του server. Με κλειστό υπολογιστή, ο browser δείχνει μόνο ήδη αποθηκευμένα δεδομένα.
-
 ## Εκτέλεση σε Windows/macOS
 
 Απαιτούνται Node.js και pnpm. Από τη ρίζα του repository:
@@ -42,15 +38,7 @@ pnpm mobile:dev
 
 Άνοιξε `http://127.0.0.1:5173` στον υπολογιστή. Το `localhost`/loopback επιτρέπει τα APIs κρυπτογράφησης του browser.
 
-Για πρόσβαση από iPhone ή άλλο υπολογιστή στο ίδιο Wi‑Fi, εγκατέστησε το [mkcert](https://github.com/FiloSottile/mkcert) και εκτέλεσε:
-
-```bash
-pnpm mobile:dev:lan
-```
-
-Το script εγκαθιστά την τοπική CA στο trust store του υπολογιστή, δημιουργεί certificate για τα LAN IPs και εμφανίζει HTTPS URLs μαζί με τη διαδρομή του `rootCA.pem`. Μετέφερε το root certificate στο iPhone, εγκατέστησε και έμπιστευσέ το από τις ρυθμίσεις της συσκευής και άνοιξε το URL που εμφάνισε το script. Τα certificates και private keys μένουν στο `.local/` και δεν πρέπει να κοινοποιούνται.
-
-Στην εφαρμογή, κάνε pairing με τον code που εμφανίζει το terminal. Για λειτουργίες που χρειάζονται δίκτυο, ο υπολογιστής και ο Vite server πρέπει να παραμένουν ενεργοί.
+Ο development server ακούει μόνο στο loopback του υπολογιστή. Δεν χρειάζεται certificate ή αλλαγή στο trust store. Η browser έκδοση είναι για τον ίδιο υπολογιστή· η πλήρης χρήση σε iPhone και Android γίνεται από την Capacitor εφαρμογή, η οποία συνδέεται απευθείας με το LMS από τη συσκευή.
 
 ## Native Android και iOS
 
@@ -82,7 +70,7 @@ pnpm mobile:build
 pnpm test
 ```
 
-Το `mobile:build` παράγει την browser/PWA έκδοση στο `apps/mobile/dist`. Για iPhone browser, το site πρέπει να σερβίρεται από localhost ή έμπιστο HTTPS origin. Τα browser notifications λειτουργούν όσο η εφαρμογή είναι ενεργή· αξιόπιστες ειδοποιήσεις όταν η εφαρμογή είναι κλειστή υποστηρίζονται στις native εφαρμογές.
+Το `mobile:build` παράγει την browser/PWA έκδοση στο `apps/mobile/dist`. Η PWA προορίζεται για localhost στον υπολογιστή. Η χρήση από iPhone γίνεται μέσω sideload της native εφαρμογής, χωρίς τοπικό CA. Τα browser notifications λειτουργούν όσο η εφαρμογή είναι ενεργή· αξιόπιστες ειδοποιήσεις όταν η εφαρμογή είναι κλειστή υποστηρίζονται στις native εφαρμογές.
 
 ## Δομή
 
