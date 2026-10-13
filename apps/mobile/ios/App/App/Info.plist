@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>NSFaceIDUsageDescription</key>
-  <string>Το Face ID χρησιμοποιείται προαιρετικά για γρήγορο ξεκλείδωμα του κρυπτογραφημένου vault.</string>
+  <string>Η εφαρμογή χρησιμοποιεί Face ID μόνο όταν επιλέξεις βιομετρικό ξεκλείδωμα του τοπικού vault.</string>
   <key>UIFileSharingEnabled</key>
   <false/>
   <key>LSSupportsOpeningDocumentsInPlace</key>

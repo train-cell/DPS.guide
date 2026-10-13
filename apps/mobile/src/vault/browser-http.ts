@@ -63,7 +63,7 @@ export class BrowserHttpPyli implements HttpPyli {
       },
       async (outgoing, signal) => {
         if (!token) {
-          throw new Error('Το τοπικό HTTPS bridge δεν είναι έτοιμο. Κάνε επαναφόρτωση της σελίδας.');
+          throw new Error('Το localhost bridge δεν είναι έτοιμο. Κάνε επαναφόρτωση της σελίδας.');
         }
         const envelope: BridgeEnvelope = {
           methodos: outgoing.methodos,
@@ -87,7 +87,7 @@ export class BrowserHttpPyli implements HttpPyli {
         });
         const rawStatus = response.headers.get('x-dps-target-status');
         if (rawStatus === null) {
-          throw new Error('Το τοπικό HTTPS bridge δεν επέστρεψε απάντηση LMS.');
+          throw new Error('Το localhost bridge δεν επέστρεψε απάντηση LMS.');
         }
         const targetHeaders = decodeHeaderMap(response.headers.get('x-dps-target-headers'));
         const targetUrl = response.headers.get('x-dps-target-url') ?? outgoing.url;
@@ -104,7 +104,7 @@ export class BrowserHttpPyli implements HttpPyli {
       this.cookieJar,
     ).catch(() => apotyxia(
       request.simatodotis?.aborted ? 'AKYROTHIKE' : 'DIKTYO',
-      'Η σύνδεση μέσω του τοπικού HTTPS bridge απέτυχε. Έλεγξε ότι ο υπολογιστής είναι διαθέσιμος.',
+      'Η σύνδεση μέσω του localhost bridge απέτυχε. Έλεγξε ότι ο υπολογιστής είναι διαθέσιμος.',
     ));
   }
 }

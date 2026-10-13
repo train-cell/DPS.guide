@@ -34,6 +34,13 @@ if (platform === 'ios' && process.platform !== 'darwin') {
 await run('pnpm', ['--filter', '@dps/mobile', 'build']);
 await run('pnpm', ['--filter', '@dps/mobile', 'exec', 'cap', 'sync', platform]);
 
+if (platform === 'ios') {
+  await run('node', [
+    join(root, 'scripts', 'ios', 'configure-private-files.mjs'),
+    join(app, 'ios', 'App', 'App', 'Info.plist'),
+  ]);
+}
+
 const nativeOutput = join(app, 'native-artifacts');
 await mkdir(nativeOutput, { recursive: true });
 

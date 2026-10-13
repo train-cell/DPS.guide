@@ -36,8 +36,8 @@ jobs:
       - name: Build web assets
         run: pnpm --filter @dps/mobile build
 
-      # Το apps/mobile/ios/ είναι gitignored, άρα σε κάθε καθαρό checkout λείπει.
-      - name: Add iOS platform (if missing)
+      # The native project is tracked; add it only if a checkout omits it.
+      - name: Add iOS platform if missing
         run: |
           if [ ! -d apps/mobile/ios ]; then
             (cd apps/mobile && npx cap add ios)
@@ -47,9 +47,9 @@ jobs:
         run: npx cap sync ios
         working-directory: apps/mobile
 
-      # Δικαιώματα αρχείων στο Info.plist (Files app, UIFileSharingEnabled).
-      - name: Patch Info.plist
-        run: node scripts/ios/patch-plist.mjs apps/mobile/ios/App/App/Info.plist
+      # Keep course files private to the app and declare the optional Face ID use.
+      - name: Configure private app storage
+        run: node scripts/ios/configure-private-files.mjs apps/mobile/ios/App/App/Info.plist
 
       # Capacitor 8 βγάζει SPM από default (χωρίς Podfile). Αν κάποιο plugin
       # φέρει Podfile, χρειαζόμαστε -workspace: με -project χάνονται τα

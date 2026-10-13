@@ -105,6 +105,7 @@ export default function RythisiesAi() {
     epitixia: boolean;
     minima: string;
   } | null>(null);
+  const [pendingGeminiTest, setPendingGeminiTest] = useState<string | null>(null);
   const [dokimiSeEkseliksi, setDokimiSeEkseliksi] = useState<boolean>(false);
   const [apothikefthike, setApothikefthike] = useState<boolean>(false);
   const [vaultMinima, setVaultMinima] = useState<string | null>(null);
@@ -170,20 +171,33 @@ export default function RythisiesAi() {
       return;
     }
 
+    if (paroxosId === 'gemini') {
+      setPendingGeminiTest(epilegmenoMontelo);
+      return;
+    }
+
+    await ektelese_dokimi_syndesis(epilegmenoMontelo, paroxosId);
+  }
+
+  async function ektelese_dokimi_syndesis(model: string, providerId: IdParoxou): Promise<void> {
+    if (providerId === 'gemini' && kleidiApi.trim().length === 0) {
+      setDokimiApotelesma({ epitixia: false, minima: 'Απαιτείται API Key για τον επιλεγμένο πάροχο.' });
+      return;
+    }
     setDokimiSeEkseliksi(true);
     setDokimiApotelesma(null);
 
     try {
       let testLlm: LlmPyli;
-      if (paroxosId === 'ollama') {
-        testLlm = ftiaxe_ollama_llm(periballon.http, epilegmenoMontelo, urlOllama, periballon.katagrafi);
+      if (providerId === 'ollama') {
+        testLlm = ftiaxe_ollama_llm(periballon.http, model, urlOllama, periballon.katagrafi);
       } else {
         const testSecrets: MystikaPyli = {
           async pare(key) { return key === 'llm_api_key' && kleidiApi.trim() ? kleidiApi.trim() : periballon.mystika.pare(key); },
           vale: (key, value) => periballon.mystika.vale(key, value),
           svise: (key) => periballon.mystika.svise(key),
         };
-        testLlm = ftiaxe_gemini_llm(periballon.http, testSecrets, periballon.rologi, periballon.katagrafi, { montelo: epilegmenoMontelo });
+        testLlm = ftiaxe_gemini_llm(periballon.http, testSecrets, periballon.rologi, periballon.katagrafi, { montelo: model });
       }
       const apotelesma = await testLlm.parage_keimeno({
         systima: 'Έλεγχος σύνδεσης συστήματος',
@@ -195,7 +209,7 @@ export default function RythisiesAi() {
       if (apotelesma.ok) {
         setDokimiApotelesma({
           epitixia: true,
-          minima: `Επιτυχής σύνδεση με ${paroxosTrexon.titlos} (${epilegmenoMontelo})!`,
+          minima: `Επιτυχής σύνδεση με ${PAROXOI_LLM.find((provider) => provider.id === providerId)?.titlos ?? providerId} (${model})!`,
         });
       } else {
         setDokimiApotelesma({
@@ -503,7 +517,7 @@ export default function RythisiesAi() {
 
       <Karta
         titlos="Δοκιμή & Επαλήθευση"
-        ypokeimeno="Επαλήθευσε ότι το κλειδί και το μοντέλο μπορούν να απαντήσουν επιτυχώς."
+        ypokeimeno="Η δοκιμή Gemini ζητά επιβεβαίωση και στέλνει μόνο ένα γενικό ping, χωρίς περιεχόμενο μαθήματος."
         stoixeia={
           <div className="odoni-xeiris">
             <button
@@ -527,6 +541,30 @@ export default function RythisiesAi() {
           </div>
         }
       />
+
+      {pendingGeminiTest !== null && (
+        <div role="alertdialog" aria-modal="true" aria-labelledby="gemini-test-confirm-title" className="karta tutor-confirmation">
+          <h2 id="gemini-test-confirm-title">Επιβεβαίωση δοκιμής Gemini</h2>
+          <p>Θα σταλεί στην Google μόνο το παρακάτω γενικό αίτημα σύνδεσης. Δεν περιλαμβάνει υλικό ή ιστορικό μαθήματος.</p>
+          <pre>{`SYSTEM\nΈλεγχος σύνδεσης συστήματος\n\nUSER\nping`}</pre>
+          <p>Μοντέλο: {pendingGeminiTest}</p>
+          <div className="odoni-xeiris">
+            <button type="button" className="pilegma" disabled={dokimiSeEkseliksi} onClick={() => setPendingGeminiTest(null)}>Ακύρωση</button>
+            <button
+              type="button"
+              className="pilegma pilegma-entono"
+              disabled={dokimiSeEkseliksi}
+              onClick={() => {
+                const model = pendingGeminiTest;
+                setPendingGeminiTest(null);
+                void ektelese_dokimi_syndesis(model, 'gemini');
+              }}
+            >
+              Επιβεβαίωση και αποστολή ping
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="odoni-xeiris">
         <button
