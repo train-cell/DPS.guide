@@ -84,7 +84,7 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
   );
 
   return (
-    <Link to={`/odigos/${enotita.id}`} data-testid="xartis-enotita">
+    <Link to={`/odigos/${encodeURIComponent(enotita.id)}`} data-testid="xartis-enotita">
       <Karta
         titlos={enotita.titlos}
         ypokeimeno={`Σειρά ${enotita.seira} · ${stilise_lepta(enotita.lepta_ektimisi)}`}

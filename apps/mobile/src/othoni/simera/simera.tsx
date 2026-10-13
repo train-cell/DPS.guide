@@ -84,7 +84,7 @@ export function StoxosEnotitas({ enotita, tetagmeni, allaxe_telia }: StoxoiEnoti
 
   return (
     <div className="simera-stoxos" data-testid="simera-stochos">
-      <Link to={`/odigos/${enotita.id}`} className="simera-stoxos-titlos">
+      <Link to={`/odigos/${encodeURIComponent(enotita.id)}`} className="simera-stoxos-titlos">
         {enotita.titlos}
       </Link>
       <div className="odoni-xeiris">
@@ -227,7 +227,7 @@ export function Simera() {
       />
 
       <div className="simera-draseis-plegma">
-        <Link to={protiMiOlokliromeni ? `/odigos/${protiMiOlokliromeni}` : '/mathimata'} className="simera-drasis-karta">
+        <Link to={protiMiOlokliromeni ? `/odigos/${encodeURIComponent(protiMiOlokliromeni)}` : '/mathimata'} className="simera-drasis-karta">
           <span className="simera-drasis-titlos">🚀 Μελέτη</span>
           <span className="simera-drasis-ypotitlos">{protiMiOlokliromeni ? 'Συνέχιση επόμενης ενότητας' : 'Σύνδεση και συγχρονισμός μαθήματος'}</span>
         </Link>
