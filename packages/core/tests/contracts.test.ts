@@ -4,13 +4,15 @@ import {
   apotyxia,
   MathimaSchema,
   EnotitaSchema,
+  ZONE_ORAS,
+} from '../src/index.js';
+import {
   FakeRologi,
   MnimiApothiki,
   FakeMystika,
   FakeHttp,
   MockLlm,
-  ZONE_ORAS,
-} from '../src/index.js';
+} from '../src/testing/index.js';
 
 describe('Contracts & Core Smoke Tests', () => {
   it('ok() and apotyxia() produce correct Apotelesma', () => {
