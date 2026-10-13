@@ -4,9 +4,11 @@ import { apotyxia, ok } from '@dps/core';
 const HEADER_PATH = '.dps-vault/header.json';
 const INDEX_PATH = '.dps-vault/index.enc';
 const OBJECTS_PATH = '.dps-vault/objects';
-const KDF_ITERATIONS = 310_000;
+const LEGACY_KDF_ITERATIONS = 310_000;
+const CURRENT_KDF_ITERATIONS = 600_000;
 const VAULT_VERSION = 1;
-const BACKUP_MAGIC = 'DPSBKP01';
+const BACKUP_MAGIC_V1 = 'DPSBKP01';
+const BACKUP_MAGIC_V2 = 'DPSBKP02';
 const BACKUP_CHUNK_BYTES = 1024 * 1024;
 const MAX_BACKUP_RECORD_BYTES = 220 * 1024 * 1024;
 const BACKUP_SECRET_KEYS = [
@@ -22,6 +24,7 @@ interface Envelope {
   readonly salt: string;
   readonly iv: string;
   readonly wrapped_key: string;
+  readonly iterations?: number;
 }
 
 interface VaultHeader {
@@ -83,7 +86,11 @@ function normalizePath(value: string): string | null {
   return parts.join('/');
 }
 
-async function deriveWrappingKey(secret: string, salt: Uint8Array): Promise<CryptoKey> {
+function supportedKdfIterations(value: number): boolean {
+  return value === LEGACY_KDF_ITERATIONS || value === CURRENT_KDF_ITERATIONS;
+}
+
+async function deriveWrappingKey(secret: string, salt: Uint8Array, iterations: number): Promise<CryptoKey> {
   const material = await crypto.subtle.importKey(
     'raw',
     asArrayBuffer(new TextEncoder().encode(secret)),
@@ -92,7 +99,7 @@ async function deriveWrappingKey(secret: string, salt: Uint8Array): Promise<Cryp
     ['deriveKey'],
   );
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt: asArrayBuffer(salt), iterations: KDF_ITERATIONS, hash: 'SHA-256' },
+    { name: 'PBKDF2', salt: asArrayBuffer(salt), iterations, hash: 'SHA-256' },
     material,
     { name: 'AES-GCM', length: 256 },
     false,
@@ -121,18 +128,21 @@ async function decrypt(key: CryptoKey, value: Ciphertext, aad: string): Promise<
 
 async function wrapDataKey(dataKey: CryptoKey, password: string, aad: string): Promise<Envelope> {
   const salt = randomBytes(16);
-  const wrappingKey = await deriveWrappingKey(password, salt);
+  const iterations = CURRENT_KDF_ITERATIONS;
+  const wrappingKey = await deriveWrappingKey(password, salt, iterations);
   const rawKey = new Uint8Array(await crypto.subtle.exportKey('raw', dataKey));
-  const wrapped = await encrypt(wrappingKey, rawKey, aad);
-  return { salt: b64(salt), iv: wrapped.iv, wrapped_key: wrapped.data };
+  const wrapped = await encrypt(wrappingKey, rawKey, `${aad}/pbkdf2-sha256/${iterations}`);
+  return { salt: b64(salt), iv: wrapped.iv, wrapped_key: wrapped.data, iterations };
 }
 
 async function unwrapDataKey(envelope: Envelope, secret: string, aad: string): Promise<CryptoKey> {
-  const wrappingKey = await deriveWrappingKey(secret, fromB64(envelope.salt));
+  const iterations = envelope.iterations ?? LEGACY_KDF_ITERATIONS;
+  if (!supportedKdfIterations(iterations)) throw new VaultError('Το vault χρησιμοποιεί μη υποστηριζόμενη ρύθμιση κρυπτογράφησης.');
+  const wrappingKey = await deriveWrappingKey(secret, fromB64(envelope.salt), iterations);
   const rawKey = await decrypt(
     wrappingKey,
     { iv: envelope.iv, data: envelope.wrapped_key },
-    aad,
+    envelope.iterations === undefined ? aad : `${aad}/pbkdf2-sha256/${iterations}`,
   );
   return crypto.subtle.importKey('raw', asArrayBuffer(rawKey), { name: 'AES-GCM' }, true, ['encrypt', 'decrypt']);
 }
@@ -298,10 +308,11 @@ export async function createEncryptedBackup(
   if (!(await vaultExists(storage))) throw new VaultError('Δεν υπάρχει ρυθμισμένο vault για backup.');
 
   const salt = randomBytes(16);
-  const wrappingKey = await deriveWrappingKey(backupPassword, salt);
-  const header = new Uint8Array(24);
-  header.set(new TextEncoder().encode(BACKUP_MAGIC), 0);
+  const wrappingKey = await deriveWrappingKey(backupPassword, salt, CURRENT_KDF_ITERATIONS);
+  const header = new Uint8Array(28);
+  header.set(new TextEncoder().encode(BACKUP_MAGIC_V2), 0);
   header.set(salt, 8);
+  new DataView(header.buffer).setUint32(24, CURRENT_KDF_ITERATIONS, false);
   const parts: BlobPart[] = [header.buffer as ArrayBuffer];
   let pending = new Uint8Array(BACKUP_CHUNK_BYTES);
   let used = 0;
@@ -315,7 +326,7 @@ export async function createEncryptedBackup(
       used += take;
       offset += take;
       if (used === pending.byteLength) {
-        const encrypted = await encryptBackupChunk(wrappingKey, pending, `dps.backup.v1/chunk/${chunkIndex}`);
+        const encrypted = await encryptBackupChunk(wrappingKey, pending, `dps.backup.v2/chunk/${chunkIndex}`);
         parts.push(encrypted.buffer as ArrayBuffer);
         pending = new Uint8Array(BACKUP_CHUNK_BYTES);
         used = 0;
@@ -324,11 +335,11 @@ export async function createEncryptedBackup(
     }
   }
   if (used > 0) {
-    const encrypted = await encryptBackupChunk(wrappingKey, pending.subarray(0, used), `dps.backup.v1/chunk/${chunkIndex}`);
+    const encrypted = await encryptBackupChunk(wrappingKey, pending.subarray(0, used), `dps.backup.v2/chunk/${chunkIndex}`);
     parts.push(encrypted.buffer as ArrayBuffer);
     chunkIndex += 1;
   }
-  const final = await encryptBackupChunk(wrappingKey, new Uint8Array(), `dps.backup.v1/final/${chunkIndex}`);
+  const final = await encryptBackupChunk(wrappingKey, new Uint8Array(), `dps.backup.v2/final/${chunkIndex}`);
   parts.push(final.buffer as ArrayBuffer);
   return new Blob(parts, { type: 'application/vnd.dps-guide.backup' });
 }
@@ -509,10 +520,29 @@ export async function restoreEncryptedBackup(
   const writtenSecrets = new Set<(typeof BACKUP_SECRET_KEYS)[number]>();
   try {
     const prefix = await reader.readExact(24);
-    if (prefix === null || new TextDecoder().decode(prefix.subarray(0, 8)) !== BACKUP_MAGIC) {
+    if (prefix === null) {
       throw new VaultError('Το αρχείο δεν είναι έγκυρο DPS.guide encrypted backup.');
     }
-    const wrappingKey = await deriveWrappingKey(backupPassword, prefix.subarray(8, 24));
+    const magic = new TextDecoder().decode(prefix.subarray(0, 8));
+    let backupVersion: 1 | 2;
+    let kdfIterations: number;
+    if (magic === BACKUP_MAGIC_V1) {
+      backupVersion = 1;
+      kdfIterations = LEGACY_KDF_ITERATIONS;
+    } else if (magic === BACKUP_MAGIC_V2) {
+      backupVersion = 2;
+      const encodedIterations = await reader.readExact(4);
+      if (encodedIterations === null) throw new VaultError('Το backup δεν περιέχει ρύθμιση κρυπτογράφησης.');
+      kdfIterations = new DataView(encodedIterations.buffer, encodedIterations.byteOffset, encodedIterations.byteLength)
+        .getUint32(0, false);
+      if (!supportedKdfIterations(kdfIterations)) {
+        throw new VaultError('Το backup χρησιμοποιεί μη υποστηριζόμενη ρύθμιση κρυπτογράφησης.');
+      }
+    } else {
+      throw new VaultError('Το αρχείο δεν είναι έγκυρο DPS.guide encrypted backup.');
+    }
+    const wrappingKey = await deriveWrappingKey(backupPassword, prefix.subarray(8, 24), kdfIterations);
+    const backupAadPrefix = `dps.backup.v${backupVersion}`;
     const files = new Set<string>();
     let hasHeader = false;
     const importedSecretKeys = new Set<string>();
@@ -552,7 +582,7 @@ export async function restoreEncryptedBackup(
       const iv = await reader.readExact(12);
       const ciphertext = await reader.readExact(length);
       if (iv === null || ciphertext === null) throw new VaultError('Το backup είναι κομμένο.');
-      const aad = kind === 1 ? `dps.backup.v1/final/${index}` : `dps.backup.v1/chunk/${index}`;
+      const aad = kind === 1 ? `${backupAadPrefix}/final/${index}` : `${backupAadPrefix}/chunk/${index}`;
       let clear: Uint8Array;
       try {
         clear = new Uint8Array(await crypto.subtle.decrypt(

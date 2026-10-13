@@ -10,8 +10,94 @@ import {
 
 const MASTER_PASSWORD = 'master-password-test-2026';
 const BACKUP_PASSWORD = 'separate-backup-password-2026';
+const LEGACY_KDF_ITERATIONS = 310_000;
+const encoder = new TextEncoder();
 
 let backup: Blob;
+
+function encodeBase64(bytes: Uint8Array): string {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
+}
+
+function concatenate(...items: readonly Uint8Array[]): Uint8Array {
+  const result = new Uint8Array(items.reduce((length, item) => length + item.byteLength, 0));
+  let offset = 0;
+  for (const item of items) {
+    result.set(item, offset);
+    offset += item.byteLength;
+  }
+  return result;
+}
+
+async function legacyWrappingKey(secret: string, salt: Uint8Array): Promise<CryptoKey> {
+  const material = await crypto.subtle.importKey(
+    'raw', Uint8Array.from(encoder.encode(secret)).buffer, 'PBKDF2', false, ['deriveKey'],
+  );
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: Uint8Array.from(salt).buffer, iterations: LEGACY_KDF_ITERATIONS, hash: 'SHA-256' },
+    material,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt'],
+  );
+}
+
+async function makeLegacyEnvelope(dataKey: Uint8Array, password: string, aad: string) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const wrappingKey = await legacyWrappingKey(password, salt);
+  const wrapped = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: Uint8Array.from(iv).buffer, additionalData: encoder.encode(aad) },
+    wrappingKey,
+    Uint8Array.from(dataKey).buffer,
+  ));
+  return { salt: encodeBase64(salt), iv: encodeBase64(iv), wrapped_key: encodeBase64(wrapped) };
+}
+
+function encryptedBackupRecord(kind: 0 | 1, iv: Uint8Array, ciphertext: Uint8Array): Uint8Array {
+  const record = new Uint8Array(17 + ciphertext.byteLength);
+  record[0] = kind;
+  new DataView(record.buffer).setUint32(1, ciphertext.byteLength, false);
+  record.set(iv, 5);
+  record.set(ciphertext, 17);
+  return record;
+}
+
+async function createLegacyBackup(): Promise<Blob> {
+  const dataKey = crypto.getRandomValues(new Uint8Array(32));
+  const envelope = await makeLegacyEnvelope(dataKey, MASTER_PASSWORD, 'dps.vault.v1/master');
+  const vaultHeader = encoder.encode(JSON.stringify({ version: 1, master: envelope, recovery: envelope }));
+  const path = encoder.encode('.dps-vault/header.json');
+  const recordHeader = new Uint8Array(11);
+  recordHeader[0] = 0;
+  new DataView(recordHeader.buffer).setUint16(1, path.byteLength, false);
+  new DataView(recordHeader.buffer).setBigUint64(3, BigInt(vaultHeader.byteLength), false);
+  const plaintext = concatenate(recordHeader, path, vaultHeader, new Uint8Array([255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const wrappingKey = await legacyWrappingKey(BACKUP_PASSWORD, salt);
+  const chunkIv = crypto.getRandomValues(new Uint8Array(12));
+  const chunk = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: Uint8Array.from(chunkIv).buffer, additionalData: encoder.encode('dps.backup.v1/chunk/0') },
+    wrappingKey,
+    Uint8Array.from(plaintext).buffer,
+  ));
+  const finalIv = crypto.getRandomValues(new Uint8Array(12));
+  const final = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: Uint8Array.from(finalIv).buffer, additionalData: encoder.encode('dps.backup.v1/final/1') },
+    wrappingKey,
+    new Uint8Array(0),
+  ));
+  const prefix = new Uint8Array(24);
+  prefix.set(encoder.encode('DPSBKP01'));
+  prefix.set(salt, 8);
+  const parts = [prefix, encryptedBackupRecord(0, chunkIv, chunk), encryptedBackupRecord(1, finalIv, final)];
+  return new Blob(parts.map((part) => Uint8Array.from(part).buffer as ArrayBuffer), {
+    type: 'application/vnd.dps-guide.backup',
+  });
+}
 
 beforeAll(async () => {
   const sourceStorage = new MnimiApothiki();
@@ -25,6 +111,39 @@ beforeAll(async () => {
 });
 
 describe('encrypted vault backup/restore', () => {
+  it('γράφει νέες εγγραφές με 600.000 PBKDF2 iterations', async () => {
+    const storage = new MnimiApothiki();
+    await createVault(storage, MASTER_PASSWORD);
+    const header = await storage.diavase_keimeno('.dps-vault/header.json');
+    if (!header.ok) throw new Error('λείπει το header του vault');
+    const parsed = JSON.parse(header.timi) as { master: { iterations?: number }; recovery: { iterations?: number } };
+    expect(parsed.master.iterations).toBe(600_000);
+    expect(parsed.recovery.iterations).toBe(600_000);
+  });
+
+  it('ξεκλειδώνει παλιό vault χωρίς πεδίο iterations', async () => {
+    const storage = new MnimiApothiki();
+    const dataKey = crypto.getRandomValues(new Uint8Array(32));
+    const envelope = await makeLegacyEnvelope(dataKey, MASTER_PASSWORD, 'dps.vault.v1/master');
+    await storage.grapse_keimeno('.dps-vault/header.json', JSON.stringify({ version: 1, master: envelope, recovery: envelope }));
+
+    const session = await unlockVault(storage, MASTER_PASSWORD);
+    await session.storage.grapse_keimeno('legacy-vault-check.txt', 'legacy data is readable');
+    const check = await session.storage.diavase_keimeno('legacy-vault-check.txt');
+    expect(check.ok && check.timi).toBe('legacy data is readable');
+  });
+
+  it('κάνει restore παλιό v1 backup με 310.000 iterations', async () => {
+    const targetStorage = new MnimiApothiki();
+    const targetSecrets = new FakeMystika();
+    const legacyBackup = await createLegacyBackup();
+    await restoreEncryptedBackup(targetStorage, targetSecrets, legacyBackup, BACKUP_PASSWORD);
+    const session = await unlockVault(targetStorage, MASTER_PASSWORD);
+    await session.storage.grapse_keimeno('legacy-backup-check.txt', 'legacy backup restored');
+    const check = await session.storage.diavase_keimeno('legacy-backup-check.txt');
+    expect(check.ok && check.timi).toBe('legacy backup restored');
+  });
+
   it('δημιουργεί recovery key που μπορεί να ξεκλειδώσει το vault ανεξάρτητα από τον master password', async () => {
     const storage = new MnimiApothiki();
     const created = await createVault(storage, MASTER_PASSWORD);
@@ -39,6 +158,8 @@ describe('encrypted vault backup/restore', () => {
     const backupBytes = new Uint8Array(await backup.arrayBuffer());
     const backupText = new TextDecoder().decode(backupBytes);
     expect(backup.type).toBe('application/vnd.dps-guide.backup');
+    expect(new TextDecoder().decode(backupBytes.subarray(0, 8))).toBe('DPSBKP02');
+    expect(new DataView(backupBytes.buffer, backupBytes.byteOffset, backupBytes.byteLength).getUint32(24, false)).toBe(600_000);
     expect(backupText).not.toContain('encrypted course notes');
     expect(backupText).not.toContain('test-only-secret-never-plaintext');
 
