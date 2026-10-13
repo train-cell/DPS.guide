@@ -21,8 +21,9 @@ import { IndexedDbApothiki } from './indexeddb-apothiki.js';
 import { BrowserHttpPyli } from './browser-http.js';
 import { ApothikiMystikaPyli, EncryptedMystikaPyli } from './vault.js';
 import type { VaultSession } from './vault.js';
+import { migrateGeminiModel, PROEPILOGI_GEMINI_MONTELO } from '../ypiresies/ai-models.js';
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = PROEPILOGI_GEMINI_MONTELO;
 
 function isOllamaModel(model: string): boolean {
   return /^(llama|mistral|deepseek|qwen|gemma|phi|codellama)([.:\d-]|$)/i.test(model.trim());
@@ -101,7 +102,9 @@ export function createProductionPeriballon(
         const settings: unknown = JSON.parse(saved.timi);
         if (typeof settings === 'object' && settings !== null) {
           const record = settings as { onomaMontelou?: unknown; urlOllama?: unknown };
-          if (typeof record.onomaMontelou === 'string' && record.onomaMontelou.trim()) model = record.onomaMontelou.trim();
+          if (typeof record.onomaMontelou === 'string' && record.onomaMontelou.trim()) {
+            model = migrateGeminiModel(record.onomaMontelou.trim());
+          }
           if (typeof record.urlOllama === 'string' && record.urlOllama.trim()) ollamaUrl = record.urlOllama.trim();
         }
       } catch {

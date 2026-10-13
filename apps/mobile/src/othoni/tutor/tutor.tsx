@@ -14,6 +14,7 @@ import {
 } from '../../ypiresies/index.js';
 import { fortose_mathimata_apo_apothiki } from '../../ypiresies/mathimata.js';
 import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
+import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 import { createAuthorizedCourseLlm } from '../../ypiresies/pipeline-analisis.js';
 
 export const APANTISI_YPARXEIS_STO_YLIKO = 'Δεν υπάρχει στο υλικό.';
@@ -162,7 +163,7 @@ export default function TutorChat() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pendingQuestion, setPendingQuestion] = useState<PendingQuestion | null>(null);
-  const selectedModel = rytheseis.onomaMontelou || 'gemini-2.5-flash';
+  const selectedModel = rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
   const geminiSelected = selectedModel.toLowerCase().startsWith('gemini-');
   const privacy = useCourseAiPrivacy(
     periballon.apothiki,

@@ -99,7 +99,7 @@ export async function sporse_deigma(apothiki: ApothikiPyli): Promise<void> {
   await grapse_an_leipei(apothiki, DIADROMI_RYTHMISEON, JSON.stringify({
     baseUrl: 'https://thales.cs.unipi.gr',
     mathimataSynch: ['ΠΛΗ201', 'ΠΛΗ101', 'ΠΛΗ204'],
-    onomaMontelou: 'gemini-2.5-flash',
+    onomaMontelou: 'gemini-3.8-flash',
     exeiKleidiLlm: false,
     einaiEidopoieseis: true,
     exetaseis: [

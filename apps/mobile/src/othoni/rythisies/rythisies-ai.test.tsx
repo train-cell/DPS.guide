@@ -77,8 +77,8 @@ describe('RythisiesAi — επιλογές παρόχων και μοντέλω�
     const gemini = PAROXOI_LLM.find((p) => p.id === 'gemini');
     expect(gemini).toBeDefined();
     const montela = gemini?.montela.map((m) => m.id);
-    expect(montela).toContain('gemini-2.5-flash');
-    expect(montela).toContain('gemini-2.5-pro');
+    expect(montela).toContain('gemini-3.8-flash');
+    expect(montela).toContain('gemini-3.1-pro-preview');
     expect(gemini?.apaitisiKleidiou).toBe(true);
   });
 
@@ -94,8 +94,8 @@ describe('RythisiesAi — επιλογές παρόχων και μοντέλω�
   });
 
   it('το entopise_paroxo_montelou αντιστοιχίζει σωστά ονόματα μοντέλων σε παρόχους', () => {
-    expect(entopise_paroxo_montelou('gemini-2.5-flash')).toBe('gemini');
-    expect(entopise_paroxo_montelou('gemini-2.5-pro')).toBe('gemini');
+    expect(entopise_paroxo_montelou('gemini-3.8-flash')).toBe('gemini');
+    expect(entopise_paroxo_montelou('gemini-3.1-pro-preview')).toBe('gemini');
     expect(entopise_paroxo_montelou('llama3.2')).toBe('ollama');
     expect(entopise_paroxo_montelou('mistral')).toBe('ollama');
     expect(entopise_paroxo_montelou('qwen2.5')).toBe('ollama');

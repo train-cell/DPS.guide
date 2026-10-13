@@ -11,6 +11,7 @@ import { LEKIKIA_TMIMATON, EPKEFALIDES_TMIMATON } from '../../ypiresies/index.js
 import { analise_parapompi, diadromi_provolis, stilise_parapompi } from '../../provoli-pdf/index.js';
 import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { generateCourseGuide } from '../../ypiresies/pipeline-analisis.js';
+import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 
 /** Μία παραπομπή τμήματος οδηγού: tap ανοίγει το PDF στη σωστή σελίδα, αλλιώς μένει απλό κείμενο. */
 export function ParapompiTmimatos({ parapompi }: { readonly parapompi: string }) {
@@ -45,7 +46,7 @@ export default function OdigosMeletis() {
   const [proseis, setProseis] = useState(0);
   const [dimiourgeitai, setDimiourgeitai] = useState(false);
   const privacy = useCourseAiPrivacy(periballon.apothiki, kodikosMathimatos, kodikosMathimatos);
-  const selectedModel = apothiki.rytheseis.onomaMontelou || 'gemini-2.5-flash';
+  const selectedModel = apothiki.rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
   const geminiSelected = selectedModel.toLowerCase().startsWith('gemini-');
 
   useEffect(() => {

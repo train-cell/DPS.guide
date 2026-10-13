@@ -10,6 +10,7 @@ import { Karta, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
 import { useVaultSecurity } from '../../vault/vault-gate.js';
 import { BridgePairingCard } from '../../vault/bridge-pairing.js';
 import { deliverEncryptedBackup } from '../../vault/backup-file.js';
+import { GEMINI_MODEL_OPTIONS, PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 
 /** Αναγνωριστικά υποστηριζόμενων παρόχων AI. */
 export type IdParoxou = 'gemini' | 'ollama';
@@ -38,11 +39,8 @@ export const PAROXOI_LLM: readonly PliroforiaParoxou[] = [
     titlos: 'Google Gemini',
     perigrafi: 'Μοντέλα Google Gemini για γρήγορη και αξιόπιστη εκπαιδευτική ανάλυση.',
     apaitisiKleidiou: true,
-    montela: [
-      { id: 'gemini-2.5-flash', titlos: 'Gemini 2.5 Flash' },
-      { id: 'gemini-2.5-pro', titlos: 'Gemini 2.5 Pro' },
-    ],
-    proepilegmenoMontelo: 'gemini-2.5-flash',
+    montela: GEMINI_MODEL_OPTIONS,
+    proepilegmenoMontelo: PROEPILOGI_GEMINI_MONTELO,
   },
   {
     id: 'ollama',
@@ -78,11 +76,8 @@ export const PROEPILOGI_PAROXOU: PliroforiaParoxou = {
   titlos: 'Google Gemini',
   perigrafi: 'Μοντέλα Google Gemini για γρήγορη και αξιόπιστη εκπαιδευτική ανάλυση.',
   apaitisiKleidiou: true,
-  montela: [
-    { id: 'gemini-2.5-flash', titlos: 'Gemini 2.5 Flash' },
-    { id: 'gemini-2.5-pro', titlos: 'Gemini 2.5 Pro' },
-  ],
-  proepilegmenoMontelo: 'gemini-2.5-flash',
+  montela: GEMINI_MODEL_OPTIONS,
+  proepilegmenoMontelo: PROEPILOGI_GEMINI_MONTELO,
 };
 
 /** Οθόνη ρύθμισης παρόχου AI, encrypted vault και τοπικού bridge. */
@@ -92,7 +87,7 @@ export default function RythisiesAi() {
   const vaultSecurity = useVaultSecurity();
   const navigate = useNavigate();
 
-  const trexonMontelo = apothiki.rytheseis.onomaMontelou || 'gemini-2.5-flash';
+  const trexonMontelo = apothiki.rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
   const [paroxosId, setParoxosId] = useState<IdParoxou>(() =>
     entopise_paroxo_montelou(trexonMontelo)
   );
@@ -135,7 +130,7 @@ export default function RythisiesAi() {
   useEffect(() => {
     if (!ollamaDiathesimo && paroxosId === 'ollama') {
       setParoxosId('gemini');
-      setEpilegmenoMontelo('gemini-2.5-flash');
+      setEpilegmenoMontelo(PROEPILOGI_GEMINI_MONTELO);
     }
   }, [ollamaDiathesimo, paroxosId]);
 

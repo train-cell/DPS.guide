@@ -16,6 +16,7 @@ import { fortosi, sfalma } from '../../kathstasi/index.js';
 import { fortose_xartis_apo_apothiki, pososto_aristeias } from '../../ypiresies/index.js';
 import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { generateCourseMap } from '../../ypiresies/pipeline-analisis.js';
+import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 
 /** Λεπτά ανά ώρα, για τη μορφοποίηση του χρόνου εκτίμησης. */
 export const LEPTA_PER_ORA = 60;
@@ -168,7 +169,7 @@ export default function XartisEnotiton() {
     apothiki.kodikosMathimatos,
     apothiki.kodikosMathimatos,
   );
-  const selectedModel = apothiki.rytheseis.onomaMontelou || 'gemini-2.5-flash';
+  const selectedModel = apothiki.rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
   const geminiSelected = selectedModel.toLowerCase().startsWith('gemini-');
 
   useEffect(() => {

@@ -2,6 +2,7 @@ import type { ApothikiPyli, Apotelesma } from '@dps/core';
 import type { Rytheseis, Proodhos } from './apothiki-typoi.js';
 import { DIALOMI_RYTHMISEON, dialomos_proodhou } from './apothiki-typoi.js';
 import { PROEDAFO_TEMPLATE } from '../programma/programma-vohthia.js';
+import { migrateGeminiModel, PROEPILOGI_GEMINI_MONTELO } from '../ypiresies/ai-models.js';
 
 /** Προσωρινές προεπιλογές όσο δεν υπάρχει αποθηκευμένο αρχείο — τιμές παραδείγματος, όχι hardcoded μέσα στην οθόνη. */
 export function proedapes_rytheseis(): Rytheseis {
@@ -9,7 +10,7 @@ export function proedapes_rytheseis(): Rytheseis {
     baseUrl: '',
     themaId: 'midnight',
     mathimataSynch: [],
-    onomaMontelou: 'gemini-2.5-flash',
+    onomaMontelou: PROEPILOGI_GEMINI_MONTELO,
     urlOllama: 'http://localhost:11434',
     exeiKleidiLlm: false,
     einaiEidopoieseis: true,
@@ -40,7 +41,11 @@ export async function fortose_rytheseis(apothiki: ApothikiPyli): Promise<Rythese
     return proedapes_rytheseis();
   }
   const anagnose = anagnose_json<Rytheseis>(diavase.timi);
-  return anagnose ?? proedapes_rytheseis();
+  if (anagnose === null) return proedapes_rytheseis();
+  return {
+    ...anagnose,
+    onomaMontelou: migrateGeminiModel(anagnose.onomaMontelou),
+  };
 }
 
 /** Αποθηκεύει τις ρυθμίσεις στη θύρα αποθήκευσης. */
