@@ -6,9 +6,12 @@
 
 import type { Exetasi } from '@dps/core';
 import type { OverrideLepton, TemplateLepton } from '../programma/programma-typoi.js';
+import type { ThemaId } from '../design/themata.js';
 
 /** Οι ρυθμίσεις της εφαρμογής, όπως τις βλέπει η οθόνη ρυθμίσεων. */
 export interface Rytheseis {
+  /** Θέμα εμφάνισης, αποθηκευμένο μέσα στο κρυπτογραφημένο vault. */
+  readonly themaId?: ThemaId;
   /** Διεύθυνση του eClass. */
   readonly baseUrl: string;
   /** Αναγνωριστικό πανεπιστημίου (π.χ. unipi, uoa). */
@@ -17,6 +20,8 @@ export interface Rytheseis {
   readonly mathimataSynch: readonly string[];
   /** Όνομα μοντέλου AI, από ρύθμιση — όχι hardcoded. */
   readonly onomaMontelou: string;
+  /** Τοπική διεύθυνση Ollama· γίνεται δεκτή μόνο στο ίδιο desktop. */
+  readonly urlOllama?: string;
   /** Αν έχει οριστεί κλειδί LLM· η τιμή του δεν φτάνει ποτέ στην οθόνη. */
   readonly exeiKleidiLlm: boolean;
   /** Θέση αποθήκευσης αρχείων στη συσκευή. */

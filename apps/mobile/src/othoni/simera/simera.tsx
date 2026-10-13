@@ -15,12 +15,9 @@ import { fortosi, xoris_katastasi, type Katastasi } from '../../kathstasi/index.
 import {
   fortose_mathimata_apo_apothiki,
   fortose_xartis_apo_apothiki,
-} from '../../ypiresies/index.js';
-import {
   lepita_aristeias,
   pososto_aristeias,
-  pseudos_mathimata,
-} from '../../pseudomata/index.js';
+} from '../../ypiresies/index.js';
 import { EikonidioPanepistimiou, PANEPISTIMIA_LISTA } from '../../design/eikonidia-panepistimion.js';
 import type { PanepistimioId } from '../../design/eikonidia-panepistimion.js';
 import { stilise_imerominia } from '../../programma/programma-vohthia.js';
@@ -141,13 +138,13 @@ export function Simera() {
     fortosi<XartisMathimatos>()
   );
   const [proseis, set_proseis] = useState(0);
-  const [mathimata, setMathimata] = useState<readonly Mathima[]>(pseudos_mathimata);
+  const [mathimata, setMathimata] = useState<readonly Mathima[]>([]);
 
   useEffect(() => {
     let zontas = true;
     void fortose_mathimata_apo_apothiki(periballon.apothiki).then((fortotiki) => {
-      if (zontas && fortotiki.katastasi === 'etimo' && fortotiki.dedomena.length > 0) {
-        setMathimata(fortotiki.dedomena);
+      if (zontas) {
+        setMathimata(fortotiki.katastasi === 'etimo' ? fortotiki.dedomena : []);
       }
     });
     return () => {
@@ -181,33 +178,23 @@ export function Simera() {
       m.epilegmeno
   );
 
-  const energo =
-    mathimata.find((m) => m.kodikos === apothiki.kodikosMathimatos) ??
-    pseudos_mathimata().find((m) => m.kodikos === apothiki.kodikosMathimatos);
+  const energo = mathimata.find((m) => m.kodikos === apothiki.kodikosMathimatos);
 
   const titlosEnergou = energo
     ? `${energo.kodikos} - ${energo.titlos}`
     : apothiki.kodikosMathimatos
-    ? `${apothiki.kodikosMathimatos} - Μάθημα`
-    : 'ΠΛΗ201 - Προγραμματισμός';
+      ? `${apothiki.kodikosMathimatos} - Μάθημα`
+      : 'Δεν έχει επιλεγεί μάθημα';
 
-  const panepistimioId = (apothiki.rytheseis.panepistimioId ?? 'unipi') as PanepistimioId;
-  const panepistimio =
-    PANEPISTIMIA_LISTA.find((p) => p.id === panepistimioId) ?? {
-      id: 'unipi' as PanepistimioId,
-      onoma: 'Πανεπιστήμιο Πειραιώς',
-      syntomiOnomasia: 'ΠΑΠΕΙ',
-      baseEclass: 'https://thales.cs.unipi.gr',
-      katigoria: 'athina' as const,
-      perigrafi: 'Τμήμα Πληροφορικής & eClass ΠΑΠΕΙ',
-    };
+  const panepistimioId = apothiki.rytheseis.panepistimioId as PanepistimioId;
+  const panepistimio = PANEPISTIMIA_LISTA.find((p) => p.id === panepistimioId);
 
   const xartisDedomena = xoris_katastasi(katastasi);
   const telies = apothiki.proodhos.aristeiesEnotiton;
   const protiMiOlokliromeni =
     xartisDedomena?.enotites.find((e) => !telies.includes(e.id))?.id ??
     xartisDedomena?.enotites[0]?.id ??
-    'en-1';
+    '';
 
   const exetaseis = apothiki.rytheseis.exetaseis ?? [];
   const simeraImerominia = new Date().toISOString().slice(0, 10);
@@ -231,18 +218,18 @@ export function Simera() {
       <ProskelesioOmonimas
         titlos="Σήμερα"
         ypokeimeno="Η πρόοδός σου στο μάθημα, με μία ματιά"
-        akseis={
+        akseis={panepistimio !== undefined ? (
           <div className="simera-panepistimio-badge">
             <EikonidioPanepistimiou id={panepistimioId} megethos={18} />
             <span>{panepistimio.syntomiOnomasia}</span>
           </div>
-        }
+        ) : undefined}
       />
 
       <div className="simera-draseis-plegma">
-        <Link to={`/odigos/${protiMiOlokliromeni}`} className="simera-drasis-karta">
+        <Link to={protiMiOlokliromeni ? `/odigos/${protiMiOlokliromeni}` : '/mathimata'} className="simera-drasis-karta">
           <span className="simera-drasis-titlos">🚀 Μελέτη</span>
-          <span className="simera-drasis-ypotitlos">Συνέχιση επόμενης ενότητας</span>
+          <span className="simera-drasis-ypotitlos">{protiMiOlokliromeni ? 'Συνέχιση επόμενης ενότητας' : 'Σύνδεση και συγχρονισμός μαθήματος'}</span>
         </Link>
         <Link to="/tutor" className="simera-drasis-karta">
           <span className="simera-drasis-titlos">🤖 AI Tutor</span>

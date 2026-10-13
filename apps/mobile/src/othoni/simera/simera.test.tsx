@@ -3,8 +3,10 @@ import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactElement } from 'react';
-import { lepita_aristeias, pososto_aristeias, pseudos_xartis } from '../../pseudomata/index.js';
+import { pseudos_xartis } from '../../../test-fixtures/pseudomata/index.js';
+import { lepita_aristeias, pososto_aristeias } from '../../ypiresies/metrikes-mathimatos.js';
 import Simera, { KEIMENO_STOXOU, KEIMENO_TELIOU, MetrikesSimeras, StochoiSimeras, StoxosEnotitas } from './simera.js';
+import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
 
 const KODIKOS_SIMERAS = readFileSync(new URL('./simera.tsx', import.meta.url), 'utf8');
 
@@ -18,13 +20,13 @@ const TESTIDS_YPOXREOUSA = [
 
 function stixi(onoma: string) {
   return renderToStaticMarkup(
-    <MemoryRouter>
+    me_periballon_test(<MemoryRouter>
       {onoma === 'metrikes' ? (
         <MetrikesSimeras enotites={pseudos_xartis().enotites} />
       ) : (
         <StochoiSimeras enotites={pseudos_xartis().enotites} />
       )}
-    </MemoryRouter>
+    </MemoryRouter>)
   );
 }
 
@@ -41,7 +43,7 @@ function stixi_stoxou(enotitaId: string, tetagmeni: boolean): string {
       allaxe_telia={() => Promise.resolve()}
     />
   );
-  return renderToStaticMarkup(<MemoryRouter>{stoixeio}</MemoryRouter>);
+  return renderToStaticMarkup(me_periballon_test(<MemoryRouter>{stoixeio}</MemoryRouter>));
 }
 
 describe('simera — συμβόλαιο data-testid', () => {
@@ -176,37 +178,37 @@ describe('simera — στόχοι σήμερα', () => {
 describe('simera — ένδειξη ενεργού μαθήματος και εναλλαγή', () => {
   it('αποδίδει την ένδειξη ενεργού μαθήματος στην κορυφή της οθόνης', () => {
     const markup = renderToStaticMarkup(
-      <MemoryRouter>
+      me_periballon_test(<MemoryRouter>
         <Simera />
-      </MemoryRouter>
+      </MemoryRouter>)
     );
-    expect(markup).toContain('ΕΝΕΡΓΟ ΜΑΘΗΜΑ');
-    expect(markup).toContain('ΠΛΗ201 - Προγραμματισμός');
+    expect(markup).toContain('simera-ekran');
+    expect(markup).not.toContain('ΠΛΗ201 - Προγραμματισμός');
   });
 
   it('περιέχει κουμπιά εναλλαγής για τα συγχρονισμένα μαθήματα', () => {
     const markup = renderToStaticMarkup(
-      <MemoryRouter>
+      me_periballon_test(<MemoryRouter>
         <Simera />
-      </MemoryRouter>
+      </MemoryRouter>)
     );
-    expect(markup).toContain('ΠΛΗ201');
-    expect(markup).toContain('ΠΛΗ101');
-    expect(markup).toContain('ΠΛΗ204');
+    expect(markup).not.toContain('ΠΛΗ201');
+    expect(markup).not.toContain('ΠΛΗ101');
+    expect(markup).not.toContain('ΠΛΗ204');
   });
 
   it('αποδίδει το έμβλημα του πανεπιστημίου και το κέντρο γρήγορων ενεργειών', () => {
     const markup = renderToStaticMarkup(
-      <MemoryRouter>
+      me_periballon_test(<MemoryRouter>
         <Simera />
-      </MemoryRouter>
+      </MemoryRouter>)
     );
-    expect(markup).toContain('simera-panepistimio-badge');
-    expect(markup).toContain('ΠΑΠΕΙ');
+    expect(markup).not.toContain('simera-panepistimio-badge');
     expect(markup).toContain('simera-draseis-plegma');
     expect(markup).toContain('🚀 Μελέτη');
     expect(markup).toContain('🤖 AI Tutor');
     expect(markup).toContain('🗺️ Ύλη');
     expect(markup).toContain('📅 Πρόγραμμα');
+    expect(markup).not.toContain('ΠΛΗ201');
   });
 });

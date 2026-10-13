@@ -2,12 +2,11 @@ import { describe, it, expect } from 'vitest';
 import {
   pare_xarti_mathimatos,
   pseudos_xartis,
-  pseudos_mathimata,
   lepita_aristeias,
   pososto_aristeias,
 } from './pseudomata.js';
-import { pseudos_odigos_md, pseudos_synomilia_jsonl, ODIGOI_PSEUDOI } from './odigos-md.js';
-import { analise_odigo_md, LEKIKIA_TMIMATON } from '../ypiresies/odigos.js';
+import { pseudos_odigos_md, pseudos_synomilia_jsonl } from './odigos-md.js';
+import { analise_odigo_md, LEKIKIA_TMIMATON } from '../../src/ypiresies/odigos.js';
 import { epikyrose_odigo } from '@dps/core';
 
 describe('pseudomata — χάρτες μαθημάτων', () => {

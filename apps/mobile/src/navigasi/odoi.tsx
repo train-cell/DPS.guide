@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { IonRouterOutlet } from '@ionic/react';
 import { PlisiOmonimas } from './plisi.js';
@@ -15,6 +16,39 @@ import RythmiseisProgrammatos from '../programma/programma.js';
 import RythisiesEidopoiseon from '../eidopoiiseis/rythisies-eidopoiseon.js';
 import { dimiourgise_ypiresies_eidopoiseon } from '../eidopoiiseis/sindesi.js';
 import type { EidopoiisiYpiresies } from '../eidopoiiseis/eidopoiiseis-typoi.js';
+import { xrisiApothekisis } from '../apothiki/index.js';
+import { fortose_mathimata_apo_apothiki, fortose_xartis_apo_apothiki } from '../ypiresies/index.js';
+
+function EidopoiiseisRoute({ ypiresies }: { readonly ypiresies: EidopoiisiYpiresies }) {
+  const periballon = xrisiPeriballontos();
+  const { kodikosMathimatos, proodhos } = xrisiApothekisis();
+  const [context, setContext] = useState<{ readonly courseTitle: string; readonly sectionTitle: string } | undefined>();
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      if (!kodikosMathimatos) { setContext(undefined); return; }
+      const [courses, chartState] = await Promise.all([
+        fortose_mathimata_apo_apothiki(periballon.apothiki),
+        fortose_xartis_apo_apothiki(periballon.apothiki, kodikosMathimatos),
+      ]);
+      if (!active) return;
+      const courseTitle = courses.katastasi === 'etimo'
+        ? courses.dedomena.find((course) => course.kodikos === kodikosMathimatos)?.titlos
+        : undefined;
+      const chart = chartState.katastasi === 'etimo' ? chartState.dedomena : undefined;
+      const nextSection = chart?.enotites.find((section) => !proodhos.aristeiesEnotiton.includes(section.id));
+      setContext(courseTitle && nextSection
+        ? { courseTitle, sectionTitle: nextSection.titlos }
+        : undefined);
+    })();
+    return () => { active = false; };
+  }, [periballon.apothiki, kodikosMathimatos, proodhos]);
+
+  const label = context ? `${context.courseTitle} · ${context.sectionTitle}` : '';
+  return <RythisiesEidopoiseon ypiresies={ypiresies} onoma={label} context={context} />;
+}
+import { xrisiPeriballontos } from '../periballon/provolos.js';
 
 /** Οι διαδρομές της εφαρμογής, μία ανά οθόνη. */
 export const ODOI: readonly { readonly diadromi: string; readonly onoma: string }[] = [
@@ -38,10 +72,23 @@ function meNav(children: ReactNode, xronos = true) {
 
 /** Έξυπνη αρχική δρομολόγηση: Onboarding για νέους χρήστες, Σήμερα για συνδεδεμένους. */
 function ArxikiDromologisi() {
-  const exeiSindesi =
-    typeof localStorage !== 'undefined' &&
-    (Boolean(localStorage.getItem('eclass_panepistimio_id')) ||
-      Boolean(localStorage.getItem('dps_sindesi_energi')));
+  const periballon = xrisiPeriballontos();
+  const [exeiSindesi, setExeiSindesi] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void Promise.all([
+      periballon.mystika.pare('eclass_onoma_xristi'),
+      periballon.mystika.pare('eclass_base_url'),
+    ]).then(([username, baseUrl]) => {
+      if (active) setExeiSindesi(Boolean(username && baseUrl));
+    }).catch(() => {
+      if (active) setExeiSindesi(false);
+    });
+    return () => { active = false; };
+  }, [periballon.mystika]);
+
+  if (exeiSindesi === null) return meNav(<p role="status">Φόρτωση τοπικού προφίλ…</p>, false);
 
   return exeiSindesi ? meNav(<Simera />) : meNav(<Proedri />, false);
 }
@@ -73,7 +120,7 @@ export function OdoiNavigisis({
         <Route path="/rythisies/ai" element={meNav(<RythisiesAi />)} />
         <Route
           path="/eidopoiseis"
-          element={meNav(<RythisiesEidopoiseon ypiresies={ypiresiesEidopoiseon} />)}
+          element={meNav(<EidopoiiseisRoute ypiresies={ypiresiesEidopoiseon} />)}
         />
         <Route path="/proedri" element={meNav(<Proedri />, false)} />
         <Route path="*" element={meNav(<Proedri />, false)} />

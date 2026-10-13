@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { ftiaxe_gemini_llm, ftiaxe_ollama_llm } from '@dps/ai';
+import type { LlmPyli, MystikaPyli } from '@dps/core';
 import { xrisiApothekisis } from '../../apothiki/index.js';
 import { xrisiPeriballontos } from '../../periballon/index.js';
 import { Karta, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
+import { useVaultSecurity } from '../../vault/vault-gate.js';
+import { BridgePairingCard } from '../../vault/bridge-pairing.js';
+import { deliverEncryptedBackup } from '../../vault/backup-file.js';
 
 /** Αναγνωριστικά υποστηριζόμενων παρόχων AI. */
-export type IdParoxou = 'gemini' | 'openai' | 'claude' | 'ollama';
+export type IdParoxou = 'gemini' | 'ollama';
 
 /** Επιλογή διαθέσιμου μοντέλου ανά πάροχο. */
 export interface EpilogiMontelou {
@@ -25,7 +31,7 @@ export interface PliroforiaParoxou {
   readonly proepilegmenoUrl?: string;
 }
 
-/** Κατάλογος των τεσσάρων υποστηριζόμενων παρόχων AI. */
+/** Κατάλογος των πραγματικά υλοποιημένων παρόχων AI. */
 export const PAROXOI_LLM: readonly PliroforiaParoxou[] = [
   {
     id: 'gemini',
@@ -39,37 +45,15 @@ export const PAROXOI_LLM: readonly PliroforiaParoxou[] = [
     proepilegmenoMontelo: 'gemini-2.5-flash',
   },
   {
-    id: 'openai',
-    titlos: 'OpenAI ChatGPT',
-    perigrafi: 'Μοντέλα OpenAI GPT-4o και O-series για σύνθετη επίλυση προβλημάτων.',
-    apaitisiKleidiou: true,
-    montela: [
-      { id: 'gpt-4o', titlos: 'GPT-4o' },
-      { id: 'gpt-4o-mini', titlos: 'GPT-4o Mini' },
-      { id: 'o3-mini', titlos: 'o3-mini' },
-    ],
-    proepilegmenoMontelo: 'gpt-4o',
-  },
-  {
-    id: 'claude',
-    titlos: 'Anthropic Claude',
-    perigrafi: 'Μοντέλα Claude για υψηλή κατανόηση ακαδημαϊκού κειμένου.',
-    apaitisiKleidiou: true,
-    montela: [
-      { id: 'claude-3-7-sonnet', titlos: 'Claude 3.7 Sonnet' },
-      { id: 'claude-3-5-haiku', titlos: 'Claude 3.5 Haiku' },
-    ],
-    proepilegmenoMontelo: 'claude-3-7-sonnet',
-  },
-  {
     id: 'ollama',
-    titlos: 'Local Ollama / Self-Hosted',
-    perigrafi: 'Τοπική εκτέλεση χωρίς αποστολή δεδομένων σε τρίτους διακομιστές.',
+    titlos: 'Τοπικό Ollama',
+    perigrafi: 'Εκτέλεση στον ίδιο υπολογιστή Windows/macOS. Δεν είναι διαθέσιμο από κινητό.',
     apaitisiKleidiou: false,
     montela: [
       { id: 'llama3.2', titlos: 'Llama 3.2' },
       { id: 'mistral', titlos: 'Mistral' },
       { id: 'deepseek-r1', titlos: 'DeepSeek R1' },
+      { id: 'qwen2.5', titlos: 'Qwen 2.5' },
     ],
     proepilegmenoMontelo: 'llama3.2',
     proepilegmenoUrl: 'http://localhost:11434',
@@ -79,18 +63,7 @@ export const PAROXOI_LLM: readonly PliroforiaParoxou[] = [
 /** Εντοπίζει τον πάροχο στον οποίο αντιστοιχεί ένα όνομα μοντέλου. */
 export function entopise_paroxo_montelou(onomaMontelou: string): IdParoxou {
   const mikro = onomaMontelou.toLowerCase().trim();
-  if (mikro.startsWith('gemini')) {
-    return 'gemini';
-  }
-  if (mikro.startsWith('gpt') || mikro.startsWith('o3')) {
-    return 'openai';
-  }
-  if (mikro.startsWith('claude')) {
-    return 'claude';
-  }
-  if (mikro.includes('llama') || mikro.includes('mistral') || mikro.includes('deepseek')) {
-    return 'ollama';
-  }
+  if (/^(llama|mistral|deepseek|qwen|gemma|phi|codellama)([.:\d-]|$)/.test(mikro)) return 'ollama';
   for (const paroxos of PAROXOI_LLM) {
     if (paroxos.montela.some((m) => m.id === mikro)) {
       return paroxos.id;
@@ -112,10 +85,11 @@ export const PROEPILOGI_PAROXOU: PliroforiaParoxou = {
   proepilegmenoMontelo: 'gemini-2.5-flash',
 };
 
-/** Οθόνη ρύθμισης AI Μοντέλου και Zero-Knowledge Hardware Vault. */
+/** Οθόνη ρύθμισης παρόχου AI, encrypted vault και τοπικού bridge. */
 export default function RythisiesAi() {
   const apothiki = xrisiApothekisis();
   const periballon = xrisiPeriballontos();
+  const vaultSecurity = useVaultSecurity();
   const navigate = useNavigate();
 
   const trexonMontelo = apothiki.rytheseis.onomaMontelou || 'gemini-2.5-flash';
@@ -126,13 +100,19 @@ export default function RythisiesAi() {
   const [kleidiApi, setKleidiApi] = useState<string>('');
   const [exeiVaultKleidi, setExeiVaultKleidi] = useState<boolean>(apothiki.rytheseis.exeiKleidiLlm);
   const [deikseKleidi, setDeikseKleidi] = useState<boolean>(false);
-  const [urlOllama, setUrlOllama] = useState<string>('http://localhost:11434');
+  const [urlOllama, setUrlOllama] = useState<string>(apothiki.rytheseis.urlOllama ?? 'http://localhost:11434');
   const [dokimiApotelesma, setDokimiApotelesma] = useState<{
     epitixia: boolean;
     minima: string;
   } | null>(null);
   const [dokimiSeEkseliksi, setDokimiSeEkseliksi] = useState<boolean>(false);
   const [apothikefthike, setApothikefthike] = useState<boolean>(false);
+  const [vaultMinima, setVaultMinima] = useState<string | null>(null);
+  const [backupPassword, setBackupPassword] = useState('');
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [backupMessage, setBackupMessage] = useState<string | null>(null);
+  const ollamaDiathesimo = !Capacitor.isNativePlatform() &&
+    typeof location !== 'undefined' && ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 
   useEffect(() => {
     let zalive = true;
@@ -142,14 +122,21 @@ export default function RythisiesAi() {
         return;
       }
       if (kleidi !== null && kleidi.length > 0) {
-        setKleidiApi(kleidi);
         setExeiVaultKleidi(true);
       }
+      setUrlOllama(apothiki.rytheseis.urlOllama ?? 'http://localhost:11434');
     })();
     return () => {
       zalive = false;
     };
-  }, [periballon.mystika]);
+  }, [periballon.mystika, apothiki.rytheseis.urlOllama]);
+
+  useEffect(() => {
+    if (!ollamaDiathesimo && paroxosId === 'ollama') {
+      setParoxosId('gemini');
+      setEpilegmenoMontelo('gemini-2.5-flash');
+    }
+  }, [ollamaDiathesimo, paroxosId]);
 
   const paroxosTrexon = PAROXOI_LLM.find((p) => p.id === paroxosId) ?? PROEPILOGI_PAROXOU;
 
@@ -187,7 +174,18 @@ export default function RythisiesAi() {
     setDokimiApotelesma(null);
 
     try {
-      const apotelesma = await periballon.llm.parage_keimeno({
+      let testLlm: LlmPyli;
+      if (paroxosId === 'ollama') {
+        testLlm = ftiaxe_ollama_llm(periballon.http, epilegmenoMontelo, urlOllama, periballon.katagrafi);
+      } else {
+        const testSecrets: MystikaPyli = {
+          async pare(key) { return key === 'llm_api_key' && kleidiApi.trim() ? kleidiApi.trim() : periballon.mystika.pare(key); },
+          vale: (key, value) => periballon.mystika.vale(key, value),
+          svise: (key) => periballon.mystika.svise(key),
+        };
+        testLlm = ftiaxe_gemini_llm(periballon.http, testSecrets, periballon.rologi, periballon.katagrafi, { montelo: epilegmenoMontelo });
+      }
+      const apotelesma = await testLlm.parage_keimeno({
         systima: 'Έλεγχος σύνδεσης συστήματος',
         minimata: [{ rolos: 'xristis', keimeno: 'ping' }],
         ekdosi_prompt: '1',
@@ -215,6 +213,25 @@ export default function RythisiesAi() {
     }
   }
 
+  async function exportBackup(): Promise<void> {
+    if (vaultSecurity === null) {
+      setBackupMessage('Δεν είναι διαθέσιμο το vault runtime.');
+      return;
+    }
+    setBackupBusy(true);
+    setBackupMessage(null);
+    try {
+      const backup = await vaultSecurity.createEncryptedBackup(backupPassword);
+      await deliverEncryptedBackup(backup);
+      setBackupPassword('');
+      setBackupMessage('Το encrypted backup δημιουργήθηκε. Φύλαξε χωριστά τον κωδικό backup.');
+    } catch (reason) {
+      setBackupMessage(reason instanceof Error ? reason.message : 'Δεν δημιουργήθηκε encrypted backup.');
+    } finally {
+      setBackupBusy(false);
+    }
+  }
+
   async function apothikefse_kai_epestrepse(erevma?: FormEvent<HTMLFormElement>): Promise<void> {
     if (erevma !== undefined) {
       erevma.preventDefault();
@@ -224,16 +241,14 @@ export default function RythisiesAi() {
     if (exeiNeoKleidi) {
       await periballon.mystika.vale('llm_api_key', kleidiApi.trim());
       setExeiVaultKleidi(true);
-    } else if (paroxosTrexon.apaitisiKleidiou) {
-      await periballon.mystika.svise('llm_api_key');
-      setExeiVaultKleidi(false);
     }
 
-    const exeiKleidi = exeiNeoKleidi || (paroxosId === 'ollama' ? true : false);
+    const exeiKleidi = paroxosId === 'gemini' && (exeiNeoKleidi || exeiVaultKleidi);
     await apothiki.allaxe_rytheseis({
       ...apothiki.rytheseis,
       onomaMontelou: epilegmenoMontelo,
       exeiKleidiLlm: exeiKleidi,
+      urlOllama,
     });
 
     setApothikefthike(true);
@@ -260,7 +275,7 @@ export default function RythisiesAi() {
     >
       <ProskelesioOmonimas
         titlos="Μοντέλο AI & Vault"
-        ypokeimeno="Επιλογή παρόχου, μοντέλου και ασφαλής αποθήκευση κλειδιού στο Hardware Vault."
+        ypokeimeno="Επιλογή παρόχου και μοντέλου AI, με κρυπτογραφημένη αποθήκευση του API key στη συσκευή."
         akseis={
           <Link
             to="/rythisies"
@@ -284,6 +299,7 @@ export default function RythisiesAi() {
                   type="button"
                   className={`pilegma${paroxosId === p.id ? ' pilegma-entono' : ''}`}
                   onClick={() => allaxe_paroxo(p.id)}
+                  disabled={p.id === 'ollama' && !ollamaDiathesimo}
                   data-testid={`paroxos-${p.id}`}
                   aria-pressed={paroxosId === p.id}
                 >
@@ -303,8 +319,8 @@ export default function RythisiesAi() {
               aria-label="Επιλογή Παρόχου AI"
             >
               {PAROXOI_LLM.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.titlos}
+                <option key={p.id} value={p.id} disabled={p.id === 'ollama' && !ollamaDiathesimo}>
+                  {p.id === 'ollama' && !ollamaDiathesimo ? `${p.titlos} · διαθέσιμο μόνο στον ίδιο υπολογιστή` : p.titlos}
                 </option>
               ))}
             </select>
@@ -355,7 +371,7 @@ export default function RythisiesAi() {
                 </option>
               ))}
             </select>
-            {paroxosId === 'ollama' && (
+            {paroxosId === 'ollama' && ollamaDiathesimo && (
               <div>
                 <label className="odoni-xeiris-zeugos" htmlFor="ai-ollama-url">
                   Διεύθυνση Ollama Base URL
@@ -377,16 +393,16 @@ export default function RythisiesAi() {
       />
 
       <Karta
-        titlos="Zero-Knowledge Hardware Vault"
-        ypokeimeno="Το API Key αποθηκεύεται αποκλειστικά στο Hardware Vault της συσκευής και δεν διαρρέει ποτέ."
+        titlos="Κρυπτογραφημένο vault"
+        ypokeimeno="Τα αρχεία, οι ρυθμίσεις και τα API keys αποθηκεύονται κρυπτογραφημένα στη συσκευή."
         stoixeia={
           <div>
             <div className="odoni-xeiris">
               <Pilegma
                 keimeno={
                   exeiVaultKleidi
-                    ? 'Hardware Vault: Κλειδωμένο & Ενεργό'
-                    : 'Hardware Vault: Κενό'
+                    ? 'API key αποθηκευμένο κρυπτογραφημένα'
+                    : 'Δεν υπάρχει αποθηκευμένο API key'
                 }
                 entono={exeiVaultKleidi}
               />
@@ -431,6 +447,56 @@ export default function RythisiesAi() {
                 </button>
               )}
             </div>
+          </div>
+        }
+      />
+
+      <Karta
+        titlos="Encrypted backup / ανάκτηση"
+        ypokeimeno="Εξάγει τοπικά κρυπτογραφημένο αντίγραφο για μεταφορά σε άλλη συσκευή. Χρησιμοποίησε διαφορετικό κωδικό τουλάχιστον 12 χαρακτήρων και φύλαξέ τον χωριστά."
+        stoixeia={
+          <div className="odoni-xeiris">
+            <label className="odoni-xeiris-zeugos" htmlFor="vault-backup-export-password">Κωδικός backup</label>
+            <input
+              id="vault-backup-export-password"
+              className="proedri-travla-gramma"
+              type="password"
+              autoComplete="new-password"
+              minLength={12}
+              value={backupPassword}
+              onChange={(event) => setBackupPassword(event.target.value)}
+              aria-label="Ξεχωριστός κωδικός για encrypted backup"
+            />
+            <button type="button" className="pilegma pilegma-entono" disabled={backupBusy || backupPassword.trim().length < 12} onClick={() => void exportBackup()}>
+              {backupBusy ? 'Δημιουργία backup…' : 'Εξαγωγή encrypted backup'}
+            </button>
+            <p>Το backup δεν περιλαμβάνει το κλειδί βιομετρικού ξεκλειδώματος. Για επαναφορά επίλεξε το αρχείο στην αρχική οθόνη μιας καθαρής εγκατάστασης.</p>
+            {backupMessage !== null && <p role="status">{backupMessage}</p>}
+          </div>
+        }
+      />
+
+      <BridgePairingCard />
+
+      <Karta
+        titlos="Γρήγορο ξεκλείδωμα συσκευής"
+        ypokeimeno={vaultSecurity?.biometricEnabled
+          ? 'Τα βιομετρικά ενεργοποιήθηκαν. Ο κύριος κωδικός και το recovery key εξακολουθούν να λειτουργούν.'
+          : 'Προαιρετικά, ξεκλείδωσε με Face ID, Touch ID ή βιομετρικά Android μετά την αρχική ρύθμιση.'}
+        stoixeia={
+          <div className="odoni-xeiris">
+            {vaultSecurity === null ? (
+              <Pilegma keimeno="Διαθέσιμο στις native εφαρμογές" />
+            ) : vaultSecurity.biometricEnabled ? (
+              <button type="button" className="pilegma" onClick={() => void vaultSecurity.disableBiometrics().then(() => setVaultMinima('Το βιομετρικό ξεκλείδωμα απενεργοποιήθηκε.')).catch(() => setVaultMinima('Δεν ήταν δυνατή η απενεργοποίηση.'))}>
+                Απενεργοποίηση βιομετρικών
+              </button>
+            ) : (
+              <button type="button" className="pilegma pilegma-entono" disabled={!vaultSecurity.biometricAvailable} onClick={() => void vaultSecurity.enableBiometrics().then(() => setVaultMinima('Τα βιομετρικά ενεργοποιήθηκαν.')).catch((reason: unknown) => setVaultMinima(reason instanceof Error ? reason.message : 'Δεν ενεργοποιήθηκαν τα βιομετρικά.'))}>
+                {vaultSecurity.biometricAvailable ? 'Ενεργοποίηση βιομετρικών' : 'Δεν είναι διαθέσιμα σε αυτή τη συσκευή'}
+              </button>
+            )}
+            {vaultMinima !== null && <p role="status">{vaultMinima}</p>}
           </div>
         }
       />

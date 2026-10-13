@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { ODOI, OdoiNavigisis } from './odoi.js';
 import { dimiourgise_ypiresies_eidopoiseon } from '../eidopoiiseis/sindesi.js';
+import { me_periballon_test } from '../../test-fixtures/periballon-test-provider.js';
 
 const ORISTO = dirname(fileURLToPath(import.meta.url));
 const ARXIKOS_ODOI = readFileSync(join(ORISTO, 'odoi.tsx'), 'utf8');
@@ -26,9 +27,9 @@ describe('odoi — χάρτης διαδρομών εφαρμογής', () => {
   it('αποδίδεται στατικά χωρίς σφάλμα με MemoryRouter', () => {
     const ypiresies = dimiourgise_ypiresies_eidopoiseon();
     const html = renderToStaticMarkup(
-      <MemoryRouter initialEntries={['/eidopoiseis']}>
+      me_periballon_test(<MemoryRouter initialEntries={['/eidopoiseis']}>
         <OdoiNavigisis ypiresiesEidopoiseon={ypiresies} />
-      </MemoryRouter>
+      </MemoryRouter>)
     );
     expect(html).toContain('eidopoiseis-ekran');
   });

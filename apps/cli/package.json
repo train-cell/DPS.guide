@@ -18,7 +18,6 @@
     "@dps/core": "workspace:*",
     "@dps/extract": "workspace:*",
     "@dps/eclass": "workspace:*",
-    "@dps/mock-eclass": "workspace:*",
     "@dps/pipeline": "workspace:*"
   },
   "devDependencies": {

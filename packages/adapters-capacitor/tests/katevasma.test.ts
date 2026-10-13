@@ -4,18 +4,24 @@ import { CapacitorKatevasmaPyli } from '../src/storage/katevasma.js';
 
 const h = vi.hoisted(() => ({
   arxeia: new Set<string>(),
+  fakeloi: new Set<string>(),
   kliseis: [] as string[],
 }));
 
 vi.mock('@capacitor/filesystem', () => ({
-  Directory: { Documents: 'DOCUMENTS' },
+  Directory: { Documents: 'DOCUMENTS', Data: 'DATA' },
   Encoding: { UTF8: 'utf8' },
   Filesystem: {
-    mkdir: vi.fn(async () => {
-      h.kliseis.push('mkdir');
+    mkdir: vi.fn(async (opts: { path: string }) => {
+      h.kliseis.push(`mkdir:${opts.path}`);
+      const tmimata = opts.path.split('/');
+      for (let idx = 1; idx <= tmimata.length; idx += 1) {
+        h.fakeloi.add(tmimata.slice(0, idx).join('/'));
+      }
     }),
     getUri: vi.fn(async (opts: { path: string }) => {
       h.kliseis.push(`getUri:${opts.path}`);
+      if (h.fakeloi.has(opts.path)) throw new Error('target is a directory');
       return { uri: `file://${opts.path}` };
     }),
     stat: vi.fn(async (opts: { path: string }) => {
@@ -37,7 +43,12 @@ vi.mock('@capacitor/file-transfer', () => ({
     downloadFile: vi.fn(async (opts: { path: string }) => {
       h.kliseis.push(`downloadFile:${opts.path}`);
       // Το native γράφει στο πλήρες URI· το stat του plugin δέχεται σχετική διαδρομή.
-      h.arxeia.add(opts.path.replace(/^file:\/\//, ''));
+      const path = opts.path.replace(/^file:\/\//, '');
+      const goneas = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+      if ((goneas !== '' && !h.fakeloi.has(goneas)) || h.fakeloi.has(path)) {
+        throw new Error('parent directory does not exist or target is a directory');
+      }
+      h.arxeia.add(path);
     }),
   },
 }));
@@ -45,6 +56,7 @@ vi.mock('@capacitor/file-transfer', () => ({
 describe('CapacitorKatevasmaPyli', () => {
   beforeEach(() => {
     h.arxeia.clear();
+    h.fakeloi.clear();
     h.kliseis.length = 0;
     vi.mocked(FileTransfer.downloadFile).mockClear();
   });
@@ -68,7 +80,14 @@ describe('CapacitorKatevasmaPyli', () => {
   it('δημιουργεί τον φάκελο προορισμού πριν τη λήψη', async () => {
     const pyli = new CapacitorKatevasmaPyli('');
     await pyli.katevase('https://thales.cs.unipi.gr/a.pdf', 'PLI101/a.pdf', {});
-    expect(h.kliseis[0]).toBe('mkdir');
+    expect(h.kliseis[0]).toBe('mkdir:PLI101');
+    expect(h.kliseis).not.toContain('mkdir:PLI101/a.pdf');
+  });
+
+  it('δεν δημιουργεί directory για αρχείο στη ρίζα', async () => {
+    const pyli = new CapacitorKatevasmaPyli('');
+    expect((await pyli.katevase('https://thales.cs.unipi.gr/a.pdf', 'a.pdf', {})).ok).toBe(true);
+    expect(h.kliseis.filter((k) => k.startsWith('mkdir:'))).toEqual([]);
   });
 
   it('προ-ακυρωμένο σήμα → AKYROTHIKE χωρίς λήψη', async () => {

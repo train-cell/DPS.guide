@@ -9,7 +9,6 @@
 
 import type { Apotelesma, Selida } from '@dps/core';
 import { apotyxia, ok } from '@dps/core';
-import { exagage_docx, exagage_pdf, exagage_pptx } from '@dps/extract';
 import type { EisodosPipeline, Metriti } from '../porte.js';
 import { arxeio_keimenou, me_riza } from '../statheroi.js';
 import { diavase_arxeia } from '../grammata/apothiki-json.js';
@@ -29,11 +28,11 @@ async function exagage_arxeio(
 ): Promise<Apotelesma<Selida[]>> {
   switch (epiteksi) {
     case 'pdf':
-      return exagage_pdf(dedomena, arxeio_id);
+      return (await import('@dps/extract')).exagage_pdf(dedomena, arxeio_id);
     case 'pptx':
-      return exagage_pptx(dedomena, arxeio_id);
+      return (await import('@dps/extract')).exagage_pptx(dedomena, arxeio_id);
     case 'docx':
-      return exagage_docx(dedomena, arxeio_id);
+      return (await import('@dps/extract')).exagage_docx(dedomena, arxeio_id);
     default:
       return apotyxia('MI_YPOSTIRIZOMENO', `Δεν υπάρχει εξαγωγή για την επέκταση «${epiteksi}»`, onoma);
   }
@@ -85,18 +84,43 @@ export async function exagogi(
       return dedomena;
     }
 
-    const selides = await exagage_arxeio(dedomena.timi, arxeio.id, epiteksi, arxeio.diadromi);
-    if (!selides.ok) {
+    const extraction = await exagage_arxeio(dedomena.timi, arxeio.id, epiteksi, arxeio.diadromi);
+    if (!extraction.ok) {
       p.katagrafi.sfalma('exagogi: η εξαγωγή κειμένου απέτυχε', {
-        kodikos: selides.sfalma.kodikos,
+        kodikos: extraction.sfalma.kodikos,
         kodikos_mathimatos,
         arxeio_id: arxeio.id,
-        minima: selides.sfalma.minima,
+        minima: extraction.sfalma.minima,
       });
-      return selides;
+      return extraction;
     }
 
-    const grapse = await grapse_json(p.apothiki, keimena, selides.timi);
+    let pages = extraction.timi;
+    if (epiteksi === 'pdf' && p.ocr !== undefined) {
+      const recovered: Selida[] = [];
+      for (const page of pages) {
+        if (!page.xoris_keimeno) {
+          recovered.push(page);
+          continue;
+        }
+        const recognized = await p.ocr.anagnorise_pdf_selida(dedomena.timi, page.arithmos);
+        if (!recognized.ok) {
+          p.katagrafi.sfalma('exagogi: το τοπικό OCR απέτυχε', {
+            kodikos: recognized.sfalma.kodikos,
+            kodikos_mathimatos,
+            arxeio_id: arxeio.id,
+            selida: page.arithmos,
+          });
+          return recognized;
+        }
+        const text = recognized.timi.normalize('NFC').replace(/\s+/g, ' ').trim();
+        const words = text.length === 0 ? 0 : text.split(' ').length;
+        recovered.push({ ...page, keimeno: text, lekseis: words, xoris_keimeno: words < 2 });
+      }
+      pages = recovered;
+    }
+
+    const grapse = await grapse_json(p.apothiki, keimena, pages);
     if (!grapse.ok) {
       p.katagrafi.sfalma('exagogi: απέτυχε η εγγραφή του εξαγόμενου κειμένου', {
         kodikos: grapse.sfalma.kodikos,

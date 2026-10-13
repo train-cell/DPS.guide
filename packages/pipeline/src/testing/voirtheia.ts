@@ -11,14 +11,17 @@
 
 import type {
   Apotelesma,
+  ApothikiPyli,
   EclassPyli,
+  KatevasmaPyli,
   KomvosArxeiou,
   Mathima,
   RologiPyli,
 } from '@dps/core';
 import { apotyxia, ok } from '@dps/core';
 import type { ApotelesmaErgaleiou, UlikoTutor } from '@dps/ai';
-import { MockLlmArchiou, ODOS_KLEIDIOU, TYPOS_JSON, parastylos_arxeio } from '@dps/ai';
+import { MockLlmArchiou } from '@dps/ai/mock';
+import { ODOS_KLEIDIOU, TYPOS_JSON, parastylos_arxeio } from '@dps/ai';
 import type { ArkeioLlm } from '@dps/ai';
 
 /** Ονομασία σε ASCII: τα fixtures του `MockLlmArchiou` είναι JSON, όχι αρχεία eClass. */
@@ -55,6 +58,22 @@ export class FakeEclassPyli implements EclassPyli {
   async fere_dentro_arxeion(kodikos: string): Promise<Apotelesma<KomvosArxeiou[]>> {
     this.kliseis_dendrou.push(kodikos);
     return this.apotelesma_dendrou ?? ok(this.dendra[kodikos] ?? []);
+  }
+}
+
+/** Test-only downloader that persists fixture bytes to the requested pipeline path. */
+export class FakeKatevasmaPyli implements KatevasmaPyli {
+  readonly kliseis: { readonly url: string; readonly proorismos: string }[] = [];
+
+  constructor(
+    private readonly apothiki: ApothikiPyli,
+    private readonly bytes: Uint8Array = new TextEncoder().encode('fixture file bytes'),
+  ) {}
+
+  async katevase(url: string, proorismos: string): Promise<Apotelesma<{ megethos: number }>> {
+    this.kliseis.push({ url, proorismos });
+    const saved = await this.apothiki.grapse_dyadiko(proorismos, this.bytes);
+    return saved.ok ? ok({ megethos: this.bytes.byteLength }) : saved;
   }
 }
 

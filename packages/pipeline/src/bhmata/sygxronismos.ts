@@ -5,16 +5,16 @@
  * όχι τα bytes. Η λήψη ανήκει στον adapter L15/L10. Ο ρόλος της ροής είναι:
  *   1. φιλτράρισμα κατά τους κανόνες του §8 (allowlist, `MEGISTO_MEGETHOS_ARXEIOU_MB`),
  *   2. κανονικοποίηση διαδρομών (§5.3) και μεταφορά του δυαδικού στην κανονική θέση
- *      `arxeia/<διαδρομή>` (διάβασμα + εγγραφή μέσω του `ApothikiPyli`),
+ *      `arxeia/<διαδρομή>` μέσω του `KatevasmaPyli` και `ApothikiPyli`,
  *   3. δέλτα έναντι του `eurethrio-arxeion.json` (μέγεθος / ημερομηνία),
  *   4. sha256 περιεχομένου και εντοπισμός διπλότυπων (`diplotypo_tou`).
  *
- * ΠΟΤΕ δεν επινοείται περιεχόμενο: αν το δυαδικό δεν υπάρχει στη θύρα, το `sha256`
- * μένει `null` και καταγράφεται προειδοποίηση· η λήψη είναι ευθύνη του adapter.
+ * ΠΟΤΕ δεν επινοείται περιεχόμενο: αποτυχία λήψης ή απουσία byte αποτυγχάνει
+ * ολόκληρο το sync και δεν γράφεται ευρετήριο που θα δήλωνε ψευδώς ολοκλήρωση.
  */
 
 import type { Apotelesma, Arxeio, KomvosArxeiou } from '@dps/core';
-import { EPITREPOMENES_EPEKTASEIS, MEGISTO_MEGETHOS_ARXEIOU_MB, ok } from '@dps/core';
+import { EPITREPOMENES_EPEKTASEIS, MEGISTO_MEGETHOS_ARXEIOU_MB, apotyxia, ok } from '@dps/core';
 import { sha256_heks } from '@dps/ai';
 import type { EisodosPipeline, Metriti } from '../porte.js';
 import { BYTES_ANA_MEGA, arxeio_eurethriou, diadromi_arxeiou, me_riza } from '../statheroi.js';
@@ -134,7 +134,6 @@ export async function sygxronismos(
 
   const palia_ana_diadromi = new Map(palio.map((arxeio) => [arxeio.diadromi, arxeio]));
   const nea: Arxeio[] = [];
-  const anekontista: string[] = [];
   let megaliteres = 0;
 
   for (const arnitiko of dekta) {
@@ -148,10 +147,32 @@ export async function sygxronismos(
     }
 
     const telikos = diadromi_arxeiou(kodikos_mathimatos, arnitiko.diadromi);
-    const periexomeno = await topothetes_to_pedio(p, kodikos_mathimatos, arnitiko, telikos);
-    if (periexomeno.anekontisto) {
-      anekontista.push(arnitiko.diadromi);
+    const telikiDiadromi = me_riza(p.riza, telikos);
+    const prepeiNaKatevasei =
+      allaxeMetadomes ||
+      !(await p.apothiki.yparxei(telikiDiadromi)) ||
+      proigoumeno?.sha256 === null;
+    if (prepeiNaKatevasei) {
+      const headers = kefalides_lipshs_ana_url(p.eclass, arnitiko.url);
+      const download = await p.katevasma.katevase(
+        arnitiko.url,
+        telikiDiadromi,
+        headers,
+      );
+      if (!download.ok) {
+        p.katagrafi.sfalma('sygxronismos: απέτυχε η λήψη αρχείου', {
+          kodikos: download.sfalma.kodikos,
+          kodikos_mathimatos,
+          diadromi: arnitiko.diadromi,
+        });
+        return apotyxia(
+          download.sfalma.kodikos,
+          `Δεν ήταν δυνατή η λήψη του αρχείου «${arnitiko.diadromi}». ${download.sfalma.minima}`,
+        );
+      }
     }
+    const periexomeno = await topothetes_to_pedio(p, arnitiko, telikos);
+    if (!periexomeno.ok) return periexomeno;
 
     nea.push({
       id: ftiaxe_arxeio_id(kodikos_mathimatos, arnitiko.diadromi),
@@ -161,18 +182,9 @@ export async function sygxronismos(
       megethos: arnitiko.megethos,
       imerominia: arnitiko.imerominia,
       etag: null,
-      sha256: periexomeno.hash,
+      sha256: periexomeno.timi,
       diplotypo_tou: null,
     });
-  }
-
-  if (anekontista.length > 0) {
-    // Μία ενιαία προειδοποίηση ανά μάθημα (όχι μία ανά αρχείο)· η λήψη είναι
-    // ευθύνη του adapter (L15/L10), όχι της ροής.
-    p.katagrafi.proeidopoiisi(
-      `sygxronismos: ${anekontista.length} αρχεία δεν βρίσκονται ακόμα στη θύρα· η λήψη είναι ευθύνη του adapter`,
-      { kodikos_mathimatos }
-    );
   }
 
   nea.sort((a, b) => (a.diadromi < b.diadromi ? -1 : a.diadromi > b.diadromi ? 1 : 0));
@@ -202,42 +214,29 @@ export async function sygxronismos(
   return ok({ megaliteres });
 }
 
-/** Αποτέλεσμα μεταφοράς: hash του περιεχομένου ή `null` αν το αρχείο δεν υπάρχει. */
-interface Topothetisi {
-  readonly hash: string | null;
-  /** Το αρχείο δεν βρέθηκε στη θύρα (η λήψη είναι ευθύνη του adapter). */
-  readonly anekontisto: boolean;
-}
-
-/**
- * Διαβάζει το δυαδικό από τη θέση όπου το έβαλε ο adapter και, αν η διαδρομή ήταν
- * μη κανονική, το γράφει στην κανονική. Υπολογίζει το sha256 του περιεχομένου.
- * Αν το αρχείο δεν υπάρχει, επιστρέφει `hash: null` χωρίς ψεύτικα δεδομένα.
- */
+/** Διαβάζει τα πραγματικά bytes και επιστρέφει το hash τους. */
 async function topothetes_to_pedio(
   p: EisodosPipeline,
-  kodikos_mathimatos: string,
   arnitiko: ArnitikoArxeio,
   telikos: string
-): Promise<Topothetisi> {
+): Promise<Apotelesma<string>> {
   const diadromi_riza = me_riza(p.riza, telikos);
   const gram = await p.apothiki.diavase_dyadiko(diadromi_riza);
   if (!gram.ok) {
-    return { hash: null, anekontisto: true };
+    return apotyxia('DEN_VRETHIKE', `Δεν βρέθηκαν τα ληφθέντα bytes του «${arnitiko.diadromi}».`);
   }
-  const hash = hash_periexomenou(gram.timi);
-  const raw = me_riza(p.riza, diadromi_arxeiou(kodikos_mathimatos, arnitiko.diadromi_apothikis));
-  if (raw !== diadromi_riza) {
-    const grapse = await p.apothiki.grapse_dyadiko(diadromi_riza, gram.timi);
-    if (!grapse.ok) {
-      p.katagrafi.sfalma('sygxronismos: απέτυχε η μετακίνηση του αρχείου στην κανονική διαδρομή', {
-        kodikos: grapse.sfalma.kodikos,
-        diadromi: arnitiko.diadromi,
-      });
-      return { hash: null, anekontisto: false };
-    }
+  return ok(hash_periexomenou(gram.timi));
+}
+
+/** Authentication headers are attached only to a connector's own origin. */
+function kefalides_lipshs_ana_url(eclass: EisodosPipeline['eclass'], url: string): Record<string, string> {
+  if (eclass.base_url === undefined || eclass.pare_kefalides_lipshs === undefined) return {};
+  try {
+    if (new URL(eclass.base_url).origin !== new URL(url).origin) return {};
+    return eclass.pare_kefalides_lipshs();
+  } catch {
+    return {};
   }
-  return { hash, anekontisto: false };
 }
 
 /** Εντοπίζει τα διπλότυπα περιεχομένου και επιστρέφει `arxeio_id -> id του πρώτου ισοδύναμου`. */

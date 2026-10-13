@@ -1,6 +1,6 @@
 import type { Enotita } from '@dps/core';
-import type { KleidiTmimatos, TmimaOdigou } from '../ypiresies/odigos.js';
-import { EPKEFALIDES_TMIMATON, LEKIKIA_TMIMATON } from '../ypiresies/odigos.js';
+import type { KleidiTmimatos, TmimaOdigou } from '../../src/ypiresies/odigos.js';
+import { EPKEFALIDES_TMIMATON, LEKIKIA_TMIMATON } from '../../src/ypiresies/odigos.js';
 import { pare_xarti_mathimatos, pseudos_xartis } from './pseudomata.js';
 
 /** Ψεύτικο περιεχόμενο τμήματος οδηγού, χωρίς τον τίτλο της ενότητας. */

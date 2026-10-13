@@ -1,4 +1,4 @@
-/** `ApothikiPyli` πάνω στο `@capacitor/filesystem` (Directory.Documents).
+/** `ApothikiPyli` πάνω στο `@capacitor/filesystem` (Directory.Data).
  *
  *  MIRROR του `NodeFsApothiki` — ίδια δημόσια API, ίδια μηνύματα, ίδιοι κωδικοί
  *  σφαλμάτων. Όλες οι διαδρομές περνούν από `karnikopoise_diadromi` (§5.3).
@@ -64,7 +64,7 @@ function einai_fakelos(statistiko: FileInfo): boolean {
 /** Εύρεση υπάρχοντος αρχείου: `stat` και τύπος `file` (verified `FileInfo.type`). */
 async function yparxei_arxeio(pliri: string): Promise<boolean> {
   try {
-    const statistiko = await Filesystem.stat({ path: pliri, directory: Directory.Documents });
+    const statistiko = await Filesystem.stat({ path: pliri, directory: Directory.Data });
     return !einai_fakelos(statistiko);
   } catch {
     return false;
@@ -74,7 +74,7 @@ async function yparxei_arxeio(pliri: string): Promise<boolean> {
 /** Διαγραφή αρχείου αγνοώντας την απουσία του (best-effort πριν το rename). */
 async function svise_an_yparxei(pliri: string): Promise<void> {
   try {
-    await Filesystem.deleteFile({ path: pliri, directory: Directory.Documents });
+    await Filesystem.deleteFile({ path: pliri, directory: Directory.Data });
   } catch {
     // ο προορισμός δεν υπήρχε — δεν εμποδίζει το rename
   }
@@ -137,7 +137,7 @@ export class CapacitorApothiki implements ApothikiPyli {
     try {
       const apotelesma = await Filesystem.readFile({
         path: pliri,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         encoding: Encoding.UTF8,
       });
       if (typeof apotelesma.data !== 'string') {
@@ -166,7 +166,7 @@ export class CapacitorApothiki implements ApothikiPyli {
       // Χωρίς encoding το plugin επιστρέφει base64 (verified `ReadFileOptions.encoding` doc).
       const apotelesma = await Filesystem.readFile({
         path: pliri,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
       if (typeof apotelesma.data !== 'string') {
         return apotyxia('AGNOSTO', 'Η ανάγνωση δεν επέστρεψε δυαδικά δεδομένα');
@@ -202,14 +202,20 @@ export class CapacitorApothiki implements ApothikiPyli {
     const pliri = topikes.timi;
     const prosorino = `${pliri}.tmp-${tixaio_id()}`;
     try {
-      await Filesystem.mkdir({
-        path: pliri,
-        directory: Directory.Documents,
-        recursive: true,
-      });
+      // Το mkdir αφορά μόνο τον γονικό φάκελο. Αν περάσει το πλήρες όνομα
+      // αρχείου, το plugin δημιουργεί directory εκεί και το writeFile αποτυγχάνει.
+      const teleia = pliri.lastIndexOf('/');
+      const goneas = teleia >= 0 ? pliri.slice(0, teleia) : '';
+      if (goneas !== '') {
+        await Filesystem.mkdir({
+          path: goneas,
+          directory: Directory.Data,
+          recursive: true,
+        });
+      }
       await Filesystem.writeFile({
         path: prosorino,
-        directory: Directory.Documents,
+        directory: Directory.Data,
         data: se_base64(dedomena),
         ...(encoding !== undefined ? { encoding } : {}),
       });
@@ -217,7 +223,7 @@ export class CapacitorApothiki implements ApothikiPyli {
       await Filesystem.rename({
         from: prosorino,
         to: pliri,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
       return ok(undefined);
     } catch (sfalma) {
@@ -254,7 +260,7 @@ export class CapacitorApothiki implements ApothikiPyli {
     try {
       const apotelesma = await Filesystem.readdir({
         path: pliri_fakelos,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
       eggrafes = apotelesma.files;
     } catch (sfalma) {
@@ -292,7 +298,7 @@ export class CapacitorApothiki implements ApothikiPyli {
     }
     const pliri = topikes.timi;
     try {
-      await Filesystem.deleteFile({ path: pliri, directory: Directory.Documents });
+      await Filesystem.deleteFile({ path: pliri, directory: Directory.Data });
       return ok(undefined);
     } catch (sfalma) {
       const kodikos = kodikos_plugin(sfalma);

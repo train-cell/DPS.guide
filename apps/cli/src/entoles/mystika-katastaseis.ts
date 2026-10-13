@@ -16,7 +16,9 @@ const ONOMATA_METAVLITON: Readonly<Record<KleidiMystikou, string>> = {
   eclass_kodikos: 'ECLASS_PASSWORD',
   eclass_panepistimio_id: 'ECLASS_PANEPISTIMIO_ID',
   eclass_base_url: 'ECLASS_BASE_URL',
+  moodle_webservice_token: 'MOODLE_WEBSERVICE_TOKEN',
   llm_api_key: 'GEMINI_API_KEY',
+  vault_biometric_unlock: 'DPS_VAULT_BIOMETRIC_UNLOCK',
 };
 
 /** Μυστικά που απαιτούνται για τη σύνδεση στο eClass. */

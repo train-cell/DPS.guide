@@ -38,7 +38,7 @@ interface SfalmaFileTransfer {
 /** Σβήνει το μερικό αρχείο που άφησε πίσω μια αποτυχημένη λήψη (best-effort). */
 async function svise_prosrino(pliri: string): Promise<void> {
   try {
-    await Filesystem.deleteFile({ path: pliri, directory: Directory.Documents });
+    await Filesystem.deleteFile({ path: pliri, directory: Directory.Data });
   } catch {
     // δεν υπήρχε — δεν εμποδίζει την αποτυχία
   }
@@ -97,18 +97,24 @@ export class CapacitorKatevasmaPyli implements KatevasmaPyli {
     }
 
     try {
-      await Filesystem.mkdir({
-        path: pliri,
-        directory: Directory.Documents,
-        recursive: true,
-      });
+      // Δημιουργεί μόνο τον γονικό φάκελο· mkdir στο πλήρες path αφήνει
+      // directory με όνομα αρχείου και αποτρέπει το native download.
+      const teleia = pliri.lastIndexOf('/');
+      const goneas = teleia >= 0 ? pliri.slice(0, teleia) : '';
+      if (goneas !== '') {
+        await Filesystem.mkdir({
+          path: goneas,
+          directory: Directory.Data,
+          recursive: true,
+        });
+      }
 
       // Το native στέλνει τη ροή ΑΠΕΥΘΕΙΑΣ στον προορισμό (χωρίς temp) — αν η
       // λήψη αποτύχει στη μέση μένει μερικό αρχείο. Σε αποτυχία HTTP σβήνεται
       // (best-effort): ένα κομμένο αρχείο χειρότερο από κανένα.
       const arxeio = await Filesystem.getUri({
         path: pliri,
-        directory: Directory.Documents,
+        directory: Directory.Data,
       });
 
       await FileTransfer.downloadFile({
@@ -124,7 +130,7 @@ export class CapacitorKatevasmaPyli implements KatevasmaPyli {
         return apotyxia('AKYROTHIKE', 'Η λήψη ακυρώθηκε από τον καλούντα');
       }
 
-      const statistiko = await Filesystem.stat({ path: pliri, directory: Directory.Documents });
+      const statistiko = await Filesystem.stat({ path: pliri, directory: Directory.Data });
       return ok({ megethos: statistiko.size });
     } catch (sfalma) {
       if (einai_akyromeno(simatodotis)) {

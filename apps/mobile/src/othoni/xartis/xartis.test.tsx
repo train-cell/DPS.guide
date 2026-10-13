@@ -12,13 +12,14 @@ import XartisEnotiton, {
   stilise_isxya,
   stilise_lepta,
 } from './xartis.js';
-import { pseudos_xartis } from '../../pseudomata/index.js';
+import { pseudos_xartis } from '../../../test-fixtures/pseudomata/index.js';
+import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
 
 const MONI_PIGIS = fileURLToPath(new URL('./xartis.tsx', import.meta.url));
 
 /** Τυλίγει ένα στοιχείο σε MemoryRouter ώστε τα Link να αποδίδουν href. */
 function apoidefsi(stoixeio: ReactElement): string {
-  return renderToStaticMarkup(<MemoryRouter>{stoixeio}</MemoryRouter>);
+  return renderToStaticMarkup(me_periballon_test(<MemoryRouter>{stoixeio}</MemoryRouter>));
 }
 
 /** Αποδίδει τον χάρτη με δοσμένες ολοκληρωμένες ενότητες, χωρίς Provider αποθήκευσης. */
@@ -90,6 +91,8 @@ describe('xartis — οθόνη χάρτη ενοτήτων', () => {
     for (const testid of ['xartis-ekran', 'xartis-enotita', 'xartis-proiresi', 'xartis-telos']) {
       expect(pigi).toContain(`"${testid}"`);
     }
+    expect(pigi).toContain('generateCourseMap(');
+    expect(pigi).toContain('data-testid="xartis-dimiourgia"');
     expect(pigi).toContain('xartis-aristeia-${enotita.id}');
   });
 });

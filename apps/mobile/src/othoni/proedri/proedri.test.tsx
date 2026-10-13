@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ftiaxe_periballon } from '../../periballon/index.js';
+import { ftiaxe_periballon_test as ftiaxe_periballon } from '../../../test-fixtures/ftiaxe-test-periballon.js';
 import Proedri, { PROEDRI_BASE_URL } from './proedri.js';
 
 const ORISTO = dirname(fileURLToPath(import.meta.url));
@@ -22,7 +22,7 @@ const AMIDES_ASYNKRONES = [
   'OloniKatastasis',
   'fortosi()',
   'sfalma(',
-  'fortose_mathimata_apo_apothiki(',
+  'syndesi_kai_anaktisi_mathimaton(',
   'epanalipsi={ananevei}',
 ] as const;
 
@@ -63,13 +63,13 @@ describe('Proedri — συμβόλαιο οθόνης', () => {
     const html = apotelesma_proedri();
     expect(html).toContain('<label class="odoni-xeiris-zeugos" for="proedri-gramma-base">');
     expect(html).toContain('type="password"');
-    expect(html).toContain('aria-label="Κωδικός πρόσβασης eClass"');
+    expect(html).toContain('aria-label="Κωδικός πρόσβασης LMS"');
   });
 
   it('η σημείωση λέει την αλήθεια για την αποθήκευση στη συσκευή', () => {
     const html = apotelesma_proedri();
     expect(html).toContain('proedri-ypostirixtiki');
-    expect(html).toContain('αποθηκεύονται μόνο στη συσκευή σου');
+    expect(html).toContain('Τα διαπιστευτήρια και το προαιρετικό token κρυπτογραφούνται στο τοπικό vault');
   });
 
   it('κάθε ασύγχρονη κατάσταση περνά από το OloniKatastasis', () => {
@@ -93,10 +93,10 @@ describe('Proedri — συμβόλαιο οθόνης', () => {
 });
 
 describe('Proedri — Bevel x UniStudents UI & Visual Components', () => {
-  it('εμφανίζει το σήμα ασφαλείας του Zero-Knowledge Vault', () => {
+  it('εμφανίζει το σήμα του κρυπτογραφημένου τοπικού vault', () => {
     const html = apotelesma_proedri();
     expect(html).toContain('data-testid="asfaleia-shma"');
-    expect(html).toContain('Zero-Knowledge Hardware Vault');
+    expect(html).toContain('Κρυπτογραφημένο τοπικό vault');
   });
 
   it('εμφανίζει το φοιτητικό tip ημέρας', () => {
@@ -153,6 +153,6 @@ describe('Proedri — Bevel x UniStudents UI & Visual Components', () => {
     const html = apotelesma_proedri();
     expect(html).toContain('onboarding-apodeixi-karta');
     expect(html).toContain('Το ακαδημαϊκό σου προφίλ είναι έτοιμο');
-    expect(html).toContain('Zero-Knowledge Hardware Vault');
+    expect(html).toContain('Κρυπτογραφημένο τοπικό vault');
   });
 });

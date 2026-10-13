@@ -138,6 +138,7 @@ function parastates(): ParastatesEksodiki {
   const eisodos: EisodosPipeline = {
     eclass: ekliron_eclass(),
     apothiki,
+    katevasma: { katevase: async () => ok({ megethos: 0 }) },
     llm: ekliron_llm(),
     mystika,
     rologi: new FakeRologi(),

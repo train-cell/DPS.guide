@@ -5,9 +5,9 @@ import type { Mathima } from '@dps/core';
 import { Karta, OloniKatastasis, Pilegma } from '../../koinima/index.js';
 import { adeio, etimo, fortosi, sfalma } from '../../kathstasi/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
-import { ftiaxe_periballon } from '../../periballon/index.js';
 import type { Periballon } from '../../periballon/index.js';
-import { fortose_mathimata_apo_apothiki, syndesi_kai_anaktisi_mathimaton } from '../../ypiresies/index.js';
+import { xrisiPeriballontosProairetika } from '../../periballon/provolos.js';
+import { syndesi_kai_anaktisi_mathimaton } from '../../ypiresies/index.js';
 import {
   EikonidioAsfaleias,
   EikonidioPanepistimiou,
@@ -16,10 +16,12 @@ import {
   type PanepistimioDedomena,
 } from '../../design/eikonidia-panepistimion.js';
 import { pare_tip_imeras } from './foititika-tips.js';
+import { BridgePairingCard } from '../../vault/bridge-pairing.js';
 import './proedri.css';
 
 /** Η προεπιλεγμένη διεύθυνση του eClass στο Πανεπιστήμιο Πειραιώς. */
 export const PROEDRI_BASE_URL = 'https://thales.cs.unipi.gr';
+type LmsTemplate = 'auto' | 'open-eclass' | 'moodle' | 'unsupported';
 
 /** Synolo ton vimaton sto Bevel-style onboarding wizard. */
 export const SYNOLA_VIMATA = 4;
@@ -54,16 +56,20 @@ const PERIGRAFI_VIMATOS: readonly string[] = [
 
 /** Ιδιότητες της οθόνης πρώτης εκτέλεσης. */
 export interface ProedriProps {
-  /** Περιβάλλον πυλών· όταν λείπει χτίζεται με τις προεπιλογές ψεύτικες πύλες. */
+  /** Περιβάλλον για test fixtures· στην εφαρμογή παρέχεται από το production provider. */
   readonly periballon?: Periballon;
 }
 
 /** Οθόνη πρώτης εκτέλεσης: Bevel-style Onboarding Wizard & Σύνδεση στο eClass. */
 export default function Proedri({ periballon }: ProedriProps) {
-  const pyles = useMemo(() => periballon ?? ftiaxe_periballon(), [periballon]);
+  const productionPeriballon = xrisiPeriballontosProairetika();
+  const pyles = periballon ?? productionPeriballon;
+  if (pyles === null) throw new Error('Λείπει το production Periballon provider.');
   const [base, setBase] = useState(PROEDRI_BASE_URL);
   const [xristis, setXristis] = useState('');
   const [kodikos, setKodikos] = useState('');
+  const [webserviceToken, setWebserviceToken] = useState('');
+  const [lms, setLms] = useState<LmsTemplate>('open-eclass');
   const [anamemeni, setAnamemeni] = useState(false);
   const [epixeirithike, setEpixeirithike] = useState(false);
   const [katastasi, setKatastasi] = useState<Katastasi<readonly Mathima[]>>(adeio);
@@ -98,10 +104,12 @@ export default function Proedri({ periballon }: ProedriProps) {
     return lista;
   }, [epilegmeniKatigoria, anazitisi]);
 
-  const xekinisei = xristis.trim().length > 0 && kodikos.trim().length > 0;
+  const canUseWebServiceToken = lms === 'moodle' && webserviceToken.trim().length > 0;
+  const xekinisei = lms !== 'unsupported' && (canUseWebServiceToken || (xristis.trim().length > 0 && kodikos.trim().length > 0));
 
   function epilexe_panepistimio(panepistimio: PanepistimioDedomena): void {
     setEpilegmenoPanepistimioId(panepistimio.id);
+    setLms(panepistimio.lms ?? 'auto');
     if (panepistimio.baseEclass.length > 0) {
       setBase(panepistimio.baseEclass);
     }
@@ -129,51 +137,36 @@ export default function Proedri({ periballon }: ProedriProps) {
   }
 
   async function pane_syndexi(): Promise<void> {
+    const runtime = pyles;
+    if (runtime === null) return;
     setAnamemeni(true);
     setEpixeirithike(true);
     setKatastasi(fortosi());
     try {
       const apotelesmaScraping = await syndesi_kai_anaktisi_mathimaton({
-        periballon: pyles,
+        periballon: runtime,
         base_url: base.trim(),
         onoma_xristi: xristis.trim(),
         kodikos: kodikos.trim(),
         panepistimio_id: epilegmenoPanepistimioId,
+        lms,
+        ...(webserviceToken.trim() ? { webservice_token: webserviceToken.trim() } : {}),
       });
 
       if (apotelesmaScraping.ok) {
-        await pyles.mystika.vale('eclass_onoma_xristi', xristis.trim());
-        await pyles.mystika.vale('eclass_kodikos', kodikos.trim());
-        await pyles.mystika.vale('eclass_panepistimio_id', epilegmenoPanepistimioId);
-        await pyles.mystika.vale('eclass_base_url', base.trim());
-        if (typeof localStorage !== 'undefined') {
-          try {
-            localStorage.setItem('eclass_panepistimio_id', epilegmenoPanepistimioId);
-            localStorage.setItem('eclass_onoma_xristi', xristis.trim());
-            localStorage.setItem('dps_sindesi_energi', 'true');
-          } catch {
-            // Ignored se private mode
-          }
-        }
+        if (xristis.trim()) await runtime.mystika.vale('eclass_onoma_xristi', xristis.trim());
+        if (kodikos.trim()) await runtime.mystika.vale('eclass_kodikos', kodikos.trim());
+        await runtime.mystika.vale('eclass_panepistimio_id', epilegmenoPanepistimioId);
+        await runtime.mystika.vale('eclass_base_url', base.trim());
         setKatastasi(etimo(apotelesmaScraping.timi));
+        setXristis('');
+        setKodikos('');
         setTrexonVima(4);
       } else {
-        const apotelesma = await fortose_mathimata_apo_apothiki(pyles.apothiki);
-        if (apotelesma.katastasi === 'etimo' && (pyles.deigma || xristis.trim() === 'demo')) {
-          await pyles.mystika.vale('eclass_onoma_xristi', xristis.trim());
-          await pyles.mystika.vale('eclass_kodikos', kodikos.trim());
-          await pyles.mystika.vale('eclass_panepistimio_id', epilegmenoPanepistimioId);
-          await pyles.mystika.vale('eclass_base_url', base.trim());
-          setKatastasi(apotelesma);
-          setTrexonVima(4);
-        } else {
-          setKatastasi(
-            sfalma({
-              kodikos: apotelesmaScraping.sfalma.kodikos,
-              minima: apotelesmaScraping.sfalma.minima,
-            })
-          );
-        }
+        setKatastasi(sfalma({
+          kodikos: apotelesmaScraping.sfalma.kodikos,
+          minima: apotelesmaScraping.sfalma.minima,
+        }));
       }
     } catch {
       setKatastasi(
@@ -241,13 +234,13 @@ export default function Proedri({ periballon }: ProedriProps) {
 
       <div className="onboarding-vima-deiktis">{PERIGRAFI_VIMATOS[trexonVima - 1]}</div>
 
-      {/* 2. Step 1: Eisagogi, Filosofia & Zero-Knowledge Vault */}
+      {/* 2. Step 1: Εισαγωγή και κρυπτογραφημένο vault */}
       <div className={`onboarding-vima-periexomeno vima-1${trexonVima === 1 ? ' vima-energo' : ' vima-krifo'}`}>
         <div className="onboarding-iroas-kouti">
           <h1 className="proedri-megalo">DPS.guide</h1>
           <p className="proedri-keimeno">
-            Ο βοηθός σου για το eClass: μαθήματα, αρχεία και ετοιμότητα για τις εξετάσεις, αποκλειστικά στο
-            κινητό σου.
+            Ο βοηθός σου για Open eClass και Moodle: μαθήματα, αρχεία και προετοιμασία εξετάσεων στον
+            υπολογιστή ή το κινητό σου.
           </p>
         </div>
 
@@ -255,7 +248,7 @@ export default function Proedri({ periballon }: ProedriProps) {
           <span className="asfaleia-shma-eikonidio">
             <EikonidioAsfaleias megethos={16} />
           </span>
-          <span>Zero-Knowledge Hardware Vault • Κρυπτογραφημένα τοπικά</span>
+          <span>Κρυπτογραφημένο τοπικό vault • Τα δεδομένα μένουν στη συσκευή</span>
         </div>
 
         <div className="foititiko-tip-kouti" data-testid="foititiko-tip-kouti">
@@ -270,8 +263,8 @@ export default function Proedri({ periballon }: ProedriProps) {
               🔒
             </div>
             <div className="onboarding-xaraktiristiko-keimeno">
-              <h3>100% Τοπική Ασφάλεια</h3>
-              <p>Τα διαπιστευτήρια και τα αρχεία σου αποθηκεύονται αποκλειστικά στη συσκευή σου.</p>
+              <h3>Κρυπτογράφηση στη συσκευή</h3>
+              <p>Τα μαθήματα, τα αρχεία και τα μυστικά κρυπτογραφούνται πριν αποθηκευτούν τοπικά.</p>
             </div>
           </div>
           <div className="onboarding-xaraktiristiko-grammi">
@@ -279,8 +272,8 @@ export default function Proedri({ periballon }: ProedriProps) {
               ⚡
             </div>
             <div className="onboarding-xaraktiristiko-keimeno">
-              <h3>Offline-First Μελέτη</h3>
-              <p>Όλο το υλικό, PDFs, σημειώσεις και πρόγραμμα είναι διαθέσιμα χωρίς σύνδεση.</p>
+              <h3>Μελέτη χωρίς σύνδεση</h3>
+              <p>Το υλικό που έχει ήδη συγχρονιστεί, οι σημειώσεις και το πρόγραμμα μένουν διαθέσιμα offline.</p>
             </div>
           </div>
           <div className="onboarding-xaraktiristiko-grammi">
@@ -288,8 +281,8 @@ export default function Proedri({ periballon }: ProedriProps) {
               🧠
             </div>
             <div className="onboarding-xaraktiristiko-keimeno">
-              <h3>Τοπικός AI Tutor</h3>
-              <p>Ερωτοαπαντήσεις και χάρτης γνώσης με απόλυτη ιδιωτικότητα και δικό σου κλειδί.</p>
+              <h3>Tutor με επιλογή παρόχου</h3>
+              <p>Χρησιμοποίησε τοπικό Ollama ή Gemini. Για Gemini απαιτείται συγκατάθεση ανά μάθημα και πριν από κάθε δημιουργία.</p>
             </div>
           </div>
         </div>
@@ -377,6 +370,7 @@ export default function Proedri({ periballon }: ProedriProps) {
                   <div className="karta-panepistimiou-periexomeno">
                     <span className="karta-panepistimiou-titlos">
                       {panepistimio.syntomiOnomasia} — {panepistimio.onoma}
+                      {panepistimio.lms === 'unsupported' ? ' · Μη υποστηριζόμενο' : panepistimio.lms === 'moodle' ? ' · Moodle' : panepistimio.lms === 'open-eclass' ? ' · Open eClass' : ' · Αυτόματος εντοπισμός'}
                     </span>
                     <span className="karta-panepistimiou-ypotitlos">{panepistimio.perigrafi}</span>
                   </div>
@@ -390,8 +384,8 @@ export default function Proedri({ periballon }: ProedriProps) {
       {/* 4. Step 3: Syndesi sto eClass & Forma Diapistevtirion */}
       <div className={`onboarding-vima-periexomeno vima-3${trexonVima === 3 ? ' vima-energo' : ' vima-krifo'}`}>
         <div className="onboarding-vima-epikefalida">
-          <h2>Σύνδεση στο eClass</h2>
-          <p>Συνδέσου με τα ακαδημαϊκά σου διαπιστευτήρια.</p>
+          <h2>Σύνδεση στο LMS</h2>
+          <p>Υποστηρίζονται τα πρότυπα Open eClass και Moodle. SSO-only portals εμφανίζουν σαφές σφάλμα.</p>
         </div>
 
         <div className="epilegmeno-panepistimio-proepiskopisi">
@@ -410,9 +404,11 @@ export default function Proedri({ periballon }: ProedriProps) {
           </button>
         </div>
 
+        <BridgePairingCard />
+
         <form className="proedri-travla" data-testid="proedri-forma" onSubmit={ypostiripse}>
           <label className="odoni-xeiris-zeugos" htmlFor="proedri-gramma-base">
-            Διεύθυνση eClass
+            Διεύθυνση LMS
           </label>
           <input
             className="proedri-travla-gramma"
@@ -424,11 +420,20 @@ export default function Proedri({ periballon }: ProedriProps) {
             autoComplete="url"
             value={base}
             onChange={(erevma) => setBase(erevma.target.value)}
-            aria-label="Διεύθυνση eClass"
+            aria-label="Διεύθυνση LMS"
           />
 
+          <label className="odoni-xeiris-zeugos" htmlFor="proedri-lms-template">Πρότυπο portal</label>
+          <select id="proedri-lms-template" className="proedri-travla-gramma" value={lms} onChange={(event) => setLms(event.target.value as LmsTemplate)}>
+            <option value="auto">Αυτόματος εντοπισμός Open eClass / Moodle</option>
+            <option value="open-eclass">Open eClass</option>
+            <option value="moodle">Moodle</option>
+            <option value="unsupported">Μη υποστηριζόμενο portal</option>
+          </select>
+          {lms === 'unsupported' && <p role="status">Αυτό το portal δεν έχει συνδετήρα Open eClass ή Moodle.</p>}
+
           <label className="odoni-xeiris-zeugos" htmlFor="proedri-gramma-xristis">
-            Όνομα χρήστη eClass
+            Όνομα χρήστη LMS
           </label>
           <input
             className="proedri-travla-gramma"
@@ -437,13 +442,14 @@ export default function Proedri({ periballon }: ProedriProps) {
             name="username"
             type="text"
             autoComplete="username"
+            required={!canUseWebServiceToken && lms !== 'unsupported'}
             value={xristis}
             onChange={(erevma) => setXristis(erevma.target.value)}
-            aria-label="Όνομα χρήστη eClass"
+            aria-label="Όνομα χρήστη LMS"
           />
 
           <label className="odoni-xeiris-zeugos" htmlFor="proedri-gramma-kodikos">
-            Κωδικός πρόσβασης eClass
+            Κωδικός πρόσβασης LMS
           </label>
           <input
             className="proedri-travla-gramma"
@@ -452,15 +458,21 @@ export default function Proedri({ periballon }: ProedriProps) {
             name="password"
             type="password"
             autoComplete="current-password"
+            required={!canUseWebServiceToken && lms !== 'unsupported'}
             value={kodikos}
             onChange={(erevma) => setKodikos(erevma.target.value)}
-            aria-label="Κωδικός πρόσβασης eClass"
+            aria-label="Κωδικός πρόσβασης LMS"
           />
 
+          {lms === 'moodle' && (
+            <>
+              <label className="odoni-xeiris-zeugos" htmlFor="proedri-moodle-token">Προαιρετικό Moodle Web Services token</label>
+              <input id="proedri-moodle-token" className="proedri-travla-gramma" type="password" autoComplete="off" value={webserviceToken} onChange={(event) => setWebserviceToken(event.target.value)} aria-label="Moodle Web Services token" />
+            </>
+          )}
+
           <p className="proedri-ypostirixtiki">
-            Το όνομα χρήστη και ο κωδικός αποθηκεύονται μόνο στη συσκευή σου, σε ασφαλή αποθήκευση, και
-            χρησιμοποιούνται μόνο για τη σύνδεση με τον διακομιστή του eClass. Δεν περνούν από κανέναν δικό
-            μας διακομιστή.
+            Τα διαπιστευτήρια και το προαιρετικό token κρυπτογραφούνται στο τοπικό vault και χρησιμοποιούνται μόνο για το LMS που επέλεξες.
           </p>
 
           <IonButton
@@ -468,19 +480,11 @@ export default function Proedri({ periballon }: ProedriProps) {
             expand="block"
             disabled={!xekinisei || anamemeni}
             data-testid="proediri-syndeon"
-            aria-label="Σύνδεση στο eClass"
-            onClick={ananevei}
+            aria-label="Σύνδεση στο LMS"
           >
             Σύνδεση
           </IonButton>
 
-          <button
-            type="button"
-            className="proedri-parakampsis-koumpi"
-            onClick={() => setTrexonVima(4)}
-          >
-            Δοκιμή σε Τοπική Λειτουργία (Demo / Offline)
-          </button>
         </form>
       </div>
 
@@ -502,16 +506,16 @@ export default function Proedri({ periballon }: ProedriProps) {
               <span className="apodeixi-timi">{epilegmenoPanepistimio.onoma}</span>
             </div>
             <div className="onboarding-apodeixi-grammi">
-              <span className="apodeixi-etiketa">Πύλη eClass</span>
+              <span className="apodeixi-etiketa">Πύλη LMS</span>
               <span className="apodeixi-timi">{base}</span>
             </div>
             <div className="onboarding-apodeixi-grammi">
               <span className="apodeixi-etiketa">Ασφάλεια</span>
-              <span className="apodeixi-timi">Zero-Knowledge Hardware Vault</span>
+              <span className="apodeixi-timi">Κρυπτογραφημένο τοπικό vault</span>
             </div>
             <div className="onboarding-apodeixi-grammi">
               <span className="apodeixi-etiketa">Λειτουργία</span>
-              <span className="apodeixi-timi">100% Τοπική (Offline-first)</span>
+              <span className="apodeixi-timi">Local-first · διαθέσιμο offline μετά τον συγχρονισμό</span>
             </div>
           </div>
         </div>

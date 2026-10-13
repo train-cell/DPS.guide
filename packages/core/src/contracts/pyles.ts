@@ -50,7 +50,9 @@ export type KleidiMystikou =
   | 'eclass_kodikos'
   | 'eclass_panepistimio_id'
   | 'eclass_base_url'
-  | 'llm_api_key';
+  | 'moodle_webservice_token'
+  | 'llm_api_key'
+  | 'vault_biometric_unlock';
 
 export interface MystikaPyli {
   pare(k: KleidiMystikou): Promise<string | null>;
@@ -104,4 +106,7 @@ export interface EclassPyli {
   syndesi(): Promise<Apotelesma<void>>;
   fere_mathimata(): Promise<Apotelesma<Mathima[]>>;
   fere_dentro_arxeion(kodikos: string): Promise<Apotelesma<KomvosArxeiou[]>>;
+  /** Optional connector metadata used only to keep authenticated download headers same-origin. */
+  readonly base_url?: string;
+  pare_kefalides_lipshs?(): Record<string, string>;
 }

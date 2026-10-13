@@ -9,7 +9,11 @@
   },
   "references": [
     { "path": "../../packages/core" },
-    { "path": "../../packages/adapters-capacitor" }
+    { "path": "../../packages/adapters-capacitor" },
+    { "path": "../../packages/ai" },
+    { "path": "../../packages/eclass" },
+    { "path": "../../packages/pipeline" }
   ],
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/testing/**"]
 }

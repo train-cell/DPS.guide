@@ -34,6 +34,7 @@ export interface PanepistimioDedomena {
   readonly baseEclass: string;
   readonly katigoria: KatigoriaPanepistimiou;
   readonly perigrafi: string;
+  readonly lms?: 'open-eclass' | 'moodle' | 'unsupported' | 'auto';
 }
 
 /** Proepilegmeno megethos tou eikonidiou se px. */
@@ -48,6 +49,7 @@ export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze
     baseEclass: 'https://thales.cs.unipi.gr',
     katigoria: 'athina',
     perigrafi: 'Τμήμα Πληροφορικής & eClass ΠΑΠΕΙ',
+    lms: 'open-eclass',
   },
   {
     id: 'uoa',
@@ -56,6 +58,7 @@ export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze
     baseEclass: 'https://eclass.uoa.gr',
     katigoria: 'athina',
     perigrafi: 'Πλατφόρμα Τηλεκπαίδευσης ΕΚΠΑ',
+    lms: 'open-eclass',
   },
   {
     id: 'ntua',
@@ -64,6 +67,7 @@ export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze
     baseEclass: 'https://mycourses.ntua.gr',
     katigoria: 'stem',
     perigrafi: 'MyCourses ΕΜΠ',
+    lms: 'unsupported',
   },
   {
     id: 'aueb',
@@ -72,6 +76,7 @@ export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze
     baseEclass: 'https://eclass.aueb.gr',
     katigoria: 'athina',
     perigrafi: 'eClass ΟΠΑ (ΑΣΟΕΕ)',
+    lms: 'open-eclass',
   },
   {
     id: 'auth',
@@ -80,6 +85,7 @@ export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze
     baseEclass: 'https://elearning.auth.gr',
     katigoria: 'thessaloniki',
     perigrafi: 'eLearning ΑΠΘ',
+    lms: 'moodle',
   },
   {
     id: 'upatras',
@@ -88,6 +94,7 @@ export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze
     baseEclass: 'https://eclass.upatras.gr',
     katigoria: 'perifereia',
     perigrafi: 'eClass Πανεπιστημίου Πατρών',
+    lms: 'open-eclass',
   },
   {
     id: 'uoc',
@@ -96,6 +103,7 @@ export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze
     baseEclass: 'https://elearn.uoc.gr',
     katigoria: 'perifereia',
     perigrafi: 'eLearn Πανεπιστημίου Κρήτης',
+    lms: 'moodle',
   },
   {
     id: 'duth',
@@ -104,6 +112,7 @@ export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze
     baseEclass: 'https://eclass.duth.gr',
     katigoria: 'perifereia',
     perigrafi: 'eClass ΔΠΘ',
+    lms: 'open-eclass',
   },
   {
     id: 'stem',
@@ -112,6 +121,7 @@ export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze
     baseEclass: 'https://eclass.gunet.gr',
     katigoria: 'stem',
     perigrafi: 'Open eClass / GUnet STEM',
+    lms: 'open-eclass',
   },
   {
     id: 'custom',
@@ -120,6 +130,7 @@ export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze
     baseEclass: '',
     katigoria: 'custom',
     perigrafi: 'Χειροκίνητη εισαγωγή διεύθυνσης eClass',
+    lms: 'auto',
   },
 ]);
 

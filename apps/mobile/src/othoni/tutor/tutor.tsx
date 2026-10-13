@@ -1,847 +1,381 @@
-import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { IonButton, IonSpinner } from '@ionic/react';
-import { Pilegma, OloniKatastasis, ProskelesioOmonimas } from '../../koinima/index.js';
-import { fortosi, etimo, type Katastasi } from '../../kathstasi/index.js';
-import { xoris_katastasi } from '../../kathstasi/index.js';
+import type { Enotita, Mathima, Selida } from '@dps/core';
+import { Karta, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
 import { xrisiApothekisis } from '../../apothiki/index.js';
 import { xrisiPeriballontos } from '../../periballon/index.js';
 import type { Periballon } from '../../periballon/index.js';
 import {
   fortose_synomilia_apo_apothiki,
   fortose_xartis_apo_apothiki,
+  diadromi_synomilias,
 } from '../../ypiresies/index.js';
-import type { Enotita, XartisMathimatos } from '@dps/core';
+import { fortose_mathimata_apo_apothiki } from '../../ypiresies/mathimata.js';
+import { read_course_gemini_opt_in, write_course_gemini_opt_in } from '../../ypiresies/ai-policy.js';
 
-/** Η απάντηση-φράγκος του tutor όταν δεν υπάρχει τεκμηρίωση στο υλικό. */
-export const APANTISI_YPARXEIS_STO_YLIKO = 'Δεν υπάρχει στο υλικό';
+export const APANTISI_YPARXEIS_STO_YLIKO = 'Δεν υπάρχει στο υλικό.';
 
-/** Χρόνος εικονικής «σκέψης» του tutor πριν την απάντηση, ώστε η αναμονή να είναι ορατή. */
-export const KATHYSTERISI_APANTISIS_MS = 420;
-
-/** Ένα γράμμα της ιστορικής συνομιλίας, είτε ερώτημα είτε απάντηση. */
 export interface GrammiImerrologiou {
   readonly rolos: 'xristis' | 'tutor';
   readonly keimeno: string;
 }
 
-/** Ιδιότητες του context του tutor: η ενεργή ενότητα και το πρώτο γράμμα. */
 export interface KontekstoTutor {
   readonly enotita: Enotita | null;
   readonly arxikes_grammata: readonly GrammiImerrologiou[];
 }
 
-/** Μία ερώτηση του διαδραστικού Quiz μαθήματος. */
-export interface ErotisiQuiz {
-  readonly id: string;
-  readonly kodikosMathimatos: string;
-  readonly enotitaId?: string;
-  readonly erotisi: string;
-  readonly epiloges: readonly string[];
-  readonly sostiEpilogi: 'A' | 'B' | 'Γ' | 'Δ';
-  readonly sostiPerigrafi: string;
-  readonly epexigisi: string;
-  readonly parapompi: string;
+export interface TutorCourseContext {
+  readonly course: Mathima;
+  readonly section: Enotita | null;
+  readonly pages: readonly Selida[];
+  readonly promptContext: string;
 }
 
-/** Ιδιότητες μιας ψεύτικης απάντησης του tutor και των λέξεων-κλειδιών της. */
-interface ApantisiPseudos {
-  readonly kleidi: readonly string[];
-  readonly keimeno: string;
-}
-
-/** Επιλογές γρήγορης ενέργειας (Quick Action Bar) πάνω από το chat input. */
 export const DRASEIS_TUTOR = [
-  { titlos: '🎯 Quiz Μαθήματος', prompt: '🎯 Quiz Μαθήματος' },
-  { titlos: '💡 Εξήγηση Ύλης', prompt: '💡 Εξήγηση Ύλης' },
-  { titlos: '⚠️ SOS Εξεταστικής', prompt: '⚠️ SOS Εξεταστικής' },
-  { titlos: '🧪 Λυμένη Άσκηση', prompt: '🧪 Λυμένη Άσκηση' },
+  { titlos: '🎯 Κάνε μου ερωτήσεις', prompt: 'Δημιούργησε ένα σύντομο quiz από το υλικό που δόθηκε. Περίμενε την απάντησή μου πριν εξηγήσεις.' },
+  { titlos: '💡 Εξήγησε την ύλη', prompt: 'Εξήγησε τα βασικά σημεία του υλικού που δόθηκε, ξεκινώντας από τα θεμέλια.' },
+  { titlos: '⚠️ Σημεία προσοχής', prompt: 'Εντόπισε τις παρανοήσεις ή τα δύσκολα σημεία που τεκμηριώνονται στο υλικό.' },
+  { titlos: '🧪 Πρότεινε άσκηση', prompt: 'Πρότεινε μία άσκηση βασισμένη στο υλικό. Μην εμφανίσεις λύση μέχρι να απαντήσω.' },
 ] as const;
 
-const TONI_ME_TONO: Readonly<Record<string, string>> = {
-  'ά': 'α',
-  'έ': 'ε',
-  'ή': 'η',
-  'ί': 'ι',
-  'ϊ': 'ι',
-  'ΐ': 'ι',
-  'ό': 'ο',
-  'ύ': 'υ',
-  'ϋ': 'υ',
-  'ΰ': 'υ',
-  'ώ': 'ω',
-};
+const MAX_CONTEXT_CHARACTERS = 24_000;
+const MAX_HISTORY_MESSAGES = 10;
+const GREETING = 'Έχω φορτώσει τοπικά το κείμενο των αρχείων αυτού του μαθήματος. Ρώτησέ με κάτι που τεκμηριώνεται σε αυτό.';
 
-/** Βάση δεδομένων ερωτήσεων Quiz ανά μάθημα και ενότητα. */
-export const EROTISEIS_QUIZ: readonly ErotisiQuiz[] = [
-  {
-    id: 'quiz-pli201-en1',
-    kodikosMathimatos: 'ΠΛΗ201',
-    enotitaId: 'en-1',
-    erotisi: 'Ποια είναι η ουσιαστική διαφορά μεταξύ ενός αλγορίθμου και ενός προγράμματος;',
-    epiloges: [
-      'A) Ο αλγόριθμος είναι η αφηρημένη μέθοδος επίλυσης, ενώ το πρόγραμμα είναι η συγκεκριμένη έκφρασή του σε γλώσσα προγραμματισμού.',
-      'B) Ο αλγόριθμος εκτελείται αποκλειστικά στο υλικό, ενώ το πρόγραμμα στο λειτουργικό σύστημα.',
-      'C) Δεν υφίσταται καμία διαφορά, αποτελούν ταυτόσημες έννοιες.',
-      'D) Το πρόγραμμα περιλαμβάνει μόνο μαθηματικούς τύπους χωρίς εντολές ελέγχου.',
-    ],
-    sostiEpilogi: 'A',
-    sostiPerigrafi:
-      'Ο αλγόριθμος είναι η αφηρημένη μέθοδος επίλυσης, ενώ το πρόγραμμα είναι η συγκεκριμένη έκφρασή του σε γλώσσα προγραμματισμού.',
-    epexigisi:
-      'Ο αλγόριθμος ορίζει τα λογικά βήματα επίλυσης ανεξάρτητα από πλατφόρμα, ενώ το πρόγραμμα αποτελεί τη γραμμή κώδικα που εκτελείται από τη μηχανή.',
-    parapompi: '[[arx-1: σ. 3]]',
-  },
-  {
-    id: 'quiz-pli201-en2',
-    kodikosMathimatos: 'ΠΛΗ201',
-    enotitaId: 'en-2',
-    erotisi: 'Στην Python, ποιο είναι το αποτέλεσμα και ο τύπος της πράξης 5 / 2;',
-    epiloges: [
-      'A) 2 με τύπο int',
-      'B) 2.5 με τύπο float',
-      'C) 2.0 με τύπο float',
-      'D) TypeError κατά την εκτέλεση',
-    ],
-    sostiEpilogi: 'B',
-    sostiPerigrafi: '2.5 με τύπο float',
-    epexigisi:
-      'Ο τελεστής διαίρεσης `/` στην Python 3 αποδίδει πάντα πραγματικό αριθμό (float). Για ακέραια διαίρεση χρησιμοποιείται ο τελεστής `//`.',
-    parapompi: '[[arx-1: σ. 14]]',
-  },
-  {
-    id: 'quiz-pli201-en3',
-    kodikosMathimatos: 'ΠΛΗ201',
-    enotitaId: 'en-3',
-    erotisi: 'Τι συμβαίνει όταν η συνθήκη ενός βρόχου while παραμένει πάντα αληθής;',
-    epiloges: [
-      'A) Ο βρόχος τερματίζει αυτόματα μετά από 100 επαναλήψεις.',
-      'B) Δημιουργείται ατέρμων βρόχος (infinite loop) και η εκτέλεση δεν προχωρά.',
-      'C) Εκτελείται αυτόματα το μπλοκ else.',
-      'D) Επιστρέφεται σιωπηρά η τιμή None.',
-    ],
-    sostiEpilogi: 'B',
-    sostiPerigrafi: 'Δημιουργείται ατέρμων βρόχος (infinite loop) και η εκτέλεση δεν προχωρά.',
-    epexigisi:
-      'Χωρίς ανανέωση της συνθήκης ή εντολή break, ο βρόχος δεν ικανοποιεί συνθήκη εξόδου και συνεχίζει επ’ άπειρον.',
-    parapompi: '[[arx-2: σ. 5]]',
-  },
-  {
-    id: 'quiz-pli201-en4',
-    kodikosMathimatos: 'ΠΛΗ201',
-    enotitaId: 'en-4',
-    erotisi: 'Σε μία λίστα μεγέθους len(p), ποιος είναι ο έγκυρος δείκτης του τελευταίου στοιχείου;',
-    epiloges: [
-      'A) len(p)',
-      'B) len(p) - 1',
-      'C) len(p) + 1',
-      'D) 0',
-    ],
-    sostiEpilogi: 'B',
-    sostiPerigrafi: 'len(p) - 1',
-    epexigisi:
-      'Οι δείκτες ξεκινούν από το 0, οπότε ένα στοιχείο με n στοιχεία έχει έγκυρους δείκτες από 0 έως n - 1.',
-    parapompi: '[[arx-2: σ. 22]]',
-  },
-  {
-    id: 'quiz-pli101-1',
-    kodikosMathimatos: 'ΠΛΗ101',
-    enotitaId: 'en-ds-1',
-    erotisi: 'Ποια είναι η θεμελιώδης αρχή λειτουργίας της Στοίβας (Stack) και της Ουράς (Queue);',
-    epiloges: [
-      'A) Στοίβα: FIFO, Ουρά: LIFO',
-      'B) Στοίβα: LIFO (Last-In-First-Out), Ουρά: FIFO (First-In-First-Out)',
-      'C) Και οι δύο λειτουργούν με τυχαία προσπέλαση O(1)',
-      'D) Και οι δύο ταξινομούν αυτόματα τα στοιχεία τους',
-    ],
-    sostiEpilogi: 'B',
-    sostiPerigrafi: 'Στοίβα: LIFO (Last-In-First-Out), Ουρά: FIFO (First-In-First-Out)',
-    epexigisi:
-      'Στη στοίβα το τελευταίο εισαχθέν στοιχείο εξάγεται πρώτο (push/pop στην κορυφή), ενώ στην ουρά το πρώτο που εισήχθη εξυπηρετείται πρώτο (enqueue στο τέλος, dequeue στην αρχή).',
-    parapompi: '[[arx-1: σ. 8]]',
-  },
-  {
-    id: 'quiz-pli101-2',
-    kodikosMathimatos: 'ΠΛΗ101',
-    enotitaId: 'en-ds-3',
-    erotisi: 'Ποια είναι η μέση χρονική πολυπλοκότητα αναζήτησης σε ένα ισοζυγισμένο Δυαδικό Δέντρο Αναζήτησης (BST);',
-    epiloges: [
-      'A) O(1)',
-      'B) O(n)',
-      'C) O(log n)',
-      'D) O(n log n)',
-    ],
-    sostiEpilogi: 'Γ',
-    sostiPerigrafi: 'O(log n)',
-    epexigisi:
-      'Σε κάθε επίπεδο του ισοζυγισμένου BST αποκλείεται το ήμισυ των κόμβων, άρα η αναζήτηση ολοκληρώνεται σε λογαριθμικό χρόνο O(log n).',
-    parapompi: '[[arx-1: σ. 22]]',
-  },
-  {
-    id: 'quiz-pli302-1',
-    kodikosMathimatos: 'ΠΛΗ302',
-    erotisi: 'Ποια ιδιότητα ACID εξασφαλίζει ότι μία συναλλαγή είτε θα εκτελεστεί πλήρως είτε δεν θα εφαρμοστεί καμία αλλαγή;',
-    epiloges: [
-      'A) Ατομικότητα (Atomicity)',
-      'B) Συνέπεια (Consistency)',
-      'C) Απομόνωση (Isolation)',
-      'D) Ανθεκτικότητα (Durability)',
-    ],
-    sostiEpilogi: 'A',
-    sostiPerigrafi: 'Ατομικότητα (Atomicity)',
-    epexigisi:
-      'Η Ατομικότητα (all-or-nothing) εγγυάται ότι σε περίπτωση σφάλματος πριν το commit, εκτελείται πλήρης αναίρεση (rollback).',
-    parapompi: '[[arx-1: σ. 30]]',
-  },
-  {
-    id: 'quiz-pli302-2',
-    kodikosMathimatos: 'ΠΛΗ302',
-    erotisi: 'Ποια είναι η κύρια διαφορά ανάμεσα στις εντολές WHERE και HAVING στην SQL;',
-    epiloges: [
-      'A) Το WHERE φιλτράρει γραμμές πριν την ομαδοποίηση, ενώ το HAVING φιλτράρει συγκεντρωτικές ομάδες μετά το GROUP BY.',
-      'B) Το WHERE χρησιμοποιείται μόνο για αριθμητικά πεδία, ενώ το HAVING για κείμενα.',
-      'C) Δεν υπάρχει διαφορά, είναι εναλλάξιμες.',
-      'D) Το WHERE μπορεί να χρησιμοποιεί συναρτήσεις συνάθροισης (π.χ. SUM, COUNT).',
-    ],
-    sostiEpilogi: 'A',
-    sostiPerigrafi: 'Το WHERE φιλτράρει γραμμές πριν την ομαδοποίηση, ενώ το HAVING φιλτράρει συγκεντρωτικές ομάδες μετά το GROUP BY.',
-    epexigisi:
-      'Το WHERE αξιολογείται σε επίπεδο μεμονωμένης εγγραφής, ενώ το HAVING εφαρμόζεται στα συγκεντρωτικά αποτελέσματα του GROUP BY.',
-    parapompi: '[[arx-1: σ. 12]]',
-  },
-  {
-    id: 'quiz-pli204-1',
-    kodikosMathimatos: 'ΠΛΗ204',
-    erotisi: 'Ποια είναι η ακολουθία των βασικών σταδίων του κλασικού κύκλου εντολής επεξεργαστή;',
-    epiloges: [
-      'A) Execute -> Fetch -> Decode',
-      'B) Fetch (Ανάκληση) -> Decode (Αποκωδικοποίηση) -> Execute (Εκτέλεση)',
-      'C) Store -> Read -> Interrupt',
-      'D) Pipeline -> Cache -> Branch',
-    ],
-    sostiEpilogi: 'B',
-    sostiPerigrafi: 'Fetch (Ανάκληση) -> Decode (Αποκωδικοποίηση) -> Execute (Εκτέλεση)',
-    epexigisi:
-      'Ο επεξεργαστής διαβάζει την εντολή από τη μνήμη (Fetch), την αποκωδικοποιεί στη μονάδα ελέγχου (Decode) και εκτελεί την πράξη στην ALU (Execute).',
-    parapompi: '[[arx-1: σ. 9]]',
-  },
-  {
-    id: 'quiz-pli204-2',
-    kodikosMathimatos: 'ΠΛΗ204',
-    erotisi: 'Ποιο είδος τοπικότητας αξιοποιεί η προσωρινή αποθήκευση πρόσφατα προσπελασμένων δεδομένων στην Cache;',
-    epiloges: [
-      'A) Χρονική τοπικότητα (Temporal Locality)',
-      'B) Χωρική τοπικότητα (Spatial Locality)',
-      'C) Δικτυακή τοπικότητα',
-      'D) Σειριακή πολυπλεξία',
-    ],
-    sostiEpilogi: 'A',
-    sostiPerigrafi: 'Χρονική τοπικότητα (Temporal Locality)',
-    epexigisi:
-      'Η χρονική τοπικότητα βασίζεται στην παρατήρηση ότι δεδομένα που χρησιμοποιήθηκαν πρόσφατα είναι πολύ πιθανό να ξαναχρησιμοποιηθούν σύντομα.',
-    parapompi: '[[arx-1: σ. 14]]',
-  },
-];
-
-const APANTISEIS_PSEDES: readonly ApantisiPseudos[] = [
-  {
-    kleidi: ['μεταβλητη', 'μεταβλητες', 'int', 'float', 'τυπος'],
-    keimeno:
-      'Μεταβλητή είναι ένα όνομα που δεσμεύει θέση στη μνήμη, και ο τύπος της (int, float, boolean) καθορίζει τι επιτρέπεται να αποθηκεύσει. Δηλώνεται μία φορά και μετά αλλάζει τιμή με εκχωρήσεις.',
-  },
-  {
-    kleidi: ['παγιδα', 'παγιδες', 'sos'],
-    keimeno:
-      'Οι συχνότερες παγίδες: στην Python το 5 / 2 δεν κάνει στρογγυλό, τα δείκτες ξεκινούν από 0 και το range(1, 5) σταματά στο 4.',
-  },
-  {
-    kleidi: ['εντολη', 'if', 'else', 'elif', 'συνθηκη'],
-    keimeno:
-      'Η επιλεκτική εκτέλεση if / elif / else τρέχει το πρώτο κλάδημα που ικανοποιεί τη συνθήκη. Δύο ανεξάρτητα if δεν κάνουν «αλλιώς»· γι’ αυτό υπάρχει το elif.',
-  },
-  {
-    kleidi: ['βροχο', 'while', 'for', 'επαναληψη'],
-    keimeno:
-      'Ο while επαναλαμβάνει όσο η συνθήκη κρατάει, ο for όσο διατρέχει μια ακολουθία. Χωρίς αρχικοποίηση ή επαύξηση της συνθήκης ο βρόχος δεν τερματίζει ποτέ.',
-  },
-  {
-    kleidi: ['πινακ', 'array', 'δεικτη', 'δεικτες'],
-    keimeno:
-      'Ο πίνακας αποθηκεύει στοιχεία ίδιου τύπου με συνεχείς δείκτες από το 0, οπότε ο τελευταίος έχει τιμή len(p) - 1.',
-  },
-  {
-    kleidi: ['συναρτησ', 'function', 'return'],
-    keimeno:
-      'Η συνάρτηση δέχεται παραμέτρους και επιστρέφει τιμή με return. Χωρίς return επιστρέφει None, και οι μεταβλητές μέσα της είναι τοπικές.',
-  },
-  {
-    kleidi: ['αλγοριθμ', 'διαδρομη εκτελεσης', 'προγραμμ'],
-    keimeno:
-      'Ο αλγόριθμος είναι η ιδέα της λύσης και το πρόγραμμα η γραμμή κώδικα που την εκφράζει. Η διαδρομή εκτέλεσης είναι η σειρά των εντολών όπως τρέχουν πραγματικά.',
-  },
-  {
-    kleidi: ['αυτοελεγχο', 'εξετασ', 'τελικη'],
-    keimeno:
-      'Ο αυτοέλεγχος έχει 3–5 ερωτήσεις με κρυφές απαντήσεις. Κάθε απάντηση παραπέμπει στη σελίδα της πηγής, ώστε να ελέγχεται στο υλικό.',
-  },
-  {
-    kleidi: ['στοιβα', 'stack', 'lifo', 'push', 'pop'],
-    keimeno:
-      'Η Στοίβα (Stack) είναι δομή LIFO (Last-In-First-Out) όπου η εισαγωγή (push) και η εξαγωγή (pop) εκτελούνται στην κορυφή σε χρόνο O(1). [[arx-1: σ. 8]]',
-  },
-  {
-    kleidi: ['ουρα', 'queue', 'fifo', 'enqueue', 'dequeue'],
-    keimeno:
-      'Η Ουρά (Queue) είναι δομή FIFO (First-In-First-Out) όπου η εισαγωγή (enqueue) γίνεται στο τέλος και η εξαγωγή (dequeue) στην αρχή σε χρόνο O(1). [[arx-1: σ. 12]]',
-  },
-  {
-    kleidi: ['δεντρ', 'tree', 'bst', 'δυαδικο'],
-    keimeno:
-      'Το Δυαδικό Δέντρο Αναζήτησης (BST) περιέχει κόμβους όπου το αριστερό παιδί έχει μικρότερο κλειδί και το δεξί μεγαλύτερο. Αναζήτηση σε μέσο χρόνο O(log n). [[arx-1: σ. 22]]',
-  },
-  {
-    kleidi: ['διασυνδεδεμεν', 'linked list', 'κομβο'],
-    keimeno:
-      'Η διασυνδεδεμένη λίστα αποτελείται από κόμβους με δείκτες. Επιτρέπει δυναμική δέσμευση και εισαγωγή/διαγραφή στην αρχή σε χρόνο O(1). [[arx-1: σ. 5]]',
-  },
-  {
-    kleidi: ['πολυπλοκοτητ', 'big o', 'o(n)', 'o(1)'],
-    keimeno:
-      'Η ασυμπτωτική πολυπλοκότητα Big-O εκφράζει το άνω φράγμα αύξησης του χρόνου εκτέλεσης ή μνήμης σε συνάρτηση με το μέγεθος n των δεδομένων εισόδου. [[arx-1: σ. 15]]',
-  },
-  {
-    kleidi: ['sql', 'select', 'query'],
-    keimeno:
-      'Η SQL είναι δηλωτική γλώσσα ερωτημάτων σχεσιακών βάσεων. Η εντολή SELECT...FROM...WHERE φιλτράρει και ανακτά γραμμές που ικανοποιούν κριτήρια. [[arx-1: σ. 10]]',
-  },
-  {
-    kleidi: ['join', 'inner join', 'left join'],
-    keimeno:
-      'Η πράξη JOIN συνδέει εγγραφές από δύο ή περισσότερους πίνακες βάσει συσχετιζόμενων πεδίων πρωτεύοντος και ξένου κλειδιού. [[arx-1: σ. 18]]',
-  },
-  {
-    kleidi: ['πρωτευον', 'primary key', 'foreign key'],
-    keimeno:
-      'Το Πρωτεύον Κλειδί ταυτοποιεί μοναδικά κάθε εγγραφή (απαγορεύεται NULL), ενώ το Ξένο Κλειδί εξασφαλίζει αναφορική ακεραιότητα μεταξύ πινάκων. [[arx-1: σ. 7]]',
-  },
-  {
-    kleidi: ['κανονικοποιησ', '1nf', '2nf', '3nf'],
-    keimeno:
-      'Η κανονικοποίηση εξαλείφει τον πλεονασμό δεδομένων και προλαμβάνει ανωμαλίες εισαγωγής, ενημέρωσης και διαγραφής μέσω διάσπασης πινάκων. [[arx-1: σ. 25]]',
-  },
-  {
-    kleidi: ['acid', 'συναλλαγ', 'transaction'],
-    keimeno:
-      'Οι ιδιότητες ACID εγγυώνται: Ατομικότητα (Atomicity), Συνέπεια (Consistency), Απομόνωση (Isolation) και Ανθεκτικότητα (Durability) των συναλλαγών. [[arx-1: σ. 30]]',
-  },
-  {
-    kleidi: ['cpu', 'επεξεργαστ', 'alu', 'καταχωρητ'],
-    keimeno:
-      'Η CPU περιλαμβάνει την ALU για υπολογισμούς, τη Μονάδα Ελέγχου και τους Καταχωρητές (Registers) για ταχύτατη αποθήκευση εντολών και δεικτών. [[arx-1: σ. 4]]',
-  },
-  {
-    kleidi: ['cache', 'κρυφη μνημη', 'l1', 'l2'],
-    keimeno:
-      'Η μνήμη Cache είναι γρήγορη μνήμη SRAM που μειώνει την καθυστέρηση προσπέλασης δεδομένων από την κεντρική μνήμη RAM εκμεταλλευόμενη την τοπικότητα. [[arx-1: σ. 14]]',
-  },
-  {
-    kleidi: ['κυκλος εντολης', 'fetch', 'decode', 'execute'],
-    keimeno:
-      'Ο κύκλος εντολής περιλαμβάνει: Ανάκληση (Fetch από μνήμη), Αποκωδικοποίηση (Decode από μονάδα ελέγχου) και Εκτέλεση (Execute από την ALU). [[arx-1: σ. 9]]',
-  },
-  {
-    kleidi: ['assembly', 'mips'],
-    keimeno:
-      'Η γλώσσα Assembly παρέχει συμβολική έκφραση της γλώσσας μηχανής, όπου κάθε εντολή (π.χ. add, lw, beq στο MIPS) αντιστοιχεί σε συγκεκριμένη λειτουργία υλικού. [[arx-1: σ. 20]]',
-  },
-];
-
-/** Κανονικοποιεί ελληνικό κείμενο σε μικρά γράμματα χωρίς τόνους, για ανθεκτική αντιστοίχιση. */
-export function kanonikopoiei(keimeno: string): string {
-  return keimeno
-    .toLowerCase()
-    .replaceAll('ς', 'σ')
-    .split('')
-    .map((char) => TONI_ME_TONO[char] ?? char)
-    .join('');
+function safeCourseSegment(value: string): string {
+  return encodeURIComponent(value).replaceAll('%', '_');
 }
 
-/** Βρίσκει την ενότητα του χάρτη με όρους αντιστοίχισης ανθεκτικούς σε τόνους και κενά. */
-export function enotita_apo_xarti(xartis: XartisMathimatos, enotita_id: string): Enotita | null {
-  const zitoumeni = kanonikopoiei(enotita_id).trim();
-  if (zitoumeni === '') {
-    return null;
-  }
-  return xartis.enotites.find((katixeino) => kanonikopoiei(katixeino.id) === zitoumeni) ?? null;
-}
-
-/** Το χαιρετιστήριο γράμμα του tutor για την ενότητα και το μάθημα. */
-export function xairetisma_tutor(
-  enotita: Enotita | null,
-  kodikosMathimatos?: string
-): GrammiImerrologiou {
-  const anafMathimatos = kodikosMathimatos ? `του μαθήματος ${kodikosMathimatos}` : 'του μαθήματος';
-  const skeinos =
-    enotita === null
-      ? `το μάθημα${kodikosMathimatos ? ` (${kodikosMathimatos})` : ''}`
-      : `την ενότητα «${enotita.titlos}» ${anafMathimatos}`;
-  return {
-    rolos: 'tutor',
-    keimeno: `Γεια σου, ρώτα με γλώσσα του μαθήματος για ${skeinos}. Αν κάτι δεν τεκμηριώνεται στο υλικό, θα το πω.`,
-  };
-}
-
-/** Ελέγχει εάν το κείμενο αποτελεί αίτημα έναρξης Quiz. */
-export function einai_aitima_quiz(keimeno: string): boolean {
-  const k = kanonikopoiei(keimeno).trim();
-  return (
-    k.includes('quiz') ||
-    k.includes('κουιζ') ||
-    k.includes('εξετασε με') ||
-    k.includes('τεστ') ||
-    k.includes('εξεταση')
-  );
-}
-
-/** Αναγνωρίζει αν το κείμενο του χρήστη αποτελεί επιλογή απάντησης πολλαπλής επιλογής (A, B, C/Γ, D/Δ). */
-export function entopise_epilogi_apantisis(keimeno: string): 'A' | 'B' | 'Γ' | 'Δ' | null {
-  const k = kanonikopoiei(keimeno).trim();
-  if (k === 'α' || k === 'a' || k.startsWith('επιλογη α') || k.startsWith('α)') || k.startsWith('α.')) {
-    return 'A';
-  }
-  if (k === 'β' || k === 'b' || k.startsWith('επιλογη β') || k.startsWith('β)') || k.startsWith('β.')) {
-    return 'B';
-  }
-  if (k === 'γ' || k === 'c' || k.startsWith('επιλογη γ') || k.startsWith('γ)') || k.startsWith('γ.')) {
-    return 'Γ';
-  }
-  if (k === 'δ' || k === 'd' || k.startsWith('επιλογη δ') || k.startsWith('δ)') || k.startsWith('δ.')) {
-    return 'Δ';
-  }
-  return null;
-}
-
-/** Επιλέγει την καταλληλότερη ερώτηση Quiz για το ενεργό μάθημα και ενότητα. */
-export function pare_erotisi_quiz(kodikosMathimatos?: string, enotitaId?: string): ErotisiQuiz {
-  const katharisKodikos = (kodikosMathimatos ?? 'ΠΛΗ201').trim();
-  if (enotitaId !== undefined && enotitaId.trim() !== '') {
-    const vrethikeEnotitas = EROTISEIS_QUIZ.find(
-      (q) => q.kodikosMathimatos === katharisKodikos && q.enotitaId === enotitaId
-    );
-    if (vrethikeEnotitas !== undefined) {
-      return vrethikeEnotitas;
-    }
-  }
-  const vrethikeMathimatos = EROTISEIS_QUIZ.find((q) => q.kodikosMathimatos === katharisKodikos);
-  if (vrethikeMathimatos !== undefined) {
-    return vrethikeMathimatos;
-  }
-  return {
-    id: `quiz-${katharisKodikos}-dyn`,
-    kodikosMathimatos: katharisKodikos,
-    erotisi: `Ποιος είναι ο βασικός στόχος μελέτης και η κεντρική μεθοδολογία στο μάθημα ${katharisKodikos};`,
-    epiloges: [
-      'A) Η ουσιαστική κατανόηση των θεμελιωδών εννοιών και η πρακτική εφαρμογή στην επίλυση προβλημάτων.',
-      'B) Η αποστήθιση κειμένων χωρίς κατανόηση της θεωρίας.',
-      'Γ) Η αποφυγή εκτέλεσης πρακτικών ασκήσεων και εργαστηρίων.',
-      'Δ) Η επιφανειακή ανάγνωση χωρίς εξάσκηση.',
-    ],
-    sostiEpilogi: 'A',
-    sostiPerigrafi: 'Η ουσιαστική κατανόηση των θεμελιωδών εννοιών και η πρακτική εφαρμογή στην επίλυση προβλημάτων.',
-    epexigisi: `Στο μάθημα ${katharisKodikos}, η κατανόηση της θεωρίας σε συνδυασμό με την πρακτική εξάσκηση εξασφαλίζουν την πλήρη ετοιμότητα για την εξεταστική.`,
-    parapompi: '[[arx-1: σ. 1]]',
-  };
-}
-
-/** Μορφοποιεί την ερώτηση Quiz για την οθόνη του Tutor. */
-export function diamorfose_erotisi_quiz(
-  q: ErotisiQuiz,
-  kodikosMathimatos?: string,
-  enotitaTitlos?: string
-): string {
-  const perigrafi = enotitaTitlos
-    ? `(${kodikosMathimatos ?? q.kodikosMathimatos} - ${enotitaTitlos})`
-    : `(${kodikosMathimatos ?? q.kodikosMathimatos})`;
-  return [
-    `🎯 Quiz Μαθήματος ${perigrafi}`,
-    '',
-    `Ερώτηση: ${q.erotisi}`,
-    '',
-    ...q.epiloges,
-    '',
-    '👉 Απάντησε με το γράμμα της επιλογής σου (Α, Β, Γ, Δ).',
-  ].join('\n');
-}
-
-/** Αξιολογεί την απάντηση του χρήστη στο ενεργό Quiz. */
-export function axiologise_quiz(q: ErotisiQuiz, epilogi: 'A' | 'B' | 'Γ' | 'Δ'): string {
-  if (epilogi === q.sostiEpilogi) {
-    return [
-      `✅ Σωστά! (Επιλογή ${q.sostiEpilogi})`,
-      '',
-      `💡 Ανάλυση: ${q.epexigisi}`,
-      '📊 Σκορ: 1/1 (100%)',
-      `📖 Τεκμηρίωση: ${q.parapompi}`,
-    ].join('\n');
-  }
-  return [
-    '❌ Λάθος απάντηση.',
-    '',
-    `Η σωστή επιλογή είναι η ${q.sostiEpilogi}: ${q.sostiPerigrafi}`,
-    `💡 Ανάλυση: ${q.epexigisi}`,
-    '📊 Σκορ: 0/1 (0%)',
-    `📖 Τεκμηρίωση: ${q.parapompi}`,
-  ].join('\n');
-}
-
-/** Επιστρέφει την κατάλληλη απάντηση για τα κουμπιά γρήγορης ενέργειας (Quick Actions). */
-export function apantisi_drasis(
-  typosDrasis: string,
-  kodikosMathimatos?: string,
-  enotitaTitlos?: string
-): string {
-  const kodikos = (kodikosMathimatos ?? 'ΠΛΗ201').trim();
-  const k = kanonikopoiei(typosDrasis);
-
-  if (k.includes('εξηγηση') || k.includes('υλη')) {
-    if (kodikos === 'ΠΛΗ101') {
-      return '💡 Σύνοψη Ύλης ΠΛΗ101 (Δομές Δεδομένων):\nΓραμμικές δομές (λίστες, στοίβες LIFO, ουρές FIFO), ιεραρχικές δομές (δέντρα BST), αλγόριθμοι αναζήτησης/ταξινόμησης και ασυμπτωτική ανάλυση Big-O. [[arx-1: σ. 1–30]]';
-    }
-    if (kodikos === 'ΠΛΗ302') {
-      return '💡 Σύνοψη Ύλης ΠΛΗ302 (Βάσεις Δεδομένων):\nΣχεσιακό μοντέλο, σχεδιασμός ERD, γλώσσα SQL (DDL/DML, JOINs, aggregations), κανονικοποίηση 1NF–3NF και συναλλαγές ACID. [[arx-1: σ. 1–30]]';
-    }
-    if (kodikos === 'ΠΛΗ204') {
-      return '💡 Σύνοψη Ύλης ΠΛΗ204 (Αρχιτεκτονική Υπολογιστών):\nΑρχιτεκτονική von Neumann, οργάνωση CPU (ALU, καταχωρητές), ιεραρχία Cache/RAM, κύκλος εντολής Fetch-Decode-Execute και assembly MIPS. [[arx-1: σ. 1–25]]';
-    }
-    return `💡 Σύνοψη Ύλης ΠΛΗ201 (Προγραμματισμός):\nΒασικές αρχές: αλγόριθμοι, μεταβλητές & τύποι (int, float, bool), έλεγχος ροής (if, while, for), και δομές συναρτήσεων με παραμέτρους και return. ${
-      enotitaTitlos ? `Ενεργή ενότητα: «${enotitaTitlos}».` : ''
-    } [[arx-1: σ. 1–28]]`;
-  }
-
-  if (
-    k.includes('sos εξεταστικης') ||
-    (k.includes('sos') && (k.includes('εξετασ') || k.includes('εξεταστικ')))
-  ) {
-    if (kodikos === 'ΠΛΗ101') {
-      return '⚠️ SOS Παγίδες Εξεταστικής (ΠΛΗ101):\nΟι συχνότερες παγίδες:\n1. Διαφορά LIFO (στοίβα) και FIFO (ουρά) στις push/pop και enqueue/dequeue.\n2. Χρόνος διαγραφής σε λίστα: O(1) με δείκτη, O(n) με αναζήτηση.\n3. Σε μη-ισοζυγισμένο BST η αναζήτηση εκφυλίζεται σε O(n).\n4. Υπερχείλιση στοίβας (stack overflow) σε αναδρομή χωρίς τερματισμό. [[arx-1: σ. 15]]';
-    }
-    if (kodikos === 'ΠΛΗ302') {
-      return '⚠️ SOS Παγίδες Εξεταστικής (ΠΛΗ302):\nΟι συχνότερες παγίδες:\n1. Χρήση WHERE vs HAVING: το WHERE δεν δέχεται συναθροίσεις.\n2. Διαφορά INNER JOIN vs LEFT JOIN όταν υπάρχουν εγγραφές χωρίς ταίριασμα.\n3. Παραβίαση αναφορικής ακεραιότητας κατά τη διαγραφή γονέα.\n4. Κανονικοποίηση 2NF (πλήρης εξάρτηση) vs 3NF (χωρίς μεταβατική εξάρτηση). [[arx-1: σ. 20]]';
-    }
-    if (kodikos === 'ΠΛΗ204') {
-      return '⚠️ SOS Παγίδες Εξεταστικής (ΠΛΗ204):\nΟι συχνότερες παγίδες:\n1. Χρόνος CPU: CPU Time = IC × CPI × Clock Cycle Time.\n2. Διαφορά χωρικής και χρονικής τοπικότητας στις κρυφές μνήμες.\n3. Hazards σε pipeline επεξεργαστή (data, control, structural hazards).\n4. Εντολές άλματος Assembly (beq, bne) και υπολογισμός διεύθυνσης. [[arx-1: σ. 18]]';
-    }
-    return '⚠️ SOS Παγίδες Εξεταστικής (ΠΛΗ201):\nΟι συχνότερες παγίδες: στην Python το 5 / 2 δεν κάνει στρογγυλό, τα δείκτες ξεκινούν από 0 και το range(1, 5) σταματά στο 4. [[arx-1: σ. 10]]';
-  }
-
-  if (k.includes('ασκησ') || k.includes('παραδειγμ')) {
-    if (kodikos === 'ΠΛΗ101') {
-      return '🧪 Λυμένη Άσκηση (ΠΛΗ101):\nΠρόβλημα: Έλεγχος ισορροπημένων παρενθέσεων με Στοίβα.\nΑλγόριθμος: Κάθε άνοιγμα «(» εισάγεται με push. Κάθε κλείσιμο «)» αφαιρεί με pop. Εάν η στοίβα είναι κενή κατά το pop ή μη-κενή στο τέλος, η έκφραση είναι άκυρη. Χρόνος O(n), χώρος O(n). [[arx-1: σ. 9]]';
-    }
-    if (kodikos === 'ΠΛΗ302') {
-      return '🧪 Λυμένη Άσκηση (ΠΛΗ302):\nΠρόβλημα: Εύρεση τμημάτων με μέσο όρο βαθμολογίας > 8.\nΕρώτημα SQL:\nSELECT tmima, AVG(vathmos) AS mo\nFROM foitites\nGROUP BY tmima\nHAVING AVG(vathmos) > 8.0;\nΕπεξήγηση: Το GROUP BY ομαδοποιεί και το HAVING φιλτράρει το συγκεντρωτικό αποτέλεσμα. [[arx-1: σ. 14]]';
-    }
-    if (kodikos === 'ΠΛΗ204') {
-      return '🧪 Λυμένη Άσκηση (ΠΛΗ204):\nΠρόβλημα: Υπολογισμός ποσοστού Cache Hit.\nΔεδομένα: Σε 1000 προσπελάσεις μνήμης, οι 950 εξυπηρετούνται από την Cache.\nΛύση: Hit Rate = 950 / 1000 = 95%. Miss Rate = 100% - 95% = 5%. AMAT = Hit Time + (Miss Rate × Miss Penalty). [[arx-1: σ. 16]]';
-    }
-    return '🧪 Λυμένη Άσκηση (ΠΛΗ201):\nΠρόβλημα: Υπολογισμός αθροίσματος ζυγών αριθμών σε λίστα.\nΚώδικας:\ndef athroisma_zygon(arithmoi):\n    synolo = 0\n    for arithmos in arithmoi:\n        if arithmos % 2 == 0:\n            synolo += arithmos\n    return synolo\nΕπεξήγηση: Ο βρόχος διατρέχει τα στοιχεία και το if ελέγχει το υπόλοιπο διαίρεσης με το 2. [[arx-1: σ. 21]]';
-  }
-
-  return APANTISI_YPARXEIS_STO_YLIKO;
-}
-
-/** Δίνει την απάντηση του tutor· χωρίς αντιστοίχιση επιστρέφει ακριβώς «Δεν υπάρχει στο υλικό». */
-export function apantisa_tutor(
-  erotisi: string,
-  konteksto?: {
-    readonly kodikosMathimatos?: string | undefined;
-    readonly enotitaId?: string | undefined;
-    readonly enotitaTitlos?: string | undefined;
-  }
-): string {
-  const zitoumeni = kanonikopoiei(erotisi).trim();
-  if (zitoumeni === '') {
-    return APANTISI_YPARXEIS_STO_YLIKO;
-  }
-
-  if (einai_aitima_quiz(zitoumeni)) {
-    const q = pare_erotisi_quiz(konteksto?.kodikosMathimatos, konteksto?.enotitaId);
-    return diamorfose_erotisi_quiz(q, konteksto?.kodikosMathimatos, konteksto?.enotitaTitlos);
-  }
-
-  const drasi = apantisi_drasis(zitoumeni, konteksto?.kodikosMathimatos, konteksto?.enotitaTitlos);
-  if (drasi !== APANTISI_YPARXEIS_STO_YLIKO) {
-    return drasi;
-  }
-
-  for (const apantisi of APANTISEIS_PSEDES) {
-    for (const kleidi of apantisi.kleidi) {
-      if (zitoumeni.includes(kanonikopoiei(kleidi))) {
-        return apantisi.keimeno;
-      }
-    }
-  }
-
-  return APANTISI_YPARXEIS_STO_YLIKO;
-}
-
-/**
- * Συνδυάζει την αξιολόγηση quiz, τον έλεγχο του LLM Port (Hardware Vault / API key / MockLlm)
- * και την εφεδρική τοπική μηχανή τεκμηριωμένης συλλογιστικής (Grounded Reasoning Engine).
- */
-export async function apantisi_me_llm_i_topika(
-  erotisi: string,
-  periballon: Periballon,
-  kodikosMathimatos: string,
-  enotita: Enotita | null,
-  ekremesQuiz: ErotisiQuiz | null,
-  istoriko: readonly GrammiImerrologiou[]
-): Promise<{ readonly keimeno: string; readonly neoQuiz: ErotisiQuiz | null }> {
-  const katharis = erotisi.trim();
-
-  // 1. Εάν υπάρχει ενεργό quiz σε αναμονή, ελέγχουμε αν ο χρήστης έδωσε επιλογή απάντησης
-  if (ekremesQuiz !== null) {
-    const epilogi = entopise_epilogi_apantisis(katharis);
-    if (epilogi !== null) {
-      return {
-        keimeno: axiologise_quiz(ekremesQuiz, epilogi),
-        neoQuiz: null,
-      };
-    }
-  }
-
-  // 2. Εάν ζητήθηκε έναρξη Quiz (είτε με κουμπί είτε με κείμενο «quiz», «κουιζ», «τεστ», «εξετασε με»)
-  if (einai_aitima_quiz(katharis)) {
-    const neoQ = pare_erotisi_quiz(kodikosMathimatos, enotita?.id);
-    return {
-      keimeno: diamorfose_erotisi_quiz(neoQ, kodikosMathimatos, enotita?.titlos),
-      neoQuiz: neoQ,
-    };
-  }
-
-  // 3. Εάν είναι εντολή Quick Action (Εξήγηση Ύλης, SOS, Λυμένη Άσκηση)
-  const drasiApantisi = apantisi_drasis(katharis, kodikosMathimatos, enotita?.titlos);
-  if (drasiApantisi !== APANTISI_YPARXEIS_STO_YLIKO) {
-    return {
-      keimeno: drasiApantisi,
-      neoQuiz: null,
-    };
-  }
-
-  // 4. Σύνδεση με το LLM Port (Hardware Vault & LLM Gate)
-  let kleidiVault: string | null = null;
-  try {
-    kleidiVault = await periballon.mystika.pare('llm_api_key');
-  } catch {
-    kleidiVault = null;
-  }
-  const exeiVaultKleidi = Boolean(kleidiVault && kleidiVault.trim().length > 0);
-
-  try {
-    const apotelesmaLlm = await periballon.llm.parage_keimeno({
-      systima: `Είσαι ο αυστηρός ακαδημαϊκός Tutor του μαθήματος ${kodikosMathimatos}${
-        enotita ? ` (ενότητα: ${enotita.titlos})` : ''
-      }. Απαντάς ΜΟΝΟ από το υλικό του μαθήματος με ακριβείς παραπομπές [[arx-X: σ. Y]]. Αν η ερώτηση δεν τεκμηριώνεται στο υλικό, απάντησε ακριβώς: «${APANTISI_YPARXEIS_STO_YLIKO}».`,
-      minimata: [
-        ...istoriko.map((g) => ({
-          rolos: g.rolos === 'xristis' ? ('xristis' as const) : ('montelo' as const),
-          keimeno: g.keimeno,
-        })),
-        { rolos: 'xristis' as const, keimeno: katharis },
-      ],
-      ekdosi_prompt: 'tutor-v2',
-      thermokrasia: 0.2,
-    });
-
-    if (apotelesmaLlm.ok) {
-      const keimenoLlm = apotelesmaLlm.timi.trim();
-      const einaiDefaultMock = keimenoLlm.startsWith('Mocked response for prompt v');
-      if (exeiVaultKleidi || !einaiDefaultMock) {
-        return {
-          keimeno: keimenoLlm,
-          neoQuiz: null,
-        };
-      }
-    }
-  } catch {
-    // Σφάλμα ή αποσύνδεση LLM -> μετάπτωση στη grounded reasoning engine
-  }
-
-  // 5. Τοπική μηχανή τεκμηριωμένης συλλογιστικής (Local Grounded Reasoning Engine)
-  const topiki = apantisa_tutor(katharis, {
-    kodikosMathimatos,
-    enotitaId: enotita?.id,
-    enotitaTitlos: enotita?.titlos,
+function pagesForSection(pages: readonly Selida[], section: Enotita | null): Selida[] {
+  if (section === null || section.piges.length === 0) return [...pages];
+  const ranges = new Map(section.piges.map((source) => [source.arxeio_id, source]));
+  return pages.filter((page) => {
+    const range = ranges.get(page.arxeio_id);
+    return range !== undefined && page.arithmos >= range.apo && page.arithmos <= range.eos;
   });
-
-  return {
-    keimeno: topiki,
-    neoQuiz: null,
-  };
 }
 
-/** Συνομιλία με τον tutor: ιστορικό από τα αρχεία, ορατή αναμονή και κανόνας «Δεν υπάρχει στο υλικό». */
+async function loadCourseContext(
+  periballon: Periballon,
+  course: Mathima,
+  sectionId: string,
+): Promise<TutorCourseContext> {
+  const chartState = await fortose_xartis_apo_apothiki(periballon.apothiki, course.kodikos);
+  const chart = chartState.katastasi === 'etimo' ? chartState.dedomena : null;
+  const section = chart?.enotites.find((entry) => entry.id === sectionId) ?? null;
+  const directory = `${course.kodikos}/.spoudes/keimeno`;
+  const files = await periballon.apothiki.lista(directory);
+  if (!files.ok) {
+    return { course, section, pages: [], promptContext: '' };
+  }
+  const pages: Selida[] = [];
+  for (const path of files.timi.filter((file) => file.endsWith('.json')).sort()) {
+    const loaded = await periballon.apothiki.diavase_keimeno(path);
+    if (!loaded.ok) continue;
+    try {
+      const parsed: unknown = JSON.parse(loaded.timi);
+      if (Array.isArray(parsed)) {
+        for (const page of parsed) {
+          if (typeof page === 'object' && page !== null && 'keimeno' in page &&
+              'arithmos' in page && 'arxeio_id' in page && typeof page.keimeno === 'string' &&
+              typeof page.arithmos === 'number' && typeof page.arxeio_id === 'string') {
+            pages.push(page as Selida);
+          }
+        }
+      }
+    } catch {
+      // One damaged extraction is skipped; no content is invented to replace it.
+    }
+  }
+  const selectedPages = pagesForSection(pages, section);
+  let length = 0;
+  const citations: string[] = [];
+  for (const page of selectedPages) {
+    const text = page.keimeno.trim();
+    if (!text) continue;
+    const citation = `[[${page.arxeio_id}: σ. ${page.arithmos}]]`;
+    const entry = `${citation}\n${text}`;
+    if (length + entry.length > MAX_CONTEXT_CHARACTERS) break;
+    citations.push(entry);
+    length += entry.length;
+  }
+  return { course, section, pages: selectedPages, promptContext: citations.join('\n\n') };
+}
+
+export function xairetisma_tutor(section: Enotita | null, courseCode?: string): GrammiImerrologiou {
+  const title = section === null ? 'το υλικό του μαθήματος' : `την ενότητα «${section.titlos}»`;
+  const course = courseCode ? ` ${courseCode}` : '';
+  return { rolos: 'tutor', keimeno: `Γεια σου. Συζητάμε για${course} και ${title}. ${GREETING}` };
+}
+
+/** Runs a real provider against locally extracted course pages; no sample answer or fallback exists. */
+export async function apantisi_me_llm_i_topika(
+  question: string,
+  periballon: Periballon,
+  courseCode: string,
+  section: Enotita | null,
+  history: readonly GrammiImerrologiou[],
+  courseText: string,
+): Promise<{ readonly keimeno: string }> {
+  if (courseText.trim() === '') return { keimeno: APANTISI_YPARXEIS_STO_YLIKO };
+  const output = await periballon.llm.parage_keimeno({
+    systima: [
+      `Είσαι tutor για το μάθημα ${courseCode}${section ? `, ενότητα «${section.titlos}»` : ''}.`,
+      'Χρησιμοποίησε αποκλειστικά τις αποσπάσεις πηγών που ακολουθούν.',
+      'Μην επινοείς παραπομπές ή πληροφορίες. Κάθε τεκμηριωμένη απάντηση να παραπέμπει με την ακριβή ετικέτα πηγής.',
+      `Αν η ερώτηση δεν τεκμηριώνεται στις αποσπάσεις, απάντησε ακριβώς: «${APANTISI_YPARXEIS_STO_YLIKO}».`,
+      '',
+      'Υλικό πηγών:',
+      courseText,
+    ].join('\n'),
+    minimata: [
+      ...history.slice(-MAX_HISTORY_MESSAGES).map((entry) => ({
+        rolos: entry.rolos === 'tutor' ? ('montelo' as const) : ('xristis' as const),
+        keimeno: entry.keimeno,
+      })),
+      { rolos: 'xristis', keimeno: question },
+    ],
+    ekdosi_prompt: 'tutor-course-material-v1',
+    thermokrasia: 0.2,
+  });
+  if (!output.ok) throw new Error(output.sfalma.minima);
+  return { keimeno: output.timi.trim() || APANTISI_YPARXEIS_STO_YLIKO };
+}
+
+type PendingQuestion = { readonly text: string; readonly gemini: boolean };
+
 export default function TutorChat() {
-  const [parametroi] = useSearchParams();
-  const enotitaId = parametroi.get('enotita') ?? '';
+  const [searchParams] = useSearchParams();
+  const sectionId = searchParams.get('enotita') ?? '';
   const periballon = xrisiPeriballontos();
-  const { kodikosMathimatos } = xrisiApothekisis();
-  const [katastasi, setKatastasi] = useState<Katastasi<KontekstoTutor>>(fortosi());
-  const [exomena, setExomena] = useState<readonly GrammiImerrologiou[]>([]);
-  const [trima, setTrima] = useState('');
-  const [apostolto, setApostolto] = useState(false);
-  const ekremesQuiz = useRef<ErotisiQuiz | null>(null);
-  const alive = useRef(true);
-  const xronologia = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const { kodikosMathimatos, rytheseis } = xrisiApothekisis();
+  const [course, setCourse] = useState<Mathima | null>(null);
+  const [courseContext, setCourseContext] = useState<TutorCourseContext | null>(null);
+  const [history, setHistory] = useState<readonly GrammiImerrologiou[]>([]);
+  const [extraMessages, setExtraMessages] = useState<readonly GrammiImerrologiou[]>([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [geminiConsent, setGeminiConsent] = useState(false);
+  const [consentGivenInDialog, setConsentGivenInDialog] = useState(false);
+  const [pendingQuestion, setPendingQuestion] = useState<PendingQuestion | null>(null);
+  const selectedModel = rytheseis.onomaMontelou || 'gemini-2.5-flash';
+  const geminiSelected = selectedModel.toLowerCase().startsWith('gemini-');
+  const activeSection = courseContext?.section ?? null;
+  const allMessages = useMemo(() => [...history, ...extraMessages], [history, extraMessages]);
 
   useEffect(() => {
-    alive.current = true;
-    setKatastasi(fortosi<KontekstoTutor>());
-    setExomena([]);
+    let active = true;
+    setLoading(true);
+    setCourseContext(null);
+    setHistory([]);
+    setExtraMessages([]);
+    setError(null);
     void (async () => {
-      const energosKodikos = kodikosMathimatos.trim() || 'ΠΛΗ201';
-      const xartis = await fortose_xartis_apo_apothiki(periballon.apothiki, energosKodikos);
-      const dedomenaXarti = xoris_katastasi(xartis);
-      const enotita = dedomenaXarti === undefined ? null : enotita_apo_xarti(dedomenaXarti, enotitaId);
-      const istoriko = await fortose_synomilia_apo_apothiki(
-        periballon.apothiki,
-        energosKodikos,
-        enotitaId
-      );
-      if (!alive.current) {
+      const coursesState = await fortose_mathimata_apo_apothiki(periballon.apothiki);
+      const courses = coursesState.katastasi === 'etimo' ? coursesState.dedomena : [];
+      const selected = courses.find((entry) => entry.kodikos === kodikosMathimatos) ?? null;
+      if (!active) return;
+      setCourse(selected);
+      if (selected === null) {
+        setLoading(false);
         return;
       }
-      setKatastasi(
-        etimo<KontekstoTutor>({
-          enotita,
-          arxikes_grammata:
-            istoriko.length > 0 ? istoriko : [xairetisma_tutor(enotita, energosKodikos)],
-        })
-      );
-    })();
-    return () => {
-      alive.current = false;
-      for (const xronos of xronologia.current) {
-        clearTimeout(xronos);
+      const context = await loadCourseContext(periballon, selected, sectionId);
+      const threadId = safeCourseSegment(sectionId || 'genika');
+      const savedHistory = await fortose_synomilia_apo_apothiki(periballon.apothiki, selected.kodikos, threadId);
+      const consent = await read_course_gemini_opt_in(periballon.apothiki, selected.kodikos);
+      if (!active) return;
+      setCourseContext(context);
+      setHistory(savedHistory);
+      setGeminiConsent(consent);
+      if (savedHistory.length === 0) setExtraMessages([xairetisma_tutor(context.section, selected.kodikos)]);
+      setLoading(false);
+    })().catch((reason: unknown) => {
+      if (active) {
+        setError(reason instanceof Error ? reason.message : 'Δεν φορτώθηκε το τοπικό υλικό.');
+        setLoading(false);
       }
-      xronologia.current = [];
-    };
-  }, [periballon.apothiki, kodikosMathimatos, enotitaId]);
+    });
+    return () => { active = false; };
+  }, [periballon, kodikosMathimatos, sectionId]);
 
-  const apostoli_erotisi = (keimenoApostolis?: string | unknown): void => {
-    const keimeno = typeof keimenoApostolis === 'string' ? keimenoApostolis : trima;
-    const katharis = keimeno.trim();
-    if (apostolto || katharis === '') {
+  async function persistConversation(messages: readonly GrammiImerrologiou[]): Promise<void> {
+    if (course === null) return;
+    const threadId = safeCourseSegment(sectionId || 'genika');
+    const path = diadromi_synomilias(course.kodikos, threadId);
+    const serialized = `${messages.map((message) => JSON.stringify(message)).join('\n')}\n`;
+    const saved = await periballon.apothiki.grapse_keimeno(path, serialized);
+    if (!saved.ok) throw new Error(saved.sfalma.minima);
+  }
+
+  function requestGeneration(questionText: string): void {
+    const question = questionText.trim();
+    if (sending || question === '') return;
+    if (course === null || courseContext === null) {
+      setError('Επίλεξε πρώτα μάθημα.');
       return;
     }
-    setExomena((palia) => [...palia, { rolos: 'xristis', keimeno: katharis }]);
-    if (typeof keimenoApostolis !== 'string') {
-      setTrima('');
+    if (courseContext.promptContext === '') {
+      setError('Δεν υπάρχει εξαγμένο κείμενο για αυτό το μάθημα. Συγχρόνισε τα αρχεία πριν χρησιμοποιήσεις τον Tutor.');
+      return;
     }
-    setApostolto(true);
-    const xronos = setTimeout(() => {
-      void (async () => {
-        if (!alive.current) {
-          return;
-        }
-        const energosKodikos = kodikosMathimatos.trim() || 'ΠΛΗ201';
-        const apantisi = await apantisi_me_llm_i_topika(
-          katharis,
-          periballon,
-          energosKodikos,
-          enotita,
-          ekremesQuiz.current,
-          exomena
-        );
-        if (!alive.current) {
-          return;
-        }
-        ekremesQuiz.current = apantisi.neoQuiz;
-        setExomena((palia) => [
-          ...palia,
-          { rolos: 'tutor', keimeno: apantisi.keimeno },
-        ]);
-        setApostolto(false);
-      })();
-    }, KATHYSTERISI_APANTISIS_MS);
-    xronologia.current.push(xronos);
-  };
+    setError(null);
+    setPendingQuestion({ text: question, gemini: geminiSelected });
+    setConsentGivenInDialog(geminiConsent);
+  }
 
-  const enotita = xoris_katastasi(katastasi)?.enotita ?? null;
-  const pilegmaEnotitas = `Ενότητα: ${enotita?.titlos ?? (enotitaId.length > 0 ? enotitaId : 'γενικά')}`;
+  async function confirmGeneration(): Promise<void> {
+    if (pendingQuestion === null || course === null || courseContext === null) return;
+    if (pendingQuestion.gemini && !consentGivenInDialog) {
+      setError('Για Gemini χρειάζεται ρητή συναίνεση για αυτό το μάθημα.');
+      return;
+    }
+    setSending(true);
+    setError(null);
+    try {
+      if (pendingQuestion.gemini && !geminiConsent) {
+        await write_course_gemini_opt_in(periballon.apothiki, course.kodikos, true);
+        setGeminiConsent(true);
+      }
+      const answer = await apantisi_me_llm_i_topika(
+        pendingQuestion.text,
+        periballon,
+        course.kodikos,
+        activeSection,
+        allMessages,
+        courseContext.promptContext,
+      );
+      const pair = [
+        ...allMessages,
+        { rolos: 'xristis' as const, keimeno: pendingQuestion.text },
+        { rolos: 'tutor' as const, keimeno: answer.keimeno },
+      ];
+      await persistConversation(pair);
+      setHistory(pair);
+      setExtraMessages([]);
+      setInput('');
+      setPendingQuestion(null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Η δημιουργία απάντησης απέτυχε.');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function changeGeminiConsent(enabled: boolean): Promise<void> {
+    if (course === null) return;
+    try {
+      await write_course_gemini_opt_in(periballon.apothiki, course.kodikos, enabled);
+      setGeminiConsent(enabled);
+      setError(null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Δεν αποθηκεύτηκε η επιλογή ιδιωτικότητας.');
+    }
+  }
+
+  function submit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    requestGeneration(input);
+  }
+
+  const sectionLabel = activeSection?.titlos ?? (sectionId || 'όλο το μάθημα');
 
   return (
     <div className="episkefsi" data-testid="tutor-ekran">
       <ProskelesioOmonimas
         titlos="Tutor"
-        ypokeimeno="Απαντά μόνο από το υλικό του μαθήματος."
-        akseis={<Pilegma keimeno={pilegmaEnotitas} entono />}
+        ypokeimeno={course ? `${course.kodikos} · ${course.titlos}` : 'Επίλεξε μάθημα για να ξεκινήσεις'}
+        akseis={course ? <Pilegma keimeno={`Υλικό: ${sectionLabel}`} entono /> : undefined}
       />
-      <OloniKatastasis katastasi={katastasi} adeioMinima="Δεν υπάρχει ακόμη συνομιλία.">
-        {(konteksto) => (
-          <>
-            <div className="imerologia" data-testid="tutor-imerologia">
-              {[...konteksto.arxikes_grammata, ...exomena].map((gramma, thesi) => (
-                <div
-                  key={`${thesi}-${gramma.keimeno}`}
-                  className={
-                    gramma.rolos === 'xristis'
-                      ? 'imerologia-gramma imerologia-bolakia'
-                      : 'imerologia-gramma imerologia-apantisi'
-                  }
-                >
-                  {gramma.keimeno}
-                </div>
-              ))}
-            </div>
-            {apostolto && (
-              <div className="katastasi-periohos" data-testid="tutor-fortisi">
-                <IonSpinner name="crescent" aria-label="Ο tutor γράφει" />
-                <p className="katastasi-ypokeimeno">Ο tutor γράφει…</p>
-              </div>
-            )}
-            <div className="tutor-draseis-mpara" role="toolbar" aria-label="Γρήγορες ενέργειες tutor">
-              {DRASEIS_TUTOR.map((drasis) => (
-                <button
-                  key={drasis.titlos}
-                  type="button"
-                  className="pilegma tutor-drasis-koumpi"
-                  disabled={apostolto}
-                  onClick={() => {
-                    apostoli_erotisi(drasis.prompt);
-                  }}
-                >
-                  {drasis.titlos}
-                </button>
-              ))}
-            </div>
-            <div className="imerologia-paixidi" data-testid="tutor-paixidi">
-              <input
-                className="imerologia-paixidi-gramma"
-                value={trima}
-                placeholder="Γράψε την ερώτησή σου…"
-                aria-label="Ερώτηση για τον tutor"
-                onChange={(γεγονός) => {
-                  setTrima(γεγονός.target.value);
-                }}
-                onKeyDown={(γεγονός) => {
-                  if (γεγονός.key === 'Enter') {
-                    apostoli_erotisi();
-                  }
-                }}
-              />
-              <IonButton
-                size="small"
-                disabled={apostolto || trima.trim() === ''}
-                onClick={apostoli_erotisi}
-                data-testid="tutor-apomilosi"
+      {course === null && !loading && (
+        <Karta titlos="Δεν έχει επιλεγεί μάθημα" ypokeimeno="Επίλεξε ή συγχρόνισε μάθημα πριν ανοίξεις τον Tutor." stoixeia={<Link to="/mathimata">Άνοιγμα μαθημάτων →</Link>} />
+      )}
+      {course !== null && (
+        <>
+          <Karta
+            titlos="Χρήση Google Gemini"
+            ypokeimeno="Η συναίνεση αποθηκεύεται χωριστά για κάθε μάθημα. Κάθε αποστολή ζητά νέα επιβεβαίωση."
+            stoixeia={
+              <label className="odoni-xeiris">
+                <input
+                  type="checkbox"
+                  checked={geminiConsent}
+                  onChange={(event) => void changeGeminiConsent(event.target.checked)}
+                />
+                Επιτρέπω στο Gemini να λάβει το απόσπασμα υλικού και το ιστορικό αυτού του μαθήματος.
+              </label>
+            }
+          />
+          <p role="status" className="karta-ypokeimeno">
+            {courseContext === null ? 'Φόρτωση τοπικού υλικού…' : courseContext.promptContext
+              ? `${courseContext.pages.length} σελίδες από τοπικά αποθηκευμένα αρχεία είναι διαθέσιμες.`
+              : 'Δεν βρέθηκε εξαγμένο κείμενο. Συγχρόνισε και εξήγαγε αρχεία του μαθήματος.'}
+          </p>
+          <div className="imerologia" data-testid="tutor-imerologia" aria-live="polite">
+            {allMessages.map((message, index) => (
+              <div
+                key={`${index}-${message.rolos}`}
+                className={message.rolos === 'xristis' ? 'imerologia-gramma imerologia-bolakia' : 'imerologia-gramma imerologia-apantisi'}
               >
-                Αποστολή
-              </IonButton>
-            </div>
-          </>
-        )}
-      </OloniKatastasis>
+                {message.keimeno}
+              </div>
+            ))}
+          </div>
+          {sending && <div className="katastasi-periohos"><IonSpinner name="crescent" /><p className="katastasi-ypokeimeno">Δημιουργία απάντησης…</p></div>}
+          <div className="tutor-draseis-mpara" role="toolbar" aria-label="Ενέργειες tutor">
+            {DRASEIS_TUTOR.map((action) => (
+              <button key={action.titlos} type="button" className="pilegma tutor-drasis-koumpi" disabled={sending || courseContext?.promptContext === ''} onClick={() => requestGeneration(action.prompt)}>
+                {action.titlos}
+              </button>
+            ))}
+          </div>
+          <form className="imerologia-paixidi" data-testid="tutor-paixidi" onSubmit={submit}>
+            <input
+              className="imerologia-paixidi-gramma"
+              value={input}
+              placeholder="Ρώτησε για το υλικό του μαθήματος…"
+              aria-label="Ερώτηση για τον tutor"
+              disabled={sending || courseContext?.promptContext === ''}
+              onChange={(event) => setInput(event.target.value)}
+            />
+            <IonButton type="submit" size="small" disabled={sending || input.trim() === '' || courseContext?.promptContext === ''} data-testid="tutor-apomilosi">
+              Αποστολή
+            </IonButton>
+          </form>
+        </>
+      )}
+      {loading && <div role="status" className="katastasi-periohos"><IonSpinner name="crescent" /><p>Φόρτωση τοπικών δεδομένων…</p></div>}
+      {error !== null && <p role="alert" className="karta-ypokeimeno">{error}</p>}
+      {pendingQuestion !== null && (
+        <div role="alertdialog" aria-modal="true" aria-labelledby="tutor-confirm-title" className="karta tutor-confirmation">
+          <h2 id="tutor-confirm-title">Επιβεβαίωση δημιουργίας</h2>
+          {pendingQuestion.gemini ? (
+            <>
+              <p>Θα σταλεί στην Google μέσω Gemini το σχετικό απόσπασμα των τοπικών αρχείων, η ερώτηση και έως 10 προηγούμενα μηνύματα αυτής της συνομιλίας.</p>
+              {!geminiConsent && (
+                <label className="odoni-xeiris">
+                  <input type="checkbox" checked={consentGivenInDialog} onChange={(event) => setConsentGivenInDialog(event.target.checked)} />
+                  Επιτρέπω τη χρήση του Gemini για αυτό το μάθημα από εδώ και πέρα.
+                </label>
+              )}
+            </>
+          ) : (
+            <p>Η ερώτηση και το σχετικό απόσπασμα θα επεξεργαστούν τοπικά από το {selectedModel} στον ίδιο υπολογιστή.</p>
+          )}
+          <p><strong>Ερώτηση:</strong> {pendingQuestion.text}</p>
+          <div className="odoni-xeiris">
+            <IonButton type="button" fill="outline" disabled={sending} onClick={() => setPendingQuestion(null)}>Ακύρωση</IonButton>
+            <IonButton type="button" disabled={sending || (pendingQuestion.gemini && !consentGivenInDialog)} onClick={() => void confirmGeneration()}>
+              {sending ? 'Αποστολή…' : pendingQuestion.gemini ? 'Επιβεβαίωση και αποστολή στο Gemini' : 'Επιβεβαίωση τοπικής δημιουργίας'}
+            </IonButton>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

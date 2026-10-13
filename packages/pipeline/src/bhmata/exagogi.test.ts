@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MnimiApothiki } from '@dps/core';
 import type { Arxeio, Selida } from '@dps/core';
-import { ArgiosLlm, FakeEclassPyli, KatagrafiDiamnemata, StatheriRologi } from '../testing/voirtheia.js';
+import { ArgiosLlm, FakeEclassPyli, FakeKatevasmaPyli, KatagrafiDiamnemata, StatheriRologi } from '../testing/voirtheia.js';
 import { ftiaxe_docx, ftiaxe_pptx } from '../testing/fixtures-arxeia.js';
 import { exagogi } from '../bhmata/exagogi.js';
 import type { EisodosPipeline } from '../porte.js';
@@ -12,6 +12,7 @@ function ftiaxe_eisodos(apothiki: MnimiApothiki, katagrafi: KatagrafiDiamnemata)
   return {
     eclass: new FakeEclassPyli(),
     apothiki,
+    katevasma: new FakeKatevasmaPyli(apothiki),
     llm: new ArgiosLlm(),
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
     rologi: new StatheriRologi(),

@@ -47,7 +47,7 @@ export default function Rythisies() {
     pare_editable_rytheseis(apothiki.rytheseis)
   );
   const [apothikefthike, setApothikefthike] = useState(false);
-  const [trexonThema, setTrexonThema] = useState<ThemaId>(() => pare_trexon_thema());
+  const [trexonThema, setTrexonThema] = useState<ThemaId>(() => pare_trexon_thema(apothiki.rytheseis.themaId));
 
   useEffect(() => {
     setGrammata({ baseUrl, onomaMontelou, einaiEidopoieseis });
@@ -80,6 +80,7 @@ export default function Rythisies() {
   function allaxe_thema(themaId: ThemaId): void {
     thete_thema(themaId);
     setTrexonThema(themaId);
+    void apothiki.allaxe_rytheseis({ ...apothiki.rytheseis, themaId });
   }
 
   function ypostiripse(erevma: FormEvent<HTMLFormElement>): void {

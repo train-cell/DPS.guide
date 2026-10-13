@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MnimiApothiki } from '@dps/core';
 import { diadromi_xarti, fortose_xartis_apo_apothiki } from './xartis.js';
-import { pseudos_xartis } from '../pseudomata/index.js';
+import { pseudos_xartis } from '../../test-fixtures/pseudomata/index.js';
 
 describe('diadromi_xarti', () => {
   it('ακολουθεί το layout §5.3 του κρυφού φακέλου μαθήματος', () => {

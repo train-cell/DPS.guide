@@ -2,20 +2,15 @@ import type { Apotelesma, EclassPyli, KomvosArxeiou, Mathima } from '@dps/core';
 import { apotyxia } from '@dps/core';
 
 /**
- * Πού θα έπρεπε να ζει ο `EclassPyli` (κάρτες L14 `auth` + L15 `crawl`).
- *
- * Το `packages/eclass` δεν υπάρχει ακόμα στο repo, οπότε το CLI δεν μπορεί να
- * συνδεθεί στο eClass. Μέχρι τότε κάθε κλήση επιστρέφει ρητό σφάλμα
- * `MI_YPOSTIRIZOMENO` — ΠΟΤΕ ψεύτικη επιτυχία και ΠΟΤΕ αχνή υπόθεση για το
- * πρωτόκολλο (κανόνας §3.7: κανένα endpoint/selector χωρίς fixture).
+ * Fallback port όταν το CLI δεν έχει διαπιστευτήρια και διεύθυνση portal.
+ * Δεν προσποιείται σύνδεση: όλες οι ενέργειες επιστρέφουν σαφές unsupported error.
  */
-export const POU_KEITAI_TO_ECLASS = 'packages/eclass (κάρτες L14/L14-L15)';
+export const POU_KEITAI_TO_ECLASS = 'διαπιστευτήρια LMS και διεύθυνση portal';
 
 /**
  * `EclassPyli` ρητά «μη υλοποιημένο».
  *
- * Υπάρχει μόνο ώστε να συμπληρωθεί η `EisodosPipeline`. Κάθε μέθοδος επιστρέφει
- * `MI_YPOSTIRIZOMENO` με σαφή αιτία, ώστε ο χρήστης να βλέπει error state (§3.9).
+ * Χρησιμοποιείται μόνο ώστε το CLI να αποδίδει χρήσιμο σφάλμα αντί ψεύτικης επιτυχίας.
  */
 export class MiYpostirimenoEclassPyli implements EclassPyli {
   private apotyxia_pylis<T>(praksi: string): Apotelesma<T> {

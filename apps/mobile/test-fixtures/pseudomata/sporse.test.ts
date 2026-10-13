@@ -15,9 +15,9 @@ import {
   fortose_mathimata_apo_apothiki,
   fortose_odigo_apo_apothiki,
   fortose_xartis_apo_apothiki,
-} from '../ypiresies/index.js';
-import { diadromi_eurethriou, fortose_pdf } from '../provoli-pdf/index.js';
-import { fortose_rytheseis } from '../apothiki/index.js';
+} from '../../src/ypiresies/index.js';
+import { diadromi_eurethriou, fortose_pdf } from '../../src/provoli-pdf/index.js';
+import { fortose_rytheseis } from '../../src/apothiki/index.js';
 
 describe('sporse_deigma', () => {
   it('γράφει όλα τα αρχεία του layout §5.3 που διαβάζουν οι οθόνες για ΟΛΑ τα 4 μαθήματα', async () => {

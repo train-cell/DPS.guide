@@ -1,10 +1,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Capacitor } from '@capacitor/core';
 import { IonApp } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import { OdoiNavigisis } from './navigasi/odoi.js';
-import { ParoxosPeriballontos } from './periballon/index.js';
 import { ParoxeApothekisis } from './apothiki/index.js';
+import { VaultGate } from './vault/vault-gate.js';
 import '@ionic/react/css/core.css';
 import '@ionic/react/css/normalize.css';
 import '@ionic/react/css/structure.css';
@@ -15,10 +16,12 @@ import './design/tokens.css';
 import './design/themata.css';
 import './navigasi/navigasi.css';
 import './koinima/koinima.css';
-import { arxikopoiisi_thematos } from './design/themata.js';
 
-// Αρχικοποίηση θέματος από localStorage
-arxikopoiisi_thematos();
+if (!Capacitor.isNativePlatform() && import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+  }, { once: true });
+}
 
 const rootElement = document.getElementById('root');
 
@@ -28,7 +31,7 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <ParoxosPeriballontos>
+    <VaultGate>
       <ParoxeApothekisis>
         <IonApp>
           <IonReactRouter>
@@ -36,6 +39,6 @@ createRoot(rootElement).render(
           </IonReactRouter>
         </IonApp>
       </ParoxeApothekisis>
-    </ParoxosPeriballontos>
+    </VaultGate>
   </StrictMode>,
 );

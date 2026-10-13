@@ -19,11 +19,24 @@ playwright/.cache/
 .DS_Store
 Thumbs.db
 
-# Platform & Sideload
+# Native build output & local signing state
 *.ipa
 *.app
-apps/mobile/ios/
-apps/mobile/android/
+apps/mobile/android/.gradle/
+apps/mobile/android/build/
+apps/mobile/android/app/build/
+apps/mobile/android/local.properties
+apps/mobile/android/.idea/
+apps/mobile/android/captures/
+apps/mobile/android/*.iml
+apps/mobile/ios/App/Pods/
+apps/mobile/ios/App/build/
+apps/mobile/ios/App/DerivedData/
+apps/mobile/ios/App/App.xcworkspace/xcuserdata/
+apps/mobile/ios/App/*.xcuserstate
+.local/
+apps/mobile/public/ocr/
+apps/mobile/native-artifacts/
 
 # Storage & Runtime Data (Local Filesystem)
 data/

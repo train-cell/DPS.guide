@@ -13,6 +13,7 @@
 
 export type {
   EisodosPipeline,
+  OcrPyli,
   Metriti,
   ApotelestesSyndesis,
   ApotelestesAnakalypsis,

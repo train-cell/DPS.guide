@@ -6,10 +6,11 @@ import { PROEDAFO_TEMPLATE } from '../programma/programma-vohthia.js';
 /** Προσωρινές προεπιλογές όσο δεν υπάρχει αποθηκευμένο αρχείο — τιμές παραδείγματος, όχι hardcoded μέσα στην οθόνη. */
 export function proedapes_rytheseis(): Rytheseis {
   return {
-    baseUrl: 'https://thales.cs.unipi.gr',
-    panepistimioId: 'unipi',
+    baseUrl: '',
+    themaId: 'midnight',
     mathimataSynch: [],
     onomaMontelou: 'gemini-2.5-flash',
+    urlOllama: 'http://localhost:11434',
     exeiKleidiLlm: false,
     onomasApothikefsis: 'Documents/DPS.guide',
     einaiEidopoieseis: true,

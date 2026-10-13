@@ -1,5 +1,6 @@
 import {
   KeyringMystika,
+  NodeKatevasmaPyli,
   NodeFetchHttpPyli,
   NodeFsApothiki,
 } from '@dps/adapters-node';
@@ -7,7 +8,6 @@ import { ftiaxe_gemini_llm } from '@dps/ai';
 import type { Apotelesma, ApothikiPyli, EclassPyli, HttpPyli, LlmPyli, MystikaPyli } from '@dps/core';
 import { apotyxia } from '@dps/core';
 import { DpsEclassPyli, TopikiSyndesi } from '@dps/eclass';
-import { MockEclassPyli } from '@dps/mock-eclass';
 import type { EisodosPipeline } from '@dps/pipeline';
 import type { ParastatesEntolhs } from '../entoles/grammatikopoio-entolhs.js';
 import { MiYpostirimenoEclassPyli } from './eclass-eksodon.js';
@@ -17,7 +17,6 @@ import { SystemaRologi } from './rologi-systimatos.js';
 import {
   DIADROMI_RYTHMISEON,
   fere_base_url_apo_ryza,
-  fere_mock_eclass_apo_ryza,
   fere_montelo_apo_ryza,
 } from './rythmiseis.js';
 
@@ -31,8 +30,7 @@ function kathisteriki_konsolis(grammi: string): void {
 /**
  * Επιλύει το EclassPyli port:
  * 1. Πραγματική EclassPyli (DpsEclassPyli) όταν παρέχονται credentials και base_url.
- * 2. MockEclassPyli όταν έχει ενεργοποιηθεί ρητά στις ρυθμίσεις ή στο περιβάλλον.
- * 3. MiYpostirimenoEclassPyli (fallback) όταν λείπουν τα στοιχεία σύνδεσης.
+ * 2. MiYpostirimenoEclassPyli όταν λείπουν τα στοιχεία σύνδεσης.
  */
 export async function lise_eclass(
   apothiki: ApothikiPyli,
@@ -42,11 +40,6 @@ export async function lise_eclass(
   const onoma = await mystika.pare('eclass_onoma_xristi');
   const kodikos = await mystika.pare('eclass_kodikos');
   const base_url = (await fere_base_url_apo_ryza(apothiki)) ?? process.env.ECLASS_BASE_URL ?? null;
-  const thelei_mock =
-    (await fere_mock_eclass_apo_ryza(apothiki)) ||
-    process.env.ECLASS_MOCK === 'true' ||
-    process.env.MOCK_ECLASS === 'true';
-
   if (onoma !== null && kodikos !== null && base_url !== null) {
     const stratigiki = new TopikiSyndesi({
       onoma_xristi: onoma,
@@ -60,17 +53,13 @@ export async function lise_eclass(
     });
   }
 
-  if (thelei_mock) {
-    return new MockEclassPyli();
-  }
-
   return new MiYpostirimenoEclassPyli();
 }
 
 /**
  * Στήνει την `EisodosPipeline` με τα Node adapters (§4: ports → adapters).
  *
- * - `eclass`: πραγματική DpsEclassPyli αν υπάρχουν credentials/base_url, αλλιώς MockEclassPyli/fallback.
+ * - `eclass`: πραγματική DpsEclassPyli αν υπάρχουν credentials/base_url, αλλιώς σαφές unsupported error.
  * - `apothiki`/`katevasma`: fs, δεμένα στη ρίζα που δίνεται με `--riza`.
  * - `llm`: Gemini μέσω `HttpPyli` (timeout/retry από §7.2) ΜΟΝΟ αν οριστεί μοντέλο·
  *   το μοντέλο προκύπτει από `--montelo` ή από `<riza>/rythmiseis.json` — ποτέ
@@ -108,11 +97,13 @@ export async function dimiourgise_eisodos(
     timi: {
       eclass,
       apothiki,
+      katevasma: new NodeKatevasmaPyli(parastates.riza),
       llm,
       mystika,
       rologi,
       katagrafi,
-      riza: parastates.riza,
+      // The Node adapters are already rooted at --riza; pipeline paths stay relative.
+      riza: '',
     },
   };
 }

@@ -1,10 +1,10 @@
 import type { ApothikiPyli, Arxeio, Parapompi } from '@dps/core';
-import { pare_xarti_mathimatos, pseudos_mathimata, pseudos_xartis } from './pseudomata.js';
+import { pare_xarti_mathimatos, pseudos_mathimata } from './pseudomata.js';
 import { pseudos_odigos_md, pseudos_synomilia_jsonl } from './odigos-md.js';
-import { analise_parapompi } from '../provoli-pdf/parapompi.js';
-import { PROEDAFO_TEMPLATE } from '../programma/programma-vohthia.js';
-import { LEKIKIA_TMIMATON } from '../ypiresies/odigos.js';
-import { ftiaxe_synthetiko_pdf } from '../provoli-pdf/synthetiko-pdf.js';
+import { analise_parapompi } from '../../src/provoli-pdf/parapompi.js';
+import { PROEDAFO_TEMPLATE } from '../../src/programma/programma-vohthia.js';
+import { LEKIKIA_TMIMATON } from '../../src/ypiresies/odigos.js';
+import { ftiaxe_synthetiko_pdf } from '../synthetiko-pdf.js';
 
 /** Κωδικός μαθήματος του σετ δείγματος, όπως τον γνωρίζει και ο ψεύτικος χάρτης. */
 export const KODIKOS_DEIGMATOS = 'ΠΛΗ201';
@@ -29,18 +29,6 @@ const DIADROMI_RYTHMISEON = 'rythmiseis.json';
 
 /** Διαδρομή της λίστας μαθημάτων στο layout §5.3. */
 const DIADROMI_MATHIMATON = 'mathimata.json';
-
-/** Διαδρομή του χάρτη ενοτήτων στο κρυφό φάκελο του μαθήματος. */
-const DIADROMI_XARTI = `${KODIKOS_DEIGMATOS}/.spoudes/xartis.json`;
-
-/** Διαδρομή του ευρετηρίου αρχείων στο κρυφό φάκελο του μαθήματος. */
-const DIADROMI_EURETHRIOU = `${KODIKOS_DEIGMATOS}/.spoudes/eurethrio-arxeion.json`;
-
-/** Διαδρομή του συνθετικού πρώτου αρχείου μέσα στον φάκελο arxeia/. */
-const DIADROMI_ARX_1 = `${KODIKOS_DEIGMATOS}/arxeia/syntheta/arx-1.pdf`;
-
-/** Διαδρομή του συνθετικού δεύτερου αρχείου μέσα στον φάκελο arxeia/. */
-const DIADROMI_ARX_2 = `${KODIKOS_DEIGMATOS}/arxeia/syntheta/arx-2.pdf`;
 
 /** Το ευρετήριο ενός μαθήματος δείγματος, με τα ίδια πεδία του συμβολαίου Arxeio. */
 function eurethrio_deigmatos(kodikos: string = KODIKOS_DEIGMATOS): Arxeio[] {

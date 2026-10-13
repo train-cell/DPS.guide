@@ -4,6 +4,7 @@ import type { Arxeio, Selida, XartisMathimatos } from '@dps/core';
 import {
   ArgiosLlm,
   FakeEclassPyli,
+  FakeKatevasmaPyli,
   KatagrafiDiamnemata,
   LigmaArchiou,
   StatheriRologi,
@@ -34,6 +35,7 @@ function ftiaxe_eisodos(apothiki: MnimiApothiki, llm: LigmaArchiou | ArgiosLlm, 
   return {
     eclass: new FakeEclassPyli(),
     apothiki,
+    katevasma: new FakeKatevasmaPyli(apothiki),
     llm: pyli,
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
     rologi: new StatheriRologi(),
