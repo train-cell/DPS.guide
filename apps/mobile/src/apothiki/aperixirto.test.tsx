@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import { ftiaxe_periballon_test } from '../../test-fixtures/ftiaxe-test-periballon.js';
 import { ParoxeApothekisis, xrisiApothekisis, type ApothikiSyntheseon } from './aperixirto.js';
 import { me_periballon_test } from '../../test-fixtures/periballon-test-provider.js';

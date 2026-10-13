@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { HttpAitima, HttpApantisi } from '@dps/core';
-import { FakeHttp } from '@dps/core';
+import { FakeHttp } from '@dps/core/testing';
 import {
   CasSyndesi,
   CookieDiaxeiristis,

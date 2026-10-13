@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ok } from '@dps/core';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import type { LlmAitimaJson, LlmAitimaKeimenou, LlmPyli } from '@dps/core';
 import { me_cache } from '@dps/ai';
 import { createAuthorizedCourseLlm } from './pipeline-analisis.js';

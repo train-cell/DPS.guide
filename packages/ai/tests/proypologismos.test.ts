@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { FakeRologi, MnimiApothiki, ok } from '@dps/core';
+import { ok } from '@dps/core';
+import { FakeRologi, MnimiApothiki } from '@dps/core/testing';
 import type { Apotelesma, LlmAitimaJson, LlmAitimaKeimenou, LlmPyli } from '@dps/core';
 import {
   PROORISMOS_METRISIS,

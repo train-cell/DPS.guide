@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { FakeMystika, MnimiApothiki } from '@dps/core';
+import { FakeMystika, MnimiApothiki } from '@dps/core/testing';
 import {
   EncryptedMystikaPyli,
   createEncryptedBackup,

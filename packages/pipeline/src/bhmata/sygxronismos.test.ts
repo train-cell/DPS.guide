@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import type { Arxeio, KomvosArxeiou } from '@dps/core';
 import { ArgiosLlm, FakeEclassPyli, FakeKatevasmaPyli, KatagrafiDiamnemata, StatheriRologi } from '../testing/voirtheia.js';
 import { sygxronismos } from '../bhmata/sygxronismos.js';

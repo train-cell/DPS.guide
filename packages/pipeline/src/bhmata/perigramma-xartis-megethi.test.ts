@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import type { Arxeio, Selida } from '@dps/core';
 import { FakeEclassPyli, FakeKatevasmaPyli, KatagrafiDiamnemata, LigmaArchiou, StatheriRologi } from '../testing/voirtheia.js';
 import { ftiaxe_docx } from '../testing/fixtures-arxeia.js';

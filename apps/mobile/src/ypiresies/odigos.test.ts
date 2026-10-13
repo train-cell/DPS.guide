@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import {
   LEKIKIA_TMIMATON,
   analise_odigo_md,

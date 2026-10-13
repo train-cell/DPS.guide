@@ -11,7 +11,8 @@
  */
 
 import { beforeEach, describe, expect, it } from 'vitest';
-import { FakeRologi, MEGISTOS_ARITHMOS_EIDOPOIISEON } from '@dps/core';
+import { MEGISTOS_ARITHMOS_EIDOPOIISEON } from '@dps/core';
+import { FakeRologi } from '@dps/core/testing';
 import type { Apotelesma, KatagrafiPyli } from '@dps/core';
 import { CapacitorEidopoiiseis } from './eidopoiiseis.js';
 import { arithmos_apok_stable, TYPOI_ENDYSEON } from './typoi.js';

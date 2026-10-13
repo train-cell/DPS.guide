@@ -3,7 +3,8 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { MockLlm, apotyxia } from '@dps/core';
+import { apotyxia } from '@dps/core';
+import { MockLlm } from '@dps/core/testing';
 import type { LlmPyli } from '@dps/core';
 import TutorChat, {
   APANTISI_YPARXEIS_STO_YLIKO,

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { FakeHttp, MnimiApothiki } from '@dps/core';
+import { FakeHttp, MnimiApothiki } from '@dps/core/testing';
 import type { HttpAitima, HttpApantisi, Mathima } from '@dps/core';
 import { ftiaxe_periballon_test as ftiaxe_periballon } from '../../test-fixtures/ftiaxe-test-periballon.js';
 import { syndesi_kai_anaktisi_mathimaton } from './syndesi-eclass.js';

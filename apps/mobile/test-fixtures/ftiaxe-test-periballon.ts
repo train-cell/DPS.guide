@@ -1,4 +1,4 @@
-import { FakeHttp, FakeMystika, FakeRologi, MockLlm, MnimiApothiki } from '@dps/core';
+import { FakeHttp, FakeMystika, FakeRologi, MockLlm, MnimiApothiki } from '@dps/core/testing';
 import type { PylesPeriballontos } from '../src/periballon/periballon.js';
 import { ftiaxe_periballon } from '../src/periballon/periballon.js';
 import { KatagrafiMnimis } from '../src/periballon/katagrafi-mnimis.js';

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import { DIADROMI_MATHIMATON, fortose_mathimata_apo_apothiki } from './mathimata.js';
 import { diadromi_synomilias, fortose_synomilia_apo_apothiki } from './synomilia.js';
 import { pseudos_mathimata } from '../../test-fixtures/pseudomata/index.js';

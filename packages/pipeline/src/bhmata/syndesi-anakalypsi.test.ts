@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { FakeEclassPyli, FakeKatevasmaPyli, KatagrafiDiamnemata, StatheriRologi, ArgiosLlm } from '../testing/voirtheia.js';
-import { MnimiApothiki } from '@dps/core';
+import {
+  FakeEclassPyli,
+  FakeKatevasmaPyli,
+  KatagrafiDiamnemata,
+  StatheriRologi,
+  ArgiosLlm,
+} from '../testing/voirtheia.js';
+import { MnimiApothiki } from '@dps/core/testing';
 import type { Mathima } from '@dps/core';
 import { syndesi } from '../bhmata/syndesi.js';
 import { anakalypsi } from '../bhmata/anakalypsi.js';

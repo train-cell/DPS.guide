@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import { course_ai_policy_path, read_course_gemini_opt_in, safe_course_segment, write_course_gemini_opt_in } from './ai-policy.js';
 
 describe('course Gemini privacy policy', () => {

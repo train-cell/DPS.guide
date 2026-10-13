@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { FakeHttp, FakeMystika, FakeRologi, LLM_TIMEOUT_MS, MEGISTES_EPANALIPSEIS } from '@dps/core';
+import { LLM_TIMEOUT_MS, MEGISTES_EPANALIPSEIS } from '@dps/core';
+import { FakeHttp, FakeMystika, FakeRologi } from '@dps/core/testing';
 import type {
   Apotelesma,
   HttpAitima,

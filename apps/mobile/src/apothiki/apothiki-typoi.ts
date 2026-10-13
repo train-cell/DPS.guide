@@ -1,7 +1,6 @@
 /**
- * Apothiki syntheseon - types pou persoun sta synoro. H stasia einai merizomeni me tin
- * epifaneia (React context) kai tha katapontetai mesa sti MnimiApothiki (prototypio)
- * i sti CapacitorFilesystem (paragogi).
+ * Storage contracts shared by the browser IndexedDB and native private filesystem.
+ * Both adapters are wrapped by the encrypted vault before course data is stored.
  */
 
 import type { Exetasi } from '@dps/core';
