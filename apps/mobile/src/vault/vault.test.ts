@@ -121,6 +121,22 @@ describe('encrypted vault backup/restore', () => {
     expect(parsed.recovery.iterations).toBe(600_000);
   });
 
+  it('διατηρεί κάθε αρχείο όταν γίνονται ταυτόχρονες εγγραφές στο vault', async () => {
+    const storage = new MnimiApothiki();
+    const created = await createVault(storage, MASTER_PASSWORD);
+    const paths = Array.from({ length: 12 }, (_, index) => `concurrent/file-${index}.json`);
+
+    const results = await Promise.all(paths.map((path) => created.session.storage.grapse_keimeno(path, path)));
+    const files = await created.session.storage.lista('concurrent');
+
+    expect(results.every((result) => result.ok)).toBe(true);
+    expect(files.ok && files.timi).toEqual([...paths].sort());
+    for (const path of paths) {
+      const content = await created.session.storage.diavase_keimeno(path);
+      expect(content.ok && content.timi).toBe(path);
+    }
+  });
+
   it('ξεκλειδώνει παλιό vault χωρίς πεδίο iterations', async () => {
     const storage = new MnimiApothiki();
     const dataKey = crypto.getRandomValues(new Uint8Array(32));

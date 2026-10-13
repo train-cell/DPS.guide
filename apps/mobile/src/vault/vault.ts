@@ -11,6 +11,7 @@ const BACKUP_MAGIC_V1 = 'DPSBKP01';
 const BACKUP_MAGIC_V2 = 'DPSBKP02';
 const BACKUP_CHUNK_BYTES = 1024 * 1024;
 const MAX_BACKUP_RECORD_BYTES = 220 * 1024 * 1024;
+const VAULT_STORAGE_LOCK_NAME = 'dps-guide-vault-storage-v1';
 const BACKUP_SECRET_KEYS = [
   'eclass_onoma_xristi',
   'eclass_kodikos',
@@ -19,6 +20,21 @@ const BACKUP_SECRET_KEYS = [
   'moodle_webservice_token',
   'llm_api_key',
 ] as const satisfies readonly KleidiMystikou[];
+
+let vaultStorageQueue: Promise<void> = Promise.resolve();
+
+/** Serializes vault index operations in this runtime and coordinates same-origin tabs when supported. */
+function withVaultStorageLock<T>(operation: () => Promise<T>): Promise<T> {
+  const run = async (): Promise<T> => {
+    const locks = typeof navigator === 'undefined' ? undefined : navigator.locks;
+    return locks === undefined
+      ? operation()
+      : locks.request(VAULT_STORAGE_LOCK_NAME, { mode: 'exclusive' }, operation);
+  };
+  const result = vaultStorageQueue.then(run, run);
+  vaultStorageQueue = result.then(() => undefined, () => undefined);
+  return result;
+}
 
 interface Envelope {
   readonly salt: string;
@@ -663,73 +679,83 @@ export class EncryptedApothiki implements ApothikiPyli {
   async diavase_dyadiko(diadromi: string): Promise<Apotelesma<Uint8Array>> {
     const path = normalizePath(diadromi);
     if (path === null) return apotyxia('MI_EGKYRO_SXIMA', 'Η διαδρομή αποθήκευσης δεν είναι έγκυρη.');
-    try {
-      const index = await this.loadIndex();
-      const id = index.files[path];
-      if (id === undefined) return apotyxia('DEN_VRETHIKE', 'Το κρυπτογραφημένο αρχείο δεν βρέθηκε.');
-      const stored = await this.storage.diavase_dyadiko(`${OBJECTS_PATH}/${id}.enc`);
-      if (!stored.ok) return apotyxia('DEN_VRETHIKE', 'Το κρυπτογραφημένο αρχείο δεν βρέθηκε.');
-      const clear = await decrypt(this.dataKey, this.decodeCipher(stored.timi), `dps.vault.v1/file/${id}`);
-      return ok(clear);
-    } catch {
-      return apotyxia('MI_EGKYRO_SXIMA', 'Δεν ήταν δυνατή η αποκρυπτογράφηση του αρχείου.');
-    }
+    return withVaultStorageLock(async () => {
+      try {
+        const index = await this.loadIndex();
+        const id = index.files[path];
+        if (id === undefined) return apotyxia('DEN_VRETHIKE', 'Το κρυπτογραφημένο αρχείο δεν βρέθηκε.');
+        const stored = await this.storage.diavase_dyadiko(`${OBJECTS_PATH}/${id}.enc`);
+        if (!stored.ok) return apotyxia('DEN_VRETHIKE', 'Το κρυπτογραφημένο αρχείο δεν βρέθηκε.');
+        const clear = await decrypt(this.dataKey, this.decodeCipher(stored.timi), `dps.vault.v1/file/${id}`);
+        return ok(clear);
+      } catch {
+        return apotyxia('MI_EGKYRO_SXIMA', 'Δεν ήταν δυνατή η αποκρυπτογράφηση του αρχείου.');
+      }
+    });
   }
 
   async grapse_dyadiko(diadromi: string, dedomena: Uint8Array): Promise<Apotelesma<void>> {
     const path = normalizePath(diadromi);
     if (path === null) return apotyxia('MI_EGKYRO_SXIMA', 'Η διαδρομή αποθήκευσης δεν είναι έγκυρη.');
-    try {
-      const index = await this.loadIndex();
-      const id = crypto.randomUUID();
-      const cipher = await encrypt(this.dataKey, dedomena, `dps.vault.v1/file/${id}`);
-      const encoded = new TextEncoder().encode(JSON.stringify(cipher));
-      const stored = await this.storage.grapse_dyadiko(`${OBJECTS_PATH}/${id}.enc`, encoded);
-      if (!stored.ok) return stored;
-      const previousId = index.files[path];
-      index.files[path] = id;
-      if (!(await this.saveIndex(index))) {
-        await this.storage.diagrafi(`${OBJECTS_PATH}/${id}.enc`);
-        return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η ενημέρωση του κρυπτογραφημένου καταλόγου.');
+    return withVaultStorageLock(async () => {
+      try {
+        const index = await this.loadIndex();
+        const id = crypto.randomUUID();
+        const cipher = await encrypt(this.dataKey, dedomena, `dps.vault.v1/file/${id}`);
+        const encoded = new TextEncoder().encode(JSON.stringify(cipher));
+        const stored = await this.storage.grapse_dyadiko(`${OBJECTS_PATH}/${id}.enc`, encoded);
+        if (!stored.ok) return stored;
+        const previousId = index.files[path];
+        index.files[path] = id;
+        if (!(await this.saveIndex(index))) {
+          await this.storage.diagrafi(`${OBJECTS_PATH}/${id}.enc`);
+          return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η ενημέρωση του κρυπτογραφημένου καταλόγου.');
+        }
+        if (previousId !== undefined) await this.storage.diagrafi(`${OBJECTS_PATH}/${previousId}.enc`);
+        return ok(undefined);
+      } catch {
+        return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η κρυπτογράφηση και αποθήκευση του αρχείου.');
       }
-      if (previousId !== undefined) await this.storage.diagrafi(`${OBJECTS_PATH}/${previousId}.enc`);
-      return ok(undefined);
-    } catch {
-      return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η κρυπτογράφηση και αποθήκευση του αρχείου.');
-    }
+    });
   }
 
   async yparxei(diadromi: string): Promise<boolean> {
     const path = normalizePath(diadromi);
     if (path === null) return false;
-    try { return (await this.loadIndex()).files[path] !== undefined; } catch { return false; }
+    return withVaultStorageLock(async () => {
+      try { return (await this.loadIndex()).files[path] !== undefined; } catch { return false; }
+    });
   }
 
   async lista(fakelos: string): Promise<Apotelesma<string[]>> {
     const prefix = fakelos === '.' || fakelos === '' ? '' : normalizePath(fakelos);
     if (prefix === null) return apotyxia('MI_EGKYRO_SXIMA', 'Η διαδρομή φακέλου δεν είναι έγκυρη.');
-    try {
-      const files = Object.keys((await this.loadIndex()).files);
-      return ok(files.filter((path) => prefix === '' || path.startsWith(`${prefix}/`)).sort());
-    } catch {
-      return apotyxia('MI_EGKYRO_SXIMA', 'Δεν ήταν δυνατή η ανάγνωση του κρυπτογραφημένου καταλόγου.');
-    }
+    return withVaultStorageLock(async () => {
+      try {
+        const files = Object.keys((await this.loadIndex()).files);
+        return ok(files.filter((path) => prefix === '' || path.startsWith(`${prefix}/`)).sort());
+      } catch {
+        return apotyxia('MI_EGKYRO_SXIMA', 'Δεν ήταν δυνατή η ανάγνωση του κρυπτογραφημένου καταλόγου.');
+      }
+    });
   }
 
   async diagrafi(diadromi: string): Promise<Apotelesma<void>> {
     const path = normalizePath(diadromi);
     if (path === null) return apotyxia('MI_EGKYRO_SXIMA', 'Η διαδρομή αποθήκευσης δεν είναι έγκυρη.');
-    try {
-      const index = await this.loadIndex();
-      const id = index.files[path];
-      if (id === undefined) return apotyxia('DEN_VRETHIKE', 'Το αρχείο δεν υπάρχει.');
-      delete index.files[path];
-      if (!(await this.saveIndex(index))) return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η ενημέρωση του vault.');
-      await this.storage.diagrafi(`${OBJECTS_PATH}/${id}.enc`);
-      return ok(undefined);
-    } catch {
-      return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η διαγραφή του αρχείου από το vault.');
-    }
+    return withVaultStorageLock(async () => {
+      try {
+        const index = await this.loadIndex();
+        const id = index.files[path];
+        if (id === undefined) return apotyxia('DEN_VRETHIKE', 'Το αρχείο δεν υπάρχει.');
+        delete index.files[path];
+        if (!(await this.saveIndex(index))) return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η ενημέρωση του vault.');
+        await this.storage.diagrafi(`${OBJECTS_PATH}/${id}.enc`);
+        return ok(undefined);
+      } catch {
+        return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η διαγραφή του αρχείου από το vault.');
+      }
+    });
   }
 }
 
