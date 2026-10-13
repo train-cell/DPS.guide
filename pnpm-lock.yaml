@@ -47,9 +47,6 @@ importers:
       '@dps/adapters-node':
         specifier: workspace:*
         version: link:../../packages/adapters-node
-      '@dps/ai':
-        specifier: workspace:*
-        version: link:../../packages/ai
       '@dps/core':
         specifier: workspace:*
         version: link:../../packages/core

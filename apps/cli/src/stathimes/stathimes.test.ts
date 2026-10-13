@@ -36,55 +36,39 @@ describe('epikyrose_montelo', () => {
   });
 });
 
-describe('dimiourgise_eisodos — χωρίς I/O', () => {
-  it('με μοντέλο από σημαία στήνει όλα τα ports χωρίς δίκτυο', async () => {
+describe('dimiourgise_eisodos — όρια privacy του CLI', () => {
+  it('αρνείται κάθε AI εντολή πριν διαβάσει μυστικά ή στήσει provider', async () => {
     const apotelesma = await dimiourgise_eisodos(parastates('./riza', MONTELO, true));
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) return;
+    expect(apotelesma.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
+    expect(apotelesma.sfalma.minima).toContain('συναίνεση ανά μάθημα');
+    expect(apotelesma.sfalma.minima).toContain('ακριβούς prompt');
+  });
+
+  it('οι μη-AI εντολές στήνουν πραγματικά ports με provider που αποτυγχάνει κλειστά', async () => {
+    const apotelesma = await dimiourgise_eisodos(parastates('./riza', null, false));
     expect(apotelesma.ok).toBe(true);
     if (!apotelesma.ok) {
       return;
     }
-    expect(apotelesma.timi.llm.montelo).toBe(MONTELO);
     // Node adapters already include --riza; pipeline paths therefore stay relative.
     expect(apotelesma.timi.riza).toBe('');
     expect(apotelesma.timi.apothiki).toBeDefined();
     expect(apotelesma.timi.mystika).toBeDefined();
     expect(apotelesma.timi.katagrafi).toBeDefined();
     expect(apotelesma.timi.rologi.tora()).toBeInstanceOf(Date);
-  });
-
-  it('χωρίς μοντέλο, σε εντολή που δεν θέλει LLM, στήνει κανονικά τα ports', async () => {
-    const apotelesma = await dimiourgise_eisodos(parastates('./riza', null, false));
-    expect(apotelesma.ok).toBe(true);
-  });
-
-  it('χωρίς μοντέλο, σε εντολή που θέλει LLM, δίνει σφάλμα με οδηγίες', async () => {
-    const apotelesma = await dimiourgise_eisodos(parastates('./riza', null, true));
-    expect(apotelesma.ok).toBe(false);
-    if (apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
-    expect(apotelesma.sfalma.minima).toContain('--montelo');
-    expect(apotelesma.sfalma.minima).toContain(DIADROMI_RYTHMISEON);
-  });
-
-  it('το port του eClass είναι ρητά «μη υλοποιημένο», όχι ψεύτικη επιτυχία', async () => {
-    const apotelesma = await dimiourgise_eisodos(parastates('./riza', MONTELO, true));
-    expect(apotelesma.ok).toBe(true);
-    if (!apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.timi.eclass).toBeInstanceOf(MiYpostirimenoEclassPyli);
-    const syndesi = await apotelesma.timi.eclass.syndesi();
-    expect(syndesi.ok).toBe(false);
-    if (syndesi.ok) {
-      return;
-    }
-    expect(syndesi.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
+    const generated = await apotelesma.timi.llm.parage_keimeno({
+      systima: 'test',
+      minimata: [{ rolos: 'xristis', keimeno: 'test' }],
+      ekdosi_prompt: '1',
+      thermokrasia: 0,
+    });
+    expect(generated.ok).toBe(false);
   });
 });
 
-describe('dimiourgise_eisodos — ανάγνωση rythmiseis.json', () => {
+describe('dimiourgise_eisodos — αποθήκευση και πραγματικό Open eClass port', () => {
   let riza = '';
 
   beforeEach(async () => {
@@ -95,51 +79,15 @@ describe('dimiourgise_eisodos — ανάγνωση rythmiseis.json', () => {
     await rm(riza, { recursive: true, force: true });
   });
 
-  it('διαβάζει το montelo από το <riza>/rythmiseis.json', async () => {
-    await writeFile(
-      path.join(riza, DIADROMI_RYTHMISEON),
-      JSON.stringify({ montelo: MONTELO, base_url: 'https://example.invalid' }),
-      'utf8'
-    );
-    const apotelesma = await dimiourgise_eisodos(parastates(riza, null, true));
-    expect(apotelesma.ok).toBe(true);
-    if (!apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.timi.llm.montelo).toBe(MONTELO);
-  });
-
-  it('η σημαία --montelo υπερισχύει του αρχείου ρυθμίσεων', async () => {
-    await writeFile(path.join(riza, DIADROMI_RYTHMISEON), JSON.stringify({ montelo: 'apo-arxeio' }), 'utf8');
-    const apotelesma = await dimiourgise_eisodos(parastates(riza, 'apo-semeia', true));
-    expect(apotelesma.ok).toBe(true);
-    if (!apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.timi.llm.montelo).toBe('apo-semeia');
-  });
-
-  it('άθλιο rythmiseis.json + ζητούμενο LLM → σφάλμα, όχι default μοντέλο', async () => {
-    await writeFile(path.join(riza, DIADROMI_RYTHMISEON), 'όχι JSON', 'utf8');
-    const apotelesma = await dimiourgise_eisodos(parastates(riza, null, true));
+  it('η ρύθμιση μοντέλου ή η σημαία --montelo δεν παρακάμπτουν το CLI privacy gate', async () => {
+    await writeFile(path.join(riza, DIADROMI_RYTHMISEON), JSON.stringify({ montelo: MONTELO }), 'utf8');
+    const apotelesma = await dimiourgise_eisodos(parastates(riza, 'gemini-2.5-flash', true));
     expect(apotelesma.ok).toBe(false);
-    if (apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
-  });
-
-  it('λείποντο rythmiseis.json + ζητούμενο LLM → σφάλμα με οδηγίες', async () => {
-    const apotelesma = await dimiourgise_eisodos(parastates(riza, null, true));
-    expect(apotelesma.ok).toBe(false);
-    if (apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.sfalma.minima).toContain('--montelo');
+    if (!apotelesma.ok) expect(apotelesma.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
   });
 
   it('το apothiki port δεσμεύεται στη ρίζα που δώθηκε', async () => {
-    const apotelesma = await dimiourgise_eisodos(parastates(riza, MONTELO, true));
+    const apotelesma = await dimiourgise_eisodos(parastates(riza, null, false));
     expect(apotelesma.ok).toBe(true);
     if (!apotelesma.ok) {
       return;

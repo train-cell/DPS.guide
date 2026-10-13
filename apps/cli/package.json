@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@dps/adapters-node": "workspace:*",
-    "@dps/ai": "workspace:*",
     "@dps/core": "workspace:*",
     "@dps/extract": "workspace:*",
     "@dps/eclass": "workspace:*",

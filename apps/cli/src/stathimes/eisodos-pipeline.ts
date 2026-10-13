@@ -4,7 +4,6 @@ import {
   NodeFetchHttpPyli,
   NodeFsApothiki,
 } from '@dps/adapters-node';
-import { ftiaxe_gemini_llm } from '@dps/ai';
 import type { Apotelesma, ApothikiPyli, EclassPyli, HttpPyli, LlmPyli, MystikaPyli } from '@dps/core';
 import { apotyxia } from '@dps/core';
 import { DpsEclassPyli, TopikiSyndesi } from '@dps/eclass';
@@ -15,12 +14,10 @@ import { KonsoladaKatagrafi } from './katagrafi-konsolada.js';
 import { MiOrismenoMonteloLlmPyli } from './llm-choris-montelou.js';
 import { SystemaRologi } from './rologi-systimatos.js';
 import {
-  DIADROMI_RYTHMISEON,
   fere_base_url_apo_ryza,
-  fere_montelo_apo_ryza,
 } from './rythmiseis.js';
 
-export { DIADROMI_RYTHMISEON };
+export { DIADROMI_RYTHMISEON } from './rythmiseis.js';
 
 /** Το stderr του CLI — τα logs πάνε εδώ, ώστε το stdout `--json` να είναι καθαρό. */
 function kathisteriki_konsolis(grammi: string): void {
@@ -61,34 +58,27 @@ export async function lise_eclass(
  *
  * - `eclass`: πραγματική DpsEclassPyli αν υπάρχουν credentials/base_url, αλλιώς σαφές unsupported error.
  * - `apothiki`/`katevasma`: fs, δεμένα στη ρίζα που δίνεται με `--riza`.
- * - `llm`: Gemini μέσω `HttpPyli` (timeout/retry από §7.2) ΜΟΝΟ αν οριστεί μοντέλο·
- *   το μοντέλο προκύπτει από `--montelo` ή από `<riza>/rythmiseis.json` — ποτέ
- *   hardcoded. Ο cache wrapper του `@dps/ai` δεν εφαρμόζεται εδώ: η cache του LLM
- *   ανήκει στο `@dps/pipeline` (§4 «idempotent βήματα, cache»), γιατί μόνο αυτό
- *   ξέρει τη διαδρομή cache ανά μάθημα (§5.3).
+ * - `llm`: fail-closed placeholder. Το βοηθητικό CLI δεν διαθέτει το per-course
+ *   Gemini opt-in και την επιβεβαίωση του ακριβούς prompt που απαιτεί η εφαρμογή.
  * - `mystika`: Windows Credential Manager με fallback στις μεταβλητές περιβάλλοντος.
  */
 export async function dimiourgise_eisodos(
   parastates: ParastatesEntolhs
 ): Promise<Apotelesma<EisodosPipeline>> {
+  if (parastates.xreiazetai_llm) {
+    return apotyxia(
+      'MI_YPOSTIRIZOMENO',
+      'Η δημιουργία AI δεν είναι διαθέσιμη από το CLI, επειδή λείπει η συναίνεση ανά μάθημα και η επιβεβαίωση του ακριβούς prompt. Χρησιμοποίησε την εφαρμογή DPS.guide.'
+    );
+  }
+
   const apothiki = new NodeFsApothiki(parastates.riza);
   const http = new NodeFetchHttpPyli();
   const mystika = new KeyringMystika();
   const rologi = new SystemaRologi();
   const katagrafi = new KonsoladaKatagrafi(kathisteriki_konsolis);
 
-  const montelo = await lise_montelo(parastates, apothiki);
-  if (montelo === null && parastates.xreiazetai_llm) {
-    return apotyxia(
-      'MI_EGKYRO_SXIMA',
-      'Δεν έχει οριστεί μοντέλο LLM: δώσε --montelo <ονομα> ' +
-        `ή βάλε το πεδίο "montelo" στο <riza>/${DIADROMI_RYTHMISEON}`
-    );
-  }
-  const llm: LlmPyli =
-    montelo === null
-      ? new MiOrismenoMonteloLlmPyli()
-      : ftiaxe_gemini_llm(http, mystika, rologi, katagrafi, { montelo });
+  const llm: LlmPyli = new MiOrismenoMonteloLlmPyli();
 
   const eclass = await lise_eclass(apothiki, http, mystika);
 
@@ -106,15 +96,4 @@ export async function dimiourgise_eisodos(
       riza: '',
     },
   };
-}
-
-/** Προτεραιότητα σημαίας, έπειτα αρχείο ρυθμίσεων, έπειτα καμία τιμή. */
-async function lise_montelo(
-  parastates: ParastatesEntolhs,
-  apothiki: ApothikiPyli
-): Promise<string | null> {
-  if (parastates.montelo !== null) {
-    return parastates.montelo;
-  }
-  return fere_montelo_apo_ryza(apothiki);
 }
