@@ -10,18 +10,26 @@ const platform = process.argv[2];
 
 function run(command, args, cwd = root) {
   return new Promise((resolveRun, rejectRun) => {
-    const windowsCommand = process.platform === 'win32' && ['pnpm', 'xcodebuild', 'ditto'].includes(command)
-      ? `${command}.cmd`
-      : command;
-    const child = spawn(windowsCommand, args, {
+    const child = spawn(command, args, {
       cwd,
       stdio: 'inherit',
-      shell: process.platform === 'win32',
+      shell: false,
       env: process.env,
     });
     child.once('error', rejectRun);
     child.once('exit', (code) => code === 0 ? resolveRun() : rejectRun(new Error(`${command} exited with ${code}`)));
   });
+}
+
+function runPnpm(args) {
+  const packageManager = process.env.npm_execpath;
+  if (!packageManager) {
+    throw new Error('Run this command through pnpm so its executable can be resolved safely.');
+  }
+  if (/\.(?:cjs|mjs|js)$/i.test(packageManager)) {
+    return run(process.execPath, [packageManager, ...args]);
+  }
+  return run(packageManager, args);
 }
 
 if (platform !== 'android' && platform !== 'ios') {
@@ -31,8 +39,8 @@ if (platform === 'ios' && process.platform !== 'darwin') {
   throw new Error('Unsigned iOS IPA builds require macOS with Xcode. Run `pnpm mobile:ios` on a Mac; no signing key is used.');
 }
 
-await run('pnpm', ['--filter', '@dps/mobile', 'build']);
-await run('pnpm', ['--filter', '@dps/mobile', 'exec', 'cap', 'sync', platform]);
+await runPnpm(['--filter', '@dps/mobile', 'build']);
+await runPnpm(['--filter', '@dps/mobile', 'exec', 'cap', 'sync', platform]);
 
 if (platform === 'ios') {
   await run('node', [
@@ -45,8 +53,14 @@ const nativeOutput = join(app, 'native-artifacts');
 await mkdir(nativeOutput, { recursive: true });
 
 if (platform === 'android') {
-  const wrapper = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
-  await run(wrapper, ['assembleDebug'], join(app, 'android'));
+  const android = join(app, 'android');
+  if (process.platform === 'win32') {
+    const java = process.env.JAVA_HOME ? join(process.env.JAVA_HOME, 'bin', 'java.exe') : 'java';
+    const wrapper = join(android, 'gradle', 'wrapper', 'gradle-wrapper.jar');
+    await run(java, ['-classpath', wrapper, 'org.gradle.wrapper.GradleWrapperMain', 'assembleDebug'], android);
+  } else {
+    await run('./gradlew', ['assembleDebug'], android);
+  }
   await copyFile(
     join(app, 'android', 'app', 'build', 'outputs', 'apk', 'debug', 'app-debug.apk'),
     join(nativeOutput, 'DPS.guide-android-debug.apk'),
