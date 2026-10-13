@@ -30,7 +30,7 @@ export async function syndesi_kai_anaktisi_mathimaton(
   input: ParametroiSyndesisEclass,
 ): Promise<Apotelesma<readonly Mathima[]>> {
   const username = input.onoma_xristi.trim();
-  const password = input.kodikos.trim();
+  const password = input.kodikos;
   const baseUrl = input.base_url.trim().replace(/\/+$/, '');
   let normalizedBase: URL;
   try {
@@ -71,10 +71,10 @@ export async function syndesi_kai_anaktisi_mathimaton(
   if (connectorType === 'unsupported') {
     return apotyxia('MI_YPOSTIRIZOMENO', 'Αυτό το portal δεν έχει υποστηριζόμενο Moodle ή Open eClass connector.');
   }
-  if (connectorType !== 'moodle' && (!username || !password)) {
+  if (connectorType !== 'moodle' && (!username || !password.trim())) {
     return apotyxia('AUTH_APOTYXIA', 'Συμπλήρωσε όνομα χρήστη και κωδικό πρόσβασης.');
   }
-  if (connectorType === 'moodle' && !input.webservice_token?.trim() && (!username || !password)) {
+  if (connectorType === 'moodle' && !input.webservice_token?.trim() && (!username || !password.trim())) {
     return apotyxia('AUTH_APOTYXIA', 'Συμπλήρωσε Moodle username/password ή ένα προαιρετικό Web Services token.');
   }
   let rawEclass: EclassPyli;
@@ -181,4 +181,34 @@ export async function syndesi_kai_anaktisi_mathimaton(
     await input.periballon.mystika.svise('moodle_webservice_token');
   }
   return ok(discovery.timi);
+}
+
+/** Re-authenticates with credentials from the encrypted device vault and refreshes LMS courses/files. */
+export async function epanasygxronise_mathimata_apo_apothiki(
+  periballon: Periballon,
+): Promise<Apotelesma<readonly Mathima[]>> {
+  const settings = await fortose_rytheseis(periballon.apothiki);
+  const [username, password, savedBaseUrl, universityId, webserviceToken] = await Promise.all([
+    periballon.mystika.pare('eclass_onoma_xristi'),
+    periballon.mystika.pare('eclass_kodikos'),
+    periballon.mystika.pare('eclass_base_url'),
+    periballon.mystika.pare('eclass_panepistimio_id'),
+    periballon.mystika.pare('moodle_webservice_token'),
+  ]);
+  const baseUrl = settings.baseUrl.trim() || savedBaseUrl?.trim() || '';
+  if (!baseUrl) {
+    return apotyxia('AUTH_APOTYXIA', 'Δεν υπάρχει αποθηκευμένη διεύθυνση LMS. Συνδέσου ξανά από την αρχική οθόνη.');
+  }
+  if ((!username?.trim() || !password?.trim()) && !webserviceToken?.trim()) {
+    return apotyxia('AUTH_APOTYXIA', 'Δεν υπάρχουν αποθηκευμένα στοιχεία σύνδεσης. Συνδέσου ξανά από την αρχική οθόνη.');
+  }
+  return syndesi_kai_anaktisi_mathimaton({
+    periballon,
+    base_url: baseUrl,
+    onoma_xristi: username ?? '',
+    kodikos: password ?? '',
+    panepistimio_id: settings.panepistimioId ?? universityId ?? 'custom',
+    lms: 'auto',
+    ...(webserviceToken?.trim() ? { webservice_token: webserviceToken.trim() } : {}),
+  });
 }

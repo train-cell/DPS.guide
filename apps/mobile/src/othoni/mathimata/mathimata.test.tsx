@@ -43,7 +43,7 @@ describe('mathimata — οθόνη λίστας μαθημάτων', () => {
 
   it('οι υποχρεωτικές data-testid υπάρχουν στην πηγή της οθόνης', () => {
     const pigi = readFileSync(MONI_PIGIS, 'utf8');
-    for (const testid of ['mathimata-ekran', 'mathimata-karta', 'mathimata-lista']) {
+    for (const testid of ['mathimata-ekran', 'mathimata-karta', 'mathimata-lista', 'mathimata-sygxronismos']) {
       expect(pigi).toContain(`"${testid}"`);
     }
   });

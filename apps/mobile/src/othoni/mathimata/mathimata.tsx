@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { IonButton } from '@ionic/react';
 import type { Mathima } from '@dps/core';
 import { Karta, OloniKatastasis, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
@@ -7,6 +8,7 @@ import { fortosi, sfalma } from '../../kathstasi/index.js';
 import { xrisiPeriballontos } from '../../periballon/index.js';
 import { xrisiApothekisis } from '../../apothiki/index.js';
 import { fortose_mathimata_apo_apothiki } from '../../ypiresies/index.js';
+import { epanasygxronise_mathimata_apo_apothiki } from '../../ypiresies/syndesi-eclass.js';
 
 /** Ετικέτα που σημαίνει ότι το μάθημα είναι ήδη συγχρονισμένο. */
 export const MINIMA_SYNXRONISMENOU = 'Συγχρονισμένο';
@@ -76,6 +78,11 @@ export default function Mathimata() {
   const [prospatheies, setProspatheies] = useState(0);
   const [anazitisi, setAnazitisi] = useState('');
   const [filtro, setFiltro] = useState<'ola' | 'sygxronismena' | 'ekkremei'>('ola');
+  const [sygxronizetai, setSygxronizetai] = useState(false);
+  const [minimaSygxronismou, setMinimaSygxronismou] = useState<{
+    readonly typos: 'epitychia' | 'sfalma';
+    readonly keimeno: string;
+  } | null>(null);
 
   useEffect(() => {
     let zontas = true;
@@ -100,9 +107,44 @@ export default function Mathimata() {
     setProspatheies((prospathia) => prospathia + 1);
   }, []);
 
+  const sygxronise = useCallback(async () => {
+    setSygxronizetai(true);
+    setMinimaSygxronismou(null);
+    try {
+      const result = await epanasygxronise_mathimata_apo_apothiki(periballon);
+      if (!result.ok) {
+        setMinimaSygxronismou({ typos: 'sfalma', keimeno: result.sfalma.minima });
+        return;
+      }
+      const refreshed = await fortose_mathimata_apo_apothiki(periballon.apothiki);
+      setKatastasi(refreshed);
+      setMinimaSygxronismou({
+        typos: 'epitychia',
+        keimeno: `Ο συγχρονισμός ολοκληρώθηκε για ${result.timi.length} μαθήματα.`,
+      });
+    } catch {
+      setMinimaSygxronismou({
+        typos: 'sfalma',
+        keimeno: 'Ο συγχρονισμός απέτυχε. Έλεγξε τη σύνδεση και δοκίμασε ξανά.',
+      });
+    } finally {
+      setSygxronizetai(false);
+    }
+  }, [periballon]);
+
   return (
     <div className="episkefsi" data-testid="mathimata-ekran">
       <ProskelesioOmonimas titlos="Μαθήματα" ypokeimeno={YPOKEIMENO_MATHIMATON} />
+      <div className="mathimata-sygxronismos" data-testid="mathimata-sygxronismos">
+        <IonButton type="button" onClick={() => void sygxronise()} disabled={sygxronizetai}>
+          {sygxronizetai ? 'Συγχρονισμός…' : 'Συγχρονισμός από LMS'}
+        </IonButton>
+        {minimaSygxronismou !== null && (
+          <p role={minimaSygxronismou.typos === 'sfalma' ? 'alert' : 'status'}>
+            {minimaSygxronismou.keimeno}
+          </p>
+        )}
+      </div>
       <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_LISTAS} epanalipsi={epanalipsi}>
         {(mathimata) => {
           const kathara = anazitisi.trim().toLowerCase();

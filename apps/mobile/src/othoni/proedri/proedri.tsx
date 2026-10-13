@@ -147,7 +147,7 @@ export default function Proedri({ periballon }: ProedriProps) {
         periballon: runtime,
         base_url: base.trim(),
         onoma_xristi: xristis.trim(),
-        kodikos: kodikos.trim(),
+        kodikos,
         panepistimio_id: epilegmenoPanepistimioId,
         lms,
         ...(webserviceToken.trim() ? { webservice_token: webserviceToken.trim() } : {}),
@@ -155,7 +155,7 @@ export default function Proedri({ periballon }: ProedriProps) {
 
       if (apotelesmaScraping.ok) {
         if (xristis.trim()) await runtime.mystika.vale('eclass_onoma_xristi', xristis.trim());
-        if (kodikos.trim()) await runtime.mystika.vale('eclass_kodikos', kodikos.trim());
+        if (kodikos.trim()) await runtime.mystika.vale('eclass_kodikos', kodikos);
         await runtime.mystika.vale('eclass_panepistimio_id', epilegmenoPanepistimioId);
         await runtime.mystika.vale('eclass_base_url', base.trim());
         setKatastasi(etimo(apotelesmaScraping.timi));

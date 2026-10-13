@@ -2,11 +2,74 @@ import { describe, it, expect, vi } from 'vitest';
 import { FakeHttp, MnimiApothiki } from '@dps/core/testing';
 import type { HttpAitima, HttpApantisi, Mathima } from '@dps/core';
 import { ftiaxe_periballon_test as ftiaxe_periballon } from '../../test-fixtures/ftiaxe-test-periballon.js';
-import { syndesi_kai_anaktisi_mathimaton } from './syndesi-eclass.js';
+import {
+  epanasygxronise_mathimata_apo_apothiki,
+  syndesi_kai_anaktisi_mathimaton,
+} from './syndesi-eclass.js';
 import { DIADROMI_MATHIMATON } from './mathimata.js';
 import { fortose_rytheseis } from '../apothiki/apothiki-ypiresies.js';
 
 describe('syndesi_kai_anaktisi_mathimaton', () => {
+  it('αρνείται επανασυγχρονισμό όταν λείπουν αποθηκευμένα στοιχεία σύνδεσης', async () => {
+    const periballon = ftiaxe_periballon();
+
+    const result = await epanasygxronise_mathimata_apo_apothiki(periballon);
+
+    expect(result).toMatchObject({ ok: false, sfalma: { kodikos: 'AUTH_APOTYXIA' } });
+  });
+
+  it('επαναχρησιμοποιεί τα αποθηκευμένα στοιχεία για νέο πραγματικό discovery και sync', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<{ ok: true; timi: HttpApantisi }> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return {
+            ok: true,
+            timi: {
+              katastasi: 200,
+              teliko_url: request.url,
+              kefalides: { 'set-cookie': 'PHPSESSID=init456; path=/' },
+              keimeno: '<form action="login_form.php"><input name="uname"/><input name="pass"/></form>',
+            },
+          };
+        }
+        if (request.methodos === 'POST') {
+          return {
+            ok: true,
+            timi: {
+              katastasi: 200,
+              teliko_url: 'https://eclass.unipi.gr/main/portfolio.php',
+              kefalides: { 'set-cookie': 'PHPSESSID=refresh456; path=/' },
+              keimeno: 'Καλώς ήρθατε στο eClass!',
+            },
+          };
+        }
+        return {
+          ok: true,
+          timi: {
+            katastasi: 200,
+            teliko_url: request.url,
+            kefalides: {},
+            keimeno: '<a href="/courses/CS303/">Βάσεις Δεδομένων</a>',
+          },
+        };
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+    await periballon.mystika.vale('eclass_onoma_xristi', 'student');
+    await periballon.mystika.vale('eclass_kodikos', 'secret');
+    await periballon.mystika.vale('eclass_base_url', 'https://eclass.unipi.gr');
+    await periballon.mystika.vale('eclass_panepistimio_id', 'unipi');
+
+    const result = await epanasygxronise_mathimata_apo_apothiki(periballon);
+
+    expect(result.ok).toBe(true);
+    expect(mockHttp.aitima).toHaveBeenCalled();
+    const stored = await apothiki.diavase_keimeno(DIADROMI_MATHIMATON);
+    expect(stored).toMatchObject({ ok: true });
+    if (stored.ok) expect(stored.timi).toContain('CS303');
+  });
+
   it('απορρίπτει κενό όνομα χρήστη ή κωδικό πρόσβασης', async () => {
     const periballon = ftiaxe_periballon();
     const res = await syndesi_kai_anaktisi_mathimaton({
@@ -75,11 +138,13 @@ describe('syndesi_kai_anaktisi_mathimaton', () => {
       periballon,
       base_url: 'https://eclass.unipi.gr',
       onoma_xristi: 'student2024',
-      kodikos: 'securepassword',
+      kodikos: 'securepassword ',
       panepistimio_id: 'unipi',
     });
 
     expect(res.ok).toBe(true);
+    const loginRequest = mockHttp.aitima.mock.calls.find(([request]) => request.methodos === 'POST');
+    expect(loginRequest?.[0].soma_forma?.pass).toBe('securepassword ');
     if (res.ok) {
       expect(res.timi).toHaveLength(2);
       expect(res.timi[0]?.kodikos).toBe('CS101');
