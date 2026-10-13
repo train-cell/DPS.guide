@@ -84,14 +84,15 @@ describe('tutor — πραγματική παραγωγή βασισμένη σ�
 });
 
 describe('tutor — opt-in Gemini και επιβεβαίωση', () => {
-  it('κρατά συναίνεση χωριστά ανά μάθημα και ζητά νέο διάλογο επιβεβαίωσης σε κάθε δημιουργία', () => {
-    expect(TUTOR_SOURCE).toContain('read_course_gemini_opt_in');
-    expect(TUTOR_SOURCE).toContain("from '../../ypiresies/ai-policy.js'");
-    expect(TUTOR_SOURCE).toContain('setPendingQuestion({ text: question, gemini: geminiSelected });');
-    expect(TUTOR_SOURCE).toContain('if (pendingQuestion.gemini && !consentGivenInDialog)');
-    expect(TUTOR_SOURCE).toContain('role="alertdialog" aria-modal="true"');
-    expect(TUTOR_SOURCE).toContain('Επιβεβαίωση και αποστολή στο Gemini');
-    expect(TUTOR_SOURCE).toContain('το σχετικό απόσπασμα των τοπικών αρχείων, η ερώτηση και έως 10 προηγούμενα μηνύματα');
+  it('χρησιμοποιεί κοινό ανά μάθημα opt-in gate και εμφανίζει το ακριβές prompt πριν από κάθε αποστολή', () => {
+    expect(TUTOR_SOURCE).toContain('useCourseAiPrivacy');
+    expect(TUTOR_SOURCE).toContain('createAuthorizedCourseLlm');
+    expect(TUTOR_SOURCE).toContain('privacy.authorizeGeneration');
+    expect(TUTOR_SOURCE).toContain('privacy.dialog');
+    expect(TUTOR_SOURCE).toContain('Πριν από κάθε αποστολή εμφανίζεται το ακριβές prompt.');
+    expect(TUTOR_SOURCE).toContain('disabled={privacy.loading || privacy.saving}');
+    expect(TUTOR_SOURCE).not.toContain('read_course_gemini_opt_in');
+    expect(TUTOR_SOURCE).not.toContain('consentGivenInDialog');
   });
 
   it('η οθόνη χωρίς αποθηκευμένο μάθημα δείχνει φόρτωση/οδηγίες και όχι demo μαθήματα', () => {
