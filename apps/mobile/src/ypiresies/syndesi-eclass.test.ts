@@ -70,6 +70,68 @@ describe('syndesi_kai_anaktisi_mathimaton', () => {
     if (stored.ok) expect(stored.timi).toContain('CS303');
   });
 
+  it('χρησιμοποιεί το Moodle token μόνο στο προσωρινό file download URL', async () => {
+    const apothiki = new MnimiApothiki();
+    const token = 'moodle-file-download-secret';
+    const fileUrl = 'https://moodle.example.edu/lms/webservice/pluginfile.php/42/mod_resource/content/1/notes.txt';
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<{ ok: true; timi: HttpApantisi }> => {
+        if (request.methodos === 'POST') {
+          const functionName = request.soma_forma?.wsfunction;
+          if (functionName === 'core_webservice_get_site_info') {
+            return { ok: true, timi: { katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: JSON.stringify({ sitename: 'Moodle' }) } };
+          }
+          if (functionName === 'core_enrol_get_users_courses') {
+            return { ok: true, timi: { katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: JSON.stringify([{ id: 42, fullname: 'Algorithms' }]) } };
+          }
+          if (functionName === 'core_course_get_contents') {
+            return {
+              ok: true,
+              timi: {
+                katastasi: 200,
+                teliko_url: request.url,
+                kefalides: {},
+                keimeno: JSON.stringify([
+                  { name: 'General', modules: [{ name: 'Notes', contents: [{ type: 'file', fileurl: fileUrl, filename: 'notes.txt', filesize: 12 }] }] },
+                ]),
+              },
+            };
+          }
+        }
+        if (request.methodos === 'GET' && request.url.startsWith(fileUrl)) {
+          return {
+            ok: true,
+            timi: {
+              katastasi: 200,
+              teliko_url: request.url,
+              kefalides: {},
+              dyadiko: new TextEncoder().encode('local notes'),
+            },
+          };
+        }
+        return { ok: true, timi: { katastasi: 404, teliko_url: request.url, kefalides: {}, keimeno: '' } };
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+
+    const result = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://moodle.example.edu/lms',
+      onoma_xristi: '',
+      kodikos: '',
+      panepistimio_id: 'moodle',
+      lms: 'moodle',
+      webservice_token: token,
+    });
+
+    expect(result.ok).toBe(true);
+    const downloadRequest = mockHttp.aitima.mock.calls.find(([request]) => request.methodos === 'GET' && request.url.startsWith(fileUrl))?.[0];
+    expect(downloadRequest?.url).toBe(`${fileUrl}?token=${token}`);
+    const index = await apothiki.diavase_keimeno('42/.spoudes/eurethrio-arxeion.json');
+    expect(index).toMatchObject({ ok: true });
+    if (index.ok) expect(index.timi).not.toContain(token);
+  });
+
   it('απορρίπτει κενό όνομα χρήστη ή κωδικό πρόσβασης', async () => {
     const periballon = ftiaxe_periballon();
     const res = await syndesi_kai_anaktisi_mathimaton({

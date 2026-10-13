@@ -42,6 +42,26 @@ describe('MoodlePyli authentication and REST transport', () => {
     });
   });
 
+  it('keeps the Web Services endpoint under a Moodle subdirectory', async () => {
+    const { http, aitima } = httpWith((request) => ({
+      katastasi: 200,
+      kefalides: {},
+      teliko_url: request.url,
+      keimeno: JSON.stringify({ sitename: 'Moodle' }),
+    }));
+    const connector = new MoodlePyli({
+      http,
+      base_url: 'https://moodle.example.edu/courses/',
+      username: '',
+      password: '',
+      webservice_token: 'test-only-secret-token',
+    });
+
+    await connector.syndesi();
+
+    expect(aitima.mock.calls[0]?.[0].url).toBe('https://moodle.example.edu/courses/webservice/rest/server.php');
+  });
+
   it('logs in through the standard form and discovers courses with the authenticated session', async () => {
     const { http, aitima } = httpWith((request) => {
       if (request.methodos === 'GET' && request.url.endsWith('/login/index.php')) {

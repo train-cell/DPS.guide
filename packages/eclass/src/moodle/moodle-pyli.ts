@@ -288,7 +288,7 @@ export class MoodlePyli implements EclassPyli {
   }
 
   private async webservice<T>(functionName: string, parameters: Record<string, string>): Promise<Apotelesma<T>> {
-    const url = new URL('/webservice/rest/server.php', this.base_url);
+    const url = new URL('webservice/rest/server.php', `${this.base_url}/`);
     const form: Record<string, string> = {
       wstoken: this.options.webservice_token?.trim() ?? '',
       wsfunction: functionName,

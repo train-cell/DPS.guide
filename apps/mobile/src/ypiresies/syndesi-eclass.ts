@@ -106,9 +106,18 @@ export async function syndesi_kai_anaktisi_mathimaton(
       } catch {
         return apotyxia('MI_EGKYRO_SXIMA', 'Το LMS επέστρεψε μη έγκυρη διεύθυνση αρχείου.');
       }
+      const downloadUrl = new URL(fileUrl.href);
+      if (
+        connectorType === 'moodle' && input.webservice_token?.trim() &&
+        /(?:^|\/)webservice\/pluginfile\.php(?:\/|$)/i.test(downloadUrl.pathname)
+      ) {
+        // Moodle's dedicated file endpoint requires `token`; add it only to this
+        // in-memory download URL, while the encrypted course index keeps the clean URL.
+        downloadUrl.searchParams.set('token', input.webservice_token.trim());
+      }
       const request: HttpAitima = {
         methodos: 'GET',
-        url: fileUrl.href,
+        url: downloadUrl.href,
         kefalides: headers,
         akolouthise_anakateuthinseis: true,
         xronos_orio_ms: DOWNLOAD_TIMEOUT_MS,
