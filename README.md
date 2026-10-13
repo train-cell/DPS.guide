@@ -41,7 +41,7 @@ pnpm mobile:dev
 
 Άνοιξε `http://127.0.0.1:5173` στον υπολογιστή. Το `localhost`/loopback επιτρέπει τα APIs κρυπτογράφησης του browser.
 
-Ο development server ακούει μόνο στο loopback του υπολογιστή και εμφανίζει one-time pairing code στο terminal. Πληκτρολόγησέ τον στην browser εφαρμογή για να επιτρέψεις τις LMS/AI συνδέσεις· το bridge δεν εκτίθεται στο δίκτυο και αλλάζει κωδικό σε κάθε επανεκκίνηση. Δεν χρειάζεται certificate ή αλλαγή στο trust store.
+Ο development server ακούει μόνο στο loopback του υπολογιστή και εμφανίζει pairing code για την τρέχουσα εκτέλεση στο terminal. Πληκτρολόγησέ τον στην browser εφαρμογή για να επιτρέψεις τις LMS/AI συνδέσεις· το bridge δεν εκτίθεται στο δίκτυο και αλλάζει κωδικό σε κάθε επανεκκίνηση. Δεν χρειάζεται certificate ή αλλαγή στο trust store.
 
 Η browser εφαρμογή λειτουργεί στον ίδιο υπολογιστή. Σε iPhone και Android χρησιμοποίησε την Capacitor εφαρμογή, η οποία συνδέεται απευθείας με το LMS· δεν χρειάζεται CA ή τοπικό certificate.
 

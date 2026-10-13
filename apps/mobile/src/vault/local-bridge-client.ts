@@ -8,7 +8,7 @@ export function getLocalBridgeToken(): string | null {
   return bridgeToken;
 }
 
-/** Exchanges the one-time code printed by the local server for a memory-only session token. */
+/** Exchanges the current server-run code for a memory-only browser session token. */
 export async function pairLocalBridge(code: string): Promise<void> {
   const normalized = code.replace(/\s+/g, '').toUpperCase();
   if (!/^[0-9A-F]{16}$/.test(normalized)) {
