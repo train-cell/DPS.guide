@@ -31,7 +31,7 @@ node apps/cli/dist/index.js --help
 
 ## Σύνδεση
 
-Το CLI αναγνωρίζει Open eClass standard login. Τα διαπιστευτήρια διαβάζονται από το Windows Credential Manager ή, ως fallback, από τις μεταβλητές `ECLASS_USERNAME` και `ECLASS_PASSWORD`. Το `ECLASS_BASE_URL` ή το πεδίο `base_url` στο `<riza>/rythmiseis.json` ορίζει το portal. Το αρχείο ρυθμίσεων δεν πρέπει να περιέχει κωδικούς.
+Το CLI αναγνωρίζει Open eClass standard login. Στην προεπιλεγμένη εγκατάσταση, τα διαπιστευτήρια διαβάζονται από τις μεταβλητές `ECLASS_USERNAME` και `ECLASS_PASSWORD`. Η προαιρετική σύνδεση με Windows Credential Manager ενεργοποιείται μόνο αν το περιβάλλον εκτέλεσης παρέχει ξεχωριστά το `@napi-rs/keyring`· το workspace δεν το εγκαθιστά. Το CLI δεν αποθηκεύει credentials. Το `ECLASS_BASE_URL` ή το πεδίο `base_url` στο `<riza>/rythmiseis.json` ορίζει το portal. Το αρχείο ρυθμίσεων δεν πρέπει να περιέχει κωδικούς.
 
 Παράδειγμα προσωρινών μεταβλητών σε PowerShell:
 
