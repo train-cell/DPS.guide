@@ -1,54 +1,22 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { IonRouterOutlet } from '@ionic/react';
 import { PlisiOmonimas } from './plisi.js';
 import type { ReactNode } from 'react';
-import Simera from '../othoni/simera/simera.js';
-import Mathimata from '../othoni/mathimata/mathimata.js';
-import XartisEnotiton from '../othoni/xartis/xartis.js';
-import OdigosMeletis from '../othoni/odigos/odigos.js';
-import TutorChat from '../othoni/tutor/tutor.js';
-import Rythisies from '../othoni/rythisies/rythisies.js';
-import RythisiesAi from '../othoni/rythisies/rythisies-ai.js';
-import Proedri from '../othoni/proedri/proedri.js';
-import ProvoliPdf from '../provoli-pdf/provoli-pdf.js';
-import RythmiseisProgrammatos from '../programma/programma.js';
-import RythisiesEidopoiseon from '../eidopoiiseis/rythisies-eidopoiseon.js';
-import { dimiourgise_ypiresies_eidopoiseon } from '../eidopoiiseis/sindesi.js';
 import type { EidopoiisiYpiresies } from '../eidopoiiseis/eidopoiiseis-typoi.js';
-import { xrisiApothekisis } from '../apothiki/index.js';
-import { fortose_mathimata_apo_apothiki, fortose_xartis_apo_apothiki } from '../ypiresies/index.js';
-
-function EidopoiiseisRoute({ ypiresies }: { readonly ypiresies: EidopoiisiYpiresies }) {
-  const periballon = xrisiPeriballontos();
-  const { kodikosMathimatos, proodhos } = xrisiApothekisis();
-  const [context, setContext] = useState<{ readonly courseTitle: string; readonly sectionTitle: string } | undefined>();
-
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      if (!kodikosMathimatos) { setContext(undefined); return; }
-      const [courses, chartState] = await Promise.all([
-        fortose_mathimata_apo_apothiki(periballon.apothiki),
-        fortose_xartis_apo_apothiki(periballon.apothiki, kodikosMathimatos),
-      ]);
-      if (!active) return;
-      const courseTitle = courses.katastasi === 'etimo'
-        ? courses.dedomena.find((course) => course.kodikos === kodikosMathimatos)?.titlos
-        : undefined;
-      const chart = chartState.katastasi === 'etimo' ? chartState.dedomena : undefined;
-      const nextSection = chart?.enotites.find((section) => !proodhos.aristeiesEnotiton.includes(section.id));
-      setContext(courseTitle && nextSection
-        ? { courseTitle, sectionTitle: nextSection.titlos }
-        : undefined);
-    })();
-    return () => { active = false; };
-  }, [periballon.apothiki, kodikosMathimatos, proodhos]);
-
-  const label = context ? `${context.courseTitle} · ${context.sectionTitle}` : '';
-  return <RythisiesEidopoiseon ypiresies={ypiresies} onoma={label} context={context} />;
-}
 import { xrisiPeriballontos } from '../periballon/provolos.js';
+
+const Simera = lazy(() => import('../othoni/simera/simera.js'));
+const Mathimata = lazy(() => import('../othoni/mathimata/mathimata.js'));
+const XartisEnotiton = lazy(() => import('../othoni/xartis/xartis.js'));
+const OdigosMeletis = lazy(() => import('../othoni/odigos/odigos.js'));
+const TutorChat = lazy(() => import('../othoni/tutor/tutor.js'));
+const Rythisies = lazy(() => import('../othoni/rythisies/rythisies.js'));
+const RythisiesAi = lazy(() => import('../othoni/rythisies/rythisies-ai.js'));
+const Proedri = lazy(() => import('../othoni/proedri/proedri.js'));
+const ProvoliPdf = lazy(() => import('../provoli-pdf/provoli-pdf.js'));
+const RythmiseisProgrammatos = lazy(() => import('../programma/programma.js'));
+const EidopoiiseisRoute = lazy(() => import('../eidopoiiseis/route.js'));
 
 /** Οι διαδρομές της εφαρμογής, μία ανά οθόνη. */
 export const ODOI: readonly { readonly diadromi: string; readonly onoma: string }[] = [
@@ -67,7 +35,13 @@ export const ODOI: readonly { readonly diadromi: string; readonly onoma: string 
 
 /** Περιτύλιγμα σελίδας με capsule navigation. */
 function meNav(children: ReactNode, xronos = true) {
-  return <PlisiOmonimas meNav={xronos}>{children}</PlisiOmonimas>;
+  return (
+    <PlisiOmonimas meNav={xronos}>
+      <Suspense fallback={<p role="status">Φόρτωση οθόνης…</p>}>
+        {children}
+      </Suspense>
+    </PlisiOmonimas>
+  );
 }
 
 /** Έξυπνη αρχική δρομολόγηση: Onboarding για νέους χρήστες, Σήμερα για συνδεδεμένους. */
@@ -103,7 +77,7 @@ export interface OdoiNavigisisProps {
  * wrapper component αφήνει το outlet κενό.
  */
 export function OdoiNavigisis({
-  ypiresiesEidopoiseon = dimiourgise_ypiresies_eidopoiseon(),
+  ypiresiesEidopoiseon,
 }: OdoiNavigisisProps = {}) {
   return (
     <IonRouterOutlet>
@@ -120,7 +94,7 @@ export function OdoiNavigisis({
         <Route path="/rythisies/ai" element={meNav(<RythisiesAi />)} />
         <Route
           path="/eidopoiseis"
-          element={meNav(<EidopoiiseisRoute ypiresies={ypiresiesEidopoiseon} />)}
+          element={meNav(<EidopoiiseisRoute ypiresiesEidopoiseon={ypiresiesEidopoiseon} />)}
         />
         <Route path="/proedri" element={meNav(<Proedri />, false)} />
         <Route path="*" element={meNav(<Proedri />, false)} />

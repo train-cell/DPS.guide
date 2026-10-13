@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { ODOI, OdoiNavigisis } from './odoi.js';
+import EidopoiiseisRoute from '../eidopoiiseis/route.js';
 import { dimiourgise_ypiresies_eidopoiseon } from '../eidopoiiseis/sindesi.js';
 import { me_periballon_test } from '../../test-fixtures/periballon-test-provider.js';
 
@@ -24,12 +25,20 @@ describe('odoi — χάρτης διαδρομών εφαρμογής', () => {
     expect(aiOdos?.onoma).toBe('Ρυθμίσεις AI & Vault');
   });
 
-  it('αποδίδεται στατικά χωρίς σφάλμα με MemoryRouter', () => {
+  it('εμφανίζει ένδειξη φόρτωσης όσο φορτώνεται η διαδρομή', () => {
     const ypiresies = dimiourgise_ypiresies_eidopoiseon();
     const html = renderToStaticMarkup(
       me_periballon_test(<MemoryRouter initialEntries={['/eidopoiseis']}>
         <OdoiNavigisis ypiresiesEidopoiseon={ypiresies} />
       </MemoryRouter>)
+    );
+    expect(html).toContain('Φόρτωση οθόνης');
+  });
+
+  it('η οθόνη ειδοποιήσεων αποδίδει κανονικά όταν φορτωθεί το route chunk', () => {
+    const ypiresies = dimiourgise_ypiresies_eidopoiseon();
+    const html = renderToStaticMarkup(
+      me_periballon_test(<EidopoiiseisRoute ypiresiesEidopoiseon={ypiresies} />)
     );
     expect(html).toContain('eidopoiseis-ekran');
   });
