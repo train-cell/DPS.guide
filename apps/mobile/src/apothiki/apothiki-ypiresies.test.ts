@@ -19,4 +19,13 @@ describe('AI model setting migration', () => {
 
     expect(loaded.onomaMontelou).toBe('gemini-3.8-flash');
   });
+
+  it('falls back to the default when a saved settings file has no model ID', async () => {
+    const storage = new MnimiApothiki();
+    await storage.grapse_keimeno('rythmiseis.json', JSON.stringify({}));
+
+    const loaded = await fortose_rytheseis(storage);
+
+    expect(loaded.onomaMontelou).toBe('gemini-3.8-flash');
+  });
 });

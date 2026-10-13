@@ -44,7 +44,10 @@ export async function fortose_rytheseis(apothiki: ApothikiPyli): Promise<Rythese
   if (anagnose === null) return proedapes_rytheseis();
   return {
     ...anagnose,
-    onomaMontelou: migrateGeminiModel(anagnose.onomaMontelou),
+    onomaMontelou:
+      typeof anagnose.onomaMontelou === 'string' && anagnose.onomaMontelou.trim()
+        ? migrateGeminiModel(anagnose.onomaMontelou.trim())
+        : PROEPILOGI_GEMINI_MONTELO,
   };
 }
 
