@@ -40,14 +40,16 @@
 
 ```bash
 pnpm install
-pnpm mobile:dev
+pnpm mobile:start
 ```
 
-Άνοιξε `http://127.0.0.1:5173` στον υπολογιστή. Το `localhost`/loopback επιτρέπει τα APIs κρυπτογράφησης του browser.
+Η εντολή χτίζει και σερβίρει το production PWA στο `http://localhost:5173`. Το `localhost`/loopback επιτρέπει τα APIs κρυπτογράφησης του browser και την εγκατάσταση/λειτουργία του service worker.
 
-Ο development server ακούει μόνο στο loopback του υπολογιστή και εμφανίζει pairing code για την τρέχουσα εκτέλεση στο terminal. Πληκτρολόγησέ τον στην browser εφαρμογή για να επιτρέψεις τις LMS/AI συνδέσεις· το bridge δεν εκτίθεται στο δίκτυο και αλλάζει κωδικό σε κάθε επανεκκίνηση. Δεν χρειάζεται certificate ή αλλαγή στο trust store.
+Ο τοπικός server ακούει μόνο στο loopback του υπολογιστή και εμφανίζει pairing code για την τρέχουσα εκτέλεση στο terminal. Πληκτρολόγησέ τον στην browser εφαρμογή για να επιτρέψεις τις LMS/AI συνδέσεις· το bridge δεν εκτίθεται στο δίκτυο και αλλάζει κωδικό σε κάθε επανεκκίνηση. Δεν χρειάζεται certificate ή αλλαγή στο trust store.
 
 Η browser εφαρμογή λειτουργεί στον ίδιο υπολογιστή. Σε iPhone και Android χρησιμοποίησε την Capacitor εφαρμογή, η οποία συνδέεται απευθείας με το LMS· δεν χρειάζεται CA ή τοπικό certificate.
+
+Για ανάπτυξη με hot reload χρησιμοποίησε `pnpm mobile:dev`. Η development έκδοση δεν ενεργοποιεί το offline PWA service worker.
 
 ## Native Android και iOS
 
