@@ -13,7 +13,7 @@ vi.mock('@capacitor/filesystem', () => {
   const sfalma_den_vrethike = (): Error =>
     Object.assign(new Error('does not exist'), { code: 'OS-PLUG-FILE-0008' });
   return {
-    Directory: { Documents: 'DOCUMENTS', Data: 'DATA' },
+    Directory: { Documents: 'DOCUMENTS', Data: 'DATA', LibraryNoCloud: 'LIBRARY_NO_CLOUD' },
     Encoding: { UTF8: 'utf8', ASCII: 'ascii' },
     Filesystem: {
       readFile: vi.fn(async (opts: { path: string; encoding?: string }) => {
@@ -112,6 +112,8 @@ vi.mock('@capacitor/filesystem', () => {
     },
   };
 });
+
+vi.mock('@capacitor/core', () => ({ Capacitor: { getPlatform: () => 'android' } }));
 
 function diabase(elafry: string, dedomena: string): void {
   h.arxeia.set(elafry, dedomena);

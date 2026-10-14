@@ -21,11 +21,12 @@
  *  `Filesystem.getUri` (verified: pure URL construction, δουλεύει και για
  *  ανύπαρκτο αρχείο). */
 
-import { Directory, Filesystem } from '@capacitor/filesystem';
+import { Filesystem } from '@capacitor/filesystem';
 import { FileTransfer } from '@capacitor/file-transfer';
 import type { Apotelesma, KatevasmaPyli } from '@dps/core';
 import { ok, apotyxia } from '@dps/core';
 import { karnikopoise_diadromi } from './diadromes.js';
+import { ensurePrivateDataDirectory, PRIVATE_DATA_DIRECTORY } from './private-directory.js';
 
 const MEGISTI_TIMI_TIMEOUT_MS = 600000;
 
@@ -38,7 +39,7 @@ interface SfalmaFileTransfer {
 /** Σβήνει το μερικό αρχείο που άφησε πίσω μια αποτυχημένη λήψη (best-effort). */
 async function svise_prosrino(pliri: string): Promise<void> {
   try {
-    await Filesystem.deleteFile({ path: pliri, directory: Directory.Data });
+    await Filesystem.deleteFile({ path: pliri, directory: PRIVATE_DATA_DIRECTORY });
   } catch {
     // δεν υπήρχε — δεν εμποδίζει την αποτυχία
   }
@@ -97,6 +98,7 @@ export class CapacitorKatevasmaPyli implements KatevasmaPyli {
     }
 
     try {
+      await ensurePrivateDataDirectory(this.riza);
       // Δημιουργεί μόνο τον γονικό φάκελο· mkdir στο πλήρες path αφήνει
       // directory με όνομα αρχείου και αποτρέπει το native download.
       const teleia = pliri.lastIndexOf('/');
@@ -104,7 +106,7 @@ export class CapacitorKatevasmaPyli implements KatevasmaPyli {
       if (goneas !== '') {
         await Filesystem.mkdir({
           path: goneas,
-          directory: Directory.Data,
+          directory: PRIVATE_DATA_DIRECTORY,
           recursive: true,
         });
       }
@@ -114,7 +116,7 @@ export class CapacitorKatevasmaPyli implements KatevasmaPyli {
       // (best-effort): ένα κομμένο αρχείο χειρότερο από κανένα.
       const arxeio = await Filesystem.getUri({
         path: pliri,
-        directory: Directory.Data,
+        directory: PRIVATE_DATA_DIRECTORY,
       });
 
       await FileTransfer.downloadFile({
@@ -130,7 +132,7 @@ export class CapacitorKatevasmaPyli implements KatevasmaPyli {
         return apotyxia('AKYROTHIKE', 'Η λήψη ακυρώθηκε από τον καλούντα');
       }
 
-      const statistiko = await Filesystem.stat({ path: pliri, directory: Directory.Data });
+      const statistiko = await Filesystem.stat({ path: pliri, directory: PRIVATE_DATA_DIRECTORY });
       return ok({ megethos: statistiko.size });
     } catch (sfalma) {
       if (einai_akyromeno(simatodotis)) {

@@ -9,7 +9,7 @@ const h = vi.hoisted(() => ({
 }));
 
 vi.mock('@capacitor/filesystem', () => ({
-  Directory: { Documents: 'DOCUMENTS', Data: 'DATA' },
+  Directory: { Documents: 'DOCUMENTS', Data: 'DATA', LibraryNoCloud: 'LIBRARY_NO_CLOUD' },
   Encoding: { UTF8: 'utf8' },
   Filesystem: {
     mkdir: vi.fn(async (opts: { path: string }) => {
@@ -37,6 +37,8 @@ vi.mock('@capacitor/filesystem', () => ({
     }),
   },
 }));
+
+vi.mock('@capacitor/core', () => ({ Capacitor: { getPlatform: () => 'android' } }));
 
 vi.mock('@capacitor/file-transfer', () => ({
   FileTransfer: {
