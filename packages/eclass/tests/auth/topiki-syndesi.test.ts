@@ -71,6 +71,50 @@ describe('TopikiSyndesi (L14)', () => {
     expect(http.kliseis.length).toBe(2);
   });
 
+  it('στέλνει το named submit control και το action query της φόρμας Thales', async () => {
+    const thales = 'https://thales.cs.unipi.gr';
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      expect(a.methodos).toBe('GET');
+      return {
+        katastasi: 200,
+        teliko_url: `${thales}/main/login_form.php`,
+        kefalides: {},
+        keimeno: `
+          <form action='/?login_page=1' method='post'>
+            <input type='text' name='uname'>
+            <input type='password' name='pass'>
+            <input type='submit' name='submit' value='Είσοδος'>
+          </form>
+        `,
+      };
+    });
+    http.orise_apantisi('/?login_page=1', (a: HttpAitima): HttpApantisi => {
+      expect(a.methodos).toBe('POST');
+      expect(a.url).toBe(`${thales}/?login_page=1`);
+      expect(a.soma_forma).toMatchObject({
+        uname: 'testuser',
+        pass: 'correctpass',
+        submit: 'Είσοδος',
+      });
+      return {
+        katastasi: 200,
+        teliko_url: `${thales}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body><h1>Χαρτοφυλάκιο</h1></body></html>',
+      };
+    });
+
+    const stratigiki = new TopikiSyndesi({
+      base_url: thales,
+      onoma_xristi: 'testuser',
+      kodikos: 'correctpass',
+    });
+    const result = await stratigiki.syndesi({ http, base_url: thales, cookie_diaxeiristis });
+
+    expect(result.ok).toBe(true);
+    expect(http.kliseis).toHaveLength(2);
+  });
+
   it('λάθος κωδικός: ΜΙΑ ΜΟΝΟ προσπάθεια POST (ποτέ retry) -> AUTH_APOTYXIA', async () => {
     let post_metritis = 0;
 

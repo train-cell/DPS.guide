@@ -69,7 +69,7 @@ describe('MoodlePyli authentication and REST transport', () => {
           katastasi: 200,
           kefalides: { 'set-cookie': 'MoodleSession=before; path=/' },
           teliko_url: request.url,
-          keimeno: '<form action="/login/index.php"><input type="hidden" name="logintoken" value="nonce"><input name="username"><input name="password"></form>',
+          keimeno: '<form action="/login/index.php"><input type="hidden" name="logintoken" value="nonce"><input name="username"><input name="password"><button type="submit" name="loginbtn" value="Log in">Log in</button></form>',
         };
       }
       if (request.methodos === 'POST') {
@@ -107,6 +107,7 @@ describe('MoodlePyli authentication and REST transport', () => {
       username: 'student',
       password: ' password with spaces ',
       logintoken: 'nonce',
+      loginbtn: 'Log in',
     });
     expect(aitima.mock.calls.some(([request]) => request.url.includes('MoodleSession=authenticated'))).toBe(false);
   });

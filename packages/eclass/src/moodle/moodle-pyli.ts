@@ -152,9 +152,18 @@ export class MoodlePyli implements EclassPyli {
     const hidden = /<input\b([^>]*)>/gi;
     for (let match = hidden.exec(loginForm.html); match !== null; match = hidden.exec(loginForm.html)) {
       const tag = match[1] ?? '';
-      if ((attribute(tag, 'type') ?? '').toLowerCase() !== 'hidden') continue;
+      const type = (attribute(tag, 'type') ?? '').toLowerCase();
       const name = attribute(tag, 'name');
-      if (name !== null) fields[name] = decodeHtml(attribute(tag, 'value') ?? '');
+      if (name !== null && (type === 'hidden' || type === 'submit')) {
+        fields[name] = decodeHtml(attribute(tag, 'value') ?? '');
+      }
+    }
+    const buttons = /<button\b([^>]*)>[\s\S]*?<\/button>/gi;
+    for (let match = buttons.exec(loginForm.html); match !== null; match = buttons.exec(loginForm.html)) {
+      const tag = match[1] ?? '';
+      const type = (attribute(tag, 'type') ?? 'submit').toLowerCase();
+      const name = attribute(tag, 'name');
+      if (type === 'submit' && name !== null) fields[name] = decodeHtml(attribute(tag, 'value') ?? '');
     }
     const login = await this.request({ methodos: 'POST', url: action.href, soma_forma: fields, typos_apantisis: 'keimeno' });
     if (!login.ok) return login;
