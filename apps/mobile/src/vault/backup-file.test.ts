@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
 
 const filesystem = vi.hoisted(() => ({
   writeFile: vi.fn(async (_options: { data: string }) => undefined),
@@ -34,6 +35,12 @@ function decodeBase64(value: string): Uint8Array {
 
 describe('deliverEncryptedBackup', () => {
   beforeEach(() => vi.clearAllMocks());
+
+  it('keeps Android FileProvider scoped to the private app cache', () => {
+    const paths = readFileSync(new URL('../../android/app/src/main/res/xml/file_paths.xml', import.meta.url), 'utf8');
+    expect(paths).toMatch(/<cache-path\b[^>]*path="\."/);
+    expect(paths).not.toMatch(/<(?:external|root|files)-path\b/);
+  });
 
   it('γράφει μεγάλο native backup σε μικρά chunks και μοιράζεται το ιδιωτικό αρχείο', async () => {
     const source = Uint8Array.from({ length: CHUNK_BYTES + 37 }, (_, index) => index % 256);
