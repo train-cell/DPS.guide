@@ -13,12 +13,23 @@ test('desktop PWA reopens its encrypted vault while offline', async ({ page, con
     const registration = await navigator.serviceWorker.ready;
     const icons = await Promise.all(['/icon-192.png', '/icon-512.png'].map(async (path) => {
       const response = await fetch(path);
-      const bytes = new DataView(await response.arrayBuffer());
+      const imageData = await response.arrayBuffer();
+      const bytes = new DataView(imageData);
+      const bitmap = await createImageBitmap(new Blob([imageData], { type: 'image/png' }));
+      const canvas = document.createElement('canvas');
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const drawing = canvas.getContext('2d');
+      if (!drawing) throw new Error('Canvas is not available to inspect the PWA icon.');
+      drawing.drawImage(bitmap, 0, 0);
+      const corner = Array.from(drawing.getImageData(0, 0, 1, 1).data);
+      bitmap.close();
       return {
         status: response.status,
         type: response.headers.get('content-type'),
         width: bytes.getUint32(16),
         height: bytes.getUint32(20),
+        corner,
       };
     }));
     return {
@@ -37,8 +48,8 @@ test('desktop PWA reopens its encrypted vault while offline', async ({ page, con
       { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
     ],
     icons: [
-      { status: 200, type: 'image/png', width: 192, height: 192 },
-      { status: 200, type: 'image/png', width: 512, height: 512 },
+      { status: 200, type: 'image/png', width: 192, height: 192, corner: [11, 11, 12, 255] },
+      { status: 200, type: 'image/png', width: 512, height: 512, corner: [11, 11, 12, 255] },
     ],
     workerPath: '/sw.js',
   });
