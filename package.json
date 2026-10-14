@@ -5,13 +5,17 @@
   "description": "DPS.guide monorepo",
   "license": "MIT",
   "type": "module",
+  "engines": {
+    "node": ">=22.15.0",
+    "pnpm": ">=10.0.0"
+  },
   "scripts": {
     "build": "tsc --build && tsc --noEmit -p apps/mobile/tsconfig.node.json",
     "test": "node scripts/test-lock.mjs vitest run --pool=forks --maxWorkers=1",
     "test:lane": "node scripts/test-lane.mjs --lane",
     "test:e2e": "playwright test --config apps/mobile/playwright.config.ts",
     "typecheck": "tsc --build && tsc --noEmit -p apps/mobile/tsconfig.node.json",
-    "mobile:dev": "pnpm --filter @dps/mobile dev --host 127.0.0.1",
+    "mobile:dev": "node scripts/start-local.mjs",
     "mobile:build": "pnpm --filter @dps/mobile build",
     "mobile:android": "node scripts/build-native.mjs android",
     "mobile:ios": "node scripts/build-native.mjs ios",

@@ -34,7 +34,7 @@
 
 ## Εκτέλεση σε Windows/macOS
 
-Απαιτούνται Node.js 22.12 ή νεότερο και pnpm 10 ή νεότερο. Από τη ρίζα του repository:
+Απαιτούνται Node.js 22.15 ή νεότερο και pnpm 10 ή νεότερο. Στα Windows/macOS, η εκκίνηση χρησιμοποιεί το έμπιστο αποθετήριο πιστοποιητικών του λειτουργικού για τις HTTPS συνδέσεις του localhost bridge. Από τη ρίζα του repository:
 
 ```bash
 pnpm install
