@@ -1,20 +1,21 @@
 import { spawn } from 'node:child_process';
 import { cp, copyFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { delimiter, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { findWindowsJdk21 } from './android-java.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const app = join(root, 'apps', 'mobile');
 const platform = process.argv[2];
 
-function run(command, args, cwd = root) {
+function run(command, args, cwd = root, env = process.env) {
   return new Promise((resolveRun, rejectRun) => {
     const child = spawn(command, args, {
       cwd,
       stdio: 'inherit',
       shell: false,
-      env: process.env,
+      env,
     });
     child.once('error', rejectRun);
     child.once('exit', (code) => code === 0 ? resolveRun() : rejectRun(new Error(`${command} exited with ${code}`)));
@@ -55,9 +56,15 @@ await mkdir(nativeOutput, { recursive: true });
 if (platform === 'android') {
   const android = join(app, 'android');
   if (process.platform === 'win32') {
-    const java = process.env.JAVA_HOME ? join(process.env.JAVA_HOME, 'bin', 'java.exe') : 'java';
+    const javaHome = await findWindowsJdk21(process.env);
+    const java = join(javaHome, 'bin', 'java.exe');
     const wrapper = join(android, 'gradle', 'wrapper', 'gradle-wrapper.jar');
-    await run(java, ['-classpath', wrapper, 'org.gradle.wrapper.GradleWrapperMain', 'assembleDebug'], android);
+    const environment = {
+      ...process.env,
+      JAVA_HOME: javaHome,
+      PATH: `${join(javaHome, 'bin')}${delimiter}${process.env.PATH ?? ''}`,
+    };
+    await run(java, ['-classpath', wrapper, 'org.gradle.wrapper.GradleWrapperMain', 'assembleDebug'], android, environment);
   } else {
     await run('./gradlew', ['assembleDebug'], android);
   }
