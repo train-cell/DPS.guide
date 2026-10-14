@@ -1,6 +1,7 @@
 import type { OcrPyli } from '@dps/pipeline';
 import type { Apotelesma } from '@dps/core';
 import { apotyxia, ok } from '@dps/core';
+import { Capacitor } from '@capacitor/core';
 import { antigrafo_dyadikon, etimose_pdfjs } from '../provoli-pdf/pdf-ypiresies.js';
 
 const OCR_SCALE = 1.6;
@@ -9,6 +10,7 @@ interface OcrWorker {
   terminate(): Promise<unknown>;
 }
 let workerPromise: Promise<OcrWorker> | null = null;
+const ANDROID_ASSET_GZIP_REMOVED = Capacitor.getPlatform() === 'android';
 
 function worker(): Promise<OcrWorker> {
   workerPromise ??= import('tesseract.js').then(({ createWorker }) => createWorker('ell+eng', 1, {
@@ -18,7 +20,8 @@ function worker(): Promise<OcrWorker> {
     cachePath: 'dps-ocr-v1',
     cacheMethod: 'write',
     workerBlobURL: false,
-    gzip: true,
+    // Android's asset packaging strips .gz and expands these files. iOS/web keep the gzip assets.
+    gzip: !ANDROID_ASSET_GZIP_REMOVED,
   }));
   return workerPromise;
 }
