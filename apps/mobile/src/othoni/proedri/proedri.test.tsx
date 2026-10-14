@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { MemoryRouter } from 'react-router-dom';
 import { ftiaxe_periballon_test as ftiaxe_periballon } from '../../../test-fixtures/ftiaxe-test-periballon.js';
 import Proedri, { PROEDRI_BASE_URL } from './proedri.js';
 
@@ -27,7 +28,11 @@ const AMIDES_ASYNKRONES = [
 ] as const;
 
 function apotelesma_proedri(): string {
-  return renderToStaticMarkup(<Proedri periballon={ftiaxe_periballon()} />);
+  return renderToStaticMarkup(
+    <MemoryRouter>
+      <Proedri periballon={ftiaxe_periballon()} />
+    </MemoryRouter>,
+  );
 }
 
 describe('Proedri — συμβόλαιο οθόνης', () => {

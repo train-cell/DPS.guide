@@ -216,7 +216,7 @@ export class CapacitorApothiki implements ApothikiPyli {
       await Filesystem.writeFile({
         path: prosorino,
         directory: Directory.Data,
-        data: se_base64(dedomena),
+        data: encoding === undefined ? se_base64(dedomena) : new TextDecoder().decode(dedomena),
         ...(encoding !== undefined ? { encoding } : {}),
       });
       await svise_an_yparxei(pliri);

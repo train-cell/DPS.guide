@@ -22,9 +22,6 @@ vi.mock('@capacitor/filesystem', () => {
         if (dedomena === undefined) {
           throw sfalma_den_vrethike();
         }
-        if (opts.encoding === 'utf8') {
-          return { data: new TextDecoder().decode(apo(dedomena)) };
-        }
         return { data: dedomena };
       }),
       writeFile: vi.fn(async (opts: { path: string; data: string }) => {
@@ -116,10 +113,6 @@ vi.mock('@capacitor/filesystem', () => {
   };
 });
 
-function apo(vasi: string): Uint8Array {
-  return apo_base64(vasi.replace(/\s+/g, ''));
-}
-
 function diabase(elafry: string, dedomena: string): void {
   h.arxeia.set(elafry, dedomena);
 }
@@ -153,6 +146,11 @@ describe('CapacitorApothiki', () => {
     const apothiki = new CapacitorApothiki('');
     const egkrisi = await apothiki.grapse_keimeno('mathimata.json', 'κόσμος');
     expect(egkrisi.ok).toBe(true);
+    expect(h.arxeia.get('mathimata.json')).toBe('κόσμος');
+    expect(vi.mocked(Filesystem.writeFile)).toHaveBeenCalledWith(expect.objectContaining({
+      data: 'κόσμος',
+      encoding: 'utf8',
+    }));
     const anagnosi = await apothiki.diavase_keimeno('mathimata.json');
     expect(anagnosi.ok).toBe(true);
     if (anagnosi.ok) {
@@ -164,6 +162,7 @@ describe('CapacitorApothiki', () => {
     const apothiki = new CapacitorApothiki('');
     const dedomena = Uint8Array.from([1, 2, 3, 4, 5]);
     expect((await apothiki.grapse_dyadiko('PLI101/arxeio.pdf', dedomena)).ok).toBe(true);
+    expect(h.arxeia.get('PLI101/arxeio.pdf')).toBe(se_base64(dedomena));
     const anagnosi = await apothiki.diavase_dyadiko('PLI101/arxeio.pdf');
     expect(anagnosi.ok).toBe(true);
     if (anagnosi.ok) {
@@ -186,7 +185,7 @@ describe('CapacitorApothiki', () => {
 
   it('γράφει ατομικά: temp → delete προορισμού → rename', async () => {
     const apothiki = new CapacitorApothiki('');
-    diabase('mathimata.json', se_base64(new TextEncoder().encode('παλιό')));
+    diabase('mathimata.json', 'παλιό');
     await apothiki.grapse_keimeno('mathimata.json', 'νέο');
 
     const reumat = h.kliseis.filter((k) => k.startsWith('writeFile:mathimata.json.tmp-'));

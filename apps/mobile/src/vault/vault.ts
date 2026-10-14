@@ -173,14 +173,27 @@ async function readHeader(storage: ApothikiPyli): Promise<VaultHeader | null> {
     if (result.sfalma.kodikos === 'DEN_VRETHIKE') return null;
     throw new VaultError('Δεν ήταν δυνατή η ανάγνωση της ρύθμισης του vault.');
   }
+  const isVaultHeader = (value: unknown): value is VaultHeader => (
+    typeof value === 'object' && value !== null && 'version' in value &&
+    value.version === VAULT_VERSION && 'master' in value && 'recovery' in value
+  );
   try {
     const parsed: unknown = JSON.parse(result.timi);
-    if (
-      typeof parsed === 'object' && parsed !== null && 'version' in parsed &&
-      parsed.version === VAULT_VERSION && 'master' in parsed && 'recovery' in parsed
-    ) return parsed as VaultHeader;
+    if (isVaultHeader(parsed)) return parsed;
   } catch {
     // Η αλλοιωμένη ρύθμιση αντιμετωπίζεται με το ίδιο ασφαλές μήνυμα.
+  }
+  try {
+    const legacyText = new TextDecoder().decode(fromB64(result.timi.replace(/\s+/g, '')));
+    const legacyHeader: unknown = JSON.parse(legacyText);
+    if (isVaultHeader(legacyHeader)) {
+      const repaired = await storage.grapse_keimeno(HEADER_PATH, JSON.stringify(legacyHeader));
+      if (!repaired.ok) throw new VaultError('Δεν ήταν δυνατή η επιδιόρθωση της ρύθμισης του vault.');
+      return legacyHeader;
+    }
+  } catch (reason) {
+    if (reason instanceof VaultError) throw reason;
+    // Δεν είναι παλιά Base64-κωδικοποιημένη ρύθμιση· αντιμετωπίζεται ως κατεστραμμένη.
   }
   throw new VaultError('Το αρχείο ρύθμισης του vault είναι κατεστραμμένο ή μη υποστηριζόμενο.');
 }

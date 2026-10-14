@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { IonButton } from '@ionic/react';
 import type { Mathima } from '@dps/core';
 import { Karta, OloniKatastasis, Pilegma } from '../../koinima/index.js';
@@ -62,6 +63,7 @@ export interface ProedriProps {
 
 /** Οθόνη πρώτης εκτέλεσης: Bevel-style Onboarding Wizard & Σύνδεση στο eClass. */
 export default function Proedri({ periballon }: ProedriProps) {
+  const navigate = useNavigate();
   const productionPeriballon = xrisiPeriballontosProairetika();
   const pyles = periballon ?? productionPeriballon;
   if (pyles === null) throw new Error('Λείπει το production Periballon provider.');
@@ -133,7 +135,9 @@ export default function Proedri({ periballon }: ProedriProps) {
         void pane_syndexi();
       }
       setTrexonVima((palio) => palio + 1);
+      return;
     }
+    navigate('/simera');
   }
 
   async function pane_syndexi(): Promise<void> {

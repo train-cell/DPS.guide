@@ -121,6 +121,23 @@ describe('encrypted vault backup/restore', () => {
     expect(parsed.recovery.iterations).toBe(600_000);
   });
 
+  it('επιδιορθώνει παλιό Base64-encoded Capacitor vault header και διατηρεί το ξεκλείδωμα', async () => {
+    const storage = new MnimiApothiki();
+    await createVault(storage, MASTER_PASSWORD);
+    const current = await storage.diavase_keimeno('.dps-vault/header.json');
+    if (!current.ok) throw new Error('λείπει το header του vault');
+    const legacy = encodeBase64(encoder.encode(current.timi));
+    await storage.grapse_keimeno('.dps-vault/header.json', legacy);
+
+    const session = await unlockVault(storage, MASTER_PASSWORD);
+    const repaired = await storage.diavase_keimeno('.dps-vault/header.json');
+
+    expect(repaired.ok && repaired.timi).toBe(current.timi);
+    await session.storage.grapse_keimeno('migration-check.txt', 'vault recovered');
+    const value = await session.storage.diavase_keimeno('migration-check.txt');
+    expect(value.ok && value.timi).toBe('vault recovered');
+  });
+
   it('αποτρέπει δύο ταυτόχρονες αρχικές ρυθμίσεις από το να αντικαταστήσουν η μία την άλλη', async () => {
     const storage = new MnimiApothiki();
     const attempts = await Promise.allSettled([
