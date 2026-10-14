@@ -11,8 +11,8 @@ import {
   proedapes_proodhou,
   proedapes_rytheseis,
 } from './apothiki-ypiresies.js';
-import { sporse_deigma } from '../pseudomata/sporse.js';
 import { fortose_mathimata_apo_apothiki } from '../ypiresies/mathimata.js';
+import { pare_trexon_thema, thete_thema } from '../design/themata.js';
 
 /** Τι εκθέτει ο πάροχος της κατάστασης αποθήκευσης στην εφαρμογή. */
 export interface ApothikiSyntheseon {
@@ -42,7 +42,7 @@ export interface ParoxeProps {
 }
 
 /** Παρέχει τις ρυθμίσεις και την πρόοδο σε ολόκληρη την εφαρμογή, φορτωμένα από τη θύρα αποθήκευσης. */
-export function ParoxeApothekisis({ children, periballon, kodikosMathimatos: arxikosKodikos = 'ΠΛΗ201' }: ParoxeProps) {
+export function ParoxeApothekisis({ children, periballon, kodikosMathimatos: arxikosKodikos = '' }: ParoxeProps) {
   const periballonEfarmogis = xrisiPeriballontos();
   const pyles = useMemo(
     () => periballon ?? periballonEfarmogis,
@@ -58,11 +58,12 @@ export function ParoxeApothekisis({ children, periballon, kodikosMathimatos: arx
   }, [arxikosKodikos]);
 
   useEffect(() => {
+    thete_thema(pare_trexon_thema(rytheseis.themaId));
+  }, [rytheseis.themaId]);
+
+  useEffect(() => {
     let zalive = true;
     void (async () => {
-      if (pyles.deigma) {
-        await sporse_deigma(pyles.apothiki);
-      }
       const [fortesRytheseis, mathimataKatastasi] = await Promise.all([
         fortose_rytheseis(pyles.apothiki),
         fortose_mathimata_apo_apothiki(pyles.apothiki),
@@ -71,7 +72,7 @@ export function ParoxeApothekisis({ children, periballon, kodikosMathimatos: arx
       let trexonKodikos = kodikosMathimatos;
       if (mathimataKatastasi.katastasi === 'etimo' && mathimataKatastasi.dedomena.length > 0) {
         const yparxei = mathimataKatastasi.dedomena.some((m) => m.kodikos === trexonKodikos);
-        if (!yparxei && trexonKodikos === 'ΠΛΗ201') {
+        if (!yparxei) {
           trexonKodikos = mathimataKatastasi.dedomena[0]?.kodikos ?? trexonKodikos;
           setKodikosMathimatos(trexonKodikos);
         }

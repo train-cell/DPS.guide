@@ -14,15 +14,13 @@
   },
   "dependencies": {
     "@dps/adapters-node": "workspace:*",
-    "@dps/ai": "workspace:*",
     "@dps/core": "workspace:*",
     "@dps/extract": "workspace:*",
     "@dps/eclass": "workspace:*",
-    "@dps/mock-eclass": "workspace:*",
     "@dps/pipeline": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.2",
-    "vitest": "^3.0.7"
+    "vitest": "^4.1.11"
   }
 }

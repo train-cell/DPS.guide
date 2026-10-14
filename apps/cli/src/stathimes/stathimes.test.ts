@@ -7,7 +7,6 @@ import { dimiourgise_eisodos, DIADROMI_RYTHMISEON } from './eisodos-pipeline.js'
 import { epikyrose_montelo } from './rythmiseis.js';
 import { MiYpostirimenoEclassPyli } from './eclass-eksodon.js';
 import { DpsEclassPyli } from '@dps/eclass';
-import { MockEclassPyli } from '@dps/mock-eclass';
 import type { ParastatesEntolhs } from '../entoles/grammatikopoio-entolhs.js';
 
 const MONTELO = 'gemini-ypokpisteio';
@@ -37,54 +36,39 @@ describe('epikyrose_montelo', () => {
   });
 });
 
-describe('dimiourgise_eisodos — χωρίς I/O', () => {
-  it('με μοντέλο από σημαία στήνει όλα τα ports χωρίς δίκτυο', async () => {
+describe('dimiourgise_eisodos — όρια privacy του CLI', () => {
+  it('αρνείται κάθε AI εντολή πριν διαβάσει μυστικά ή στήσει provider', async () => {
     const apotelesma = await dimiourgise_eisodos(parastates('./riza', MONTELO, true));
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) return;
+    expect(apotelesma.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
+    expect(apotelesma.sfalma.minima).toContain('συναίνεση ανά μάθημα');
+    expect(apotelesma.sfalma.minima).toContain('ακριβούς prompt');
+  });
+
+  it('οι μη-AI εντολές στήνουν πραγματικά ports με provider που αποτυγχάνει κλειστά', async () => {
+    const apotelesma = await dimiourgise_eisodos(parastates('./riza', null, false));
     expect(apotelesma.ok).toBe(true);
     if (!apotelesma.ok) {
       return;
     }
-    expect(apotelesma.timi.llm.montelo).toBe(MONTELO);
-    expect(apotelesma.timi.riza).toBe('./riza');
+    // Node adapters already include --riza; pipeline paths therefore stay relative.
+    expect(apotelesma.timi.riza).toBe('');
     expect(apotelesma.timi.apothiki).toBeDefined();
     expect(apotelesma.timi.mystika).toBeDefined();
     expect(apotelesma.timi.katagrafi).toBeDefined();
     expect(apotelesma.timi.rologi.tora()).toBeInstanceOf(Date);
-  });
-
-  it('χωρίς μοντέλο, σε εντολή που δεν θέλει LLM, στήνει κανονικά τα ports', async () => {
-    const apotelesma = await dimiourgise_eisodos(parastates('./riza', null, false));
-    expect(apotelesma.ok).toBe(true);
-  });
-
-  it('χωρίς μοντέλο, σε εντολή που θέλει LLM, δίνει σφάλμα με οδηγίες', async () => {
-    const apotelesma = await dimiourgise_eisodos(parastates('./riza', null, true));
-    expect(apotelesma.ok).toBe(false);
-    if (apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
-    expect(apotelesma.sfalma.minima).toContain('--montelo');
-    expect(apotelesma.sfalma.minima).toContain(DIADROMI_RYTHMISEON);
-  });
-
-  it('το port του eClass είναι ρητά «μη υλοποιημένο», όχι ψεύτικη επιτυχία', async () => {
-    const apotelesma = await dimiourgise_eisodos(parastates('./riza', MONTELO, true));
-    expect(apotelesma.ok).toBe(true);
-    if (!apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.timi.eclass).toBeInstanceOf(MiYpostirimenoEclassPyli);
-    const syndesi = await apotelesma.timi.eclass.syndesi();
-    expect(syndesi.ok).toBe(false);
-    if (syndesi.ok) {
-      return;
-    }
-    expect(syndesi.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
+    const generated = await apotelesma.timi.llm.parage_keimeno({
+      systima: 'test',
+      minimata: [{ rolos: 'xristis', keimeno: 'test' }],
+      ekdosi_prompt: '1',
+      thermokrasia: 0,
+    });
+    expect(generated.ok).toBe(false);
   });
 });
 
-describe('dimiourgise_eisodos — ανάγνωση rythmiseis.json', () => {
+describe('dimiourgise_eisodos — αποθήκευση και πραγματικό Open eClass port', () => {
   let riza = '';
 
   beforeEach(async () => {
@@ -95,51 +79,15 @@ describe('dimiourgise_eisodos — ανάγνωση rythmiseis.json', () => {
     await rm(riza, { recursive: true, force: true });
   });
 
-  it('διαβάζει το montelo από το <riza>/rythmiseis.json', async () => {
-    await writeFile(
-      path.join(riza, DIADROMI_RYTHMISEON),
-      JSON.stringify({ montelo: MONTELO, base_url: 'https://example.invalid' }),
-      'utf8'
-    );
-    const apotelesma = await dimiourgise_eisodos(parastates(riza, null, true));
-    expect(apotelesma.ok).toBe(true);
-    if (!apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.timi.llm.montelo).toBe(MONTELO);
-  });
-
-  it('η σημαία --montelo υπερισχύει του αρχείου ρυθμίσεων', async () => {
-    await writeFile(path.join(riza, DIADROMI_RYTHMISEON), JSON.stringify({ montelo: 'apo-arxeio' }), 'utf8');
-    const apotelesma = await dimiourgise_eisodos(parastates(riza, 'apo-semeia', true));
-    expect(apotelesma.ok).toBe(true);
-    if (!apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.timi.llm.montelo).toBe('apo-semeia');
-  });
-
-  it('άθλιο rythmiseis.json + ζητούμενο LLM → σφάλμα, όχι default μοντέλο', async () => {
-    await writeFile(path.join(riza, DIADROMI_RYTHMISEON), 'όχι JSON', 'utf8');
-    const apotelesma = await dimiourgise_eisodos(parastates(riza, null, true));
+  it('η ρύθμιση μοντέλου ή η σημαία --montelo δεν παρακάμπτουν το CLI privacy gate', async () => {
+    await writeFile(path.join(riza, DIADROMI_RYTHMISEON), JSON.stringify({ montelo: MONTELO }), 'utf8');
+    const apotelesma = await dimiourgise_eisodos(parastates(riza, 'gemini-2.5-flash', true));
     expect(apotelesma.ok).toBe(false);
-    if (apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
-  });
-
-  it('λείποντο rythmiseis.json + ζητούμενο LLM → σφάλμα με οδηγίες', async () => {
-    const apotelesma = await dimiourgise_eisodos(parastates(riza, null, true));
-    expect(apotelesma.ok).toBe(false);
-    if (apotelesma.ok) {
-      return;
-    }
-    expect(apotelesma.sfalma.minima).toContain('--montelo');
+    if (!apotelesma.ok) expect(apotelesma.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
   });
 
   it('το apothiki port δεσμεύεται στη ρίζα που δώθηκε', async () => {
-    const apotelesma = await dimiourgise_eisodos(parastates(riza, MONTELO, true));
+    const apotelesma = await dimiourgise_eisodos(parastates(riza, null, false));
     expect(apotelesma.ok).toBe(true);
     if (!apotelesma.ok) {
       return;
@@ -160,6 +108,7 @@ describe('dimiourgise_eisodos — επιλογή EclassPyli', () => {
   const palioUser = process.env.ECLASS_USERNAME;
   const palioPass = process.env.ECLASS_PASSWORD;
   const palioMock = process.env.ECLASS_MOCK;
+  const palioMockEclass = process.env.MOCK_ECLASS;
   const palioBase = process.env.ECLASS_BASE_URL;
 
   beforeEach(async () => {
@@ -167,6 +116,7 @@ describe('dimiourgise_eisodos — επιλογή EclassPyli', () => {
     delete process.env.ECLASS_USERNAME;
     delete process.env.ECLASS_PASSWORD;
     delete process.env.ECLASS_MOCK;
+    delete process.env.MOCK_ECLASS;
     delete process.env.ECLASS_BASE_URL;
   });
 
@@ -177,6 +127,8 @@ describe('dimiourgise_eisodos — επιλογή EclassPyli', () => {
     else delete process.env.ECLASS_PASSWORD;
     if (palioMock !== undefined) process.env.ECLASS_MOCK = palioMock;
     else delete process.env.ECLASS_MOCK;
+    if (palioMockEclass !== undefined) process.env.MOCK_ECLASS = palioMockEclass;
+    else delete process.env.MOCK_ECLASS;
     if (palioBase !== undefined) process.env.ECLASS_BASE_URL = palioBase;
     else delete process.env.ECLASS_BASE_URL;
     await rm(riza, { recursive: true, force: true });
@@ -196,7 +148,7 @@ describe('dimiourgise_eisodos — επιλογή EclassPyli', () => {
     expect(apotelesma.timi.eclass).toBeInstanceOf(DpsEclassPyli);
   });
 
-  it('στήνει MockEclassPyli όταν έχει οριστεί mock_eclass: true στις ρυθμίσεις', async () => {
+  it('αγνοεί legacy mock_eclass ρύθμιση και επιστρέφει σαφές unsupported port', async () => {
     await writeFile(
       path.join(riza, DIADROMI_RYTHMISEON),
       JSON.stringify({ montelo: MONTELO, mock_eclass: true }),
@@ -205,15 +157,21 @@ describe('dimiourgise_eisodos — επιλογή EclassPyli', () => {
     const apotelesma = await dimiourgise_eisodos(parastates(riza, null, false));
     expect(apotelesma.ok).toBe(true);
     if (!apotelesma.ok) return;
-    expect(apotelesma.timi.eclass).toBeInstanceOf(MockEclassPyli);
+    expect(apotelesma.timi.eclass).toBeInstanceOf(MiYpostirimenoEclassPyli);
+    const connection = await apotelesma.timi.eclass.syndesi();
+    expect(connection.ok).toBe(false);
+    if (!connection.ok) expect(connection.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
   });
 
-  it('στήνει MockEclassPyli όταν έχει οριστεί ECLASS_MOCK=true στο περιβάλλον', async () => {
+  it('αγνοεί legacy ECLASS_MOCK και δεν εμφανίζει ψεύτικη επιτυχία', async () => {
     process.env.ECLASS_MOCK = 'true';
     const apotelesma = await dimiourgise_eisodos(parastates(riza, MONTELO, false));
     expect(apotelesma.ok).toBe(true);
     if (!apotelesma.ok) return;
-    expect(apotelesma.timi.eclass).toBeInstanceOf(MockEclassPyli);
+    expect(apotelesma.timi.eclass).toBeInstanceOf(MiYpostirimenoEclassPyli);
+    const connection = await apotelesma.timi.eclass.syndesi();
+    expect(connection.ok).toBe(false);
+    if (!connection.ok) expect(connection.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
   });
 });
 

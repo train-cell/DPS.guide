@@ -12,7 +12,7 @@ export default defineConfig({
     baseURL: 'http://localhost:5173',
   },
   webServer: {
-    command: 'pnpm --filter @dps/mobile dev',
+    command: 'pnpm -w mobile:start',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
@@ -20,7 +20,12 @@ export default defineConfig({
   projects: [
     {
       name: 'iphone',
+      testIgnore: '**/pwa.spec.ts',
       use: { ...devices['iPhone 13'] },
+    },
+    {
+      name: 'desktop-chromium',
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 });

@@ -7,18 +7,20 @@ import type { ReactElement } from 'react';
 import XartisEnotiton, {
   KEIMENO_STOXOU,
   KEIMENO_TELIOU,
+  KartaEnotitas,
   OdomosEnotiton,
   grammi_proapasitis,
   stilise_isxya,
   stilise_lepta,
 } from './xartis.js';
-import { pseudos_xartis } from '../../pseudomata/index.js';
+import { pseudos_xartis } from '../../../test-fixtures/pseudomata/index.js';
+import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
 
 const MONI_PIGIS = fileURLToPath(new URL('./xartis.tsx', import.meta.url));
 
 /** Τυλίγει ένα στοιχείο σε MemoryRouter ώστε τα Link να αποδίδουν href. */
 function apoidefsi(stoixeio: ReactElement): string {
-  return renderToStaticMarkup(<MemoryRouter>{stoixeio}</MemoryRouter>);
+  return renderToStaticMarkup(me_periballon_test(<MemoryRouter>{stoixeio}</MemoryRouter>));
 }
 
 /** Αποδίδει τον χάρτη με δοσμένες ολοκληρωμένες ενότητες, χωρίς Provider αποθήκευσης. */
@@ -75,6 +77,21 @@ describe('xartis — οθόνη χάρτη ενοτήτων', () => {
     expect(html).toContain('enotita-xreomeni');
   });
 
+  it('παλιό ή κακόβουλο id ενότητας δεν γίνεται href εξωτερικής πλοήγησης', () => {
+    const original = pseudos_xartis().enotites[0];
+    if (original === undefined) throw new Error('λείπει η δοκιμαστική ενότητα');
+    const html = apoidefsi(
+      <KartaEnotitas
+        enotita={{ ...original, id: '\\\\evil.example' }}
+        tetagmeni={false}
+        allaxe_telia={() => Promise.resolve()}
+      />
+    );
+
+    expect(html).not.toContain('href=');
+    expect(html).toContain('μη έγκυρο αναγνωριστικό');
+  });
+
   it('ο δακτύλιος προόδου ξεκινά στο μηδέν και ανεβαίνει με τις ολοκληρωμένες ενότητες', () => {
     const kenis = char_tis_proodhou([]);
     expect(kenis).toContain('>0%<');
@@ -90,6 +107,8 @@ describe('xartis — οθόνη χάρτη ενοτήτων', () => {
     for (const testid of ['xartis-ekran', 'xartis-enotita', 'xartis-proiresi', 'xartis-telos']) {
       expect(pigi).toContain(`"${testid}"`);
     }
+    expect(pigi).toContain('generateCourseMap(');
+    expect(pigi).toContain('data-testid="xartis-dimiourgia"');
     expect(pigi).toContain('xartis-aristeia-${enotita.id}');
   });
 });

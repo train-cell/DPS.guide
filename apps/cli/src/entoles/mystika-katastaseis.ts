@@ -1,6 +1,5 @@
 import type { Apotelesma, KleidiMystikou } from '@dps/core';
 import { apotyxia } from '@dps/core';
-import { KLEIDIA_PIPELINE } from '@dps/pipeline';
 import type { EisodosPipeline } from '@dps/pipeline';
 
 /** Στάση ενός μυστικού — ΠΟΤΕ η τιμή του, μόνο αν υπάρχει. */
@@ -11,16 +10,18 @@ export interface KatastasiMystikou {
 }
 
 /** Συνδέει το κλειδί μυστικού με το όνομα της μεταβλητής περιβάλλοντος (fallback). */
-const ONOMATA_METAVLITON: Readonly<Record<KleidiMystikou, string>> = {
+const KLEIDIA_ECLASS_CLI = [
+  'eclass_onoma_xristi',
+  'eclass_kodikos',
+] as const satisfies readonly KleidiMystikou[];
+
+const ONOMATA_METAVLITON: Readonly<Record<(typeof KLEIDIA_ECLASS_CLI)[number], string>> = {
   eclass_onoma_xristi: 'ECLASS_USERNAME',
   eclass_kodikos: 'ECLASS_PASSWORD',
-  eclass_panepistimio_id: 'ECLASS_PANEPISTIMIO_ID',
-  eclass_base_url: 'ECLASS_BASE_URL',
-  llm_api_key: 'GEMINI_API_KEY',
 };
 
 /** Μυστικά που απαιτούνται για τη σύνδεση στο eClass. */
-const KLEIDIA_YNDESIS: readonly KleidiMystikou[] = ['eclass_onoma_xristi', 'eclass_kodikos'];
+const KLEIDIA_YNDESIS: readonly KleidiMystikou[] = KLEIDIA_ECLASS_CLI;
 
 /**
  * Κατάσταση των μυστικών μέσω του `MystikaPyli`.
@@ -30,7 +31,7 @@ const KLEIDIA_YNDESIS: readonly KleidiMystikou[] = ['eclass_onoma_xristi', 'ecla
  */
 export async function katastaseis_mystikon(eisodos: EisodosPipeline): Promise<KatastasiMystikou[]> {
   const katastaseis: KatastasiMystikou[] = [];
-  for (const kleidi of KLEIDIA_PIPELINE) {
+  for (const kleidi of KLEIDIA_ECLASS_CLI) {
     const timi = await eisodos.mystika.pare(kleidi);
     katastaseis.push({
       kleidi,

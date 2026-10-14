@@ -1,20 +1,22 @@
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { IonRouterOutlet } from '@ionic/react';
 import { PlisiOmonimas } from './plisi.js';
 import type { ReactNode } from 'react';
-import Simera from '../othoni/simera/simera.js';
-import Mathimata from '../othoni/mathimata/mathimata.js';
-import XartisEnotiton from '../othoni/xartis/xartis.js';
-import OdigosMeletis from '../othoni/odigos/odigos.js';
-import TutorChat from '../othoni/tutor/tutor.js';
-import Rythisies from '../othoni/rythisies/rythisies.js';
-import RythisiesAi from '../othoni/rythisies/rythisies-ai.js';
-import Proedri from '../othoni/proedri/proedri.js';
-import ProvoliPdf from '../provoli-pdf/provoli-pdf.js';
-import RythmiseisProgrammatos from '../programma/programma.js';
-import RythisiesEidopoiseon from '../eidopoiiseis/rythisies-eidopoiseon.js';
-import { dimiourgise_ypiresies_eidopoiseon } from '../eidopoiiseis/sindesi.js';
 import type { EidopoiisiYpiresies } from '../eidopoiiseis/eidopoiiseis-typoi.js';
+import { xrisiPeriballontos } from '../periballon/provolos.js';
+
+const Simera = lazy(() => import('../othoni/simera/simera.js'));
+const Mathimata = lazy(() => import('../othoni/mathimata/mathimata.js'));
+const XartisEnotiton = lazy(() => import('../othoni/xartis/xartis.js'));
+const OdigosMeletis = lazy(() => import('../othoni/odigos/odigos.js'));
+const TutorChat = lazy(() => import('../othoni/tutor/tutor.js'));
+const Rythisies = lazy(() => import('../othoni/rythisies/rythisies.js'));
+const RythisiesAi = lazy(() => import('../othoni/rythisies/rythisies-ai.js'));
+const Proedri = lazy(() => import('../othoni/proedri/proedri.js'));
+const ProvoliPdf = lazy(() => import('../provoli-pdf/provoli-pdf.js'));
+const RythmiseisProgrammatos = lazy(() => import('../programma/programma.js'));
+const EidopoiiseisRoute = lazy(() => import('../eidopoiiseis/route.js'));
 
 /** Οι διαδρομές της εφαρμογής, μία ανά οθόνη. */
 export const ODOI: readonly { readonly diadromi: string; readonly onoma: string }[] = [
@@ -33,15 +35,34 @@ export const ODOI: readonly { readonly diadromi: string; readonly onoma: string 
 
 /** Περιτύλιγμα σελίδας με capsule navigation. */
 function meNav(children: ReactNode, xronos = true) {
-  return <PlisiOmonimas meNav={xronos}>{children}</PlisiOmonimas>;
+  return (
+    <PlisiOmonimas meNav={xronos}>
+      <Suspense fallback={<p role="status">Φόρτωση οθόνης…</p>}>
+        {children}
+      </Suspense>
+    </PlisiOmonimas>
+  );
 }
 
 /** Έξυπνη αρχική δρομολόγηση: Onboarding για νέους χρήστες, Σήμερα για συνδεδεμένους. */
 function ArxikiDromologisi() {
-  const exeiSindesi =
-    typeof localStorage !== 'undefined' &&
-    (Boolean(localStorage.getItem('eclass_panepistimio_id')) ||
-      Boolean(localStorage.getItem('dps_sindesi_energi')));
+  const periballon = xrisiPeriballontos();
+  const [exeiSindesi, setExeiSindesi] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void Promise.all([
+      periballon.mystika.pare('eclass_onoma_xristi'),
+      periballon.mystika.pare('eclass_base_url'),
+    ]).then(([username, baseUrl]) => {
+      if (active) setExeiSindesi(Boolean(username && baseUrl));
+    }).catch(() => {
+      if (active) setExeiSindesi(false);
+    });
+    return () => { active = false; };
+  }, [periballon.mystika]);
+
+  if (exeiSindesi === null) return meNav(<p role="status">Φόρτωση τοπικού προφίλ…</p>, false);
 
   return exeiSindesi ? meNav(<Simera />) : meNav(<Proedri />, false);
 }
@@ -56,7 +77,7 @@ export interface OdoiNavigisisProps {
  * wrapper component αφήνει το outlet κενό.
  */
 export function OdoiNavigisis({
-  ypiresiesEidopoiseon = dimiourgise_ypiresies_eidopoiseon(),
+  ypiresiesEidopoiseon,
 }: OdoiNavigisisProps = {}) {
   return (
     <IonRouterOutlet>
@@ -73,7 +94,7 @@ export function OdoiNavigisis({
         <Route path="/rythisies/ai" element={meNav(<RythisiesAi />)} />
         <Route
           path="/eidopoiseis"
-          element={meNav(<RythisiesEidopoiseon ypiresies={ypiresiesEidopoiseon} />)}
+          element={meNav(<EidopoiiseisRoute ypiresiesEidopoiseon={ypiresiesEidopoiseon} />)}
         />
         <Route path="/proedri" element={meNav(<Proedri />, false)} />
         <Route path="*" element={meNav(<Proedri />, false)} />

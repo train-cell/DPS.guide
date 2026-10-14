@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import type { Arxeio, Selida, XartisMathimatos } from '@dps/core';
 import {
   ArgiosLlm,
   FakeEclassPyli,
+  FakeKatevasmaPyli,
   KatagrafiDiamnemata,
   LigmaArchiou,
   StatheriRologi,
@@ -34,6 +35,7 @@ function ftiaxe_eisodos(apothiki: MnimiApothiki, llm: LigmaArchiou | ArgiosLlm, 
   return {
     eclass: new FakeEclassPyli(),
     apothiki,
+    katevasma: new FakeKatevasmaPyli(apothiki),
     llm: pyli,
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
     rologi: new StatheriRologi(),

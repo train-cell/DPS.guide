@@ -1,17 +1,13 @@
 /**
- * Wrapper για το Windows Credential Manager μέσω `@napi-rs/keyring`.
+ * Προαιρετική σύνδεση με το Windows Credential Manager μέσω `@napi-rs/keyring`.
  *
- * Το dependency ΔΕΝ είναι εγκατεστημένο (request docs/requests/E-L10-01 —
- * προς έγκριση), οπότε το `@napi-rs/keyring` φορτώνεται ΔΥΝΑΜΙΚΑ. Η αποτυχία
- * φόρτωσης (module απών / αποτυγχάνει η φόρτωση) μετατρέπεται σε σήμα «μη
- * διαθέσιμο» (null), ώστε ο καλώντας (KeyringMystika) να πέφτει ομαλά στο
- * PerivallonMystika.
+ * Το package δεν δηλώνεται ως dependency του workspace και φορτώνεται δυναμικά.
+ * Αν δεν είναι εγκατεστημένο ή αποτύχει η φόρτωσή του, επιστρέφεται «μη
+ * διαθέσιμο» (null), ώστε το `KeyringMystika` να χρησιμοποιήσει το read-only
+ * fallback μεταβλητών περιβάλλοντος.
  *
- * Zero-guessing: το package λείπει από τα node_modules, συνεπώς η ύπαρξη και η
- * δομή του export `Entry` ελέγχονται ΔΟΜΙΚΑ κατά το φορτίο και θα
- * επιβεβαιωθούν στο πρώτο run με εγκατεστημένο dependency. Μόνο τα ονόματα
- * μεθόδων (`getPassword`/`setPassword`/`deleteCredential`) βασίζονται στο
- * εγκεκριμένο API v2.1.0 της κάρτας L11.
+ * Η ύπαρξη και η δομή του export `Entry` ελέγχονται κατά τη φόρτωση, πριν
+ * χρησιμοποιηθούν τα `getPassword`/`setPassword`/`deleteCredential`.
  */
 
 /** Εμφάνιση ενός entry του keyring που μας ενδιαφέρει. */
@@ -27,10 +23,8 @@ export type KeyringFortoma = (service: string, onoma: string) => KeyringEntry;
 let forti_gia_elegxo: KeyringFortoma | null = null;
 
 /**
- * Το όνομα του module κρατιέται σε μεταβλητή ώστε ο TS να μην το ψάξει στα
- * type declarations: το `@napi-rs/keyring` δεν είναι εγκατεστημένο (request
- * docs/requests/E-L10-01) και ο έλεγχος της ύπαρξης/δομής του γίνεται σε
- * runtime χωρίς @ts-expect-error.
+ * Το όνομα του optional module κρατιέται σε μεταβλητή ώστε ο TS να μην το ψάξει
+ * στα type declarations· η διαθεσιμότητα και η δομή του ελέγχονται στο runtime.
  */
 const ONOMA_MODULOU = '@napi-rs/keyring';
 

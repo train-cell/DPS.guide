@@ -3,3 +3,6 @@ packages:
   - 'apps/*'
 allowBuilds:
   esbuild: true
+  tesseract.js: false
+overrides:
+  xcode>uuid: 11.1.1

@@ -8,6 +8,7 @@ import type {
 } from '../contracts/montela.js';
 import { PerigrammaSchema, XartisMathimatosSchema } from '../contracts/montela.js';
 import { apotyxia, ok } from '../helpers.js';
+import { einai_asfales_tmima_diadromis } from '../diadromes.js';
 import { ANOXI_EPIKALYPSIS_SELIDON } from '../statheres.js';
 
 /** Υποχρεωτικές ενότητες οδηγού (§7.1 P3): αρκεί ο τίτλος να περιέχει το κλειδί. */
@@ -129,6 +130,9 @@ export function epikyrose_xarti(
   const gnwsta_arxeia = new Set(perigrammata.map((p) => p.arxeio_id));
   const ids = new Set<string>();
   for (const enotita of parsed.data.enotites) {
+    if (!einai_asfales_tmima_diadromis(enotita.id)) {
+      return apotyxia('MI_EGKYRO_SXIMA', 'Ο χάρτης περιέχει μη έγκυρο αναγνωριστικό ενότητας.');
+    }
     if (ids.has(enotita.id)) {
       return apotyxia('MI_EGKYRO_SXIMA', `Διπλότυπο id ενότητας «${enotita.id}».`);
     }

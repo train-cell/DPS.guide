@@ -51,14 +51,14 @@ export const ENTOLES: readonly GrammatikopoioEntolhs[] = [
   },
   {
     onoma: 'analysi',
-    perigrafh: 'Ανάλυση μαθήματος: exagogi → perigramma → xartis → megethi.',
+    perigrafh: 'Ανάλυση μαθήματος· μη διαθέσιμη από CLI χωρίς opt-in και επιβεβαίωση prompt.',
     argia: [{ onoma: 'KODIKOS', upoxreitai: true, perigrafh: 'Κωδικός μαθήματος.' }],
     xreiazetai_llm: true,
     trexe: (eisodos, _parastates, ori_arg) => trexe_analysi(eisodos, ori_arg),
   },
   {
     onoma: 'odigos',
-    perigrafh: 'Παραγωγή (lazy) του οδηγού μιας ενότητας.',
+    perigrafh: 'Οδηγός ενότητας· μη διαθέσιμος από CLI χωρίς opt-in και επιβεβαίωση prompt.',
     argia: [{ onoma: 'ENOTITA_ID', upoxreitai: true, perigrafh: 'Id ενότητας του χάρτη.' }],
     xreiazetai_llm: true,
     trexe: (eisodos, _parastates, ori_arg) => trexe_odigos(eisodos, ori_arg),
@@ -72,7 +72,7 @@ export const ENTOLES: readonly GrammatikopoioEntolhs[] = [
   },
   {
     onoma: 'run',
-    perigrafh: 'Πλήρης ροή: σύνδεση, μαθήματα, συγχρονισμός, ανάλυση.',
+    perigrafh: 'Πλήρης ροή· μη διαθέσιμη από CLI επειδή περιλαμβάνει μη εγκεκριμένη παραγωγή AI.',
     argia: [],
     xreiazetai_llm: true,
     trexe: (eisodos) => trexe_run(eisodos),

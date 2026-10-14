@@ -182,6 +182,13 @@ describe('epikyrose_xarti', () => {
     }
   });
 
+  it('rejects unsafe path-segment ids from generated or imported study maps', () => {
+    for (const id of ['\\\\evil.example', 'section/child', 'section%2fchild', 'section?next=x', '..']) {
+      const res = epikyrose_xarti(xartis_raw([enotita(id)]), [perigramma_apo('arx-1')]);
+      expect(res).toMatchObject({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA' } });
+    }
+  });
+
   it('rejects prerequisites that do not exist', () => {
     const res = epikyrose_xarti(
       xartis_raw([enotita('e1', undefined, [{ enotita_id: 'fantasma', isxys: 'isxyri' }])]),

@@ -43,14 +43,14 @@ export function keimako_xeysisimaton(): string[] {
     `  ${SEMA_RIZA} <διαδρομή>  Ρίζα αποθήκευσης (προεπιλογή: ${RIZA_PROEDROPIA}).`
   );
   grammmes.push(
-    `  ${SEMA_MONTELO} <όνομα>  Μοντέλο LLM· αν λείπει, διαβάζεται το montelo του <riza>/rythmiseis.json.`
+    `  ${SEMA_MONTELO} <όνομα>  Συμβατότητα παλιών scripts· δεν ενεργοποιεί παραγωγή AI από το CLI.`
   );
   grammmes.push(
     `  ${SEMA_JSON}            Μία εγγραφή JSON στο stdout ({"ok":true,…} ή {"ok":false,"sfalma":{…}}).`
   );
   grammmes.push('');
   grammmes.push('Μεταβλητές περιβάλλοντος (fallback μυστικών):');
-  grammmes.push('  ECLASS_USERNAME, ECLASS_PASSWORD, GEMINI_API_KEY');
+  grammmes.push('  ECLASS_USERNAME, ECLASS_PASSWORD');
   grammmes.push('');
   grammmes.push('Κωδικοί εξόδου: 0 επιτυχία · 1 σφάλμα ή λανθασμένη χρήση.');
   return grammmes;

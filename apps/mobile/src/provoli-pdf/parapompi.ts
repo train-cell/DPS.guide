@@ -1,3 +1,5 @@
+import { einai_asfales_tmima_diadromis } from '@dps/core';
+
 /** Μία παραπομπή οδηγού προς αρχείο PDF: ταυτότητα αρχείου και εύρος σελίδων (1-based). */
 export interface ParapompiPdf {
   readonly arxeio_id: string;
@@ -53,6 +55,13 @@ export function stilise_parapompi(parapompi: ParapompiPdf): string {
 }
 
 /** Διαδρομή πλοήγησης της προβολής PDF για μια παραπομπή. */
-export function diadromi_provolis(parapompi: ParapompiPdf): string {
+export function diadromi_provolis(parapompi: ParapompiPdf): string | null {
+  if (
+    !einai_asfales_tmima_diadromis(parapompi.arxeio_id) ||
+    !Number.isSafeInteger(parapompi.apo) ||
+    parapompi.apo < PROTI_SELIDA
+  ) {
+    return null;
+  }
   return `/provoli/${encodeURIComponent(parapompi.arxeio_id)}/${parapompi.apo}`;
 }

@@ -1,3 +1,6 @@
+[ARCHIVED BRIEF — HISTORICAL]
+This file describes an earlier implementation phase and is not current project guidance. Use the repository README and docs/README.md for current behavior.
+
 ================================================================================
 ΕΙΣΑΙ Ο: ORCHESTRATOR STREAM C — ΕΞΑΓΩΓΗ & AI (packages/extract, packages/ai)cd C:\Users\skyd3\antigarvity\DPS.guide-wt\C
 

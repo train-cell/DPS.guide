@@ -52,7 +52,12 @@ export class DpsEclassPyli implements EclassPyli {
   }
 
   get base_url(): string {
-    return this.perivallon.base_url;
+    return this.perivallon.base_url ?? VASIKO_URL_ECLASS;
+  }
+
+  pare_kefalides_lipshs(): Record<string, string> {
+    const cookie = this.perivallon.cookie_diaxeiristis.pare_kefalida();
+    return cookie == null ? {} : { cookie };
   }
 
   async syndesi(): Promise<Apotelesma<void>> {

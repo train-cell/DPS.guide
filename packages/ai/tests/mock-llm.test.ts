@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { z } from 'zod';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import type { Apotelesma, LlmAitimaJson, LlmAitimaKeimenou, LlmPyli } from '@dps/core';
 import { ArkeioLlmSchema, kleidi_json, kleidi_keimenou, me_cache } from '../src/cache/index.js';
 import {

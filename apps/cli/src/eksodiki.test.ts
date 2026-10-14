@@ -11,7 +11,8 @@ import type {
   Sfalma,
   XartisMathimatos,
 } from '@dps/core';
-import { FakeRologi, MnimiApothiki, FakeMystika, apotyxia, ok } from '@dps/core';
+import { apotyxia, ok } from '@dps/core';
+import { FakeRologi, MnimiApothiki, FakeMystika } from '@dps/core/testing';
 import type { EisodosPipeline, Metriti } from '@dps/pipeline';
 
 /** Ψεύτικα βήματα του `@dps/pipeline` — το εργοστάσιο του vi.mock. */
@@ -138,6 +139,7 @@ function parastates(): ParastatesEksodiki {
   const eisodos: EisodosPipeline = {
     eclass: ekliron_eclass(),
     apothiki,
+    katevasma: { katevase: async () => ok({ megethos: 0 }) },
     llm: ekliron_llm(),
     mystika,
     rologi: new FakeRologi(),

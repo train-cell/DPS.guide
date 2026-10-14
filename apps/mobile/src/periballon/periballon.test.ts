@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { FakeHttp, FakeMystika, FakeRologi, MockLlm, MnimiApothiki } from '@dps/core';
-import { KLEIDIA_PYLON, ftiaxe_periballon, pare_pyli, type KleidiPyli } from './periballon.js';
+import { FakeMystika, FakeRologi, MockLlm, MnimiApothiki } from '@dps/core/testing';
+import { FakeHttp } from '@dps/core/testing';
+import { KLEIDIA_PYLON, pare_pyli, type KleidiPyli } from './periballon.js';
+import { ftiaxe_periballon_test as ftiaxe_periballon } from '../../test-fixtures/ftiaxe-test-periballon.js';
 import {
   KatagrafiMnimis,
   type EggrafiKatagrafis,

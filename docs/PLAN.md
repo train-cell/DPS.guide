@@ -1,5 +1,7 @@
 # PLAN 2026-10-09 — «spoudes»: Study Agent / Tutor για Open eClass (iOS μέσω Sideloadly + CLI για Windows)
 
+> **Ιστορικό πλάνο, όχι τρέχουσα προδιαγραφή.** Το αρχείο περιγράφει το αρχικό scope και περιέχει αποφάσεις που άλλαξαν. Για εγκατάσταση, υποστήριξη και τρέχουσα συμπεριφορά δες το [README](../README.md) και το [ευρετήριο docs](README.md).
+
 | Πεδίο | Τιμή |
 |---|---|
 | Ημερομηνία | 2026-10-09 |
@@ -13,7 +15,7 @@
 **Τι χτίζουμε.** Το «spoudes» (όνομα εργασίας) είναι open-source iOS εφαρμογή, εγκατεστημένη με Sideloadly, συν ένα Node CLI για Windows. Κάνει τα εξής:
 
 1. Login στο Open eClass του Τμήματος Πληροφορικής ΠαΠει (`https://thales.cs.unipi.gr`) με τα στοιχεία του χρήστη, που αποθηκεύονται στο Keychain.
-2. Κατεβάζει όλα τα αρχεία σε φάκελο ανά μάθημα, ορατό στην εφαρμογή «Αρχεία» του iOS.
+2. Κατεβάζει τα αρχεία στο κρυπτογραφημένο, ιδιωτικό vault της εφαρμογής. Η τρέχουσα έκδοση δεν τα εμφανίζει στην εφαρμογή «Αρχεία» του iOS.
 3. Αναλύει με AI την ύλη του μαθήματος που επιλέγει ο χρήστης σε ενότητες με προαπαιτούμενα.
 4. Παράγει study guide ανά ενότητα με παραπομπές σε σελίδες.
 5. Δίνει tutor chat grounded στο υλικό.
@@ -43,7 +45,7 @@
 
 1. Onboarding (base URL, στοιχεία, Gemini key) και login.
 2. Λίστα μαθημάτων και επιλογή ποια συγχρονίζονται.
-3. «Συγχρονισμός»: φάκελοι με τα αρχεία στο Files.
+3. «Συγχρονισμός»: κρυπτογραφημένη αποθήκευση αρχείων στο app-private vault.
 4. Επιλογή μαθήματος και «Ανάλυση»: εμφανίζεται ο χάρτης ενοτήτων.
 5. Άνοιγμα ενότητας: οδηγός με παραπομπές· tap σε παραπομπή ανοίγει το PDF στη σελίδα.
 6. Tutor chat για την ενότητα.
@@ -69,7 +71,7 @@
 | D2 | **Local-first, χωρίς backend.** Όλα τρέχουν στη συσκευή. Τα στοιχεία σύνδεσης μένουν στο Keychain. | — | — |
 | D3 | **BYOK AI.** Ο χρήστης φέρνει το δικό του Gemini API key (secure storage). Υπάρχει provider port, ώστε αργότερα να μπει και OpenAI-compatible provider. | — | — |
 | D4 | **50/50 boundary.** Το LLM κάνει μόνο NLP: περιγράμματα, συγχώνευση, κείμενο οδηγού, tutor. Ό,τι αριθμητικό (λεπτά, σειρά, ημερομηνίες, `apodosi_exetasis`, κατάσταση μάθησης) υπολογίζεται deterministic στο `packages/core`. Το LLM δεν βγάζει αριθμούς εμπιστοσύνης· χρησιμοποιεί enums (π.χ. `isxys: 'isxyri' \| 'asthenis'`). | — | — |
-| D5 | **Storage = αρχεία JSON + Markdown** με σταθερό layout (§5.3). Το layout είναι ίδιο σε Node fs και Capacitor Filesystem, και ορατό στο Files. | — | — |
+| D5 | **Ιστορική απόφαση storage.** Το σημερινό browser/native vault κρυπτογραφεί όλα τα δεδομένα και τα αρχεία στη συσκευή· τα native αρχεία παραμένουν ιδιωτικά στο sandbox και δεν εμφανίζονται στο Files. Μεταφορά γίνεται μόνο με encrypted backup. | — | — |
 | D6 | **Cache ανά content hash** σε κάθε LLM βήμα: ίδιο input → καμία νέα κλήση. Οι οδηγοί παράγονται lazily. | — | — |
 | D7 | **Δωρεάν Apple ID.** Μόνο local notifications. Χωρίς extensions/widgets. Σταθερό bundle ID που δεν αλλάζει ποτέ, αλλιώς χάνονται τα δεδομένα. Υπογραφή 7 ημερών, με Sideloadly auto-refresh. | — | Ανοιχτή απόφαση §14 (2): δωρεάν ή paid Apple ID. |
 | D8 | **Repo.** Θέση `C:\Users\skyd3\spoudes\`, worktrees στο `C:\Users\skyd3\spoudes-wt\`. PRIVATE μέχρι το H2, όπου γίνεται sweep PII/copyright σε όλο το history· μετά PUBLIC. Σε private repo τα macOS λεπτά του CI μετράνε στο δωρεάν όριο με πολλαπλασιαστή (⚠️ επαλήθευση τρέχουσας τιμολόγησης GitHub Actions). Λίγα IPA builds αρκούν. | Εκτός του `C:\Users\skyd3\antigarvity\`, γιατί εκεί απαγορεύεται νέο version control. | Ανοιχτή απόφαση §14 (4): πότε γίνεται public (πρόταση: στο H2). |
@@ -916,9 +918,9 @@ spoudes/
 - **Παραδοτέα:** workflow σε macOS runner:
   1. pnpm install
   2. build του `apps/mobile`
-  3. `npx cap add ios`, αν λείπει. Το `apps/mobile/ios/` ΔΕΝ μπαίνει σε commit.
+  3. `npx cap add ios` μόνο αν λείπει το tracked platform project από το checkout.
   4. `npx cap sync ios`
-  5. `scripts/ios/patch-plist.mjs`: `UIFileSharingEnabled=YES`, `LSSupportsOpeningDocumentsInPlace=YES`, εμφανιζόμενο όνομα.
+  5. `scripts/ios/configure-private-files.mjs`: κρατά `UIFileSharingEnabled` και `LSSupportsOpeningDocumentsInPlace` σε `false` και δηλώνει τη χρήση Face ID για προαιρετικό vault unlock.
   6. `xcodebuild` Release, `-destination generic/platform=iOS`, `CODE_SIGNING_ALLOWED=NO`.
   7. `Payload/App.app` → zip σε `.ipa` → artifact.
   - ⚠️ επαλήθευση: CocoaPods ή SPM ανάλογα με την έκδοση Capacitor, άρα `-workspace` ή `-project`.

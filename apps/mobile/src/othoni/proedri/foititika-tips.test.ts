@@ -16,13 +16,18 @@ describe('foititika-tips - FOITITIKA_TIPS syllogi', () => {
     }
   });
 
-  it('perilamvanei ola ta zitoumena afthentika themata', () => {
+  it('perilamvanei mono akriveis symvoules gia pragmatikes leitourgies', () => {
     const oloToKeimeno = FOITITIKA_TIPS.join(' ');
-    expect(oloToKeimeno).toMatch(/espresso|καφέ/i);
-    expect(oloToKeimeno).toMatch(/23:59/);
-    expect(oloToKeimeno).toMatch(/Zero-Cloud|vault/i);
-    expect(oloToKeimeno).toMatch(/EWMA/);
+    expect(oloToKeimeno).toMatch(/συγχρον/i);
+    expect(oloToKeimeno).toMatch(/master password/i);
+    expect(oloToKeimeno).toMatch(/recovery key/i);
+    expect(oloToKeimeno).toMatch(/backup/i);
+    expect(oloToKeimeno).toMatch(/Gemini/);
+    expect(oloToKeimeno).toMatch(/Ollama/);
+    expect(oloToKeimeno).toMatch(/OCR/);
+    expect(oloToKeimeno).toMatch(/ειδοποι/);
     expect(oloToKeimeno).toMatch(/eClass/);
+    expect(oloToKeimeno).not.toMatch(/80%|secure enclave|hardware-backed|EWMA|23:59|κόκκινο συναγερμό/i);
   });
 });
 

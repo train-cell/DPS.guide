@@ -5,13 +5,14 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import Mathimata, { KartaMathimatos } from './mathimata.js';
-import { pseudos_mathimata } from '../../pseudomata/index.js';
+import { pseudos_mathimata } from '../../../test-fixtures/pseudomata/index.js';
+import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
 
 const MONI_PIGIS = fileURLToPath(new URL('./mathimata.tsx', import.meta.url));
 
 /** Τυλίγει ένα στοιχείο σε MemoryRouter ώστε τα Link να αποδίδουν href. */
 function apoidefsi(stoixeio: ReactElement): string {
-  return renderToStaticMarkup(<MemoryRouter>{stoixeio}</MemoryRouter>);
+  return renderToStaticMarkup(me_periballon_test(<MemoryRouter>{stoixeio}</MemoryRouter>));
 }
 
 /** Αντιγράφει τη διαφύγαση HTML που κάνει το renderToStaticMarkup στο κείμενο. */
@@ -42,7 +43,7 @@ describe('mathimata — οθόνη λίστας μαθημάτων', () => {
 
   it('οι υποχρεωτικές data-testid υπάρχουν στην πηγή της οθόνης', () => {
     const pigi = readFileSync(MONI_PIGIS, 'utf8');
-    for (const testid of ['mathimata-ekran', 'mathimata-karta', 'mathimata-lista']) {
+    for (const testid of ['mathimata-ekran', 'mathimata-karta', 'mathimata-lista', 'mathimata-sygxronismos']) {
       expect(pigi).toContain(`"${testid}"`);
     }
   });

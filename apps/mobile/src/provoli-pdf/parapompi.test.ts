@@ -86,7 +86,17 @@ describe('diadromi_provolis', () => {
     expect(diadromi_provolis({ arxeio_id: 'arx-1', apo: 3, eos: 7 })).toBe('/provoli/arx-1/3');
   });
 
-  it('κωδικοποιεί ταυτότητες αρχείου με χαρακτήρες URL', () => {
-    expect(diadromi_provolis({ arxeio_id: 'arx 1/a', apo: 1, eos: 1 })).toBe('/provoli/arx%201%2Fa/1');
+  it('απορρίπτει ταυτότητες αρχείου που δεν είναι ασφαλή path segments', () => {
+    expect(diadromi_provolis({ arxeio_id: 'arx 1/a', apo: 1, eos: 1 })).toBeNull();
+  });
+
+  it('απορρίπτει backslash-looking external URLs αντί να τα περνά στον router', () => {
+    expect(diadromi_provolis({ arxeio_id: '\\\\evil.example', apo: 1, eos: 1 }))
+      .toBeNull();
+  });
+
+  it('απορρίπτει μη έγκυρο αριθμό σελίδας', () => {
+    expect(diadromi_provolis({ arxeio_id: 'arx-1', apo: 0, eos: 1 })).toBeNull();
+    expect(diadromi_provolis({ arxeio_id: 'arx-1', apo: 1.5, eos: 2 })).toBeNull();
   });
 });

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import type { Arxeio, Selida } from '@dps/core';
-import { FakeEclassPyli, KatagrafiDiamnemata, LigmaArchiou, StatheriRologi } from '../testing/voirtheia.js';
+import { FakeEclassPyli, FakeKatevasmaPyli, KatagrafiDiamnemata, LigmaArchiou, StatheriRologi } from '../testing/voirtheia.js';
 import { ftiaxe_docx } from '../testing/fixtures-arxeia.js';
 import { perigramma_mathimatos } from '../bhmata/perigramma.js';
 import { xartis } from '../bhmata/xartis.js';
@@ -24,6 +24,7 @@ function ftiaxe_eisodos(apothiki: MnimiApothiki, llm: LigmaArchiou, katagrafi: K
   return {
     eclass: new FakeEclassPyli(),
     apothiki,
+    katevasma: new FakeKatevasmaPyli(apothiki),
     // Η ροή περνάει ΠΑΝΤΑ από το me_cache του @dps/ai (δεν γράφει δικό της cache).
     llm: me_cache(llm.llm, apothiki, `${KODIKOS}/.spoudes/cache/llm`),
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import type { Arxeio, KomvosArxeiou } from '@dps/core';
-import { ArgiosLlm, FakeEclassPyli, KatagrafiDiamnemata, StatheriRologi } from '../testing/voirtheia.js';
+import { ArgiosLlm, FakeEclassPyli, FakeKatevasmaPyli, KatagrafiDiamnemata, StatheriRologi } from '../testing/voirtheia.js';
 import { sygxronismos } from '../bhmata/sygxronismos.js';
 import type { EisodosPipeline } from '../porte.js';
 import { arxeio_eurethriou, me_riza } from '../statheroi.js';
@@ -29,6 +29,7 @@ function ftiaxe_eisodos(
   return {
     eclass,
     apothiki,
+    katevasma: new FakeKatevasmaPyli(apothiki),
     llm: new ArgiosLlm(),
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
     rologi: new StatheriRologi(),

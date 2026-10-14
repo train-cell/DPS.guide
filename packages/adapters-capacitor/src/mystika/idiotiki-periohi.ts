@@ -15,8 +15,19 @@
  *
  *  Κανένα μυστικό δεν εμφανίζεται σε μηνύματα σφαλμάτων — μόνο το κλειδί. */
 
-import { SecureStorage } from '@aparajita/capacitor-secure-storage';
+import { KeychainAccess, SecureStorage } from '@aparajita/capacitor-secure-storage';
+import { Capacitor } from '@capacitor/core';
 import type { KleidiMystikou, MystikaPyli, Sfalma } from '@dps/core';
+
+const DEVICE_SECRET_KEYS: readonly KleidiMystikou[] = [
+  'eclass_onoma_xristi',
+  'eclass_kodikos',
+  'eclass_panepistimio_id',
+  'eclass_base_url',
+  'moodle_webservice_token',
+  'llm_api_key',
+  'vault_biometric_unlock',
+];
 
 function sfalma_mi_diathesimo(k: KleidiMystikou, praksi: string): Sfalma {
   return {
@@ -26,9 +37,35 @@ function sfalma_mi_diathesimo(k: KleidiMystikou, praksi: string): Sfalma {
 }
 
 export class CapacitorMystikaPyli implements MystikaPyli {
+  private initialization: Promise<void> | null = null;
+
+  private ensureInitialized(): Promise<void> {
+    this.initialization ??= this.initializeDeviceOnlyKeychain();
+    return this.initialization;
+  }
+
+  private async initializeDeviceOnlyKeychain(): Promise<void> {
+    if (Capacitor.getPlatform() !== 'ios') return;
+    await SecureStorage.setSynchronize(false);
+    await SecureStorage.setDefaultKeychainAccess(KeychainAccess.whenUnlockedThisDeviceOnly);
+    for (const key of DEVICE_SECRET_KEYS) {
+      const value = await SecureStorage.get(key, false, false);
+      if (typeof value === 'string') {
+        await SecureStorage.set(
+          key,
+          value,
+          false,
+          false,
+          KeychainAccess.whenUnlockedThisDeviceOnly,
+        );
+      }
+    }
+  }
+
   async pare(k: KleidiMystikou): Promise<string | null> {
     try {
-      const timi = await SecureStorage.get(k);
+      await this.ensureInitialized();
+      const timi = await SecureStorage.get(k, false, false);
       return typeof timi === 'string' ? timi : null;
     } catch {
       // λείπει/κλειδωμένο storage → null, ποτέ throw, ποτέ μυστικό στο σφάλμα
@@ -38,7 +75,14 @@ export class CapacitorMystikaPyli implements MystikaPyli {
 
   async vale(k: KleidiMystikou, timi: string): Promise<void> {
     try {
-      await SecureStorage.set(k, timi);
+      await this.ensureInitialized();
+      await SecureStorage.set(
+        k,
+        timi,
+        false,
+        false,
+        KeychainAccess.whenUnlockedThisDeviceOnly,
+      );
     } catch {
       throw { sfalma: sfalma_mi_diathesimo(k, 'αποθήκευση') };
     }
@@ -46,7 +90,8 @@ export class CapacitorMystikaPyli implements MystikaPyli {
 
   async svise(k: KleidiMystikou): Promise<void> {
     try {
-      await SecureStorage.remove(k);
+      await this.ensureInitialized();
+      await SecureStorage.remove(k, false);
     } catch {
       // no-op: αν δεν είναι διαθέσιμο/απόν, δεν υπάρχει τι να σβηστεί
     }

@@ -33,7 +33,8 @@ export interface EidopoiisiYpiresies {
   /** Προγραμματίζει μία δοκιμαστική υπενθύμιση. */
   programmatise_dokimi(
     otn: Date,
-    leptaProeidopoisis: number
+    leptaProeidopoisis: number,
+    context?: { readonly courseTitle: string; readonly sectionTitle: string }
   ): Promise<Apotelesma<EidopoiisiProgrammatismeni>>;
   /** Ακυρώνει όλες τις εκκρεμείς υπενθυμίσεις. */
   akiro_ol(): Promise<Apotelesma<void>>;

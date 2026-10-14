@@ -1,10 +1,9 @@
-/** Υλοποίηση `KatevasmaPyli` πάνω στο GLOBAL fetch του Node (undici-based), με
+/** Υλοποίηση `KatevasmaPyli` πάνω στο global `fetch` του Node 22+, με
  *  `redirect: 'manual'` και χειροκίνητο βρόχο ανακατευθύνσεων (βλ. `anakateuthinsi.ts`).
  *
- *  ΑΠΟΦΑΣΗ TRANSPORT: ακολουθεί την ίδια προσέγγιση με το `fetch-http-pyli.ts` — το
- *  `undici` ως ρητό dependency είναι ακόμη pending (docs/requests/E-L10-01), οπότε
- *  χρησιμοποιείται το native `fetch`. Ολόκληρο το transport είναι απομονωμένο στη
- *  συνάρτηση `katevase_reuma` ώστε η αντικατάσταση να απαιτεί αλλαγή σε ένα σημείο.
+ *  Το `fetch` του Node βασίζεται εσωτερικά στο Undici. Δεν υπάρχει ρητό Undici
+ *  dependency: όλη η μετατροπή του response stream σε Node stream είναι απομονωμένη
+ *  στη `katevase_reuma`.
  *
  *  ΑΤΟΜΙΚΟΤΗΤΑ: το σώμα ροής γράφεται σε προσωρινό αρχείο (`<proorismos>.tmp-<uuid>`)
  *  και μετονομάζεται ατομικά στο τελικό μόνο μετά την πλήρη λήψη. Κάθε αποτυχία

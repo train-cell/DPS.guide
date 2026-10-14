@@ -8,7 +8,7 @@ import RythisiesAi, {
   PAROXOI_LLM,
   entopise_paroxo_montelou,
 } from './rythisies-ai.js';
-import { ftiaxe_periballon } from '../../periballon/index.js';
+import { ftiaxe_periballon_test as ftiaxe_periballon } from '../../../test-fixtures/ftiaxe-test-periballon.js';
 import { ParoxosPeriballontos } from '../../periballon/provolos.js';
 
 const ORISTO = dirname(fileURLToPath(import.meta.url));
@@ -23,8 +23,6 @@ const APOTELEMATA_AI = [
   'ai-apothikeysi',
   'ai-epistrofi-link',
   'paroxos-gemini',
-  'paroxos-openai',
-  'paroxos-claude',
   'paroxos-ollama',
 ] as const;
 
@@ -50,7 +48,7 @@ describe('RythisiesAi — συμβόλαιο οθόνης', () => {
     expect(html).toContain('Μοντέλο AI &amp; Vault');
     expect(html).toContain('Πάροχος AI');
     expect(html).toContain('Επιλογή Μοντέλου');
-    expect(html).toContain('Zero-Knowledge Hardware Vault');
+    expect(html).toContain('Κρυπτογραφημένο vault');
     expect(html).toContain('Δοκιμή &amp; Επαλήθευση');
   });
 
@@ -70,37 +68,18 @@ describe('RythisiesAi — συμβόλαιο οθόνης', () => {
 });
 
 describe('RythisiesAi — επιλογές παρόχων και μοντέλων', () => {
-  it('ορίζει ακριβώς τους 4 ζητούμενους παρόχους AI', () => {
+  it('ορίζει μόνο τους υλοποιημένους παρόχους AI', () => {
     const idList = PAROXOI_LLM.map((p) => p.id);
-    expect(idList).toEqual(['gemini', 'openai', 'claude', 'ollama']);
+    expect(idList).toEqual(['gemini', 'ollama']);
   });
 
   it('το Google Gemini περιλαμβάνει τα μοντέλα flash και pro', () => {
     const gemini = PAROXOI_LLM.find((p) => p.id === 'gemini');
     expect(gemini).toBeDefined();
     const montela = gemini?.montela.map((m) => m.id);
-    expect(montela).toContain('gemini-2.5-flash');
-    expect(montela).toContain('gemini-2.5-pro');
+    expect(montela).toContain('gemini-3.8-flash');
+    expect(montela).toContain('gemini-3.1-pro-preview');
     expect(gemini?.apaitisiKleidiou).toBe(true);
-  });
-
-  it('το OpenAI ChatGPT περιλαμβάνει τα gpt-4o, gpt-4o-mini και o3-mini', () => {
-    const openai = PAROXOI_LLM.find((p) => p.id === 'openai');
-    expect(openai).toBeDefined();
-    const montela = openai?.montela.map((m) => m.id);
-    expect(montela).toContain('gpt-4o');
-    expect(montela).toContain('gpt-4o-mini');
-    expect(montela).toContain('o3-mini');
-    expect(openai?.apaitisiKleidiou).toBe(true);
-  });
-
-  it('το Anthropic Claude περιλαμβάνει τα claude-3-7-sonnet και claude-3-5-haiku', () => {
-    const claude = PAROXOI_LLM.find((p) => p.id === 'claude');
-    expect(claude).toBeDefined();
-    const montela = claude?.montela.map((m) => m.id);
-    expect(montela).toContain('claude-3-7-sonnet');
-    expect(montela).toContain('claude-3-5-haiku');
-    expect(claude?.apaitisiKleidiou).toBe(true);
   });
 
   it('το Local Ollama περιλαμβάνει llama3.2, mistral, deepseek-r1 και default port 11434', () => {
@@ -115,21 +94,23 @@ describe('RythisiesAi — επιλογές παρόχων και μοντέλω�
   });
 
   it('το entopise_paroxo_montelou αντιστοιχίζει σωστά ονόματα μοντέλων σε παρόχους', () => {
-    expect(entopise_paroxo_montelou('gemini-2.5-flash')).toBe('gemini');
-    expect(entopise_paroxo_montelou('gemini-2.5-pro')).toBe('gemini');
-    expect(entopise_paroxo_montelou('gpt-4o')).toBe('openai');
-    expect(entopise_paroxo_montelou('gpt-4o-mini')).toBe('openai');
-    expect(entopise_paroxo_montelou('o3-mini')).toBe('openai');
-    expect(entopise_paroxo_montelou('claude-3-7-sonnet')).toBe('claude');
-    expect(entopise_paroxo_montelou('claude-3-5-haiku')).toBe('claude');
+    expect(entopise_paroxo_montelou('gemini-3.8-flash')).toBe('gemini');
+    expect(entopise_paroxo_montelou('gemini-3.1-pro-preview')).toBe('gemini');
     expect(entopise_paroxo_montelou('llama3.2')).toBe('ollama');
     expect(entopise_paroxo_montelou('mistral')).toBe('ollama');
-    expect(entopise_paroxo_montelou('deepseek-r1')).toBe('ollama');
+    expect(entopise_paroxo_montelou('qwen2.5')).toBe('ollama');
     expect(entopise_paroxo_montelou('agnosto')).toBe('gemini');
+    expect(entopise_paroxo_montelou('lab/custom-chat:latest', 'ollama')).toBe('ollama');
+  });
+
+  it('δίνει ελεύθερο πεδίο για το εγκατεστημένο Ollama model ID και αποθηκεύει τον πάροχο', () => {
+    expect(ARXIKOS).toContain('data-testid="ai-ollama-model-id"');
+    expect(ARXIKOS).toContain('ID μοντέλου Ollama από την εντολή ollama list');
+    expect(ARXIKOS).toContain('paroxosLlm: paroxosId');
   });
 });
 
-describe('RythisiesAi — Zero-Knowledge Hardware Vault & Ασφάλεια', () => {
+describe('RythisiesAi — κρυπτογραφημένο vault & Ασφάλεια', () => {
   it('αποθηκεύει το κλειδί ΑΠΟΚΛΕΙΣΤΙΚΑ μέσω periballon.mystika.vale με llm_api_key', () => {
     expect(ARXIKOS).toContain("periballon.mystika.vale('llm_api_key'");
     expect(ARXIKOS).toContain("periballon.mystika.pare('llm_api_key'");
@@ -167,8 +148,10 @@ describe('RythisiesAi — δοκιμή σύνδεσης και ενέργειε�
     expect(html).toContain('type="submit"');
   });
 
-  it('καλεί το periballon.llm.parage_keimeno κατά τον έλεγχο σύνδεσης', () => {
-    expect(ARXIKOS).toContain('periballon.llm.parage_keimeno');
+  it('δημιουργεί τον επιλεγμένο πραγματικό Gemini/Ollama provider για έλεγχο', () => {
+    expect(ARXIKOS).toContain('testLlm.parage_keimeno');
+    expect(ARXIKOS).toContain('ftiaxe_gemini_llm');
+    expect(ARXIKOS).toContain('ftiaxe_ollama_llm');
     expect(ARXIKOS).toContain("systima: 'Έλεγχος σύνδεσης συστήματος'");
   });
 });

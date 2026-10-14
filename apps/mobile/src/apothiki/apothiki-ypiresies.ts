@@ -2,16 +2,19 @@ import type { ApothikiPyli, Apotelesma } from '@dps/core';
 import type { Rytheseis, Proodhos } from './apothiki-typoi.js';
 import { DIALOMI_RYTHMISEON, dialomos_proodhou } from './apothiki-typoi.js';
 import { PROEDAFO_TEMPLATE } from '../programma/programma-vohthia.js';
+import { migrateGeminiModel, PROEPILOGI_GEMINI_MONTELO } from '../ypiresies/ai-models.js';
+import { entopise_paroxo_montelou } from '../ypiresies/ai-providers.js';
 
 /** Προσωρινές προεπιλογές όσο δεν υπάρχει αποθηκευμένο αρχείο — τιμές παραδείγματος, όχι hardcoded μέσα στην οθόνη. */
 export function proedapes_rytheseis(): Rytheseis {
   return {
-    baseUrl: 'https://thales.cs.unipi.gr',
-    panepistimioId: 'unipi',
+    baseUrl: '',
+    themaId: 'midnight',
     mathimataSynch: [],
-    onomaMontelou: 'gemini-2.5-flash',
+    onomaMontelou: PROEPILOGI_GEMINI_MONTELO,
+    paroxosLlm: 'gemini',
+    urlOllama: 'http://localhost:11434',
     exeiKleidiLlm: false,
-    onomasApothikefsis: 'Documents/DPS.guide',
     einaiEidopoieseis: true,
     exetaseis: [],
     arxiExetastikis: null,
@@ -40,7 +43,19 @@ export async function fortose_rytheseis(apothiki: ApothikiPyli): Promise<Rythese
     return proedapes_rytheseis();
   }
   const anagnose = anagnose_json<Rytheseis>(diavase.timi);
-  return anagnose ?? proedapes_rytheseis();
+  if (anagnose === null) return proedapes_rytheseis();
+  const onomaMontelou =
+    typeof anagnose.onomaMontelou === 'string' && anagnose.onomaMontelou.trim()
+      ? migrateGeminiModel(anagnose.onomaMontelou.trim())
+      : PROEPILOGI_GEMINI_MONTELO;
+  return {
+    ...anagnose,
+    onomaMontelou,
+    paroxosLlm:
+      anagnose.paroxosLlm === 'gemini' || anagnose.paroxosLlm === 'ollama'
+        ? anagnose.paroxosLlm
+        : entopise_paroxo_montelou(onomaMontelou),
+  };
 }
 
 /** Αποθηκεύει τις ρυθμίσεις στη θύρα αποθήκευσης. */

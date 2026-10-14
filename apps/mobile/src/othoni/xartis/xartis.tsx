@@ -13,14 +13,18 @@ import { xrisiApothekisis } from '../../apothiki/index.js';
 import { xrisiPeriballontos } from '../../periballon/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
 import { fortosi, sfalma } from '../../kathstasi/index.js';
-import { fortose_xartis_apo_apothiki } from '../../ypiresies/index.js';
-import { pososto_aristeias } from '../../pseudomata/index.js';
+import { fortose_xartis_apo_apothiki, pososto_aristeias } from '../../ypiresies/index.js';
+import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
+import { generateCourseMap } from '../../ypiresies/pipeline-analisis.js';
+import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
+import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
+import { diadromi_odigou } from '../../navigasi/dromoi.js';
 
 /** Λεπτά ανά ώρα, για τη μορφοποίηση του χρόνου εκτίμησης. */
 export const LEPTA_PER_ORA = 60;
 
 /** Μήνυμα κενού χάρτη, με οδηγίες αντί για σιωπή. */
-export const MINIMA_KENOY_XARTI = 'Ο χάρτης δεν έχει ενότητες ακόμη. Επιστρέψτε όταν το eClass θα δημοσιεύσει την ύλη.';
+export const MINIMA_KENOY_XARTI = 'Δεν έχει δημιουργηθεί ακόμη χάρτης για αυτό το μάθημα.';
 
 /** Μήνυμα σφάλματος φόρτωσης του χάρτη. */
 export const MINIMA_SFALMATOS_XARTI = 'Δεν ήταν δυνατή η φόρτωση του χάρτη του μαθήματος.';
@@ -72,6 +76,7 @@ export interface KartaEnotitasProps {
 
 /** Κάρτα ενότητας: κλικ στην κάρτα ανοίγει τον οδηγό, το κουμπί τη σημειώνει ως ολοκληρωμένη. */
 export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotitasProps) {
+  const dromos = diadromi_odigou(enotita.id);
   const simaProspatheias = useCallback(
     async (gevento: GeventoPedomati<HTMLButtonElement>): Promise<void> => {
       gevento.preventDefault();
@@ -81,9 +86,8 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
     [allaxe_telia, enotita.id]
   );
 
-  return (
-    <Link to={`/odigos/${enotita.id}`} data-testid="xartis-enotita">
-      <Karta
+  const karta = (
+    <Karta
         titlos={enotita.titlos}
         ypokeimeno={`Σειρά ${enotita.seira} · ${stilise_lepta(enotita.lepta_ektimisi)}`}
         akseis={<Pilegma keimeno={`Σειρά ${enotita.seira}`} entono={tetagmeni} />}
@@ -105,6 +109,9 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
                 ))
               )}
             </div>
+            {dromos === null && (
+              <p role="status">Η ενότητα έχει μη έγκυρο αναγνωριστικό και δεν μπορεί να ανοιχτεί.</p>
+            )}
             <button
               type="button"
               className={`pilegma${tetagmeni ? ' pilegma-entono' : ''}`}
@@ -116,7 +123,14 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
             </button>
           </div>
         }
-      />
+    />
+  );
+
+  return dromos === null ? (
+    <div data-testid="xartis-enotita">{karta}</div>
+  ) : (
+    <Link to={dromos} data-testid="xartis-enotita">
+      {karta}
     </Link>
   );
 }
@@ -161,6 +175,15 @@ export default function XartisEnotiton() {
   const periballon = xrisiPeriballontos();
   const [katastasi, setKatastasi] = useState<Katastasi<XartisMathimatos>>(fortosi<XartisMathimatos>());
   const [prospatheies, setProspatheies] = useState(0);
+  const [dimiourgeitai, setDimiourgeitai] = useState(false);
+  const privacy = useCourseAiPrivacy(
+    periballon.apothiki,
+    apothiki.kodikosMathimatos,
+    apothiki.kodikosMathimatos,
+  );
+  const selectedModel = apothiki.rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
+  const selectedProvider = entopise_paroxo_montelou(selectedModel, apothiki.rytheseis.paroxosLlm);
+  const geminiSelected = selectedProvider === 'gemini';
 
   useEffect(() => {
     let zontas = true;
@@ -187,14 +210,39 @@ export default function XartisEnotiton() {
     setProspatheies((prospathia) => prospathia + 1);
   }, []);
 
-  const sygxronismena =
-    apothiki.rytheseis.mathimataSynch.length > 0
-      ? apothiki.rytheseis.mathimataSynch
-      : ['ΠΛΗ201', 'ΠΛΗ101', 'ΠΛΗ204'];
+  const sygxronismena = apothiki.rytheseis.mathimataSynch;
+
+  const dimiourgia_xarti = useCallback(async (): Promise<void> => {
+    const courseCode = apothiki.kodikosMathimatos;
+    if (!courseCode || dimiourgeitai) return;
+    setDimiourgeitai(true);
+    setKatastasi(fortosi<XartisMathimatos>());
+    try {
+      const result = await generateCourseMap(
+        periballon,
+        courseCode,
+        selectedModel,
+        privacy.authorizeGeneration,
+        selectedProvider,
+      );
+      setKatastasi(result.ok ? { katastasi: 'etimo', dedomena: result.timi } : sfalma(result.sfalma));
+    } catch (reason) {
+      setKatastasi(sfalma({
+        kodikos: KODIKOS_SFALMATOS_DIKTYOU,
+        minima: reason instanceof Error ? reason.message : MINIMA_SFALMATOS_XARTI,
+      }));
+    } finally {
+      setDimiourgeitai(false);
+    }
+  }, [apothiki.kodikosMathimatos, dimiourgeitai, periballon, privacy.authorizeGeneration, selectedModel, selectedProvider]);
 
   return (
     <div className="episkefsi" data-testid="xartis-ekran">
-      <ProskelesioOmonimas titlos="Χάρτης" ypokeimeno={apothiki.kodikosMathimatos} />
+      <ProskelesioOmonimas
+        titlos="Χάρτης"
+        ypokeimeno={apothiki.kodikosMathimatos || 'Επίλεξε μάθημα για να δεις την ύλη.'}
+        akseis={!apothiki.kodikosMathimatos ? <Link to="/mathimata">Άνοιγμα μαθημάτων →</Link> : undefined}
+      />
       {sygxronismena.length > 1 && (
         <div className="kapsoules-filtra-mpara">
           {sygxronismena.map((kodikos) => {
@@ -215,15 +263,53 @@ export default function XartisEnotiton() {
           })}
         </div>
       )}
-      <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_XARTI} epanalipsi={epanalipsi}>
-        {(xartis) => (
-          <OdomosEnotiton
-            xartis={xartis}
-            telies={apothiki.proodhos.aristeiesEnotiton}
-            allaxe_telia={apothiki.allaxe_telia}
-          />
-        )}
-      </OloniKatastasis>
+      {katastasi.katastasi === 'etimo' ? (
+        <OdomosEnotiton
+          xartis={katastasi.dedomena}
+          telies={apothiki.proodhos.aristeiesEnotiton}
+          allaxe_telia={apothiki.allaxe_telia}
+        />
+      ) : katastasi.katastasi === 'fortosi' ? (
+        <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_XARTI} epanalipsi={epanalipsi}>
+          {() => null}
+        </OloniKatastasis>
+      ) : (
+        <Karta
+          titlos={katastasi.katastasi === 'adeio' ? 'Δημιουργία χάρτη μαθήματος' : 'Ο χάρτης χρειάζεται ανάλυση'}
+          ypokeimeno={katastasi.katastasi === 'adeio'
+            ? MINIMA_KENOY_XARTI
+            : katastasi.sfalma.minima}
+          stoixeia={
+            <div className="odoni-lista">
+              {geminiSelected && (
+                <label className="odoni-xeiris">
+                  <input
+                    type="checkbox"
+                    checked={privacy.optIn}
+                    disabled={privacy.loading || privacy.saving || !apothiki.kodikosMathimatos}
+                    onChange={(event) => void privacy.setOptIn(event.target.checked).catch(() => undefined)}
+                    data-testid="xartis-gemini-optin"
+                  />
+                  Επιτρέπω στο Gemini να λαμβάνει το υλικό αυτού του μαθήματος. Θα επιβεβαιώνω κάθε αποστολή ξεχωριστά.
+                </label>
+              )}
+              {privacy.error !== null && <p role="alert" className="karta-ypokeimeno">{privacy.error}</p>}
+              <button
+                type="button"
+                className="pilegma pilegma-entono"
+                disabled={!apothiki.kodikosMathimatos || dimiourgeitai || privacy.loading || privacy.saving || (geminiSelected && !privacy.optIn)}
+                onClick={() => void dimiourgia_xarti()}
+                data-testid="xartis-dimiourgia"
+              >
+                {dimiourgeitai ? 'Ανάλυση υλικού…' : katastasi.katastasi === 'adeio' ? 'Δημιουργία χάρτη' : 'Επανάληψη ανάλυσης'}
+              </button>
+              {!apothiki.kodikosMathimatos && <Link to="/mathimata">Επίλεξε συγχρονισμένο μάθημα →</Link>}
+            </div>
+          }
+        />
+      )}
+      {dimiourgeitai && <p role="status" className="karta-ypokeimeno">Ανάλυση τοπικών αρχείων και δημιουργία χάρτη…</p>}
+      {privacy.dialog}
     </div>
   );
 }

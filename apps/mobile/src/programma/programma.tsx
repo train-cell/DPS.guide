@@ -160,7 +160,7 @@ export default function RythmiseisProgrammatos() {
                           className="programma-gramma programma-gramma-kodikos"
                           data-testid="programma-exetasi-kodikos"
                           aria-label="Κωδικός μαθήματος"
-                          placeholder="ΠΛΗ201"
+                          placeholder="Κωδικός"
                           value={exetasi.kodikos}
                           onChange={(gevma) => {
                             setDraft((palio) =>

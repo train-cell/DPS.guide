@@ -33,6 +33,7 @@ export interface RythisiesEidopoiseonProps {
   readonly ypiresies?: EidopoiisiYpiresies;
   /** Ελεύθερο κείμενο ενότητας για τα μηνύματα — ποτέ κωδικός μαθήματος. */
   readonly onoma?: string;
+  readonly context?: { readonly courseTitle: string; readonly sectionTitle: string } | undefined;
   /** Επιτρέπει στα τεστ να δώσουν κατάσταση χωρίς πύλα (μόνο για tests). */
   readonly arxikiKatastasi?: Katastasi<EidopoiisiProgrammatismeni[]>;
 }
@@ -40,6 +41,7 @@ export interface RythisiesEidopoiseonProps {
 export default function RythisiesEidopoiseon({
   ypiresies,
   onoma = '',
+  context,
   arxikiKatastasi,
 }: RythisiesEidopoiseonProps) {
   const proedapes = proedapes_eidopoiseis();
@@ -102,11 +104,11 @@ export default function RythisiesEidopoiseon({
     }
     void (async () => {
       const otn = new Date(Date.now() + KHRISI_DOKIMIS_MS);
-      const a = await ypiresies.programmatise_dokimi(otn, rytheseis.leptaProeidopoisis);
+      const a = await ypiresies.programmatise_dokimi(otn, rytheseis.leptaProeidopoisis, context);
       setApotel(a.ok ? 'Η δοκιμαστική ειδοποίηση μπήκε σε αναμονή.' : MINIMA_SFALMA);
       fortose();
     })();
-  }, [ypiresies, rytheseis.leptaProeidopoisis, fortose]);
+  }, [ypiresies, rytheseis.leptaProeidopoisis, fortose, context]);
 
   const akiro_oles = useCallback(() => {
     if (ypiresies === undefined) {

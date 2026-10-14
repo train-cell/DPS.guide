@@ -5,7 +5,8 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import OdigosMeletis, { ParapompiTmimatos } from './odigos.js';
 import { EPKEFALIDES_TMIMATON, LEKIKIA_TMIMATON } from '../../ypiresies/index.js';
-import { ODIGOI_PSEUDOI } from '../../pseudomata/index.js';
+import { ODIGOI_PSEUDOI } from '../../../test-fixtures/pseudomata/index.js';
+import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
 
 const DIALOMOS_PALIAS = LEKIKIA_TMIMATON;
 
@@ -16,12 +17,12 @@ function odigos_arxeio(): string {
 /** Αποδίδει την οθόνη σε SSR μέσα σε MemoryRouter, χωρίς DOM και χωρίς @testing-library. */
 function apostrophes_odigos(diadromi: string): string {
   return renderToStaticMarkup(
-    <MemoryRouter initialEntries={[diadromi]}>
+    me_periballon_test(<MemoryRouter initialEntries={[diadromi]}>
       <Routes>
         <Route path="/odigos/:enotitaId" element={<OdigosMeletis />} />
         <Route path="/tutor" element={<div data-testid="alilos-xartis">alilos xartis</div>} />
       </Routes>
-    </MemoryRouter>
+    </MemoryRouter>)
   );
 }
 
@@ -71,9 +72,9 @@ describe('odigos — τοπικός χάρτης οδηγών (ψεύτικα π
 describe('odigos — ParapompiTmimatos', () => {
   it('αποδίδει κουμπί με την κανονική παραπομπή όταν το κείμενο αναλύεται', () => {
     const html = renderToStaticMarkup(
-      <MemoryRouter>
+      me_periballon_test(<MemoryRouter>
         <ParapompiTmimatos parapompi="[[arx-1: σ. 3]]" />
-      </MemoryRouter>
+      </MemoryRouter>)
     );
     expect(html).toContain('data-testid="odigos-parapompi"');
     expect(html).toContain('[[arx-1: σ. 3]]');
@@ -81,12 +82,22 @@ describe('odigos — ParapompiTmimatos', () => {
 
   it('αποδίδει απλό κείμενο όταν η παραπομπή δεν αναλύεται', () => {
     const html = renderToStaticMarkup(
-      <MemoryRouter>
+      me_periballon_test(<MemoryRouter>
         <ParapompiTmimatos parapompi="χωρίς παραπομπή" />
-      </MemoryRouter>
+      </MemoryRouter>)
     );
     expect(html).not.toContain('data-testid="odigos-parapompi"');
     expect(html).toContain('χωρίς παραπομπή');
+  });
+
+  it('αποδίδει ως κείμενο αναλύσιμη παραπομπή με μη ασφαλές id αρχείου', () => {
+    const html = renderToStaticMarkup(
+      me_periballon_test(<MemoryRouter>
+        <ParapompiTmimatos parapompi="[[..: σ. 3]]" />
+      </MemoryRouter>)
+    );
+    expect(html).not.toContain('data-testid="odigos-parapompi"');
+    expect(html).toContain('[[..: σ. 3]]');
   });
 });
 
@@ -119,9 +130,11 @@ describe('odigos — συμβόλαιο data-testid στον πηγαίο κώδ
       'odigos-tutor',
       'odigos-episostrofh',
       'odigos-parapompi',
+      'odigos-dimiourgia',
     ]) {
       expect(arxeio).toContain(`data-testid="${testid}"`);
     }
+    expect(arxeio).toContain('generateCourseGuide(');
   });
 
   it('χρησιμοποιεί τις κλάσεις της οδού, των ενοτήτων και της παραπομπής', () => {

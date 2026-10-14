@@ -3,7 +3,7 @@ import {
   ftiaxe_synthetiko_pdf,
   ELAXISTES_SELIDES_SYNTHETIKOU,
   MEGISTES_SELIDES_SYNTHETIKOU,
-} from './synthetiko-pdf.js';
+} from '../../test-fixtures/synthetiko-pdf.js';
 
 /** Διαβάζει το PDF ως κείμενο· το συνθετικό είναι ASCII, άρα το decode είναι πιστό. */
 function se_keimeno(dyadiko: Uint8Array): string {

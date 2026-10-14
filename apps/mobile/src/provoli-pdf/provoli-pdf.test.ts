@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import ProvoliPdf, { KLIMAKA_SELIDAS } from './provoli-pdf.js';
+import { me_periballon_test } from '../../test-fixtures/periballon-test-provider.js';
 
 const KATALOGOS = dirname(fileURLToPath(import.meta.url));
 const KODIKOS_PROVOLIS = readFileSync(join(KATALOGOS, 'provoli-pdf.tsx'), 'utf8');
@@ -30,13 +31,13 @@ const TESTIDS_YPOXREOTIKA = [
 
 /** Αποδίδει στατικά την οθόνη ProvoliPdf μέσα σε Router. */
 function apodosi_provolis(arxikiDiadromi = '/provoli/arx-1/1'): string {
-  return renderToStaticMarkup(
+  return renderToStaticMarkup(me_periballon_test(
     createElement(
       MemoryRouter,
       { initialEntries: [arxikiDiadromi] },
       createElement(ProvoliPdf, null)
     )
-  );
+  ));
 }
 
 describe('ProvoliPdf — συμβόλαιο οθόνης και αρχιτεκτονικής', () => {

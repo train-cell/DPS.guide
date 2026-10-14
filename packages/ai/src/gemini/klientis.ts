@@ -109,7 +109,7 @@ export function ftiaxe_gemini_llm(
         [GEMINI_KLEIDI_KEFALIDA]: kleidi,
         [GEMINI_KEFALIDA_TYPOS]: GEMINI_TYPOS_KEIMENOU_JSON,
       },
-      soma_json: ftiaxe_soma(zaxaria),
+      soma_json: ftiaxe_soma(zaxaria, montelo),
       akolouthise_anakateuthinseis: false,
       xronos_orio_ms: LLM_TIMEOUT_MS,
       typos_apantisis: 'keimeno',
@@ -249,20 +249,26 @@ katagrafi.sfalma('llm: σφάλμα HTTP από το Gemini', {
   };
 }
 
-function ftiaxe_soma(zaxaria: ZaxariaKlisis): Record<string, unknown> {
-  const generationConfig: Record<string, unknown> = { temperature: zaxaria.thermokrasia };
+function ftiaxe_soma(zaxaria: ZaxariaKlisis, montelo: string): Record<string, unknown> {
+  const generationConfig: Record<string, unknown> = {};
+  if (!xrisimopoiei_default_sampling(montelo)) {
+    generationConfig['temperature'] = zaxaria.thermokrasia;
+  }
   if (zaxaria.sisma !== null) {
     generationConfig['responseMimeType'] = GEMINI_TYPOS_KEIMENOU_JSON;
     generationConfig['responseSchema'] = zaxaria.sisma;
   }
-  const soma: Record<string, unknown> = {
-    contents: zaxaria.periexomena,
-    generationConfig,
-  };
+  const soma: Record<string, unknown> = { contents: zaxaria.periexomena };
+  if (Object.keys(generationConfig).length > 0) soma['generationConfig'] = generationConfig;
   if (zaxaria.systima.length > 0) {
     soma['systemInstruction'] = { parts: [{ text: zaxaria.systima }] };
   }
   return soma;
+}
+
+/** Gemini 3+ expects provider-default sampling; Gemini 3.6+ deprecates custom values. */
+function xrisimopoiei_default_sampling(montelo: string): boolean {
+  return /^gemini-(?:3(?:\.\d+)?|4(?:\.\d+)?)-/i.test(montelo.trim());
 }
 
 function arxizise_xrono(xristi: AbortSignal | undefined): Xronologio {

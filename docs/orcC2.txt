@@ -1,3 +1,6 @@
+[ARCHIVED BRIEF — HISTORICAL]
+This file describes an earlier implementation phase and is not current project guidance. Use the repository README and docs/README.md for current behavior.
+
 ===============================================================================
 ORCHESTRATOR BRIEF — STREAM C, ΚΥΚΛΟΣ 2 (v2, 2026-10-10)
 Αντικαθιστά το docs/orcC.txt (κύκλος 1). Διάβασε ΚΑΙ τα δύο· εδώ μπαίνει η

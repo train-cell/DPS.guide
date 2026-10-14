@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { Apotelesma, EclassPyli, HttpApantisi, KatagrafiPyli, KomvosArxeiou, Mathima } from '@dps/core';
-import { FakeHttp, MnimiApothiki, ok } from '@dps/core';
+import { ok } from '@dps/core';
+import { FakeHttp, MnimiApothiki } from '@dps/core/testing';
 import {
   sygxronise_mathima,
   ftiaxe_arxeio_id,

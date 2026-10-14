@@ -1,6 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { FakeEclassPyli, KatagrafiDiamnemata, StatheriRologi, ArgiosLlm } from '../testing/voirtheia.js';
-import { MnimiApothiki } from '@dps/core';
+import {
+  FakeEclassPyli,
+  FakeKatevasmaPyli,
+  KatagrafiDiamnemata,
+  StatheriRologi,
+  ArgiosLlm,
+} from '../testing/voirtheia.js';
+import { MnimiApothiki } from '@dps/core/testing';
 import type { Mathima } from '@dps/core';
 import { syndesi } from '../bhmata/syndesi.js';
 import { anakalypsi } from '../bhmata/anakalypsi.js';
@@ -15,6 +21,7 @@ function ftiaxe_eisodos(
   return {
     eclass,
     apothiki,
+    katevasma: new FakeKatevasmaPyli(apothiki),
     llm: new ArgiosLlm(),
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
     rologi: new StatheriRologi(),

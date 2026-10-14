@@ -21,7 +21,7 @@ function eisodos_xarti() {
 describe('prompt_xarti (P2)', () => {
   it('επιστρέφει αίτηση με έκδοση prompt p2 και σχήμα XartisMathimatos', () => {
     const aitisi = prompt_xarti(eisodos_xarti());
-    expect(aitisi.ekdosi_prompt).toBe('p2@1');
+    expect(aitisi.ekdosi_prompt).toBe('p2@2');
     expect(aitisi.ekdosi_prompt).toBe(EKDOSI_PROMPT_P2);
     const egkyro = aitisi.sisma.safeParse({
       kodikos_mathimatos: 'PLI101',
@@ -74,7 +74,7 @@ describe('prompt_xarti (P2)', () => {
     const apantisi = aitisi.sisma.safeParse({
       kodikos_mathimatos: 'PLI101',
       enotites: [ftiaxe_enotita({ id: 'enotita-1', titlos: 'Λίστες' })],
-      ekdosi_prompt: 'p2@1',
+      ekdosi_prompt: 'p2@2',
       dimiourgithike: '2026-10-09T10:00:00.000Z',
     });
     expect(apantisi.success).toBe(true);
@@ -92,6 +92,7 @@ describe('prompt_xarti (P2)', () => {
     expect(sistima).toContain('asthenis');
     expect(sistima).toContain('XartisMathimatos');
     expect(sistima).toContain(EKDOSI_PROMPT_P2);
+    expect(sistima).toContain('ασφαλές αναγνωριστικό διαδρομής');
   });
 
   it('το sistima αναφέρει ότι ο αριθμός λεπτών υπολογίζεται έξω από το LLM', () => {

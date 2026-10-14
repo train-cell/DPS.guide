@@ -86,7 +86,7 @@ describe('EikonidioPanepistimiou - Vasiki leitourgia & SVG paragogi', () => {
   });
 });
 
-describe('EikonidioAsfaleias - Hardware Vault icon', () => {
+describe('EikonidioAsfaleias - local encrypted vault icon', () => {
   it('apodidei SVG asfaleias me proepilegmenes kai prosarmasmenes idiotites', () => {
     const html = renderToStaticMarkup(<EikonidioAsfaleias />);
     expect(html).toContain('<svg');
@@ -94,6 +94,7 @@ describe('EikonidioAsfaleias - Hardware Vault icon', () => {
     expect(html).toContain('height="16"');
     expect(html).toContain('data-testid="eikonidio-asfaleias"');
     expect(html).toContain('role="img"');
+    expect(html).toContain('aria-label="Ασφάλεια κρυπτογραφημένου vault"');
 
     const megalo = renderToStaticMarkup(<EikonidioAsfaleias megethos={24} className="asfaleia-klasi" />);
     expect(megalo).toContain('width="24"');

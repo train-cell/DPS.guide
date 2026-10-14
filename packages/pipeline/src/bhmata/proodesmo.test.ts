@@ -7,10 +7,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import type { Arxeio, Selida } from '@dps/core';
 import {
   FakeEclassPyli,
+  FakeKatevasmaPyli,
   KatagrafiDiamnemata,
   LigmaArchiou,
   StatheriRologi,
@@ -41,6 +42,7 @@ function ftiaxe_eisodos(apothiki: MnimiApothiki, llm: LigmaArchiou): EisodosPipe
   return {
     eclass: new FakeEclassPyli(),
     apothiki,
+    katevasma: new FakeKatevasmaPyli(apothiki),
     llm: me_cache(llm.llm, apothiki, `${KODIKOS}/.spoudes/cache/llm`),
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
     rologi: new StatheriRologi(),

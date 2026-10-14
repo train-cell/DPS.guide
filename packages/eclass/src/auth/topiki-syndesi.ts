@@ -17,7 +17,7 @@ interface FormasPedia {
   action: string;
   pedio_xristi: string;
   pedio_kodikou: string;
-  krifa_pedia: Record<string, string>;
+  pedia_formas: Record<string, string>;
 }
 
 export class TopikiSyndesi implements SyndesiStratigiki {
@@ -71,7 +71,7 @@ export class TopikiSyndesi implements SyndesiStratigiki {
 
     // Βήμα 2: POST διαπιστευτηρίων (ΜΙΑ ΜΟΝΟ ΠΡΟΣΠΑΘΕΙΑ - ΠΟΤΕ RETRY ΣΕ ΛΑΘΟΣ ΚΩΔΙΚΟ)
     const soma_forma: Record<string, string> = {
-      ...stoixeia_formas.krifa_pedia,
+      ...stoixeia_formas.pedia_formas,
       [stoixeia_formas.pedio_xristi]: this.onoma_xristi,
       [stoixeia_formas.pedio_kodikou]: this.kodikos,
     };
@@ -147,7 +147,7 @@ export class TopikiSyndesi implements SyndesiStratigiki {
 
     let pedio_kodikou = 'pass';
     let pedio_xristi = 'uname';
-    const krifa_pedia: Record<string, string> = {};
+    const pedia_formas: Record<string, string> = {};
 
     const protypos_input = /<input\b([^>]*)>/gi;
     let match: RegExpExecArray | null;
@@ -163,13 +163,25 @@ export class TopikiSyndesi implements SyndesiStratigiki {
       if (typos === 'password') {
         pedio_kodikou = onoma;
       } else if (typos === 'hidden') {
-        krifa_pedia[onoma] = timi;
+        pedia_formas[onoma] = timi;
+      } else if (typos === 'submit') {
+        pedia_formas[onoma] = timi;
       } else if (typos === 'text' && pedio_xristi === 'uname') {
         pedio_xristi = onoma;
       }
     }
 
-    return { action, pedio_xristi, pedio_kodikou, krifa_pedia };
+    const protypos_button = /<button\b([^>]*)>[\s\S]*?<\/button>/gi;
+    for (let button = protypos_button.exec(html); button !== null; button = protypos_button.exec(html)) {
+      const tag = button[1] ?? '';
+      const typos = (this.pare_idiotita(tag, 'type') ?? 'submit').toLowerCase();
+      const onoma = this.pare_idiotita(tag, 'name');
+      if (typos === 'submit' && onoma) {
+        pedia_formas[onoma] = this.pare_idiotita(tag, 'value') ?? '';
+      }
+    }
+
+    return { action, pedio_xristi, pedio_kodikou, pedia_formas };
   }
 
   private pare_idiotita(tag: string, onoma: string): string | null {

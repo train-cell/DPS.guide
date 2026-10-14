@@ -9,9 +9,6 @@ export const THEMATA_IDS = ['midnight', 'unistudents', 'emerald', 'light'] as co
 
 export type ThemaId = (typeof THEMATA_IDS)[number];
 
-/** Kleidi apothikefsis sto localStorage. */
-export const APOTHEKE_KLEIDI_THEMATOS = 'dps_guide_thema';
-
 /** Proepilegmeno thema tis efarmogis. */
 export const PROEPILEGMENTO_THEMA_ID: ThemaId = 'midnight';
 
@@ -76,19 +73,9 @@ export function einai_egkyro_thema(id: unknown): id is ThemaId {
   return (THEMATA_IDS as readonly string[]).includes(id);
 }
 
-/** Epistrefei to trexon thema apo to localStorage i to proepilegmeno. */
-export function pare_trexon_thema(): ThemaId {
-  if (typeof localStorage !== 'undefined') {
-    try {
-      const apothikevmeno = localStorage.getItem(APOTHEKE_KLEIDI_THEMATOS);
-      if (einai_egkyro_thema(apothikevmeno)) {
-        return apothikevmeno;
-      }
-    } catch {
-      // Agnoisi se private mode
-    }
-  }
-  return PROEPILEGMENTO_THEMA_ID;
+/** Validates the encrypted app preference or returns the built-in default. */
+export function pare_trexon_thema(apothikevmeno?: unknown): ThemaId {
+  return einai_egkyro_thema(apothikevmeno) ? apothikevmeno : PROEPILEGMENTO_THEMA_ID;
 }
 
 /** Efarmozei to thema sto DOM (data-theme attribute, Ionic dark palette) kai to apothikevei. */
@@ -110,13 +97,6 @@ export function thete_thema(id: ThemaId): void {
     }
   }
 
-  if (typeof localStorage !== 'undefined') {
-    try {
-      localStorage.setItem(APOTHEKE_KLEIDI_THEMATOS, id);
-    } catch {
-      // Agnoisi se private mode
-    }
-  }
 }
 
 /** Arxikopoiei to thema me tin ekkinisi tis efarmogis. */

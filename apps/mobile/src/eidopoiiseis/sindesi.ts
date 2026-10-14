@@ -12,11 +12,11 @@
 
 import { LocalNotifications } from '@capacitor/local-notifications';
 import type { LocalNotificationsPlugin } from '@capacitor/local-notifications';
+import { Capacitor } from '@capacitor/core';
 import { CapacitorEidopoiiseis } from '@dps/adapters-capacitor';
 import type {
   EidopoiisiGRAMMAT,
   EidopoiiseisPugi,
-  KatastasiAdieas,
   KatastasiAdieasGRAMMAT,
 } from '@dps/adapters-capacitor';
 import { apotyxia, ok } from '@dps/core';
@@ -41,35 +41,68 @@ export function prosarmogi_plugin(plugin: LocalNotificationsPlugin): Eidopoiisei
   };
 }
 
-/** Δημιουργία δομικού fallback plugin όταν το Capacitor LocalNotifications λείπει. */
-export function dimiourgise_fallback_pugi(): EidopoiiseisPugi {
-  let adia: KatastasiAdieas = 'prompt';
-  let ekkremeis: EidopoiisiGRAMMAT[] = [];
+/** Real browser Notification API scheduler. Timers live only while this page remains active. */
+export function dimiourgise_browser_pugi(): EidopoiiseisPugi {
+  const ekkremeis = new Map<number, EidopoiisiGRAMMAT>();
+  const timers = new Map<number, ReturnType<typeof setTimeout>>();
+  const MAX_TIMER_MS = 2_147_000_000;
+
+  function permission(): KatastasiAdieasGRAMMAT['display'] {
+    if (typeof Notification === 'undefined') return 'denied';
+    if (Notification.permission === 'granted') return 'granted';
+    return Notification.permission === 'denied' ? 'denied' : 'prompt';
+  }
+
+  function showWhenDue(notification: EidopoiisiGRAMMAT): void {
+    const due = notification.schedule?.at?.getTime() ?? Date.now();
+    const remaining = due - Date.now();
+    if (remaining > 0) {
+      timers.set(notification.id, setTimeout(() => showWhenDue(notification), Math.min(remaining, MAX_TIMER_MS)));
+      return;
+    }
+    timers.delete(notification.id);
+    ekkremeis.delete(notification.id);
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try { new Notification(notification.title, { body: notification.body, tag: String(notification.id) }); }
+      catch { /* Browser notification presentation failed; the UI can schedule again. */ }
+    }
+  }
 
   return {
     async checkPermissions(): Promise<KatastasiAdieasGRAMMAT> {
-      return { display: adia };
+      return { display: permission() };
     },
     async requestPermissions(): Promise<KatastasiAdieasGRAMMAT> {
-      adia = 'granted';
-      return { display: adia };
+      if (typeof Notification === 'undefined') throw new Error('Browser notifications are unavailable.');
+      return { display: await Notification.requestPermission() === 'granted' ? 'granted' : permission() };
     },
     async schedule(o) {
+      if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
+        throw new Error('Browser notification permission is not granted.');
+      }
       for (const n of o.notifications) {
-        ekkremeis = ekkremeis.filter((p) => p.id !== n.id);
-        ekkremeis.push(n);
+        const previous = timers.get(n.id);
+        if (previous !== undefined) clearTimeout(previous);
+        ekkremeis.set(n.id, n);
+        showWhenDue(n);
       }
       return { notifications: o.notifications.map((n) => ({ id: n.id })) };
     },
     async cancel(o) {
-      const diagrafiIds = new Set(o.notifications.map((n) => n.id));
-      ekkremeis = ekkremeis.filter((p) => !diagrafiIds.has(p.id));
+      for (const { id } of o.notifications) {
+        const timer = timers.get(id);
+        if (timer !== undefined) clearTimeout(timer);
+        timers.delete(id);
+        ekkremeis.delete(id);
+      }
     },
     async cancelAll() {
-      ekkremeis = [];
+      for (const timer of timers.values()) clearTimeout(timer);
+      timers.clear();
+      ekkremeis.clear();
     },
     async getPending() {
-      return { notifications: [...ekkremeis] };
+      return { notifications: [...ekkremeis.values()] };
     },
     async registerActionTypes() {
       // Καμία ενέργεια στο fallback
@@ -84,25 +117,28 @@ export function dimiourgise_fallback_pugi(): EidopoiiseisPugi {
 export function dimiourgise_ypiresies_eidopoiseon(
   pugiEisodou?: EidopoiiseisPugi
 ): EidopoiisiYpiresies {
-  const pugi: EidopoiiseisPugi =
-    pugiEisodou ??
-    (typeof LocalNotifications !== 'undefined' &&
-    LocalNotifications !== null &&
-    typeof LocalNotifications.checkPermissions === 'function'
+  const nativePluginAvailable = typeof LocalNotifications !== 'undefined' &&
+    LocalNotifications !== null && typeof LocalNotifications.checkPermissions === 'function';
+  const pugi: EidopoiiseisPugi = pugiEisodou ?? (
+    Capacitor.isNativePlatform() && nativePluginAvailable
       ? prosarmogi_plugin(LocalNotifications)
-      : dimiourgise_fallback_pugi());
+      : dimiourgise_browser_pugi()
+  );
 
   const adapter = new CapacitorEidopoiiseis(pugi);
 
   return {
     zitise_adia: () => adapter.zitise_adia(),
     zitisi_adias: () => adapter.zitisi_adias(),
-    programmatise_dokimi: async (otn, _lepta) => {
+    programmatise_dokimi: async (otn, _lepta, context) => {
+      const suffix = context
+        ? `${context.courseTitle} · ${context.sectionTitle}`
+        : 'DPS.guide';
       const apotelesma = await adapter.programmatise([
         {
           kleidiEnotitas: 'dps-dokimi',
-          titlos: 'Δοκιμή ειδοποίησης',
-          soma: 'Λειτουργούν οι τοπικές ειδοποιήσεις.',
+          titlos: `Υπενθύμιση μελέτης · ${suffix}`,
+          soma: `Ώρα για μελέτη: ${suffix}`,
           otan: otn,
         },
       ]);

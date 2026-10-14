@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { MnimiApothiki, apotyxia, ok } from '@dps/core';
+import { apotyxia, ok } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import type {
   ApothikiPyli,
   Apotelesma,

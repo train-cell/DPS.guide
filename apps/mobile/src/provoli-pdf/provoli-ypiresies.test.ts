@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import {
   diadromi_eurethriou,
   diadromi_arxeiou,
@@ -7,7 +7,7 @@ import {
   fortose_pdf,
   kilise_selida,
 } from './provoli-ypiresies.js';
-import { ftiaxe_synthetiko_pdf } from './synthetiko-pdf.js';
+import { ftiaxe_synthetiko_pdf } from '../../test-fixtures/synthetiko-pdf.js';
 import type { Arxeio } from '@dps/core';
 
 /** Φτιάχνει ένα ευρετήριο με δύο αρχεία και τα bytesof τους σε in-memory αποθήκευση. */
