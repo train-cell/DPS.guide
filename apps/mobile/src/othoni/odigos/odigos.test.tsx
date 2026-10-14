@@ -89,6 +89,16 @@ describe('odigos — ParapompiTmimatos', () => {
     expect(html).not.toContain('data-testid="odigos-parapompi"');
     expect(html).toContain('χωρίς παραπομπή');
   });
+
+  it('αποδίδει ως κείμενο αναλύσιμη παραπομπή με μη ασφαλές id αρχείου', () => {
+    const html = renderToStaticMarkup(
+      me_periballon_test(<MemoryRouter>
+        <ParapompiTmimatos parapompi="[[..: σ. 3]]" />
+      </MemoryRouter>)
+    );
+    expect(html).not.toContain('data-testid="odigos-parapompi"');
+    expect(html).toContain('[[..: σ. 3]]');
+  });
 });
 
 describe('odigos — SSR της οθόνης', () => {

@@ -21,13 +21,17 @@ export function ParapompiTmimatos({ parapompi }: { readonly parapompi: string })
   if (analise === null) {
     return <p className="odigos-parapompi">{parapompi}</p>;
   }
+  const dromos = diadromi_provolis(analise);
+  if (dromos === null) {
+    return <p className="odigos-parapompi">{parapompi}</p>;
+  }
   return (
     <button
       type="button"
       className="odigos-parapompi odigos-parapompi-koumpi"
       data-testid="odigos-parapompi"
       onClick={() => {
-        navigate(diadromi_provolis(analise));
+        navigate(dromos);
       }}
     >
       {stilise_parapompi(analise)}

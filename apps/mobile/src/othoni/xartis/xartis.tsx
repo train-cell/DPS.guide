@@ -18,6 +18,7 @@ import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { generateCourseMap } from '../../ypiresies/pipeline-analisis.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
+import { diadromi_odigou } from '../../navigasi/dromoi.js';
 
 /** Λεπτά ανά ώρα, για τη μορφοποίηση του χρόνου εκτίμησης. */
 export const LEPTA_PER_ORA = 60;
@@ -75,6 +76,7 @@ export interface KartaEnotitasProps {
 
 /** Κάρτα ενότητας: κλικ στην κάρτα ανοίγει τον οδηγό, το κουμπί τη σημειώνει ως ολοκληρωμένη. */
 export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotitasProps) {
+  const dromos = diadromi_odigou(enotita.id);
   const simaProspatheias = useCallback(
     async (gevento: GeventoPedomati<HTMLButtonElement>): Promise<void> => {
       gevento.preventDefault();
@@ -84,9 +86,8 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
     [allaxe_telia, enotita.id]
   );
 
-  return (
-    <Link to={`/odigos/${encodeURIComponent(enotita.id)}`} data-testid="xartis-enotita">
-      <Karta
+  const karta = (
+    <Karta
         titlos={enotita.titlos}
         ypokeimeno={`Σειρά ${enotita.seira} · ${stilise_lepta(enotita.lepta_ektimisi)}`}
         akseis={<Pilegma keimeno={`Σειρά ${enotita.seira}`} entono={tetagmeni} />}
@@ -108,6 +109,9 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
                 ))
               )}
             </div>
+            {dromos === null && (
+              <p role="status">Η ενότητα έχει μη έγκυρο αναγνωριστικό και δεν μπορεί να ανοιχτεί.</p>
+            )}
             <button
               type="button"
               className={`pilegma${tetagmeni ? ' pilegma-entono' : ''}`}
@@ -119,7 +123,14 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
             </button>
           </div>
         }
-      />
+    />
+  );
+
+  return dromos === null ? (
+    <div data-testid="xartis-enotita">{karta}</div>
+  ) : (
+    <Link to={dromos} data-testid="xartis-enotita">
+      {karta}
     </Link>
   );
 }

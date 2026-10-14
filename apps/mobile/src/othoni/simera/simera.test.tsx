@@ -152,6 +152,23 @@ describe('simera — στόχοι σήμερα', () => {
     expect(markup).toContain('data-testid="simera-telos"');
   });
 
+  it('παλιό ή κακόβουλο id ενότητας δεν γίνεται href εξωτερικής πλοήγησης', () => {
+    const original = pseudos_xartis().enotites[0];
+    if (original === undefined) throw new Error('λείπει η δοκιμαστική ενότητα');
+    const markup = renderToStaticMarkup(
+      <MemoryRouter>
+        <StoxosEnotitas
+          enotita={{ ...original, id: '\\\\evil.example' }}
+          tetagmeni={false}
+          allaxe_telia={() => Promise.resolve()}
+        />
+      </MemoryRouter>
+    );
+
+    expect(markup).not.toContain('href=');
+    expect(markup).toContain('μη έγκυρο αναγνωριστικό');
+  });
+
   it('δεν προτείνει τέταρτη ενότητα όταν ζητηθεί μικρότερη λίστα', () => {
     const markup = renderToStaticMarkup(
       <MemoryRouter>

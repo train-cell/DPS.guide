@@ -21,6 +21,7 @@ import {
 import { EikonidioPanepistimiou, PANEPISTIMIA_LISTA } from '../../design/eikonidia-panepistimion.js';
 import type { PanepistimioId } from '../../design/eikonidia-panepistimion.js';
 import { stilise_imerominia } from '../../programma/programma-vohthia.js';
+import { diadromi_odigou } from '../../navigasi/dromoi.js';
 
 /** Πόσες ενότητες του χάρτη προτείνονται ως στόχοι της ημέρας. */
 const PLITOS_STOCHOIS = 3;
@@ -74,6 +75,7 @@ export interface StoxoiEnotitasProps {
 
 /** Ενότητα-στόχος με τον δεσμό προς τον οδό μελέτης και το κουμπί σήμανσης ολοκλήρωσης. */
 export function StoxosEnotitas({ enotita, tetagmeni, allaxe_telia }: StoxoiEnotitasProps) {
+  const dromos = diadromi_odigou(enotita.id);
   const simaProspatheias = useCallback(
     async (gevento: GeventoPedomati<HTMLButtonElement>): Promise<void> => {
       gevento.preventDefault();
@@ -84,9 +86,16 @@ export function StoxosEnotitas({ enotita, tetagmeni, allaxe_telia }: StoxoiEnoti
 
   return (
     <div className="simera-stoxos" data-testid="simera-stochos">
-      <Link to={`/odigos/${encodeURIComponent(enotita.id)}`} className="simera-stoxos-titlos">
-        {enotita.titlos}
-      </Link>
+      {dromos === null ? (
+        <div>
+          <span className="simera-stoxos-titlos">{enotita.titlos}</span>
+          <p role="status">Η ενότητα έχει μη έγκυρο αναγνωριστικό και δεν μπορεί να ανοιχτεί.</p>
+        </div>
+      ) : (
+        <Link to={dromos} className="simera-stoxos-titlos">
+          {enotita.titlos}
+        </Link>
+      )}
       <div className="odoni-xeiris">
         <Pilegma
           keimeno={
@@ -195,6 +204,7 @@ export function Simera() {
     xartisDedomena?.enotites.find((e) => !telies.includes(e.id))?.id ??
     xartisDedomena?.enotites[0]?.id ??
     '';
+  const dromosProtisEnotitas = diadromi_odigou(protiMiOlokliromeni) ?? '/mathimata';
 
   const exetaseis = apothiki.rytheseis.exetaseis ?? [];
   const simeraImerominia = new Date().toISOString().slice(0, 10);
@@ -227,9 +237,9 @@ export function Simera() {
       />
 
       <div className="simera-draseis-plegma">
-        <Link to={protiMiOlokliromeni ? `/odigos/${encodeURIComponent(protiMiOlokliromeni)}` : '/mathimata'} className="simera-drasis-karta">
+        <Link to={dromosProtisEnotitas} className="simera-drasis-karta">
           <span className="simera-drasis-titlos">🚀 Μελέτη</span>
-          <span className="simera-drasis-ypotitlos">{protiMiOlokliromeni ? 'Συνέχιση επόμενης ενότητας' : 'Σύνδεση και συγχρονισμός μαθήματος'}</span>
+          <span className="simera-drasis-ypotitlos">{dromosProtisEnotitas !== '/mathimata' ? 'Συνέχιση επόμενης ενότητας' : 'Σύνδεση και συγχρονισμός μαθήματος'}</span>
         </Link>
         <Link to="/tutor" className="simera-drasis-karta">
           <span className="simera-drasis-titlos">🤖 AI Tutor</span>

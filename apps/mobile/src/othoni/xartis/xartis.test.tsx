@@ -7,6 +7,7 @@ import type { ReactElement } from 'react';
 import XartisEnotiton, {
   KEIMENO_STOXOU,
   KEIMENO_TELIOU,
+  KartaEnotitas,
   OdomosEnotiton,
   grammi_proapasitis,
   stilise_isxya,
@@ -74,6 +75,21 @@ describe('xartis — οθόνη χάρτη ενοτήτων', () => {
     expect(html).toContain('Προαπαιτείται: en-2 (ασθενικό)');
     expect(html).toContain('enotita-kartela');
     expect(html).toContain('enotita-xreomeni');
+  });
+
+  it('παλιό ή κακόβουλο id ενότητας δεν γίνεται href εξωτερικής πλοήγησης', () => {
+    const original = pseudos_xartis().enotites[0];
+    if (original === undefined) throw new Error('λείπει η δοκιμαστική ενότητα');
+    const html = apoidefsi(
+      <KartaEnotitas
+        enotita={{ ...original, id: '\\\\evil.example' }}
+        tetagmeni={false}
+        allaxe_telia={() => Promise.resolve()}
+      />
+    );
+
+    expect(html).not.toContain('href=');
+    expect(html).toContain('μη έγκυρο αναγνωριστικό');
   });
 
   it('ο δακτύλιος προόδου ξεκινά στο μηδέν και ανεβαίνει με τις ολοκληρωμένες ενότητες', () => {
