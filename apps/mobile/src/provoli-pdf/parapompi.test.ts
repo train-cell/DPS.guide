@@ -89,4 +89,9 @@ describe('diadromi_provolis', () => {
   it('κωδικοποιεί ταυτότητες αρχείου με χαρακτήρες URL', () => {
     expect(diadromi_provolis({ arxeio_id: 'arx 1/a', apo: 1, eos: 1 })).toBe('/provoli/arx%201%2Fa/1');
   });
+
+  it('κρατά backslash-looking external URLs σε εσωτερική, κωδικοποιημένη διαδρομή', () => {
+    expect(diadromi_provolis({ arxeio_id: '\\\\evil.example', apo: 1, eos: 1 }))
+      .toBe('/provoli/%5C%5Cevil.example/1');
+  });
 });
