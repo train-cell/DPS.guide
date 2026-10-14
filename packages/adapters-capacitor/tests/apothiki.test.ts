@@ -5,14 +5,15 @@ import { CapacitorApothiki, apo_base64, se_base64 } from '../src/storage/apothik
 /** Κοινό in-memory filesystem για το mock του plugin. */
 const h = vi.hoisted(() => {
   const arxeia = new Map<string, string>();
-  return { arxeia, kliseis: [] as string[] };
+  const fakeloi = new Set<string>();
+  return { arxeia, fakeloi, kliseis: [] as string[] };
 });
 
 vi.mock('@capacitor/filesystem', () => {
   const sfalma_den_vrethike = (): Error =>
     Object.assign(new Error('does not exist'), { code: 'OS-PLUG-FILE-0008' });
   return {
-    Directory: { Documents: 'DOCUMENTS', Data: 'DATA' },
+    Directory: { Documents: 'DOCUMENTS', Data: 'DATA', LibraryNoCloud: 'LIBRARY_NO_CLOUD' },
     Encoding: { UTF8: 'utf8', ASCII: 'ascii' },
     Filesystem: {
       readFile: vi.fn(async (opts: { path: string; encoding?: string }) => {
@@ -21,13 +22,14 @@ vi.mock('@capacitor/filesystem', () => {
         if (dedomena === undefined) {
           throw sfalma_den_vrethike();
         }
-        if (opts.encoding === 'utf8') {
-          return { data: new TextDecoder().decode(apo(dedomena)) };
-        }
         return { data: dedomena };
       }),
       writeFile: vi.fn(async (opts: { path: string; data: string }) => {
         h.kliseis.push(`writeFile:${opts.path}`);
+        const goneas = opts.path.includes('/') ? opts.path.slice(0, opts.path.lastIndexOf('/')) : '';
+        if ((goneas !== '' && !h.fakeloi.has(goneas)) || h.fakeloi.has(opts.path)) {
+          throw new Error('parent directory does not exist or target is a directory');
+        }
         h.arxeia.set(opts.path, opts.data);
         return { uri: `file://${opts.path}` };
       }),
@@ -40,12 +42,20 @@ vi.mock('@capacitor/filesystem', () => {
       }),
       mkdir: vi.fn(async (opts: { path: string }) => {
         h.kliseis.push(`mkdir:${opts.path}`);
+        const tmimata = opts.path.split('/');
+        for (let idx = 1; idx <= tmimata.length; idx += 1) {
+          h.fakeloi.add(tmimata.slice(0, idx).join('/'));
+        }
       }),
       rename: vi.fn(async (opts: { from: string; to: string }) => {
         h.kliseis.push(`rename:${opts.from}>${opts.to}`);
         const dedomena = h.arxeia.get(opts.from);
         if (dedomena === undefined) {
           throw sfalma_den_vrethike();
+        }
+        const goneas = opts.to.includes('/') ? opts.to.slice(0, opts.to.lastIndexOf('/')) : '';
+        if ((goneas !== '' && !h.fakeloi.has(goneas)) || h.fakeloi.has(opts.to)) {
+          throw new Error('parent directory does not exist or target is a directory');
         }
         h.arxeia.set(opts.to, dedomena);
         h.arxeia.delete(opts.from);
@@ -103,9 +113,7 @@ vi.mock('@capacitor/filesystem', () => {
   };
 });
 
-function apo(vasi: string): Uint8Array {
-  return apo_base64(vasi.replace(/\s+/g, ''));
-}
+vi.mock('@capacitor/core', () => ({ Capacitor: { getPlatform: () => 'android' } }));
 
 function diabase(elafry: string, dedomena: string): void {
   h.arxeia.set(elafry, dedomena);
@@ -131,6 +139,7 @@ describe('se_base64 / apo_base64', () => {
 describe('CapacitorApothiki', () => {
   beforeEach(() => {
     h.arxeia.clear();
+    h.fakeloi.clear();
     h.kliseis.length = 0;
     vi.mocked(Filesystem.readFile).mockClear();
   });
@@ -139,6 +148,11 @@ describe('CapacitorApothiki', () => {
     const apothiki = new CapacitorApothiki('');
     const egkrisi = await apothiki.grapse_keimeno('mathimata.json', 'κόσμος');
     expect(egkrisi.ok).toBe(true);
+    expect(h.arxeia.get('mathimata.json')).toBe('κόσμος');
+    expect(vi.mocked(Filesystem.writeFile)).toHaveBeenCalledWith(expect.objectContaining({
+      data: 'κόσμος',
+      encoding: 'utf8',
+    }));
     const anagnosi = await apothiki.diavase_keimeno('mathimata.json');
     expect(anagnosi.ok).toBe(true);
     if (anagnosi.ok) {
@@ -150,6 +164,7 @@ describe('CapacitorApothiki', () => {
     const apothiki = new CapacitorApothiki('');
     const dedomena = Uint8Array.from([1, 2, 3, 4, 5]);
     expect((await apothiki.grapse_dyadiko('PLI101/arxeio.pdf', dedomena)).ok).toBe(true);
+    expect(h.arxeia.get('PLI101/arxeio.pdf')).toBe(se_base64(dedomena));
     const anagnosi = await apothiki.diavase_dyadiko('PLI101/arxeio.pdf');
     expect(anagnosi.ok).toBe(true);
     if (anagnosi.ok) {
@@ -157,9 +172,22 @@ describe('CapacitorApothiki', () => {
     }
   });
 
+  it('δημιουργεί μόνο τον γονικό φάκελο σε nested path', async () => {
+    const apothiki = new CapacitorApothiki('');
+    expect((await apothiki.grapse_keimeno('PLI101/arxeio.json', '{}')).ok).toBe(true);
+    expect(h.kliseis).toContain('mkdir:PLI101');
+    expect(h.kliseis).not.toContain('mkdir:PLI101/arxeio.json');
+  });
+
+  it('δεν δημιουργεί κατά λάθος directory για αρχείο στη ρίζα', async () => {
+    const apothiki = new CapacitorApothiki('');
+    expect((await apothiki.grapse_keimeno('mathimata.json', '{}')).ok).toBe(true);
+    expect(h.kliseis.filter((k) => k.startsWith('mkdir:'))).toEqual([]);
+  });
+
   it('γράφει ατομικά: temp → delete προορισμού → rename', async () => {
     const apothiki = new CapacitorApothiki('');
-    diabase('mathimata.json', se_base64(new TextEncoder().encode('παλιό')));
+    diabase('mathimata.json', 'παλιό');
     await apothiki.grapse_keimeno('mathimata.json', 'νέο');
 
     const reumat = h.kliseis.filter((k) => k.startsWith('writeFile:mathimata.json.tmp-'));

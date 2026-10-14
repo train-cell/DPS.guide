@@ -5,28 +5,35 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "tsc --build && vite build",
-    "test": "vitest run --pool=forks --poolOptions.forks.singleFork=true",
+    "build": "tsc --build && tsc --noEmit -p tsconfig.node.json && vite build",
+    "test": "vitest run --pool=forks --maxWorkers=1",
     "dev": "vite",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aparajita/capacitor-biometric-auth": "^10.0.0",
     "@aparajita/capacitor-secure-storage": "^8.0.1",
     "@capacitor/core": "^8.5.3",
     "@capacitor/file-transfer": "^2.0.6",
     "@capacitor/filesystem": "^8.1.4",
     "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/share": "^8.0.3",
     "@dps/adapters-capacitor": "workspace:*",
+    "@dps/ai": "workspace:*",
     "@dps/core": "workspace:*",
     "@dps/eclass": "workspace:*",
+    "@dps/pipeline": "workspace:*",
     "@ionic/react": "^9.0.7",
     "@ionic/react-router": "^9.0.7",
+    "@tesseract.js-data/ell": "^1.0.0",
+    "@tesseract.js-data/eng": "^1.0.0",
     "pdfjs-dist": "^6.4.299",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-markdown": "^10.1.0",
     "react-pdf": "^11.0.0",
-    "react-router-dom": "^6.30.6"
+    "react-router-dom": "^6.30.6",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.3",
@@ -35,6 +42,6 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "typescript": "^5.8.2",
-    "vitest": "^3.0.7"
+    "vitest": "^4.1.11"
   }
 }

@@ -293,7 +293,7 @@
   font-weight: var(--grammatoseira-baros-entono);
 }
 
-/* Security / Hardware-backed Vault badge */
+/* Security badge for the encrypted local vault */
 .asfaleia-shma {
   display: inline-flex;
   align-items: center;

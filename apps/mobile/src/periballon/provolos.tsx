@@ -1,31 +1,28 @@
 import { createContext, useContext } from 'react';
 import type { Periballon } from './periballon.js';
-import { ftiaxe_periballon } from './periballon.js';
 
 const PeriballonSunexo = createContext<Periballon | null>(null);
-
-/** Το τυχόν σταθερό περιβάλλον πυλών για οθόνες που αποδίδονται χωρίς Provider. */
-let orioPeriballontos: Periballon | null = null;
-
-/** Επιστρέφει το σταθερό εφεδρικό περιβάλλον, ώστε η ταυτότητά του να μην αλλάζει ανά render. */
-function periballonXorisProvolo(): Periballon {
-  orioPeriballontos ??= ftiaxe_periballon();
-  return orioPeriballontos;
-}
 
 /** Ιδιότητες του παρόχου περιβάλλοντος. */
 export interface ParoxosProps {
   readonly children: React.ReactNode;
-  /** Προαιρετικό έτοιμο περιβάλλον (tests)· προεπιλογή το ψεύτικο περιβάλλον πυλών. */
+  /** Το έτοιμο runtime της εφαρμογής· τα tests περνούν test-only fixtures. */
   readonly periballon?: Periballon;
 }
 
 /** Παρέχει το περιβάλλον πυλών σε ολόκληρη την εφαρμογή. */
 export function ParoxosPeriballontos({ children, periballon }: ParoxosProps) {
-  return <PeriballonSunexo.Provider value={periballon ?? periballonXorisProvolo()}>{children}</PeriballonSunexo.Provider>;
+  return <PeriballonSunexo.Provider value={periballon ?? null}>{children}</PeriballonSunexo.Provider>;
 }
 
-/** Πρόσβαση στο περιβάλλον· χωρίς Provider επιστρέφει σταθερό ψεύτικο περιβάλλον (ποτέ null). */
+/** Πρόσβαση στο production runtime ή σαφές σφάλμα αν παραλείφθηκε ο provider. */
 export function xrisiPeriballontos(): Periballon {
-  return useContext(PeriballonSunexo) ?? periballonXorisProvolo();
+  const periballon = useContext(PeriballonSunexo);
+  if (periballon === null) throw new Error('Λείπει το production Periballon provider.');
+  return periballon;
+}
+
+/** Optional context read for components that also accept explicit test ports. */
+export function xrisiPeriballontosProairetika(): Periballon | null {
+  return useContext(PeriballonSunexo);
 }

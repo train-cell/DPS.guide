@@ -4,12 +4,16 @@ import { CapacitorMystikaPyli } from '../src/mystika/idiotiki-periohi.js';
 
 const h = vi.hoisted(() => {
   const timi = new Map<string, string>();
-  return { timi, sfalma_set: false, sfalma_get: false, sfalma_remove: false };
+  return { timi, platform: 'android', sfalma_set: false, sfalma_get: false, sfalma_remove: false };
 });
 
 vi.mock('@aparajita/capacitor-secure-storage', () => ({
+  KeychainAccess: { whenUnlockedThisDeviceOnly: 1 },
   SecureStorage: {
-    get: vi.fn(async (k: string) => {
+    setSynchronize: vi.fn(async () => undefined),
+    setDefaultKeychainAccess: vi.fn(async () => undefined),
+    keys: vi.fn(async () => [...h.timi.keys()]),
+    get: vi.fn(async (k: string, _convertDate?: boolean, _sync?: boolean) => {
       if (h.sfalma_get) {
         throw new Error('κλειδωμένο storage');
       }
@@ -21,7 +25,7 @@ vi.mock('@aparajita/capacitor-secure-storage', () => ({
       }
       h.timi.set(k, v);
     }),
-    remove: vi.fn(async (k: string) => {
+    remove: vi.fn(async (k: string, _sync?: boolean) => {
       if (h.sfalma_remove) {
         throw new Error('μη διαθέσιμο storage');
       }
@@ -31,9 +35,12 @@ vi.mock('@aparajita/capacitor-secure-storage', () => ({
   },
 }));
 
+vi.mock('@capacitor/core', () => ({ Capacitor: { getPlatform: () => h.platform } }));
+
 describe('CapacitorMystikaPyli', () => {
   beforeEach(() => {
     h.timi.clear();
+    h.platform = 'android';
     h.sfalma_set = false;
     h.sfalma_get = false;
     h.sfalma_remove = false;
@@ -43,6 +50,18 @@ describe('CapacitorMystikaPyli', () => {
     const mystika = new CapacitorMystikaPyli();
     await mystika.vale('eclass_kodikos', 'kwdikos123');
     expect(await mystika.pare('eclass_kodikos')).toBe('kwdikos123');
+  });
+
+  it('απενεργοποιεί iCloud Keychain sync και μεταφέρει τα υπάρχοντα μυστικά σε ThisDeviceOnly', async () => {
+    h.platform = 'ios';
+    h.timi.set('eclass_kodikos', 'local-encrypted-secret');
+    const mystika = new CapacitorMystikaPyli();
+
+    expect(await mystika.pare('eclass_kodikos')).toBe('local-encrypted-secret');
+
+    expect(SecureStorage.setSynchronize).toHaveBeenCalledWith(false);
+    expect(SecureStorage.setDefaultKeychainAccess).toHaveBeenCalledWith(1);
+    expect(SecureStorage.set).toHaveBeenCalledWith('eclass_kodikos', 'local-encrypted-secret', false, false, 1);
   });
 
   it('pare κρυφού κλειδιού επιστρέφει null', async () => {

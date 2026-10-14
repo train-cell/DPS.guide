@@ -1,165 +1,120 @@
-# 🎓 DPS.guide — Open-Source eClass Study Companion & Tutor
+# DPS.guide
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-1216%20passed-brightgreen.svg)](#)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Strict%205.8-blue.svg)](#)
-[![Zero-Cloud](https://img.shields.io/badge/Architecture-100%25%20Zero--Cloud-purple.svg)](#)
-[![Privacy](https://img.shields.io/badge/Security-Hardware%20Vault-success.svg)](#)
+Το DPS.guide είναι τοπικός βοηθός μελέτης για μαθήματα σε **Open eClass** και **Moodle**. Συγχρονίζει μαθήματα και αρχεία στη συσκευή, δημιουργεί χάρτη ύλης και οδηγούς μελέτης, υποστηρίζει πρόοδο, πρόγραμμα, υπενθυμίσεις και συνομιλία με tutor. Δεν απαιτεί λογαριασμό DPS.guide ή κεντρικό server.
 
-> **DPS.guide**: Ο ανοικτού κώδικα, self-hosted ψηφιακός βοηθός για φοιτητές των Ελληνικών Πανεπιστημίων. Συγχρονίζει τα μαθήματα και τα αρχεία του Open eClass τοπικά, δημιουργεί χάρτες γνώσης και περιγράμματα με AI, και προσφέρει εξατομικευμένη μελέτη — **αποκλειστικά στη συσκευή σου (iOS, Android, PC)** χωρίς κανέναν εξωτερικό διακομιστή ή telemetry.
+## Πλατφόρμες
 
----
+| Πλατφόρμα | Εκτέλεση | Σημειώσεις |
+| --- | --- | --- |
+| Windows / macOS | Browser/PWA μέσω `localhost` | Τοπικός bridge για LMS και AI. Το Ollama λειτουργεί μόνο στον ίδιο υπολογιστή. |
+| Android | Capacitor app (debug APK) | Απευθείας σύνδεση με LMS, κρυπτογραφημένο τοπικό vault και native ειδοποιήσεις. |
+| iPhone / iPad | Capacitor app (unsigned IPA) | Sideload και τοπική υπογραφή. Δεν απαιτείται εγκατάσταση CA. |
 
-## 🔒 100% Zero-Knowledge & Zero-Cloud Αρχιτεκτονική
+Τα δεδομένα είναι ανεξάρτητα ανά εγκατάσταση και συσκευή. Δεν υπάρχει αυτόματος συγχρονισμός μεταξύ συσκευών. Η PWA ανοίγει μόνο στον υπολογιστή που την εκτελεί· για χρήση από κινητό εγκατέστησε την Android ή iOS εφαρμογή. Ο browser κρατά αξιόπιστες υπενθυμίσεις μόνο όσο η εφαρμογή παραμένει ενεργή· οι native εφαρμογές μπορούν να προγραμματίζουν τοπικές ειδοποιήσεις στο παρασκήνιο.
 
-Το DPS.guide είναι **αυστηρά client-only / self-hosted**:
-- 🛡️ **Κανένας ενδιάμεσος server:** Τα διαπιστευτήρια eClass και τα αρχεία των μαθημάτων μένουν αποκλειστικά στη συσκευή σου.
-- 🔐 **Hardware-Backed Vault:** Τα συνθηματικά προστατεύονται μέσω iOS Keychain, Android Keystore, ή Windows Credential Manager.
-- 🤖 **BYOK (Bring Your Own Key):** Ο χρήστης εισάγει το δικό του Gemini API key το οποίο δεν διαμοιράζεται ποτέ.
-- ⚡ **The 50/50 Boundary:** Η AI αναλαμβάνει μόνο NLP (περίληψη, εξήγηση, tutor), ενώ η μηχανή υπολογισμών εκτελείται 100% ντετερμινιστικά (Leitner spcaed repetition, τοπολογική ταξινόμηση προαπαιτουμένων, βαθμονόμηση χρόνου EWMA).
+## Υποστηριζόμενα LMS
 
----
+- **Open eClass:** τυπική σύνδεση με όνομα χρήστη και κωδικό, εύρεση μαθημάτων και συγχρονισμός υλικού.
+- **Moodle:** τυπική σύνδεση και ανάγνωση μαθημάτων/πόρων. Προαιρετικά υποστηρίζεται Web Services token. SSO-only και ιδιοταγείς ροές σύνδεσης δεν υποστηρίζονται και εμφανίζουν σαφές σφάλμα.
+- Άλλα ιδρύματα εμφανίζονται ως μη υποστηριζόμενα, εκτός αν το URL τους αναγνωρίζεται ως τυπικό Open eClass ή Moodle.
 
-## 🏛️ Υποστηριζόμενα Ελληνικά Πανεπιστήμια & Portals
+Τα διαπιστευτήρια χρησιμοποιούνται για σύνδεση στο LMS που επιλέγεις και αποστέλλονται σε αυτό το ίδρυμα.
 
-Το σύστημα ενσωματώνει πλήρη κατάλογο με **26+ ακαδημαϊκά portals** με ειδική έμφαση στα τμήματα **Πληροφορικής, ΗΜΜΥ και Θετικών Επιστημών**, καθώς και υποστήριξη για **Custom eClass URL**:
+Για ορισμένα Moodle downloads, το LMS απαιτεί το token στο προσωρινό URL λήψης. Το token δεν αποθηκεύεται στο ευρετήριο της εφαρμογής, όμως ο Moodle server ή ενδιάμεσο proxy ενδέχεται να καταγράψει το URL.
 
-| Ίδρυμα | Συντομογραφία | Τμήμα / Πύλη | Προεπιλεγμένο URL | LMS |
-|---|---|---|---|---|
-| **Πανεπιστήμιο Πειραιώς** | ΠΑΠΕΙ (unipi_cs) | Τμήμα Πληροφορικής (Θαλής) | `https://thales.cs.unipi.gr` | Open eClass |
-| **Πανεπιστήμιο Πειραιώς** | ΠΑΠΕΙ (unipi) | Κεντρικό eClass | `https://eclass.unipi.gr` | Open eClass |
-| **ΕΚΠΑ** | ΕΚΠΑ (uoa_dit) | Πληροφορικής & Τηλεπικοινωνιών | `https://eclass.uoa.gr` | Open eClass |
-| **ΟΠΑ (ΑΣΟΕΕ)** | ΟΠΑ (aueb_cs) | Τμήμα Πληροφορικής | `https://eclass.aueb.gr` | Open eClass |
-| **ΕΜΠ** | ΕΜΠ (ntua_mycourses) | Σχολή ΗΜΜΥ & Πολυτεχνείο | `https://mycourses.ntua.gr` | Custom LMS |
-| **ΑΠΘ** | ΑΠΘ (auth_cs) | Τμήμα Πληροφορικής & Σχολές | `https://eclass.auth.gr` | Open eClass |
-| **Πανεπιστήμιο Πατρών** | ΠΑΤΡΑ (upatras_ceid) | Μηχανικών Η/Υ & Πληροφορικής | `https://eclass.upatras.gr` | Open eClass |
-| **Πανεπιστήμιο Κρήτης** | ΚΡΗΤΗ (uoc_csd) | Τμήμα Επιστήμης Υπολογιστών | `https://eclass.uoc.gr` | Open eClass |
-| **Πολυτεχνείο Κρήτης** | ΠΟΛΥΤΕΧΝΕΙΟ (tuc_ece) | ΗΜΜΥ Χανίων | `https://eclass.tuc.gr` | Open eClass |
-| **ΔΠΘ** | ΔΠΘ (duth_ee) | Ηλεκτρολόγων Μηχανικών & Η/Υ | `https://eclass.duth.gr` | Open eClass |
-| **Πανεπιστήμιο Ιωαννίνων** | UOI (uoi_cs) | Μηχανικών Η/Υ & Πληροφορικής | `https://ecourse.uoi.gr` | Moodle |
-| **Πανεπιστήμιο Θεσσαλίας** | UTH (uth_inf) | Πληροφορικής & Τηλεπικοινωνιών | `https://eclass.uth.gr` | Open eClass |
-| **Χαροκόπειο Πανεπιστήμιο** | ΧΑΡΟΚΟΠΕΙΟ (hua_dit) | Πληροφορικής & Τηλεματικής | `https://eclass.hua.gr` | Open eClass |
-| **Πάντειο Πανεπιστήμιο** | ΠΑΝΤΕΙΟ (panteion) | eClass Παντείου | `https://eclass.panteion.gr` | Open eClass |
-| **Πανεπιστήμιο Αιγαίου** | ΑΙΓΑΙΟ (aegean_icsd) | Μηχανικών Πληροφοριακών Συστημάτων | `https://eclass.aegean.gr` | Open eClass |
-| **Ιόνιο Πανεπιστήμιο** | ΙΟΝΙΟ (ionio_di) | Τμήμα Πληροφορικής | `https://eclass.ionio.gr` | Open eClass |
-| **Πανεπιστήμιο Δυτικής Μακεδονίας** | ΠΔΜ (uowm_ece) | Ηλεκτρολόγων Μηχανικών & Μηχανικών Η/Υ | `https://eclass.uowm.gr` | Open eClass |
-| **Πανεπιστήμιο Πελοποννήσου** | ΠΑΠΕΛ (uop_dit) | Πληροφορικής & Τηλεπικοινωνιών | `https://eclass.uop.gr` | Open eClass |
-| **ΠΑΔΑ** | ΠΑΔΑ (uniwa_ice) | Μηχανικών Πληροφορικής & Υπολογιστών | `https://eclass.uniwa.gr` | Open eClass |
-| **ΕΛΜΕΠΑ** | ΕΛΜΕΠΑ (hmu_cs) | ΗΜΜΥ & Ηλεκτρονικών Μηχανικών | `https://eclass.hmu.gr` | Open eClass |
-| **ΔΙΠΑΕ** | ΔΙΠΑΕ (ihu_iee) | Μηχανικών Πληροφορικής | `https://eclass.ihu.gr` | Open eClass |
-| **ΓΠΑ** | ΓΠΑ (aua) | Γεωπονικό Πανεπιστήμιο Αθηνών | `https://eclass.aua.gr` | Open eClass |
-| **ΑΣΚΤ** | ΑΣΚΤ (asfa) | Ανωτάτη Σχολή Καλών Τεχνών | `https://eclass.asfa.gr` | Open eClass |
-| **ΑΣΠΑΙΤΕ** | ΑΣΠΑΙΤΕ (aspete) | eClass ΑΣΠΑΙΤΕ | `https://eclass.aspete.gr` | Open eClass |
-| **ΕΑΠ** | ΕΑΠ (eap) | Ελληνικό Ανοικτό Πανεπιστήμιο | `https://courses.eap.gr` | Moodle |
-| **Custom eClass** | CUSTOM | Οποιοδήποτε άλλο eClass / Moodle portal | Εισαγωγή από τον χρήστη | Custom |
+## AI και ιδιωτικότητα
 
----
+- Μπορείς να χρησιμοποιείς τις βασικές λειτουργίες χωρίς AI.
+- **Ollama:** εκτελείται τοπικά στον ίδιο υπολογιστή Windows/macOS. Δεν είναι διαθέσιμο στις native εφαρμογές.
+- **Google Gemini:** χρειάζεται δικό σου API key. Η αποστολή υλικού απαιτεί opt-in για κάθε μάθημα και επιβεβαίωση πριν από κάθε νέα, μη αποθηκευμένη δημιουργία. Η οθόνη επιβεβαίωσης δείχνει το περιεχόμενο που πρόκειται να σταλεί στην Google. Ισχύουν επίσης οι όροι και οι πολιτικές διαχείρισης δεδομένων του παρόχου.
+- Η εξαγωγή κειμένου και το OCR PDF γίνονται τοπικά. Σαρωμένα PDF αναγνωρίζονται με τοπικά μοντέλα ελληνικών και αγγλικών.
 
-## 🎨 Σχεδιασμός UI: Bevel x UniStudents
+## Αποθήκευση και προστασία δεδομένων
 
-Η εμπειρία χρήσης συνδυάζει την αισθητική και λειτουργικότητα των κορυφαίων φοιτητικών εφαρμογών:
-- **UniStudents-inspired Onboarding:** Αναγνώριση ελληνικών σχολών, καθαρά εμβλήματα SVG ανά πανεπιστήμιο, φίλτρα περιοχής ("Όλα", "Πληροφορική/STEM", "Αθήνα", "Θεσσαλονίκη", "Περιφέρεια", "Custom"), και δυναμική αναζήτηση σχολής.
-- **Bevel Tactile Interface:** Σκούρα επιφάνεια (`dark-only`), tactile κάρτες με `border-radius: 18px`, micro-badges, pill filters, smooth tap animations (`scale(0.98)`).
-- **Αυστηρό Design System (Κανόνας D11):** 100% συνεπές με τα tokens του συστήματος (`tokens.css`), χωρίς αυθαίρετα hex χρώματα.
-- **Student Easter Eggs & Tips:** Έξυπνα φοιτητικά tips (καφές, deadlines 23:59, EWMA calibration, Wi-Fi σχολής).
+Το vault κρυπτογραφεί τα δεδομένα και τα αρχεία μαθημάτων με AES-256-GCM πριν αποθηκευτούν στο IndexedDB ή στον ιδιωτικό χώρο της native εφαρμογής. Στα νέα vaults, το κλειδί προστατεύεται με PBKDF2-HMAC-SHA256 600.000 επαναλήψεων. Απαιτείται master password τουλάχιστον 12 χαρακτήρων. Ο master password δεν αποθηκεύεται.
 
----
+Κατά την αρχική ρύθμιση δημιουργείται recovery key και εμφανίζεται για φύλαξη. Αποθήκευσέ το χωριστά και με ασφάλεια· είναι εναλλακτικός τρόπος ξεκλειδώματος. Τα encrypted backups χρησιμοποιούν ξεχωριστό password και επαναφέρονται μόνο σε καθαρή εγκατάσταση. Η επαναφορά backup είναι ο χειροκίνητος τρόπος μεταφοράς δεδομένων ανάμεσα στις συσκευές. Τα βιομετρικά κλειδιά δεν μπαίνουν στο backup. Τα υπάρχοντα vaults και τα παλιότερα backups παραμένουν συμβατά.
 
-## 📦 Δομή Monorepo
+Στα native apps, τα credentials και τα API keys φυλάσσονται στο Keychain/Keystore, τα αρχεία μένουν στον ιδιωτικό χώρο της εφαρμογής και τα cloud/device backups εξαιρούνται. Στο iOS, τα secrets είναι `ThisDeviceOnly` και το iCloud Keychain sync είναι απενεργοποιημένο. Προαιρετικά μπορείς να ενεργοποιήσεις Face ID, Touch ID ή Android biometrics· το master password και το recovery key παραμένουν διαθέσιμα. Στον browser, το vault κλειδώνει όταν η εφαρμογή περάσει στο παρασκήνιο.
 
-```
-DPS.guide/
-├── apps/
-│   ├── mobile/             # Ionic React / Capacitor εφαρμογή (iOS, Android, Web)
-│   └── cli/                # Node.js CLI εργαλείο (Windows, macOS, Linux)
-├── packages/
-│   ├── core/               # Pure domain logic (panepistimia, grafos, leitner, ewma, epikyrosi)
-│   ├── eclass/             # eClass crawler (L14 Auth, L15 BFS Tree & Delta Sync)
-│   ├── extract/            # PDF και Office extraction (pdfjs, mammoth)
-│   ├── ai/                 # LLM provider (Gemini, SHA-256 prompt caching, grounding)
-│   ├── pipeline/           # Ενορχήστρωση deterministic pipeline
-│   ├── adapters-capacitor/ # Capacitor native bridge (Filesystem, SecureStorage, Notifications)
-│   ├── adapters-node/      # Node.js platform bridge (fs, keytar, undici)
-│   └── mock-eclass/        # Offline fixture-based test server (zero network testing)
-```
+Η κρυπτογράφηση προστατεύει τα δεδομένα σε ηρεμία. Όταν το vault είναι ξεκλείδωτο, η εφαρμογή χρειάζεται το κλειδί στη μνήμη της συσκευής· η προστασία αυτή δεν καλύπτει μολυσμένο ή παραβιασμένο λειτουργικό, κακόβουλες επεκτάσεις browser, καταγραφή πληκτρολόγησης ή φυσική πρόσβαση σε ξεκλείδωτη συσκευή. Το προαιρετικό CLI είναι ξεχωριστό εργαλείο και αποθηκεύει αρχεία χωρίς το vault.
 
----
+### Τοπικός bridge του browser
 
-## 🚀 Οδηγός Χρήσης
+Η PWA χρησιμοποιεί τοπικό bridge για αιτήματα προς LMS και AI. Ο server ακούει μόνο στο loopback (`127.0.0.1`), απαιτεί pairing code που εμφανίζεται στο terminal και δημιουργεί νέο κωδικό σε κάθε επανεκκίνηση. Χρησιμοποίησε τον κωδικό μόνο στον browser και στον υπολογιστή που εμπιστεύεσαι· αν εκτεθεί, κλείσε και ξανάνοιξε τον server. Τα αιτήματα προς LMS απαιτούν HTTPS· HTTP επιτρέπεται μόνο για Ollama στο localhost. Το bridge δεν είναι server για πρόσβαση κινητού μέσω Wi-Fi.
 
-### 1. Εγκατάσταση Εξαρτήσεων & Έλεγχος
+### Αναφορά ευπαθειών
+
+Μην δημοσιεύεις passwords, API keys, recovery keys, pairing codes, πραγματικά δεδομένα μαθημάτων ή αρχεία backup σε issues, screenshots ή logs. Για αναφορά ευπάθειας χρησιμοποίησε ιδιωτικό κανάλι του repository host, όχι δημόσιο issue. Έλεγχε τις παραγωγικές εξαρτήσεις με `pnpm audit --prod` πριν από διανομή.
+
+## Εκτέλεση σε Windows/macOS
+
+Απαιτούνται **Node.js 22.15+** και **pnpm 10+**. Από τη ρίζα του repository:
 
 ```bash
-# Εγκατάσταση dependencies
-npm install
-
-# Έλεγχος TypeScript τύπων σε όλο το monorepo
-npm run typecheck
-
-# Εκτέλεση όλων των δοκιμών (1216 tests)
-npm test
-
-# Έλεγχος ποιότητας κώδικα (ESLint)
-npx eslint .
+pnpm install
+pnpm mobile:start
 ```
 
-### 2. Χρήση του CLI (`dps-guide`)
+Η `pnpm mobile:start` χτίζει και σερβίρει την production PWA στο `http://localhost:5173`. Κράτησε ανοιχτό το terminal όσο χρησιμοποιείς εφαρμογή, συγχρονισμό LMS ή AI. Το localhost παρέχει το secure browser context που απαιτούν το WebCrypto και το service worker. Σε Windows/macOS, το bridge χρησιμοποιεί το trust store του λειτουργικού για τις upstream HTTPS συνδέσεις.
+
+Για ανάπτυξη με hot reload:
 
 ```bash
-# Προβολή υποστηριζόμενων πανεπιστημίων και eClass portals
-npx dps-guide panepistimia
-
-# Αναζήτηση συγκεκριμένου πανεπιστημίου / σχολής
-npx dps-guide panepistimia unipi
-npx dps-guide panepistimia ekpa
-
-# Σύνδεση με το eClass (διαβάζει διαπιστευτήρια από το τοπικό keyring)
-npx dps-guide syndesi
-
-# Προβολή μαθημάτων του λογαριασμού σου
-npx dps-guide mathimata
-
-# Συγχρονισμός αρχείων ενός μαθήματος (π.χ. ΠΛΗ101)
-npx dps-guide sygxronismos PLI101
-
-# Ανάλυση ύλης μαθήματος (διάγραμμα ενοτήτων και προαπαιτούμενα)
-npx dps-guide analysi PLI101
-
-# Παραγωγή οδηγού μελέτης ενότητας
-npx dps-guide odigos en-1
-
-# Υπολογισμός ημερήσιου προγράμματος μελέτης
-npx dps-guide programma
-
-# Πλήρης ροή: σύνδεση → μαθήματα → συγχρονισμός → ανάλυση
-npx dps-guide run
+pnpm mobile:dev
 ```
 
-### 3. Εκτέλεση Mobile App
+Η development έκδοση δεν ενεργοποιεί το offline PWA service worker.
+
+## Native builds
+
+### Android APK
+
+Χρειάζονται JDK 21, Android SDK Platform 36 και Build Tools 36, καθώς και αποδοχή των Android SDK licenses. Εκτέλεσε:
 
 ```bash
-# Εκκίνηση τοπικού dev server (Vite)
-npm run dev --workspace=@dps/mobile
-
-# Build της εφαρμογής
-npm run build --workspace=@dps/mobile
-
-# Συγχρονισμός με Capacitor για iOS / Android
-npx cap sync
+pnpm mobile:android
 ```
 
----
+Το debug-signed APK παράγεται στο `apps/mobile/native-artifacts/DPS.guide-android-debug.apk`. Είναι για εγκατάσταση/sideload, όχι υπογεγραμμένη έκδοση Play Store.
 
-## 🧪 Δοκιμές & Επαλήθευση (TDD)
+### iOS IPA
 
-Το έργο ακολουθεί αυστηρή μεθοδολογία **Test-Driven Development (TDD)** με **0 network calls** στα tests:
-- **85 Test Files**
-- **1216 Unit & Integration Tests (100% επιτυχία)**
-- **0 ESLint Warnings**
-- **0 TypeScript Errors (`tsc --build`)**
+Η κατασκευή απαιτεί macOS και Xcode 16+. Εκτέλεσε σε Mac:
 
----
+```bash
+pnpm mobile:ios
+```
 
-## 📄 Άδεια Χρήσης
+Παράγεται unsigned IPA στο `apps/mobile/native-artifacts/DPS.guide-unsigned.ipa`, για τοπική υπογραφή και sideload με εργαλείο όπως το Sideloadly. Τα signing keys και τα Apple credentials πρέπει να μένουν εκτός repository.
 
-Το DPS.guide διατίθεται υπό την άδεια [MIT](LICENSE). Ελεύθερο για χρήση, τροποποίηση και διανομή από οποιονδήποτε φοιτητή ή ερευνητή.
+## Ανάπτυξη και έλεγχοι
+
+```bash
+pnpm typecheck
+pnpm lint
+pnpm test
+pnpm test:e2e
+pnpm check:ownership
+pnpm mobile:build
+pnpm audit --prod
+```
+
+Τα mocks και τα fixtures χρησιμοποιούνται μόνο από tests. Τα fixtures LMS είναι συνθετικά· η επιτυχία τους δεν υποκαθιστά ζωντανό έλεγχο σύνδεσης σε κάθε ίδρυμα. Το `mobile:build` παράγει την browser/PWA έκδοση στο `apps/mobile/dist`.
+
+## Δομή repository
+
+- `apps/mobile`: Ionic React, PWA και Capacitor εφαρμογές iOS/Android.
+- `apps/cli`: προαιρετικό CLI χωρίς κρυπτογραφημένο vault.
+- `packages/core`: domain μοντέλα, συμβόλαια και ντετερμινιστικοί υπολογισμοί.
+- `packages/eclass`: connectors Open eClass και Moodle.
+- `packages/extract`: εξαγωγή περιεχομένου PDF/Office.
+- `packages/pipeline`: συγχρονισμός και ανάλυση μαθημάτων.
+- `packages/ai`: Gemini και Ollama adapters.
+- `packages/adapters-capacitor`, `packages/adapters-node`: adapters πλατφόρμας.
+
+Οι παλιές προδιαγραφές, τα orchestration prompts και τα handoff snapshots κάτω από το `docs/` είναι ιστορικό υλικό· δες το [ευρετήριο τεκμηρίωσης](docs/README.md).
+
+## Άδεια
+
+Το DPS.guide διατίθεται υπό την άδεια [MIT](LICENSE). Οι τρίτες βιβλιοθήκες διατηρούν τις δικές τους άδειες και notices.

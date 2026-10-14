@@ -1,13 +1,12 @@
 import {
   KeyringMystika,
+  NodeKatevasmaPyli,
   NodeFetchHttpPyli,
   NodeFsApothiki,
 } from '@dps/adapters-node';
-import { ftiaxe_gemini_llm } from '@dps/ai';
 import type { Apotelesma, ApothikiPyli, EclassPyli, HttpPyli, LlmPyli, MystikaPyli } from '@dps/core';
 import { apotyxia } from '@dps/core';
 import { DpsEclassPyli, TopikiSyndesi } from '@dps/eclass';
-import { MockEclassPyli } from '@dps/mock-eclass';
 import type { EisodosPipeline } from '@dps/pipeline';
 import type { ParastatesEntolhs } from '../entoles/grammatikopoio-entolhs.js';
 import { MiYpostirimenoEclassPyli } from './eclass-eksodon.js';
@@ -15,13 +14,10 @@ import { KonsoladaKatagrafi } from './katagrafi-konsolada.js';
 import { MiOrismenoMonteloLlmPyli } from './llm-choris-montelou.js';
 import { SystemaRologi } from './rologi-systimatos.js';
 import {
-  DIADROMI_RYTHMISEON,
   fere_base_url_apo_ryza,
-  fere_mock_eclass_apo_ryza,
-  fere_montelo_apo_ryza,
 } from './rythmiseis.js';
 
-export { DIADROMI_RYTHMISEON };
+export { DIADROMI_RYTHMISEON } from './rythmiseis.js';
 
 /** Το stderr του CLI — τα logs πάνε εδώ, ώστε το stdout `--json` να είναι καθαρό. */
 function kathisteriki_konsolis(grammi: string): void {
@@ -31,8 +27,7 @@ function kathisteriki_konsolis(grammi: string): void {
 /**
  * Επιλύει το EclassPyli port:
  * 1. Πραγματική EclassPyli (DpsEclassPyli) όταν παρέχονται credentials και base_url.
- * 2. MockEclassPyli όταν έχει ενεργοποιηθεί ρητά στις ρυθμίσεις ή στο περιβάλλον.
- * 3. MiYpostirimenoEclassPyli (fallback) όταν λείπουν τα στοιχεία σύνδεσης.
+ * 2. MiYpostirimenoEclassPyli όταν λείπουν τα στοιχεία σύνδεσης.
  */
 export async function lise_eclass(
   apothiki: ApothikiPyli,
@@ -42,11 +37,6 @@ export async function lise_eclass(
   const onoma = await mystika.pare('eclass_onoma_xristi');
   const kodikos = await mystika.pare('eclass_kodikos');
   const base_url = (await fere_base_url_apo_ryza(apothiki)) ?? process.env.ECLASS_BASE_URL ?? null;
-  const thelei_mock =
-    (await fere_mock_eclass_apo_ryza(apothiki)) ||
-    process.env.ECLASS_MOCK === 'true' ||
-    process.env.MOCK_ECLASS === 'true';
-
   if (onoma !== null && kodikos !== null && base_url !== null) {
     const stratigiki = new TopikiSyndesi({
       onoma_xristi: onoma,
@@ -60,46 +50,35 @@ export async function lise_eclass(
     });
   }
 
-  if (thelei_mock) {
-    return new MockEclassPyli();
-  }
-
   return new MiYpostirimenoEclassPyli();
 }
 
 /**
  * Στήνει την `EisodosPipeline` με τα Node adapters (§4: ports → adapters).
  *
- * - `eclass`: πραγματική DpsEclassPyli αν υπάρχουν credentials/base_url, αλλιώς MockEclassPyli/fallback.
+ * - `eclass`: πραγματική DpsEclassPyli αν υπάρχουν credentials/base_url, αλλιώς σαφές unsupported error.
  * - `apothiki`/`katevasma`: fs, δεμένα στη ρίζα που δίνεται με `--riza`.
- * - `llm`: Gemini μέσω `HttpPyli` (timeout/retry από §7.2) ΜΟΝΟ αν οριστεί μοντέλο·
- *   το μοντέλο προκύπτει από `--montelo` ή από `<riza>/rythmiseis.json` — ποτέ
- *   hardcoded. Ο cache wrapper του `@dps/ai` δεν εφαρμόζεται εδώ: η cache του LLM
- *   ανήκει στο `@dps/pipeline` (§4 «idempotent βήματα, cache»), γιατί μόνο αυτό
- *   ξέρει τη διαδρομή cache ανά μάθημα (§5.3).
+ * - `llm`: fail-closed placeholder. Το βοηθητικό CLI δεν διαθέτει το per-course
+ *   Gemini opt-in και την επιβεβαίωση του ακριβούς prompt που απαιτεί η εφαρμογή.
  * - `mystika`: Windows Credential Manager με fallback στις μεταβλητές περιβάλλοντος.
  */
 export async function dimiourgise_eisodos(
   parastates: ParastatesEntolhs
 ): Promise<Apotelesma<EisodosPipeline>> {
+  if (parastates.xreiazetai_llm) {
+    return apotyxia(
+      'MI_YPOSTIRIZOMENO',
+      'Η δημιουργία AI δεν είναι διαθέσιμη από το CLI, επειδή λείπει η συναίνεση ανά μάθημα και η επιβεβαίωση του ακριβούς prompt. Χρησιμοποίησε την εφαρμογή DPS.guide.'
+    );
+  }
+
   const apothiki = new NodeFsApothiki(parastates.riza);
   const http = new NodeFetchHttpPyli();
   const mystika = new KeyringMystika();
   const rologi = new SystemaRologi();
   const katagrafi = new KonsoladaKatagrafi(kathisteriki_konsolis);
 
-  const montelo = await lise_montelo(parastates, apothiki);
-  if (montelo === null && parastates.xreiazetai_llm) {
-    return apotyxia(
-      'MI_EGKYRO_SXIMA',
-      'Δεν έχει οριστεί μοντέλο LLM: δώσε --montelo <ονομα> ' +
-        `ή βάλε το πεδίο "montelo" στο <riza>/${DIADROMI_RYTHMISEON}`
-    );
-  }
-  const llm: LlmPyli =
-    montelo === null
-      ? new MiOrismenoMonteloLlmPyli()
-      : ftiaxe_gemini_llm(http, mystika, rologi, katagrafi, { montelo });
+  const llm: LlmPyli = new MiOrismenoMonteloLlmPyli();
 
   const eclass = await lise_eclass(apothiki, http, mystika);
 
@@ -108,22 +87,13 @@ export async function dimiourgise_eisodos(
     timi: {
       eclass,
       apothiki,
+      katevasma: new NodeKatevasmaPyli(parastates.riza),
       llm,
       mystika,
       rologi,
       katagrafi,
-      riza: parastates.riza,
+      // The Node adapters are already rooted at --riza; pipeline paths stay relative.
+      riza: '',
     },
   };
-}
-
-/** Προτεραιότητα σημαίας, έπειτα αρχείο ρυθμίσεων, έπειτα καμία τιμή. */
-async function lise_montelo(
-  parastates: ParastatesEntolhs,
-  apothiki: ApothikiPyli
-): Promise<string | null> {
-  if (parastates.montelo !== null) {
-    return parastates.montelo;
-  }
-  return fere_montelo_apo_ryza(apothiki);
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MockLlm } from '@dps/core';
+import { MockLlm } from '@dps/core/testing';
 import { prompt_tutor } from '../src/prompts/index.js';
 import {
   FRASIS_ANESTIXTORI,

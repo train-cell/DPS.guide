@@ -73,32 +73,3 @@ export async function fere_base_url_apo_ryza(apothiki: ApothikiPyli): Promise<st
   }
   return epikyrose_base_url(dedomena);
 }
-
-/**
- * Εξάγει αν είναι ενεργοποιημένο το mock eClass από τις ρυθμίσεις.
- */
-export function epikyrose_mock_eclass(rythmiseis: unknown): boolean {
-  if (typeof rythmiseis !== 'object' || rythmiseis === null) {
-    return false;
-  }
-  const r = rythmiseis as Record<string, unknown>;
-  return r.mock_eclass === true || r.mock === true || r.use_mock === true;
-}
-
-/**
- * Διαβάζει αν είναι ενεργοποιημένο το mock eClass από το `<riza>/rythmiseis.json`.
- */
-export async function fere_mock_eclass_apo_ryza(apothiki: ApothikiPyli): Promise<boolean> {
-  const gram = await apothiki.diavase_keimeno(DIADROMI_RYTHMISEON);
-  if (!gram.ok) {
-    return false;
-  }
-  let dedomena: unknown;
-  try {
-    dedomena = JSON.parse(gram.timi);
-  } catch {
-    return false;
-  }
-  return epikyrose_mock_eclass(dedomena);
-}
-

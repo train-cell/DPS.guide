@@ -1,6 +1,8 @@
 {
   "name": "@dps/mock-eclass",
   "version": "0.1.0",
+  "private": true,
+  "description": "Test-only Open eClass connector backed by scrubbed fixtures.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -13,6 +15,6 @@
   },
   "devDependencies": {
     "typescript": "^5.8.2",
-    "vitest": "^3.0.7"
+    "vitest": "^4.1.11"
   }
 }

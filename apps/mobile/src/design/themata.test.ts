@@ -48,7 +48,12 @@ class MockStorage {
   }
 }
 
-if (typeof globalThis.document === 'undefined' || typeof (globalThis.document as any).addEventListener !== 'function') {
+function hasDocumentListeners(value: unknown): value is Document {
+  return typeof value === 'object' && value !== null &&
+    typeof Reflect.get(value, 'addEventListener') === 'function';
+}
+
+if (!hasDocumentListeners(globalThis.document)) {
   const mockDoc = {
     documentElement: new MockElement(),
     addEventListener: () => {},
@@ -161,18 +166,18 @@ describe('Themata - λειτουργίες ενεργοποίησης και α�
     expect(pare_trexon_thema()).toBe('midnight');
   });
 
-  it('η thete_thema θέτει το data-theme στο <html> και αποθηκεύει στο localStorage', () => {
+  it('η thete_thema εφαρμόζει το data-theme στο DOM χωρίς μη κρυπτογραφημένη αποθήκευση', () => {
     thete_thema('unistudents');
     expect(document.documentElement.getAttribute('data-theme')).toBe('unistudents');
-    expect(localStorage.getItem(APOTHEKE_KLEIDI_THEMATOS)).toBe('unistudents');
-    expect(pare_trexon_thema()).toBe('unistudents');
+    expect(localStorage.getItem(APOTHEKE_KLEIDI_THEMATOS)).toBeNull();
+    expect(pare_trexon_thema('unistudents')).toBe('unistudents');
   });
 
-  it('η thete_thema για emerald ενημερώνει DOM και storage', () => {
+  it('η thete_thema για emerald ενημερώνει μόνο το DOM', () => {
     thete_thema('emerald');
     expect(document.documentElement.getAttribute('data-theme')).toBe('emerald');
-    expect(localStorage.getItem(APOTHEKE_KLEIDI_THEMATOS)).toBe('emerald');
-    expect(pare_trexon_thema()).toBe('emerald');
+    expect(localStorage.getItem(APOTHEKE_KLEIDI_THEMATOS)).toBeNull();
+    expect(pare_trexon_thema('emerald')).toBe('emerald');
   });
 
   it('η thete_thema για light προσαρμόζει το ion-palette-dark και colorScheme', () => {
@@ -192,11 +197,11 @@ describe('Themata - λειτουργίες ενεργοποίησης και α�
     expect(() => thete_thema('agnoosto' as unknown as ThemaId)).toThrow();
   });
 
-  it('η arxikopoiisi_thematos διαβάζει από το localStorage και το εφαρμόζει στο DOM', () => {
+  it('η arxikopoiisi_thematos χρησιμοποιεί την ασφαλή προεπιλογή μέχρι να φορτωθούν οι κρυπτογραφημένες ρυθμίσεις', () => {
     localStorage.setItem(APOTHEKE_KLEIDI_THEMATOS, 'emerald');
     const apotelesma = arxikopoiisi_thematos();
-    expect(apotelesma).toBe('emerald');
-    expect(document.documentElement.getAttribute('data-theme')).toBe('emerald');
+    expect(apotelesma).toBe('midnight');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('midnight');
   });
 });
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
-import { FakeHttp, FakeMystika, FakeRologi, LLM_TIMEOUT_MS, MEGISTES_EPANALIPSEIS } from '@dps/core';
+import { LLM_TIMEOUT_MS, MEGISTES_EPANALIPSEIS } from '@dps/core';
+import { FakeHttp, FakeMystika, FakeRologi } from '@dps/core/testing';
 import type {
   Apotelesma,
   HttpAitima,
@@ -266,6 +267,24 @@ describe('parage_json', () => {
     expect(config['responseMimeType']).toBe(GEMINI_TYPOS_KEIMENOU_JSON);
     expect(config['temperature']).toBe(0.2);
     expect(config['responseSchema']).toMatchObject({ type: 'OBJECT' });
+  });
+
+  it('αφήνει τις παραμέτρους sampling στις προεπιλογές του Gemini 3.8', async () => {
+    const b = await ftiaxe_periballon();
+    b.http.orise_apantisi(ANTIPOCHO, () =>
+      apantisi(200, soma_apantisis(JSON.stringify({ arxeio_id: 'a', titlos: 'b', tmimata: [] })))
+    );
+    const llm = ftiaxe_gemini_llm(b.http, b.mystika, b.rologi, b.katagrafi, { montelo: 'gemini-3.8-flash' });
+
+    await llm.parage_json(aitima_json({ thermokrasia: 0.2 }));
+
+    const soma = lektika_tou_somatos(b.http.kliseis[0] ?? { soma_json: undefined });
+    const generationConfig = soma['generationConfig'];
+    if (typeof generationConfig !== 'object' || generationConfig === null) {
+      throw new Error('λείπει το generationConfig με schema');
+    }
+    expect(generationConfig).not.toHaveProperty('temperature');
+    expect(generationConfig).toHaveProperty('responseSchema');
   });
 
   it('χρησιμοποιεί το custom base URL', async () => {

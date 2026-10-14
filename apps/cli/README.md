@@ -1,178 +1,59 @@
-# dps-guide — CLI για Windows
+# DPS.guide CLI
 
-Node CLI του **DPS.guide**: σύνδεση στο Open eClass, συγχρονισμός αρχείων μαθημάτων,
-ανάλυση υλικού σε χάρτη ενοτήτων, lazy παραγωγή οδηγών και πρόγραμμα μελέτης.
-Local-first, χωρίς backend (D2): τα δεδομένα μένουν σε αρχεία κάτω από τη ρίζα (`--riza`).
+Προαιρετικό Node εργαλείο για Windows με Open eClass connector. Είναι ξεχωριστό από την browser/Capacitor εφαρμογή και **δεν παρέχει το κρυπτογραφημένο vault**: τα μαθήματα και τα αρχεία που γράφει κάτω από το `--riza` αποθηκεύονται ως κανονικά αρχεία. Μην το χρησιμοποιείς για προσωπικό υλικό όταν χρειάζεσαι την προστασία του vault.
 
-Η όλη ορχήστρωση (βήματα, cache, idempotency) ανήκει στο `@dps/pipeline`· το CLI είναι
-μόνο το «σκέτο»: αναλύει τα ορίσματα, στήνει τα ports με τα Node adapters, καλεί το
-σωστό βήμα και τυπώνει το αποτέλεσμα.
+Οι εντολές δημιουργίας AI (`analysi`, `odigos`, `run`) αποτυγχάνουν ρητά. Το CLI δεν έχει τη συναίνεση Gemini ανά μάθημα ούτε την επιβεβαίωση του ακριβούς prompt που προσφέρει η εφαρμογή. Χρησιμοποίησε την browser/Capacitor εφαρμογή για δημιουργία AI.
+
+## Εκτέλεση
+
+Από τη ρίζα του repository:
+
+```powershell
+pnpm install
+pnpm --filter @dps/cli build
+node apps/cli/dist/index.js --help
+```
+
+Στα Windows μπορείς επίσης να χρησιμοποιήσεις το `apps/cli/bin/dps-guide.cmd` μετά το build.
 
 ## Εντολές
 
-```text
-dps-guide <εντολή> [ορίσματα] [σημαίες]
-```
-
-| Εντολή | Ορίσματα | Τι κάνει (§4) |
-|---|---|---|
-| `syndesi` | — | Βήμα 1: σύνδεση με το eClass από τα μυστικά. |
-| `mathimata` | — | Βήμα 2: λίστα μαθημάτων → `mathimata.json`. |
-| `sygxronismos` | `[KODIKOS]` | Βήμα 3: αρχεία ενός μαθήματος ή, χωρίς κωδικό, όλων των **επιλεγμένων**. |
-| `analysi KODIKOS` | `KODIKOS` | Βήματα 4–7: `exagogi → perigramma → xartis → megethi`. |
-| `odigos ENOTITA_ID` | `ENOTITA_ID` | Βήμα 8: lazy παραγωγή οδηγού ενότητας. |
-| `programma` | — | Βήμα 10: πρόγραμμα μέχρι τις εξετάσεις. |
-| `run` | — | Πλήρης ροή: σύνδεση → μαθήματα → συγχρονισμός → ανάλυση. |
-
-## Σημαίες
-
-| Σημαία | Σημασία |
+| Εντολή | Τι κάνει |
 |---|---|
-| `--riza <διαδρομή>` | Ρίζα αποθήκευσης. Προεπιλογή: `./data`. |
-| `--montelo <όνομα>` | Μοντέλο LLM. Αν λείπει, διαβάζεται το `montelo` του `<riza>/rythmiseis.json`. |
-| `--json` | Μία εγγραφή JSON στο stdout. |
-| `--help`, `-h` | Βοήθεια (έξοδος 0). |
+| `panepistimia [ΑΝΑΖΗΤΗΣΗ]` | Αναζητά στον κατάλογο ιδρυμάτων/portals. |
+| `syndesi` | Συνδέεται στο Open eClass με τα αποθηκευμένα διαπιστευτήρια. |
+| `mathimata` | Ανακτά τα μαθήματα του λογαριασμού. |
+| `sygxronismos [ΚΩΔΙΚΟΣ]` | Συγχρονίζει ένα μάθημα ή τα επιλεγμένα μαθήματα. |
+| `programma` | Υπολογίζει το τοπικό πρόγραμμα μελέτης. |
+| `analysi ΚΩΔΙΚΟΣ`, `odigos ΕΝΟΤΗΤΑ_ID`, `run` | Δεν υποστηρίζονται από το CLI επειδή περιλαμβάνουν παραγωγή AI χωρίς την απαιτούμενη επιβεβαίωση αποστολής. |
 
-Οι σημαίες μπορούν να έρθουν πριν ή μετά τα ορίσματα. Μετά το `--` όλα τα tokens
-θεωρούνται ορίσματα.
+Οι σημαίες είναι `--riza <διαδρομή>` (προεπιλογή `./data`), `--json`, `--help`/`-h`. Η παλιά σημαία `--montelo` γίνεται δεκτή για συμβατότητα scripts, αλλά δεν ενεργοποιεί AI.
 
-**Δεν υπάρχει hardcoded μοντέλο.** Προτεραιότητα: `--montelo` → `<riza>/rythmiseis.json`
-→ σφάλμα με οδηγίες. Οι εντολές που δεν παράγουν κείμενο (`mathimata`, `sygxronismos`,
-`programma`) τρέχουν κανονικά χωρίς μοντέλο· αν ζητηθεί από αυτές LLM κλήση,
-επιστρέφεται σφάλμα, όχι κρυφό default.
+## Σύνδεση
 
-## Μυστικά
+Το CLI αναγνωρίζει Open eClass standard login. Στην προεπιλεγμένη εγκατάσταση, τα διαπιστευτήρια διαβάζονται από τις μεταβλητές `ECLASS_USERNAME` και `ECLASS_PASSWORD`. Η προαιρετική σύνδεση με Windows Credential Manager ενεργοποιείται μόνο αν το περιβάλλον εκτέλεσης παρέχει ξεχωριστά το `@napi-rs/keyring`· το workspace δεν το εγκαθιστά. Το CLI δεν αποθηκεύει credentials. Το `ECLASS_BASE_URL` ή το πεδίο `base_url` στο `<riza>/rythmiseis.json` ορίζει το portal. Το αρχείο ρυθμίσεων δεν πρέπει να περιέχει κωδικούς.
 
-Τα διαπιστευτήρια διαβάζονται **μόνο για ανάγνωση** από το `MystikaPyli`:
-πρώτα το Windows Credential Manager, με fallback στις μεταβλητές περιβάλλοντος.
-
-| Κλειδί | Μεταβλητή περιβάλλοντος (fallback) | Χρήση |
-|---|---|---|
-| `eclass_onoma_xristi` | `ECLASS_USERNAME` | Σύνδεση στο eClass |
-| `eclass_kodikos` | `ECLASS_PASSWORD` | Σύνδεση στο eClass |
-| `llm_api_key` | `GEMINI_API_KEY` | Κλήσεις Gemini |
-
-Παράδειγμα (PowerShell):
+Παράδειγμα προσωρινών μεταβλητών σε PowerShell:
 
 ```powershell
-$env:ECLASS_USERNAME = 'am-12345'
-$env:ECLASS_PASSWORD = '...'
-$env:GEMINI_API_KEY  = '...'
-dps-guide syndesi
+$env:ECLASS_USERNAME = 'το-όνομα-χρήστη'
+$env:ECLASS_PASSWORD = 'ο-κωδικός'
+$env:ECLASS_BASE_URL = 'https://το-portal.example'
+node apps/cli/dist/index.js syndesi
 ```
 
-Η εντολή `syndesi` δεν γράφει ποτέ μυστικά στο keyring· η αποθήκευση διαπιστευτηρίων
-αποτελεί ξεχωριστό βήμα onboarding (δεν περιλαμβάνεται ακόμα). Οι τιμές των μυστικών
-**ποτέ** δεν εκτυπώνονται — μόνο αν βρέθηκαν ή λείπουν.
+Η εντολή `syndesi` δεν γράφει credentials στο keyring. Τα μυστικά δεν εμφανίζονται στην έξοδο· το CLI αναφέρει μόνο αν υπάρχουν.
 
-## Παραδείγματα
+## Αποθήκευση και έξοδος
+
+Τα αρχεία μαθημάτων και ανάλυσης γράφονται κάτω από το `--riza`, μεταξύ άλλων στα `mathimata.json`, `<ΚΩΔΙΚΟΣ>/.spoudes/` και `<ΚΩΔΙΚΟΣ>/arxeia/`. Δεν κρυπτογραφούνται από το CLI.
+
+Με `--json`, το stdout περιέχει μία εγγραφή JSON· τα logs και τα σφάλματα πάνε στο stderr. Κωδικός εξόδου `0` σημαίνει επιτυχία και `1` αποτυχία.
+
+## Έλεγχοι ανάπτυξης
 
 ```powershell
-# Βοήθεια
-dps-guide --help
-
-# Λίστα μαθημάτων
-dps-guide mathimata
-
-# Συγχρονισμός ενός μαθήματος
-dps-guide sygxronismos MATH101
-
-# Συγχρονισμός όλων των επιλεγμένων (από το mathimata.json)
-dps-guide sygxronismos
-
-# Ανάλυση μαθήματος σε ρίζα αποθήκευσης
-dps-guide analysi MATH101 --riza D:\dps-data --montelo gemini-2.5-flash
-
-# Οδηγός ενότητας
-dps-guide odigos en-3
-
-# Πρόγραμμα, μηχανικά αναγνώσιμο
-dps-guide programma --json
+pnpm --filter @dps/cli test
+pnpm --filter @dps/cli build
+pnpm lint
 ```
-
-Έξοδος σε JSON:
-
-```json
-{"ok":true,"apotelesma":{"eidos":"mathimata","mathimata":[…]}}
-{"ok":false,"sfalma":{"kodikos":"SESSION_LIXI","minima":"Η συνεδρία λήξησε"}}
-```
-
-Σε `--json` η έξοδος είναι **μία** εγγραφή στο stdout. Τα logs του pipeline και τα
-σφάλματα σε ανθρώπινη λειτουργία πάνε στο stderr, ώστε το stdout να παραμένει
-μηχανικά αναγνώσιμο.
-
-## Κωδικοί εξόδου
-
-| Κώδικας | Πότε |
-|---|---|
-| `0` | Επιτυχία (ή `--help`). |
-| `1` | Σφάλμα βήματος, λανθασμένη χρήση, άγνωστη εντολή ή λείπον όρισμα. |
-
-Το CLI δεν πετάει ποτέ εξαίρεση προς τον χρήστη και δεν επιστρέφει ποτέ ψεύτικη
-επιτυχία: κάθε αποτυχία εκτυπώνεται ως σφάλμα με τον κωδικό του `Sfalma`
-(§3.9). Δεν γίνεται καμία επανάληψη σε λάθος κωδικό eClass.
-
-## Αποθήκευση
-
-Διάταξη §5.3, με ρίζα το `--riza` (προεπιλογή `./data`):
-
-```text
-<riza>/
-  mathimata.json
-  rythmiseis.json              μη-μυστικές ρυθμίσεις (π.χ. montelo, base_url)
-  <ΚΩΔΙΚΟΣ_ΜΑΘΗΜΑΤΟΣ>/
-    arxeia/…
-    .spoudes/
-      keimeno/<arxeio_id>.json
-      perigrammata/<arxeio_id>.json
-      xartis.json
-      odigoi/<enotita_id>.md  +  .meta.json
-      cache/llm/<hash>.json
-```
-
-Το `rythmiseis.json` είναι το μόνο αρχείο που γράφεται/διαβάζεται από το CLI για
-ρυθμίσεις, και μόνο για ανάγνωση:
-
-```json
-{ "montelo": "gemini-2.5-flash", "base_url": "https://…" }
-```
-
-Άγνωστα πεδία αγνοούνται· άθλιο JSON ή `montelo` που δεν είναι μη κενό κείμενο
-θεωρείται «μοντέλο μη ορισμένο» (σφάλμα, όχι default).
-
-## Γνωστά περιορισμά (κατάσταση της κάρτας I2)
-
-1. **Δεν υπάρχει `packages/eclass`** (κάρτες L14/L15). Όσο λείπει, το port
-   `EclassPyli` επιστρέφει ρητό `MI_YPOSTIRIZOMENO` σε κάθε μέθοδο — τα βήματα που
-   χρειάζονται σύνδεση στο eClass (`mathimata`, `sygxronismos`, `analysi`, `run`)
-   αποτυγχάνουν με error state, όχι με ψεύτικα δεδομένα.
-2. **Το `bin` δείχνει σε αρχείο TypeScript** (`./src/index.ts`), όπως ζητήθηκε. Το
-   Node εκτελεί TypeScript χωρίς bundler, **αλλά** δεν ξαναγράφει τις προδιαγραφές
-   `.js` σε `.ts`. Άρα η εκτέλεση απαιτεί TypeScript-aware runner· χωρίς νέο
-   dependency δεν εκτελείται απευθείας. Δες `docs/requests/H-01.md`.
-3. **Το cache του LLM δεν εφαρμόζεται εδώ**· ανήκει στο `@dps/pipeline` (§4), που
-   γνωρίζει τη διαδρομή cache ανά μάθημα.
-
-## Ανάπτυξη
-
-```powershell
-# tests (χωρίς δίκτυο, χωρίς credentials)
-npx vitest run --root apps/cli
-
-# typecheck
-npx tsc --build apps/cli
-
-# lint
-npx eslint apps/cli
-```
-
-Δομή `src/`:
-
-| Φάκελος | Περιεχόμενο |
-|---|---|
-| `argv/` | Ανάλυση γραμμής εντολής και κείμενο βοήθειας (χωρίς I/O). |
-| `eksodos/` | `ExodosEn` και μορφοποίηση ανθρώπινα / JSON. |
-| `entoles/` | Μία εντολή = ένα αρχείο· ο πίνακας `ENTOLES` είναι η μοναδική πηγή αλήθειας. |
-| `stathimes/` | Στήνιση ports: adapters-node, Gemini μέσω `HttpPyli`, keyring, ρυθμίσεις. |
-| `eksodiki.ts` | Dispatcher: argv → εντολή → ports → βήμα → έξοδος. Χωρίς εξαρτήσεις από την κονσόλα. |
-| `index.ts` | Σημείο εισόδου (`bin`): μοιράζει τις ροές της διεργασίας. |

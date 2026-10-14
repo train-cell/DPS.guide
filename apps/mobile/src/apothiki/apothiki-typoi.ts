@@ -1,14 +1,16 @@
 /**
- * Apothiki syntheseon - types pou persoun sta synoro. H stasia einai merizomeni me tin
- * epifaneia (React context) kai tha katapontetai mesa sti MnimiApothiki (prototypio)
- * i sti CapacitorFilesystem (paragogi).
+ * Storage contracts shared by the browser IndexedDB and native private filesystem.
+ * Both adapters are wrapped by the encrypted vault before course data is stored.
  */
 
 import type { Exetasi } from '@dps/core';
 import type { OverrideLepton, TemplateLepton } from '../programma/programma-typoi.js';
+import type { ThemaId } from '../design/themata.js';
 
 /** Οι ρυθμίσεις της εφαρμογής, όπως τις βλέπει η οθόνη ρυθμίσεων. */
 export interface Rytheseis {
+  /** Θέμα εμφάνισης, αποθηκευμένο μέσα στο κρυπτογραφημένο vault. */
+  readonly themaId?: ThemaId;
   /** Διεύθυνση του eClass. */
   readonly baseUrl: string;
   /** Αναγνωριστικό πανεπιστημίου (π.χ. unipi, uoa). */
@@ -17,10 +19,12 @@ export interface Rytheseis {
   readonly mathimataSynch: readonly string[];
   /** Όνομα μοντέλου AI, από ρύθμιση — όχι hardcoded. */
   readonly onomaMontelou: string;
+  /** Πάροχος AI· προαιρετικό για συμβατότητα με παλιότερα vaults. */
+  readonly paroxosLlm?: 'gemini' | 'ollama';
+  /** Τοπική διεύθυνση Ollama· γίνεται δεκτή μόνο στο ίδιο desktop. */
+  readonly urlOllama?: string;
   /** Αν έχει οριστεί κλειδί LLM· η τιμή του δεν φτάνει ποτέ στην οθόνη. */
   readonly exeiKleidiLlm: boolean;
-  /** Θέση αποθήκευσης αρχείων στη συσκευή. */
-  readonly onomasApothikefsis: string;
   /** Αν οι τοπικές ειδοποιήσεις είναι ενεργές. */
   readonly einaiEidopoieseis: boolean;
   /** Εξετάσεις που εισάγει ο χρήστης (κάρτα P1, §5.3). */

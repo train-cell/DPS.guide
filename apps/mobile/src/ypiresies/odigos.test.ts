@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { MnimiApothiki } from '@dps/core';
+import { MnimiApothiki } from '@dps/core/testing';
 import {
   LEKIKIA_TMIMATON,
   analise_odigo_md,
   diadromi_odigou,
   fortose_odigo_apo_apothiki,
 } from './odigos.js';
-import { pseudos_odigos_md } from '../pseudomata/index.js';
+import { pseudos_odigos_md } from '../../test-fixtures/pseudomata/index.js';
 
 /** Σπέρνει έναν ψεύτικο οδηγό στη μνήμη και επιστρέφει την αποθήκη. */
 async function apothiki_me_odigo(enotita_id: string): Promise<MnimiApothiki> {
