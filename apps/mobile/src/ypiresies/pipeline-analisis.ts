@@ -14,6 +14,8 @@ import type { OdigosMeta, XartisMathimatos } from '@dps/core';
 import type { Periballon } from '../periballon/periballon.js';
 import { createLocalOcrPort } from './topiko-ocr.js';
 import type { GeminiGenerationRequest } from './ai-generation-approval.js';
+import { entopise_paroxo_montelou } from './ai-providers.js';
+import type { IdParoxouAi } from './ai-providers.js';
 
 export type AuthorizeCourseGeneration = (request: GeminiGenerationRequest) => Promise<boolean>;
 
@@ -31,10 +33,10 @@ export function createAuthorizedCourseLlm(
   model: string,
   purpose: string,
   authorize: AuthorizeCourseGeneration,
+  providerId: IdParoxouAi = entopise_paroxo_montelou(model),
 ): LlmPyli {
   async function permit(prompt: string): Promise<Apotelesma<void>> {
-    const isGemini = model.toLowerCase().startsWith('gemini-');
-    if (!isGemini || await authorize({ model, purpose, prompt })) {
+    if (providerId !== 'gemini' || await authorize({ model, provider: providerId, purpose, prompt })) {
       return { ok: true, timi: undefined };
     }
     return apotyxia('AKYROTHIKE', 'Η αποστολή στο μοντέλο ακυρώθηκε ή δεν εγκρίθηκε.');
@@ -63,6 +65,7 @@ export function createCourseAnalysisPipeline(
   courseCode: string,
   model: string,
   authorize: AuthorizeCourseGeneration,
+  providerId: IdParoxouAi = entopise_paroxo_montelou(model),
 ): EisodosPipeline {
   const eclass: EclassPyli = {
     async syndesi() {
@@ -80,7 +83,13 @@ export function createCourseAnalysisPipeline(
       return unavailable('Η ανάλυση δεν κατεβάζει αρχεία. Συγχρόνισε πρώτα το μάθημα.');
     },
   };
-  const guarded = createAuthorizedCourseLlm(periballon.llm, model, 'ανάλυση και δημιουργία εκπαιδευτικού περιεχομένου', authorize);
+  const guarded = createAuthorizedCourseLlm(
+    periballon.llm,
+    model,
+    'ανάλυση και δημιουργία εκπαιδευτικού περιεχομένου',
+    authorize,
+    providerId,
+  );
   const llm = me_cache(guarded, periballon.apothiki, `${courseCode}/.spoudes/cache/llm`);
   return {
     eclass,
@@ -100,8 +109,9 @@ export async function generateCourseMap(
   courseCode: string,
   model: string,
   authorize: AuthorizeCourseGeneration,
+  providerId: IdParoxouAi = entopise_paroxo_montelou(model),
 ): Promise<Apotelesma<XartisMathimatos>> {
-  return trekse_analysi(createCourseAnalysisPipeline(periballon, courseCode, model, authorize), courseCode);
+  return trekse_analysi(createCourseAnalysisPipeline(periballon, courseCode, model, authorize, providerId), courseCode);
 }
 
 export async function generateCourseGuide(
@@ -110,9 +120,10 @@ export async function generateCourseGuide(
   sectionId: string,
   model: string,
   authorize: AuthorizeCourseGeneration,
+  providerId: IdParoxouAi = entopise_paroxo_montelou(model),
 ): Promise<Apotelesma<OdigosMeta>> {
   return odigos_mathimatos(
-    createCourseAnalysisPipeline(periballon, courseCode, model, authorize),
+    createCourseAnalysisPipeline(periballon, courseCode, model, authorize, providerId),
     courseCode,
     sectionId,
   );

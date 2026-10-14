@@ -17,6 +17,7 @@ import { fortose_xartis_apo_apothiki, pososto_aristeias } from '../../ypiresies/
 import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { generateCourseMap } from '../../ypiresies/pipeline-analisis.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
+import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
 
 /** Λεπτά ανά ώρα, για τη μορφοποίηση του χρόνου εκτίμησης. */
 export const LEPTA_PER_ORA = 60;
@@ -170,7 +171,8 @@ export default function XartisEnotiton() {
     apothiki.kodikosMathimatos,
   );
   const selectedModel = apothiki.rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
-  const geminiSelected = selectedModel.toLowerCase().startsWith('gemini-');
+  const selectedProvider = entopise_paroxo_montelou(selectedModel, apothiki.rytheseis.paroxosLlm);
+  const geminiSelected = selectedProvider === 'gemini';
 
   useEffect(() => {
     let zontas = true;
@@ -210,6 +212,7 @@ export default function XartisEnotiton() {
         courseCode,
         selectedModel,
         privacy.authorizeGeneration,
+        selectedProvider,
       );
       setKatastasi(result.ok ? { katastasi: 'etimo', dedomena: result.timi } : sfalma(result.sfalma));
     } catch (reason) {
@@ -220,7 +223,7 @@ export default function XartisEnotiton() {
     } finally {
       setDimiourgeitai(false);
     }
-  }, [apothiki.kodikosMathimatos, dimiourgeitai, periballon, privacy.authorizeGeneration, selectedModel]);
+  }, [apothiki.kodikosMathimatos, dimiourgeitai, periballon, privacy.authorizeGeneration, selectedModel, selectedProvider]);
 
   return (
     <div className="episkefsi" data-testid="xartis-ekran">

@@ -21,16 +21,9 @@ import { BrowserHttpPyli } from './browser-http.js';
 import { ApothikiMystikaPyli, EncryptedMystikaPyli } from './vault.js';
 import type { VaultSession } from './vault.js';
 import { migrateGeminiModel, PROEPILOGI_GEMINI_MONTELO } from '../ypiresies/ai-models.js';
+import { entopise_paroxo_montelou } from '../ypiresies/ai-providers.js';
 
 const GEMINI_MODEL = PROEPILOGI_GEMINI_MONTELO;
-
-function isOllamaModel(model: string): boolean {
-  return /^(llama|mistral|deepseek|qwen|gemma|phi|codellama)([.:\d-]|$)/i.test(model.trim());
-}
-
-function isGeminiModel(model: string): boolean {
-  return /^gemini-[\w.-]+$/i.test(model.trim());
-}
 
 function isLoopbackPage(): boolean {
   if (typeof location === 'undefined') return false;
@@ -96,14 +89,16 @@ export function createProductionPeriballon(
     const saved = await apothiki.diavase_keimeno('rythmiseis.json');
     let model = GEMINI_MODEL;
     let ollamaUrl = 'http://localhost:11434';
+    let savedProvider: unknown;
     if (saved.ok) {
       try {
         const settings: unknown = JSON.parse(saved.timi);
         if (typeof settings === 'object' && settings !== null) {
-          const record = settings as { onomaMontelou?: unknown; urlOllama?: unknown };
+          const record = settings as { onomaMontelou?: unknown; paroxosLlm?: unknown; urlOllama?: unknown };
           if (typeof record.onomaMontelou === 'string' && record.onomaMontelou.trim()) {
             model = migrateGeminiModel(record.onomaMontelou.trim());
           }
+          savedProvider = record.paroxosLlm;
           if (typeof record.urlOllama === 'string' && record.urlOllama.trim()) ollamaUrl = record.urlOllama.trim();
         }
       } catch {
@@ -111,12 +106,9 @@ export function createProductionPeriballon(
       }
     }
     activeModel = model;
-    if (isGeminiModel(model)) {
+    if (entopise_paroxo_montelou(model, savedProvider) === 'gemini') {
       const { ftiaxe_gemini_llm } = await import('@dps/ai');
       return ftiaxe_gemini_llm(http, mystika, rologi, katagrafi, { montelo: model });
-    }
-    if (!isOllamaModel(model)) {
-      return unsupportedLlm(model, 'Ο αποθηκευμένος πάροχος δεν υποστηρίζεται. Επίλεξε Gemini ή τοπικό Ollama στις ρυθμίσεις AI.');
     }
     if (device.native) {
       return unsupportedLlm(model, 'Το Ollama υποστηρίζεται μόνο σε Windows/macOS στον ίδιο υπολογιστή.');

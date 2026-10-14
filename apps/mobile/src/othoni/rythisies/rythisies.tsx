@@ -24,8 +24,6 @@ const THEMATA_EPILOGES: readonly { readonly id: ThemaId; readonly titlos: string
 export interface GrammataRythmiseon {
   /** Διεύθυνση του eClass. */
   readonly baseUrl: string;
-  /** Όνομα μοντέλου AI, όπως το δίνει η αποθήκευση. */
-  readonly onomaMontelou: string;
   /** Αν οι τοπικές ειδοποιήσεις είναι ενεργές. */
   readonly einaiEidopoieseis: boolean;
 }
@@ -34,7 +32,6 @@ export interface GrammataRythmiseon {
 export function pare_editable_rytheseis(rytheseis: Rytheseis): GrammataRythmiseon {
   return {
     baseUrl: rytheseis.baseUrl,
-    onomaMontelou: rytheseis.onomaMontelou,
     einaiEidopoieseis: rytheseis.einaiEidopoieseis,
   };
 }
@@ -42,7 +39,7 @@ export function pare_editable_rytheseis(rytheseis: Rytheseis): GrammataRythmiseo
 /** Οθόνη ρυθμίσεων: τιμές από την αποθήκευση, επεξεργάσιμες και αποθηκευμένες στη συσκευή. */
 export default function Rythisies() {
   const apothiki = xrisiApothekisis();
-  const { baseUrl, onomaMontelou, einaiEidopoieseis } = apothiki.rytheseis;
+  const { baseUrl, einaiEidopoieseis } = apothiki.rytheseis;
   const [grammata, setGrammata] = useState<GrammataRythmiseon>(() =>
     pare_editable_rytheseis(apothiki.rytheseis)
   );
@@ -50,8 +47,8 @@ export default function Rythisies() {
   const [trexonThema, setTrexonThema] = useState<ThemaId>(() => pare_trexon_thema(apothiki.rytheseis.themaId));
 
   useEffect(() => {
-    setGrammata({ baseUrl, onomaMontelou, einaiEidopoieseis });
-  }, [baseUrl, onomaMontelou, einaiEidopoieseis]);
+    setGrammata({ baseUrl, einaiEidopoieseis });
+  }, [baseUrl, einaiEidopoieseis]);
 
   function trexouses(): Rytheseis {
     return { ...apothiki.rytheseis, ...grammata };
@@ -150,7 +147,7 @@ export default function Rythisies() {
 
       <Karta
         titlos="Μοντέλο AI"
-        ypokeimeno="Το μοντέλο που χρησιμοποιείται για απαντήσεις και περιλήψεις."
+        ypokeimeno="Ο πάροχος και το μοντέλο ρυθμίζονται από την ειδική οθόνη AI."
         stoixeia={
           <div data-testid="rythisies-seira-montelo">
             <div className="odoni-xeiris">
@@ -162,20 +159,13 @@ export default function Rythisies() {
                 Ρύθμιση Παρόχου &amp; Κλειδιού Vault →
               </Link>
             </div>
-            <label className="odoni-xeiris-zeugos" htmlFor="rythisies-gramma-montelo">
-              Όνομα μοντέλου
-            </label>
-            <input
-              className="proedri-travla-gramma"
-              id="rythisies-gramma-montelo"
+            <p
+              className="karta-ypokeimeno"
               data-testid="rythisies-gramma-montelo"
-              name="onomaMontelou"
-              type="text"
-              autoComplete="off"
-              value={grammata.onomaMontelou}
-              onChange={(erevma) => allaze_gramma({ onomaMontelou: erevma.target.value })}
               aria-label="Όνομα μοντέλου AI"
-            />
+            >
+              {apothiki.rytheseis.onomaMontelou}
+            </p>
             <Pilegma
               keimeno={exeiKleidiLlm ? 'Κλειδί: Ρυθμισμένο' : 'Κλειδί: Μη ρυθμισμένο'}
               entono={exeiKleidiLlm}

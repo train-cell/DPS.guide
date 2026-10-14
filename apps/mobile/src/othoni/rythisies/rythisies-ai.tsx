@@ -11,9 +11,13 @@ import { useVaultSecurity } from '../../vault/vault-gate.js';
 import { BridgePairingCard } from '../../vault/bridge-pairing.js';
 import { deliverEncryptedBackup } from '../../vault/backup-file.js';
 import { GEMINI_MODEL_OPTIONS, PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
+import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
+import type { IdParoxouAi } from '../../ypiresies/ai-providers.js';
+
+export { entopise_paroxo_montelou };
 
 /** Αναγνωριστικά υποστηριζόμενων παρόχων AI. */
-export type IdParoxou = 'gemini' | 'ollama';
+export type IdParoxou = IdParoxouAi;
 
 /** Επιλογή διαθέσιμου μοντέλου ανά πάροχο. */
 export interface EpilogiMontelou {
@@ -58,18 +62,6 @@ export const PAROXOI_LLM: readonly PliroforiaParoxou[] = [
   },
 ];
 
-/** Εντοπίζει τον πάροχο στον οποίο αντιστοιχεί ένα όνομα μοντέλου. */
-export function entopise_paroxo_montelou(onomaMontelou: string): IdParoxou {
-  const mikro = onomaMontelou.toLowerCase().trim();
-  if (/^(llama|mistral|deepseek|qwen|gemma|phi|codellama)([.:\d-]|$)/.test(mikro)) return 'ollama';
-  for (const paroxos of PAROXOI_LLM) {
-    if (paroxos.montela.some((m) => m.id === mikro)) {
-      return paroxos.id;
-    }
-  }
-  return 'gemini';
-}
-
 /** Προεπιλεγμένος πάροχος σε περίπτωση μη έγκυρου id. */
 export const PROEPILOGI_PAROXOU: PliroforiaParoxou = {
   id: 'gemini',
@@ -89,7 +81,7 @@ export default function RythisiesAi() {
 
   const trexonMontelo = apothiki.rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
   const [paroxosId, setParoxosId] = useState<IdParoxou>(() =>
-    entopise_paroxo_montelou(trexonMontelo)
+    entopise_paroxo_montelou(trexonMontelo, apothiki.rytheseis.paroxosLlm)
   );
   const [epilegmenoMontelo, setEpilegmenoMontelo] = useState<string>(trexonMontelo);
   const [kleidiApi, setKleidiApi] = useState<string>('');
@@ -137,6 +129,7 @@ export default function RythisiesAi() {
   const paroxosTrexon = PAROXOI_LLM.find((p) => p.id === paroxosId) ?? PROEPILOGI_PAROXOU;
 
   function allaxe_paroxo(neosParoxosId: IdParoxou): void {
+    if (neosParoxosId === paroxosId) return;
     setParoxosId(neosParoxosId);
     const vrethike = PAROXOI_LLM.find((p) => p.id === neosParoxosId);
     if (vrethike !== undefined) {
@@ -150,6 +143,12 @@ export default function RythisiesAi() {
   }
 
   async function elegxos_syndesis(): Promise<void> {
+    const model = epilegmenoMontelo.trim();
+    if (paroxosId === 'ollama' && model.length === 0) {
+      setDokimiApotelesma({ epitixia: false, minima: 'Απαιτείται model ID από την εντολή ollama list.' });
+      return;
+    }
+
     if (paroxosTrexon.apaitisiKleidiou && kleidiApi.trim().length === 0) {
       setDokimiApotelesma({
         epitixia: false,
@@ -167,11 +166,11 @@ export default function RythisiesAi() {
     }
 
     if (paroxosId === 'gemini') {
-      setPendingGeminiTest(epilegmenoMontelo);
+      setPendingGeminiTest(model);
       return;
     }
 
-    await ektelese_dokimi_syndesis(epilegmenoMontelo, paroxosId);
+    await ektelese_dokimi_syndesis(model, paroxosId);
   }
 
   async function ektelese_dokimi_syndesis(model: string, providerId: IdParoxou): Promise<void> {
@@ -255,7 +254,8 @@ export default function RythisiesAi() {
     const exeiKleidi = paroxosId === 'gemini' && (exeiNeoKleidi || exeiVaultKleidi);
     await apothiki.allaxe_rytheseis({
       ...apothiki.rytheseis,
-      onomaMontelou: epilegmenoMontelo,
+      onomaMontelou: epilegmenoMontelo.trim(),
+      paroxosLlm: paroxosId,
       exeiKleidiLlm: exeiKleidi,
       urlOllama,
     });
@@ -360,26 +360,53 @@ export default function RythisiesAi() {
                 </button>
               ))}
             </div>
-            <label className="odoni-xeiris-zeugos" htmlFor="ai-montelo-select">
-              Επιλογή μοντέλου
-            </label>
-            <select
-              id="ai-montelo-select"
-              data-testid="ai-montelo-select"
-              className="proedri-travla-gramma"
-              value={epilegmenoMontelo}
-              onChange={(erevma) => {
-                setEpilegmenoMontelo(erevma.target.value);
-                setApothikefthike(false);
-              }}
-              aria-label="Επιλογή Μοντέλου AI"
-            >
-              {paroxosTrexon.montela.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.titlos} ({m.id})
-                </option>
-              ))}
-            </select>
+            {paroxosId === 'ollama' ? (
+              <div>
+                <label className="odoni-xeiris-zeugos" htmlFor="ai-ollama-model-id">
+                  ID μοντέλου Ollama από την εντολή ollama list
+                </label>
+                <input
+                  id="ai-ollama-model-id"
+                  data-testid="ai-ollama-model-id"
+                  className="proedri-travla-gramma"
+                  type="text"
+                  autoComplete="off"
+                  required
+                  value={epilegmenoMontelo}
+                  onChange={(erevma) => {
+                    setEpilegmenoMontelo(erevma.target.value);
+                    setDokimiApotelesma(null);
+                    setApothikefthike(false);
+                  }}
+                  placeholder="π.χ. qwen3.5:9b"
+                  aria-label="ID μοντέλου Ollama"
+                />
+                <p className="karta-ypokeimeno">Χρειάζεται εγκατεστημένο μοντέλο συνομιλίας. Για νέο μοντέλο, χρησιμοποίησε πρώτα `ollama pull`.</p>
+              </div>
+            ) : (
+              <>
+                <label className="odoni-xeiris-zeugos" htmlFor="ai-montelo-select">
+                  Επιλογή μοντέλου
+                </label>
+                <select
+                  id="ai-montelo-select"
+                  data-testid="ai-montelo-select"
+                  className="proedri-travla-gramma"
+                  value={epilegmenoMontelo}
+                  onChange={(erevma) => {
+                    setEpilegmenoMontelo(erevma.target.value);
+                    setApothikefthike(false);
+                  }}
+                  aria-label="Επιλογή Μοντέλου AI"
+                >
+                  {paroxosTrexon.montela.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.titlos} ({m.id})
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
             {paroxosId === 'ollama' && ollamaDiathesimo && (
               <div>
                 <label className="odoni-xeiris-zeugos" htmlFor="ai-ollama-url">

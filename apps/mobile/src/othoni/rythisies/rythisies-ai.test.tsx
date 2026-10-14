@@ -100,6 +100,13 @@ describe('RythisiesAi — επιλογές παρόχων και μοντέλω�
     expect(entopise_paroxo_montelou('mistral')).toBe('ollama');
     expect(entopise_paroxo_montelou('qwen2.5')).toBe('ollama');
     expect(entopise_paroxo_montelou('agnosto')).toBe('gemini');
+    expect(entopise_paroxo_montelou('lab/custom-chat:latest', 'ollama')).toBe('ollama');
+  });
+
+  it('δίνει ελεύθερο πεδίο για το εγκατεστημένο Ollama model ID και αποθηκεύει τον πάροχο', () => {
+    expect(ARXIKOS).toContain('data-testid="ai-ollama-model-id"');
+    expect(ARXIKOS).toContain('ID μοντέλου Ollama από την εντολή ollama list');
+    expect(ARXIKOS).toContain('paroxosLlm: paroxosId');
   });
 });
 

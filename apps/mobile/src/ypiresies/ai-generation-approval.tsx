@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { ApothikiPyli } from '@dps/core';
 import { read_course_gemini_opt_in, write_course_gemini_opt_in } from './ai-policy.js';
+import type { IdParoxouAi } from './ai-providers.js';
 import './ai-generation-approval.css';
 
 interface PendingGeneration {
@@ -15,6 +16,7 @@ interface PendingGeneration {
 
 export interface GeminiGenerationRequest {
   readonly model: string;
+  readonly provider?: IdParoxouAi;
   readonly purpose: string;
   /** Exact system and user content that is about to be sent to the provider. */
   readonly prompt: string;
@@ -109,7 +111,9 @@ export function useCourseAiPrivacy(
   }, [storage, courseCode]);
 
   const authorizeGeneration = useCallback((request: GeminiGenerationRequest): Promise<boolean> => {
-    if (!request.model.toLowerCase().startsWith('gemini-')) return Promise.resolve(true);
+    const requiresGeminiConsent = request.provider === 'gemini' ||
+      (request.provider === undefined && request.model.toLowerCase().startsWith('gemini-'));
+    if (!requiresGeminiConsent) return Promise.resolve(true);
     if (optInRef.current.courseCode !== courseCode || !optInRef.current.enabled) {
       setError('Για Gemini χρειάζεται ρητή συναίνεση για αυτό το μάθημα.');
       return Promise.resolve(false);

@@ -12,6 +12,7 @@ import { analise_parapompi, diadromi_provolis, stilise_parapompi } from '../../p
 import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { generateCourseGuide } from '../../ypiresies/pipeline-analisis.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
+import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
 
 /** Μία παραπομπή τμήματος οδηγού: tap ανοίγει το PDF στη σωστή σελίδα, αλλιώς μένει απλό κείμενο. */
 export function ParapompiTmimatos({ parapompi }: { readonly parapompi: string }) {
@@ -47,7 +48,8 @@ export default function OdigosMeletis() {
   const [dimiourgeitai, setDimiourgeitai] = useState(false);
   const privacy = useCourseAiPrivacy(periballon.apothiki, kodikosMathimatos, kodikosMathimatos);
   const selectedModel = apothiki.rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
-  const geminiSelected = selectedModel.toLowerCase().startsWith('gemini-');
+  const selectedProvider = entopise_paroxo_montelou(selectedModel, apothiki.rytheseis.paroxosLlm);
+  const geminiSelected = selectedProvider === 'gemini';
 
   useEffect(() => {
     let mounted = true;
@@ -81,6 +83,7 @@ export default function OdigosMeletis() {
         enotitaId,
         selectedModel,
         privacy.authorizeGeneration,
+        selectedProvider,
       );
       if (!result.ok) {
         setKatastasi({ katastasi: 'sfalma', sfalma: result.sfalma });
@@ -102,7 +105,7 @@ export default function OdigosMeletis() {
     } finally {
       setDimiourgeitai(false);
     }
-  }, [dimiourgeitai, enotitaId, kodikosMathimatos, periballon, privacy.authorizeGeneration, selectedModel]);
+  }, [dimiourgeitai, enotitaId, kodikosMathimatos, periballon, privacy.authorizeGeneration, selectedModel, selectedProvider]);
 
   const parametroi = new URLSearchParams({ enotita: enotitaId });
   const kseis = (

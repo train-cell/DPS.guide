@@ -19,6 +19,8 @@ export interface Rytheseis {
   readonly mathimataSynch: readonly string[];
   /** Όνομα μοντέλου AI, από ρύθμιση — όχι hardcoded. */
   readonly onomaMontelou: string;
+  /** Πάροχος AI· προαιρετικό για συμβατότητα με παλιότερα vaults. */
+  readonly paroxosLlm?: 'gemini' | 'ollama';
   /** Τοπική διεύθυνση Ollama· γίνεται δεκτή μόνο στο ίδιο desktop. */
   readonly urlOllama?: string;
   /** Αν έχει οριστεί κλειδί LLM· η τιμή του δεν φτάνει ποτέ στην οθόνη. */

@@ -15,6 +15,7 @@ import {
 import { fortose_mathimata_apo_apothiki } from '../../ypiresies/mathimata.js';
 import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
+import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
 import { createAuthorizedCourseLlm } from '../../ypiresies/pipeline-analisis.js';
 
 export const APANTISI_YPARXEIS_STO_YLIKO = 'Δεν υπάρχει στο υλικό.';
@@ -164,7 +165,8 @@ export default function TutorChat() {
   const [error, setError] = useState<string | null>(null);
   const [pendingQuestion, setPendingQuestion] = useState<PendingQuestion | null>(null);
   const selectedModel = rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
-  const geminiSelected = selectedModel.toLowerCase().startsWith('gemini-');
+  const selectedProvider = entopise_paroxo_montelou(selectedModel, rytheseis.paroxosLlm);
+  const geminiSelected = selectedProvider === 'gemini';
   const privacy = useCourseAiPrivacy(
     periballon.apothiki,
     course?.kodikos ?? '',
@@ -251,6 +253,7 @@ export default function TutorChat() {
           selectedModel,
           'Tutor με βάση το τοπικό υλικό του μαθήματος',
           privacy.authorizeGeneration,
+          selectedProvider,
         ),
       };
       const answer = await apantisi_me_llm_i_topika(

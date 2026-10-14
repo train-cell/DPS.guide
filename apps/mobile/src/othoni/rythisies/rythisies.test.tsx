@@ -66,12 +66,12 @@ describe('Rythisies — τιμές από την αποθήκευση, όχι ha
     expect(html).toContain('Τοπικό κρυπτογραφημένο vault στη συσκευή');
   });
 
-  it('η οθόνη δεν έχει σταθερό μοντέλο: το όνομα έρχεται από το store', () => {
+  it('η οθόνη δεν έχει σταθερό μοντέλο: δείχνει το αποθηκευμένο όνομα χωρίς να το επεξεργάζεται', () => {
     expect(ARXIKOS).not.toMatch(/gemini|gpt-|claude|anthropic/i);
-    expect(ARXIKOS).toContain('grammata.onomaMontelou');
+    expect(ARXIKOS).toContain('apothiki.rytheseis.onomaMontelou');
   });
 
-  it('το pare_editable_rytheseis κρατάει μόνο τα τρία επεξεργάσιμα πεδία', () => {
+  it('το pare_editable_rytheseis κρατάει μόνο τα πεδία της γενικής φόρμας', () => {
     const pare = pare_editable_rytheseis({
       baseUrl: 'https://eclass.example.unipi.gr',
       mathimataSynch: ['ΠΛΗ201'],
@@ -85,7 +85,6 @@ describe('Rythisies — τιμές από την αποθήκευση, όχι ha
     });
     expect(pare).toEqual({
       baseUrl: 'https://eclass.example.unipi.gr',
-      onomaMontelou: 'montelo-alfa',
       einaiEidopoieseis: false,
     });
   });
@@ -94,9 +93,16 @@ describe('Rythisies — τιμές από την αποθήκευση, όχι ha
     const eksartiseis = ARXIKOS.match(/useEffect\([\s\S]*?\}, \[([\s\S]*?)\]\);/)?.[1];
     expect(eksartiseis).toBeDefined();
     expect(String(eksartiseis)).not.toContain('apothiki.rytheseis');
-    for (const pedio of ['baseUrl', 'onomaMontelou', 'einaiEidopoieseis']) {
+    for (const pedio of ['baseUrl', 'einaiEidopoieseis']) {
       expect(String(eksartiseis)).toContain(pedio);
     }
+  });
+
+  it('η αλλαγή μοντέλου γίνεται μόνο από τις ρυθμίσεις παρόχου AI', () => {
+    const html = apostrophes_rythisi();
+    expect(html).toContain('data-testid="rythisies-gramma-montelo"');
+    expect(html).toContain('href="/rythisies/ai"');
+    expect(ARXIKOS).not.toContain('allaze_gramma({ onomaMontelou:');
   });
 });
 
@@ -108,7 +114,7 @@ describe('Rythisies — επεξεργασία και αποθήκευση', () 
 
   it('η οθόνη έχει δύο επεξεργάσιμα πεδία κειμένου και κουμπί αποθήκευσης', () => {
     const html = apostrophes_rythisi();
-    expect((html.match(/<input/g) ?? []).length).toBe(2);
+    expect((html.match(/<input/g) ?? []).length).toBe(1);
     expect(html).toContain('rythisies-apothekeysto');
     expect(ARXIKOS).toContain('onSubmit={ypostiripse}');
   });

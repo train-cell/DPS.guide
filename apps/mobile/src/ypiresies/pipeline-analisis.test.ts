@@ -37,6 +37,7 @@ describe('per-course generation approval', () => {
     await expect(llm.parage_json(request)).resolves.toEqual({ ok: true, timi: 'json result' });
     expect(authorize).toHaveBeenCalledWith({
       model: 'gemini-2.5-flash',
+      provider: 'gemini',
       purpose: 'δημιουργία χάρτη',
       prompt: 'SYSTEM\nOnly use the supplied course notes.\n\nUSER\nSummarize chapter 4.',
     });
@@ -59,7 +60,7 @@ describe('per-course generation approval', () => {
   it('allows same-device models without invoking the external-send approval flow', async () => {
     const { provider, calls } = fakeProvider();
     const authorize = vi.fn(async () => false);
-    const llm = createAuthorizedCourseLlm(provider, 'qwen2.5:7b', 'τοπική ανάλυση', authorize);
+    const llm = createAuthorizedCourseLlm(provider, 'gemini-local:latest', 'τοπική ανάλυση', authorize, 'ollama');
     const result = await llm.parage_keimeno({
       systima: 'Local request',
       minimata: [{ rolos: 'xristis', keimeno: 'Local course extract' }],
@@ -69,6 +70,22 @@ describe('per-course generation approval', () => {
     expect(result).toEqual({ ok: true, timi: 'text result' });
     expect(authorize).not.toHaveBeenCalled();
     expect(calls).toHaveBeenCalledTimes(1);
+  });
+
+  it('requires Gemini consent from the explicit provider even for a custom model ID', async () => {
+    const { provider, calls } = fakeProvider();
+    const authorize = vi.fn(async () => false);
+    const llm = createAuthorizedCourseLlm(provider, 'custom-chat-model', 'ανάλυση', authorize, 'gemini');
+    const result = await llm.parage_keimeno({
+      systima: 'Use the selected course.',
+      minimata: [{ rolos: 'xristis', keimeno: 'Course text' }],
+      ekdosi_prompt: 'test-v1',
+      thermokrasia: 0,
+    });
+
+    expect(result).toMatchObject({ ok: false, sfalma: { kodikos: 'AKYROTHIKE' } });
+    expect(authorize).toHaveBeenCalledWith(expect.objectContaining({ model: 'custom-chat-model', provider: 'gemini' }));
+    expect(calls).not.toHaveBeenCalled();
   });
 
   it('asks before each distinct uncached generation but reuses encrypted local cache entries', async () => {
