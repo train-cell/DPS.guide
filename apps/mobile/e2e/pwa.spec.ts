@@ -8,15 +8,40 @@ test('desktop PWA reopens its encrypted vault while offline', async ({ page, con
     const manifest = await fetch('/manifest.webmanifest').then((response) => response.json()) as {
       name?: string;
       display?: string;
+      icons?: Array<{ src?: string; sizes?: string; type?: string; purpose?: string }>;
     };
     const registration = await navigator.serviceWorker.ready;
+    const icons = await Promise.all(['/icon-192.png', '/icon-512.png'].map(async (path) => {
+      const response = await fetch(path);
+      const bytes = new DataView(await response.arrayBuffer());
+      return {
+        status: response.status,
+        type: response.headers.get('content-type'),
+        width: bytes.getUint32(16),
+        height: bytes.getUint32(20),
+      };
+    }));
     return {
       name: manifest.name,
       display: manifest.display,
+      manifestIcons: manifest.icons?.filter((icon) => icon.type === 'image/png'),
+      icons,
       workerPath: registration.active === null ? '' : new URL(registration.active.scriptURL).pathname,
     };
   });
-  expect(details).toEqual({ name: 'DPS.guide', display: 'standalone', workerPath: '/sw.js' });
+  expect(details).toEqual({
+    name: 'DPS.guide',
+    display: 'standalone',
+    manifestIcons: [
+      { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+    ],
+    icons: [
+      { status: 200, type: 'image/png', width: 192, height: 192 },
+      { status: 200, type: 'image/png', width: 512, height: 512 },
+    ],
+    workerPath: '/sw.js',
+  });
 
   // A controlled online reload lets the worker cache the built application assets before going offline.
   await page.reload();
@@ -25,6 +50,11 @@ test('desktop PWA reopens its encrypted vault while offline', async ({ page, con
     .toContain('/sw.js');
 
   await context.setOffline(true);
+  const offlineIcons = await page.evaluate(async () => Promise.all(
+    ['/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'].map(async (path) =>
+      (await fetch(path)).status),
+  ));
+  expect(offlineIcons).toEqual([200, 200, 200]);
   await page.reload();
   await page.getByLabel('Κύριος κωδικός ή recovery key').fill('dps-guide-e2e-master-password');
   await page.getByRole('button', { name: 'Ξεκλείδωμα' }).click();

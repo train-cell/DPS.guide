@@ -16,7 +16,17 @@ async function cacheShellResponse(response) {
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
-    try { await cacheShellResponse(await fetch(SHELL_URL, { cache: 'no-store' })); }
+    try {
+      await cacheShellResponse(await fetch(SHELL_URL, { cache: 'no-store' }));
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll([
+        '/manifest.webmanifest',
+        '/icon.svg',
+        '/icon-192.png',
+        '/icon-512.png',
+        '/apple-touch-icon.png',
+      ]);
+    }
     finally { await self.skipWaiting(); }
   })());
 });
@@ -48,7 +58,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/ocr/') || url.pathname === '/manifest.webmanifest' || url.pathname === '/icon.svg') {
+  if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/ocr/') || url.pathname === '/manifest.webmanifest' || ['/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'].includes(url.pathname)) {
     event.respondWith((async () => {
       const cached = await caches.match(request);
       if (cached) return cached;
