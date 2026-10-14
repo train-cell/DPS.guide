@@ -15,6 +15,26 @@ function backupName(): string {
   return `DPS.guide-${stamp}.dpsbackup`;
 }
 
+const NATIVE_BACKUP_CHUNK_BYTES = 256 * 1024;
+
+async function writeBlobToPrivateCache(blob: Blob, path: string): Promise<void> {
+  let wroteFirstChunk = false;
+  for (let offset = 0; offset < blob.size; offset += NATIVE_BACKUP_CHUNK_BYTES) {
+    const end = Math.min(offset + NATIVE_BACKUP_CHUNK_BYTES, blob.size);
+    const bytes = new Uint8Array(await blob.slice(offset, end).arrayBuffer());
+    const data = base64(bytes);
+    if (wroteFirstChunk) {
+      await Filesystem.appendFile({ path, directory: Directory.Cache, data });
+    } else {
+      await Filesystem.writeFile({ path, directory: Directory.Cache, data });
+      wroteFirstChunk = true;
+    }
+  }
+  if (!wroteFirstChunk) {
+    await Filesystem.writeFile({ path, directory: Directory.Cache, data: '' });
+  }
+}
+
 /** Downloads on desktop browsers or opens the native share sheet from the app-private cache. */
 export async function deliverEncryptedBackup(blob: Blob): Promise<void> {
   const filename = backupName();
@@ -30,11 +50,7 @@ export async function deliverEncryptedBackup(blob: Blob): Promise<void> {
 
   const path = filename;
   try {
-    await Filesystem.writeFile({
-      path,
-      directory: Directory.Cache,
-      data: base64(new Uint8Array(await blob.arrayBuffer())),
-    });
+    await writeBlobToPrivateCache(blob, path);
     const file = await Filesystem.getUri({ path, directory: Directory.Cache });
     await Share.share({
       title: 'Κρυπτογραφημένο backup DPS.guide',
