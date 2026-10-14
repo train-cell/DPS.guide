@@ -23,7 +23,7 @@ test('the app paints the dark background of the design system', async ({ page })
   expect(xromaKeimenou).toMatch(/^rgba?\(255,\s*255,\s*255/);
 });
 
-test('capture full-page screenshot at iPhone viewport', async ({ page }, testInfo) => {
+test('capture full-page screenshot at the browser viewport', async ({ page }, testInfo) => {
   const screenshotPath = testInfo.outputPath('efarmogi-etoimi.png');
   const screenshotsDir = testInfo.outputPath('');
   fs.mkdirSync(screenshotsDir, { recursive: true });
