@@ -3,7 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin, ViteDevServer, PreviewServer } from 'vite';
 
 const MAX_REQUEST_BYTES = 1024 * 1024;
-const MAX_RESPONSE_BYTES = 105 * 1024 * 1024;
+const MAX_RESPONSE_BYTES = 100 * 1024 * 1024;
 const METHODS = new Set(['GET', 'POST', 'HEAD']);
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
 const PAIRING_WINDOW_MS = 60_000;
@@ -72,6 +72,36 @@ function requestHeaders(source: Record<string, string>): Headers {
   return headers;
 }
 
+class ResponseTooLargeError extends Error {}
+
+async function readBoundedBody(body: ReadableStream<Uint8Array> | null): Promise<Uint8Array> {
+  if (body === null) return new Uint8Array();
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let length = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      length += value.byteLength;
+      if (length > MAX_RESPONSE_BYTES) {
+        await reader.cancel().catch(() => undefined);
+        throw new ResponseTooLargeError();
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const result = new Uint8Array(length);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return result;
+}
+
 function createHandler(token: string) {
   return async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
     if (request.method !== 'POST' || !originMatches(request)) {
@@ -129,11 +159,7 @@ function createHandler(token: string) {
         sendError(response, 413, 'Response exceeds the 100 MB download limit');
         return;
       }
-      const bytes = new Uint8Array(await outgoing.arrayBuffer());
-      if (bytes.byteLength > MAX_RESPONSE_BYTES) {
-        sendError(response, 413, 'Response exceeds the 100 MB download limit');
-        return;
-      }
+      const bytes = await readBoundedBody(outgoing.body);
       const targetHeaders: Record<string, string[]> = {};
       outgoing.headers.forEach((value, name) => { targetHeaders[name.toLowerCase()] = [value]; });
       const setCookies = outgoing.headers.getSetCookie?.();
@@ -148,8 +174,12 @@ function createHandler(token: string) {
         'x-dps-target-headers': encodedHeaders,
       });
       response.end(bytes);
-    } catch {
-      sendError(response, controller.signal.aborted ? 504 : 502, 'Upstream request failed');
+    } catch (error) {
+      if (error instanceof ResponseTooLargeError) {
+        sendError(response, 413, 'Response exceeds the 100 MB download limit');
+      } else {
+        sendError(response, controller.signal.aborted ? 504 : 502, 'Upstream request failed');
+      }
     } finally {
       clearTimeout(timer);
     }
