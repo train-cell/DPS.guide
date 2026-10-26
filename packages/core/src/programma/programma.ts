@@ -1,4 +1,4 @@
-﻿import type { Apotelesma } from '../contracts/apotelesma.js';
+import type { Apotelesma } from '../contracts/apotelesma.js';
 import type { Enotita } from '../contracts/montela.js';
 import { topologiki_taxinomisi } from '../grafos/grafos.js';
 import { apotyxia, ok } from '../helpers.js';
@@ -80,6 +80,8 @@ export interface Programma {
   slack_ana_mathima: Record<string, number>;
   protasi_epiviosis: ProtasiEpiviosis[];
 }
+
+export type ProgrammaMeletis = Programma;
 
 /** Δείκτης ημέρας εβδομάδας με 0 = Δευτέρα (Europe/Athens ημερολόγιο). */
 function deiktis_evdomadas(meri: MeriImorominias): number {

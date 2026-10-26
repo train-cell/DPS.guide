@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { MouseEvent as GeventoPedomati } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { IonProgressBar } from '@ionic/react';
 import type { Enotita, Proapaitoumeno, XartisMathimatos } from '@dps/core';
 import {
   Karta,
@@ -13,12 +14,13 @@ import { xrisiApothekisis } from '../../apothiki/index.js';
 import { xrisiPeriballontos } from '../../periballon/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
 import { fortosi, sfalma } from '../../kathstasi/index.js';
-import { fortose_xartis_apo_apothiki, pososto_aristeias } from '../../ypiresies/index.js';
+import { fortose_apodosi, fortose_xartis_apo_apothiki, pososto_aristeias } from '../../ypiresies/index.js';
 import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { generateCourseMap } from '../../ypiresies/pipeline-analisis.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
 import { diadromi_odigou } from '../../navigasi/dromoi.js';
+import { me_tilemetria } from '../../tilemetria/tilemetria.js';
 
 /** Λεπτά ανά ώρα, για τη μορφοποίηση του χρόνου εκτίμησης. */
 export const LEPTA_PER_ORA = 60;
@@ -40,6 +42,83 @@ export const KEIMENO_STOXOU = 'Σημείωση ως ολοκληρωμένη';
 
 /** Κείμενο του κουμπιού σήμανσης όταν η ενότητα έχει ολοκληρωθεί. */
 export const KEIMENO_TELIOU = 'Ολοκληρώθηκε';
+
+/** Στάδια της διαδικασίας ανάλυσης και δημιουργίας χάρτη ύλης. */
+export const STADIA_DIMIOURGIAS_XARTI: readonly string[] = [
+  'Επεξεργασία διαφανειών...',
+  'Τοπολογική ταξινόμηση DAG...',
+  'Ολοκλήρωση χάρτη...',
+];
+
+/** Ιδιότητες προόδου δημιουργίας χάρτη μαθήματος. */
+export interface ProodosDimiourgiasXartiProps {
+  readonly stadio?: number;
+  readonly pososto?: number;
+}
+
+/** Component πολυσταδιακής προόδου δημιουργίας χάρτη μαθήματος. */
+export function ProodosDimiourgiasXarti({
+  stadio = 1,
+  pososto,
+}: ProodosDimiourgiasXartiProps) {
+  const trexonStadio = Math.max(1, Math.min(STADIA_DIMIOURGIAS_XARTI.length, stadio));
+  const telikoPososto = pososto !== undefined
+    ? Math.max(0, Math.min(100, Math.round(pososto)))
+    : Math.round((trexonStadio / STADIA_DIMIOURGIAS_XARTI.length) * 100);
+  const trexonKeimeno = STADIA_DIMIOURGIAS_XARTI[trexonStadio - 1] ?? STADIA_DIMIOURGIAS_XARTI[0];
+
+  return (
+    <div
+      className="proodos-analisis-plaisio"
+      data-testid="xartis-proodos-analisis"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="proodos-analisis-kefali">
+        <span className="proodos-analisis-titlos">
+          Ανάλυση Ύλης Μαθήματος (Στάδιο {trexonStadio}/{STADIA_DIMIOURGIAS_XARTI.length})
+        </span>
+        <span className="proodos-analisis-pososto" data-testid="xartis-proodos-pososto">
+          {telikoPososto}%
+        </span>
+      </div>
+
+      <div
+        className="proodos-mpara-kouti"
+        role="progressbar"
+        aria-valuenow={telikoPososto}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={trexonKeimeno}
+      >
+        <IonProgressBar value={telikoPososto / 100} />
+      </div>
+
+      <div className="proodos-analisis-trexon-keimeno">
+        {trexonKeimeno}
+      </div>
+
+      <ul className="proodos-analisis-stadia-lista">
+        {STADIA_DIMIOURGIAS_XARTI.map((titlosStadiou, deiktis) => {
+          const arithmos = deiktis + 1;
+          const olokliromeno = trexonStadio > arithmos;
+          const trexon = trexonStadio === arithmos;
+          return (
+            <li
+              key={titlosStadiou}
+              className={`proodos-stadio-stoixeio${olokliromeno ? ' olokliromeno' : ''}${trexon ? ' trexon' : ''}`}
+            >
+              <span className="proodos-stadio-simio">
+                {olokliromeno ? '✓' : arithmos}
+              </span>
+              <span className="proodos-stadio-titlos">{titlosStadiou}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 /** Μετατρέπει λεπτά σε «ώρες και λεπτά», π.χ. 75 → «1 ζ 15 λ». */
 export function stilise_lepta(lepta: number | null): string {
@@ -67,16 +146,40 @@ export function grammi_proapasitis(proapasiti: Proapaitoumeno): string {
   return `Προαπαιτείται: ${proapasiti.enotita_id} (${stilise_isxya(proapasiti.isxys)})`;
 }
 
+/** Υπολογίζει αν η ενότητα είναι κλειδωμένη βάσει ισχυρών προαπαιτουμένων που δεν έχουν ολοκληρωθεί. */
+export function einai_kleidomeni_enotita(
+  enotita: Enotita,
+  telies: readonly string[] = []
+): boolean {
+  return enotita.proapaitoumenes.some(
+    (proapasiti) => proapasiti.isxys === 'isxyri' && !telies.includes(proapasiti.enotita_id)
+  );
+}
+
 /** Ιδιότητες της κάρτας μιας ενότητας του χάρτη. */
 export interface KartaEnotitasProps {
   readonly enotita: Enotita;
   readonly tetagmeni: boolean;
   readonly allaxe_telia: (id: string) => Promise<void>;
+  readonly telies?: readonly string[] | undefined;
+  readonly titloiEnotiton?: Readonly<Record<string, string>> | undefined;
+  readonly apodosi?: number | null | undefined;
 }
 
 /** Κάρτα ενότητας: κλικ στην κάρτα ανοίγει τον οδηγό, το κουμπί τη σημειώνει ως ολοκληρωμένη. */
-export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotitasProps) {
+export function KartaEnotitas({
+  enotita,
+  tetagmeni,
+  allaxe_telia,
+  telies = [],
+  titloiEnotiton,
+  apodosi,
+}: KartaEnotitasProps) {
+  const navigate = useNavigate();
   const dromos = diadromi_odigou(enotita.id);
+  const kleidomeni = einai_kleidomeni_enotita(enotita, telies);
+  const apodosiMonadon = apodosi ?? enotita.apodosi_exetasis ?? 0;
+
   const simaProspatheias = useCallback(
     async (gevento: GeventoPedomati<HTMLButtonElement>): Promise<void> => {
       gevento.preventDefault();
@@ -90,7 +193,25 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
     <Karta
         titlos={enotita.titlos}
         ypokeimeno={`Σειρά ${enotita.seira} · ${stilise_lepta(enotita.lepta_ektimisi)}`}
-        akseis={<Pilegma keimeno={`Σειρά ${enotita.seira}`} entono={tetagmeni} />}
+        akseis={
+          <div className="karta-mathimatos-akseis">
+            {apodosiMonadon > 0 && (
+              <span
+                data-testid="xartis-apodosi-badge"
+                className="pilegma pilegma-apodosi"
+              >
+                ⭐ Θέματα: +{apodosiMonadon} μονάδες
+              </span>
+            )}
+            <span
+              data-testid="xartis-katastasi-kleidomatos"
+              className={`pilegma ${kleidomeni ? 'pilegma-kleidomeni' : 'pilegma-xekleidoti'}`}
+            >
+              {kleidomeni ? '🔒 Κλειδωμένη' : '🔓 Ξεκλείδωτη'}
+            </span>
+            <Pilegma keimeno={`Σειρά ${enotita.seira}`} entono={tetagmeni} />
+          </div>
+        }
         stoixeia={
           <div>
             <div className="odoni-xeiris">
@@ -102,11 +223,42 @@ export function KartaEnotitas({ enotita, tetagmeni, allaxe_telia }: KartaEnotita
               {enotita.proapaitoumenes.length === 0 ? (
                 <p className="enotita-xreomeni">Χωρίς προαπαιτούμενες</p>
               ) : (
-                enotita.proapaitoumenes.map((proapasiti) => (
-                  <p key={proapasiti.enotita_id} className="enotita-xreomeni">
-                    {grammi_proapasitis(proapasiti)}
-                  </p>
-                ))
+                <>
+                  {enotita.proapaitoumenes.map((proapasiti) => (
+                    <p key={proapasiti.enotita_id} className="enotita-xreomeni">
+                      {grammi_proapasitis(proapasiti)}
+                    </p>
+                  ))}
+                  <div className="dag-syndeseis">
+                    {enotita.proapaitoumenes.map((proapasiti) => {
+                      const einaiTetagmeni = telies.includes(proapasiti.enotita_id);
+                      const titlosEnotitas =
+                        titloiEnotiton?.[proapasiti.enotita_id] ?? proapasiti.enotita_id;
+                      const keimeno = einaiTetagmeni
+                        ? `✓ ${titlosEnotitas}`
+                        : `⏳ ${titlosEnotitas} (${stilise_isxya(proapasiti.isxys)})`;
+                      const diadromi = diadromi_odigou(proapasiti.enotita_id);
+
+                      return (
+                        <button
+                          key={proapasiti.enotita_id}
+                          type="button"
+                          className={`pilegma${einaiTetagmeni ? ' pilegma-entono' : ''}`}
+                          data-testid="xartis-dag-syndesi"
+                          onClick={(symvan) => {
+                            symvan.preventDefault();
+                            symvan.stopPropagation();
+                            if (diadromi !== null) {
+                              navigate(diadromi);
+                            }
+                          }}
+                        >
+                          {keimeno}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
             {dromos === null && (
@@ -140,11 +292,20 @@ export interface OdomosEnotitonProps {
   readonly xartis: XartisMathimatos;
   readonly telies: readonly string[];
   readonly allaxe_telia: (id: string) => Promise<void>;
+  readonly apodosi?: Readonly<Record<string, number>> | undefined;
 }
 
 /** Ο χάρτης του μαθήματος: ενότητες ταξινομημένες κατά σειρά και δακτύλιος προόδου. */
-export function OdomosEnotiton({ xartis, telies, allaxe_telia }: OdomosEnotitonProps) {
+export function OdomosEnotiton({
+  xartis,
+  telies,
+  allaxe_telia,
+  apodosi = {},
+}: OdomosEnotitonProps) {
   const taxinomisi = [...xartis.enotites].sort((prwti, defteri) => prwti.seira - defteri.seira);
+  const titloiEnotiton: Record<string, string> = Object.fromEntries(
+    xartis.enotites.map((enot) => [enot.id, enot.titlos])
+  );
   return (
     <div>
       <div className="odoni-lista" data-testid="xartis-lista">
@@ -154,6 +315,9 @@ export function OdomosEnotiton({ xartis, telies, allaxe_telia }: OdomosEnotitonP
             enotita={enotita}
             tetagmeni={telies.includes(enotita.id)}
             allaxe_telia={allaxe_telia}
+            telies={telies}
+            titloiEnotiton={titloiEnotiton}
+            apodosi={apodosi[enotita.id]}
           />
         ))}
       </div>
@@ -174,8 +338,11 @@ export default function XartisEnotiton() {
   const apothiki = xrisiApothekisis();
   const periballon = xrisiPeriballontos();
   const [katastasi, setKatastasi] = useState<Katastasi<XartisMathimatos>>(fortosi<XartisMathimatos>());
+  const [apodosi, setApodosi] = useState<Record<string, number>>({});
   const [prospatheies, setProspatheies] = useState(0);
   const [dimiourgeitai, setDimiourgeitai] = useState(false);
+  const [stadioAnalisis, setStadioAnalisis] = useState(1);
+  const [posostoAnalisis, setPosostoAnalisis] = useState(20);
   const privacy = useCourseAiPrivacy(
     periballon.apothiki,
     apothiki.kodikosMathimatos,
@@ -200,6 +367,23 @@ export default function XartisEnotiton() {
           );
         }
       });
+
+    if (apothiki.kodikosMathimatos) {
+      void fortose_apodosi(periballon.apothiki, apothiki.kodikosMathimatos)
+        .then((dedomenaApodosis) => {
+          if (zontas) {
+            setApodosi(dedomenaApodosis);
+          }
+        })
+        .catch(() => {
+          if (zontas) {
+            setApodosi({});
+          }
+        });
+    } else {
+      setApodosi({});
+    }
+
     return () => {
       zontas = false;
     };
@@ -216,22 +400,51 @@ export default function XartisEnotiton() {
     const courseCode = apothiki.kodikosMathimatos;
     if (!courseCode || dimiourgeitai) return;
     setDimiourgeitai(true);
+    setStadioAnalisis(1);
+    setPosostoAnalisis(20);
     setKatastasi(fortosi<XartisMathimatos>());
+
+    const xronodiakoptis = setInterval(() => {
+      setPosostoAnalisis((palio) => {
+        if (palio < 45) {
+          return palio + 10;
+        }
+        if (palio < 75) {
+          setStadioAnalisis(2);
+          return palio + 10;
+        }
+        if (palio < 95) {
+          setStadioAnalisis(3);
+          return palio + 5;
+        }
+        return palio;
+      });
+    }, 400);
+
     try {
-      const result = await generateCourseMap(
-        periballon,
-        courseCode,
-        selectedModel,
-        privacy.authorizeGeneration,
-        selectedProvider,
+      await me_tilemetria(
+        'dimiourgia_xarti',
+        async () => {
+          const result = await generateCourseMap(
+            periballon,
+            courseCode,
+            selectedModel,
+            privacy.authorizeGeneration,
+            selectedProvider,
+          );
+          setStadioAnalisis(3);
+          setPosostoAnalisis(100);
+          setKatastasi(result.ok ? { katastasi: 'etimo', dedomena: result.timi } : sfalma(result.sfalma));
+        },
+        { courseCode, selectedModel, selectedProvider }
       );
-      setKatastasi(result.ok ? { katastasi: 'etimo', dedomena: result.timi } : sfalma(result.sfalma));
     } catch (reason) {
       setKatastasi(sfalma({
         kodikos: KODIKOS_SFALMATOS_DIKTYOU,
         minima: reason instanceof Error ? reason.message : MINIMA_SFALMATOS_XARTI,
       }));
     } finally {
+      clearInterval(xronodiakoptis);
       setDimiourgeitai(false);
     }
   }, [apothiki.kodikosMathimatos, dimiourgeitai, periballon, privacy.authorizeGeneration, selectedModel, selectedProvider]);
@@ -268,6 +481,7 @@ export default function XartisEnotiton() {
           xartis={katastasi.dedomena}
           telies={apothiki.proodhos.aristeiesEnotiton}
           allaxe_telia={apothiki.allaxe_telia}
+          apodosi={apodosi}
         />
       ) : katastasi.katastasi === 'fortosi' ? (
         <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_XARTI} epanalipsi={epanalipsi}>
@@ -308,7 +522,12 @@ export default function XartisEnotiton() {
           }
         />
       )}
-      {dimiourgeitai && <p role="status" className="karta-ypokeimeno">Ανάλυση τοπικών αρχείων και δημιουργία χάρτη…</p>}
+      {dimiourgeitai && (
+        <ProodosDimiourgiasXarti
+          stadio={stadioAnalisis}
+          pososto={posostoAnalisis}
+        />
+      )}
       {privacy.dialog}
     </div>
   );

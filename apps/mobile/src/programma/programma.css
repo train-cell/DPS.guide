@@ -99,6 +99,26 @@
   padding: 0;
 }
 
+.programma-epiviosi-proteraiotita {
+  margin-top: var(--diastima-2);
+  padding: var(--diastima-2);
+  border-radius: var(--aktina-mikro);
+  background: var(--xroma-epifaneia-patimeni);
+  border: 1px solid var(--xroma-synorio);
+}
+
+.programma-epiviosi-proteraiotita-titlos {
+  font-weight: var(--grammatoseira-baros-entono);
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-entono);
+}
+
+.programma-epiviosi-ypotitlos {
+  margin: var(--diastima-1) 0 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
 .programma-meres-plegma {
   display: flex;
   flex-direction: column;

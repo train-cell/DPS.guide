@@ -27,3 +27,7 @@ export * as imeres from './imeres/index.js';
 
 export * from './panepistimia/index.js';
 export * as panepistimia from './panepistimia/index.js';
+
+export * from './anazitisi/index.js';
+export * as anazitisi from './anazitisi/index.js';
+

@@ -30,6 +30,9 @@ describe('RythmiseisProgrammatos — συμβόλαιο οθόνης και χρ
     expect(markup).toContain('data-testid="programma-template"');
     expect(markup).toContain('data-testid="programma-overrides"');
     expect(markup).toContain('data-testid="programma-apothikefsi"');
+    expect(markup).toContain('data-testid="programma-export-ics"');
+    expect(markup).toContain('aria-label="Εξαγωγή Προγράμματος σε Ημερολόγιο (.ics)"');
+    expect(markup).toContain('Εξαγωγή Ημερολογίου (.ics)');
     expect(markup).toContain('data-testid="programma-xronodiagramma"');
   });
 
@@ -158,5 +161,107 @@ describe('RythmiseisProgrammatos — συμβόλαιο οθόνης και χρ
     expect(html).toContain('CS101');
     expect(html).toContain('Εισαγωγή στην πληροφορική');
     expect(html).toContain('Νέα ύλη');
+  });
+
+  it('εμφανίζει σύσταση προτεραιότητας στην κάρτα πρότασης επιβίωσης όταν υπάρχει apodosi', () => {
+    const enotites = pseudos_xartis().enotites.map((en, idx) => ({
+      ...en,
+      apodosi_exetasis: idx === 0 ? 25 : idx === 1 ? 5 : null,
+    }));
+    const arxikaMathimata: DedomenaMathimatosMeleti[] = [
+      {
+        kodikos: 'ΠΛΗ201',
+        enotites,
+        checkins: [],
+      },
+    ];
+    const arxikoDraft: DraftProgrammatos = {
+      exetaseis: [
+        {
+          kodikos: 'ΠΛΗ201',
+          imerominia: '2026-10-27',
+          tropos: 'kleista_vivlia',
+        },
+      ],
+      arxiExetastikis: '',
+      templateLepton: [
+        { imera: 1, lepta: 1 },
+        { imera: 2, lepta: 1 },
+        { imera: 3, lepta: 1 },
+        { imera: 4, lepta: 1 },
+        { imera: 5, lepta: 1 },
+        { imera: 6, lepta: 1 },
+        { imera: 7, lepta: 1 },
+      ],
+      overrides: [],
+    };
+
+    const markup = renderToStaticMarkup(
+      me_periballon_test(
+        <MemoryRouter>
+          <RythmiseisProgrammatos
+            arxikaMathimata={arxikaMathimata}
+            arxikoDraft={arxikoDraft}
+          />
+        </MemoryRouter>
+      )
+    );
+
+    expect(markup).toContain('data-testid="programma-protasi-epiviosis"');
+    expect(markup).toContain('data-testid="programma-systasi-proteraiotitas"');
+    expect(markup).toContain('data-testid="programma-proteraiotita-enotita"');
+    expect(markup).toContain('⭐ Βασικές αρχές και ιστορικό (+25 μονάδες)');
+  });
+
+  it('εμφανίζει σύσταση προτεραιότητας μελέτης όταν υπάρχει apodosi εκτός survival mode', () => {
+    const arxikaMathimata: DedomenaMathimatosMeleti[] = [
+      {
+        kodikos: 'ΠΛΗ201',
+        enotites: pseudos_xartis().enotites,
+        checkins: [],
+        apodosi: { 'en-1': 30, 'en-2': 10 },
+      },
+    ];
+    const arxikoDraft: DraftProgrammatos = {
+      exetaseis: [
+        {
+          kodikos: 'ΠΛΗ201',
+          imerominia: '2027-01-20',
+          tropos: 'kleista_vivlia',
+        },
+      ],
+      arxiExetastikis: '2027-01-15',
+      templateLepton: PROEDAFO_TEMPLATE,
+      overrides: [],
+    };
+
+    const markup = renderToStaticMarkup(
+      me_periballon_test(
+        <MemoryRouter>
+          <RythmiseisProgrammatos
+            arxikaMathimata={arxikaMathimata}
+            arxikoDraft={arxikoDraft}
+          />
+        </MemoryRouter>
+      )
+    );
+
+    expect(markup).toContain('data-testid="programma-systasi-proteraiotitas"');
+    expect(markup).toContain('Σύσταση Προτεραιότητας Μελέτης');
+    expect(markup).toContain('⭐ Βασικές αρχές και ιστορικό (+30 μονάδες)');
+  });
+
+  it('παρέχει κουμπί εξαγωγής προγράμματος σε αρχείο .ics με σωστή σήμανση προσβασιμότητας', () => {
+    const markup = renderToStaticMarkup(
+      me_periballon_test(
+        <MemoryRouter>
+          <RythmiseisProgrammatos />
+        </MemoryRouter>
+      )
+    );
+
+    expect(markup).toContain('data-testid="programma-export-ics"');
+    expect(markup).toContain('aria-label="Εξαγωγή Προγράμματος σε Ημερολόγιο (.ics)"');
+    expect(markup).toContain('Εξαγωγή Ημερολογίου (.ics)');
   });
 });
