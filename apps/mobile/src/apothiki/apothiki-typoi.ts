@@ -3,7 +3,8 @@
  * Both adapters are wrapped by the encrypted vault before course data is stored.
  */
 
-import type { Exetasi } from '@dps/core';
+import type { Checkin, Exetasi, KatastasiMathisis } from '@dps/core';
+export type { Checkin } from '@dps/core';
 import type { OverrideLepton, TemplateLepton } from '../programma/programma-typoi.js';
 import type { ThemaId } from '../design/themata.js';
 
@@ -41,6 +42,10 @@ export interface Rytheseis {
 export interface Proodhos {
   /** ids ενοτήτων που ο χρήστης έχει ολοκληρώσει. */
   readonly aristeiesEnotiton: readonly string[];
+  /** Leitner 5-box learning state. */
+  readonly katastasiMathisis?: readonly KatastasiMathisis[];
+  /** Καταγεγραμμένα check-ins μελέτης. */
+  readonly checkins?: readonly Checkin[];
 }
 
 /** Θέση του αρχείου ρυθμίσεων, σύμφωνα με το layout §5.3. */

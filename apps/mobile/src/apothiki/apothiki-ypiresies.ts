@@ -1,4 +1,5 @@
-import type { ApothikiPyli, Apotelesma } from '@dps/core';
+import type { ApothikiPyli, Apotelesma, Checkin, KatastasiMathisis } from '@dps/core';
+import { add_imeres, arxikopoiisi_mathisis, katagrafe_apotelesma, parse_meri } from '@dps/core';
 import type { Rytheseis, Proodhos } from './apothiki-typoi.js';
 import { DIALOMI_RYTHMISEON, dialomos_proodhou } from './apothiki-typoi.js';
 import { PROEDAFO_TEMPLATE } from '../programma/programma-vohthia.js';
@@ -100,7 +101,133 @@ export async function allaxe_aristeia(
   } else {
     nees = [...trexousa.aristeiesEnotiton];
   }
-  const neosProodhos: Proodhos = { aristeiesEnotiton: nees };
+  const neosProodhos: Proodhos = { ...trexousa, aristeiesEnotiton: nees };
   await grapse_proodho(apothiki, kodikos, neosProodhos);
   return neosProodhos;
+}
+
+/**
+ * Καταγράφει απάντηση Leitner για μία έννοια μαθήματος και αποθηκεύει την πρόοδο στο proodhos.json.
+ */
+export async function katagrapse_leitner_apantisi(
+  apothiki: ApothikiPyli,
+  kodikosMathimatos: string,
+  ennoia: string,
+  sosto: boolean,
+  simera: string
+): Promise<Apotelesma<KatastasiMathisis[]>> {
+  const trexousa = await fortose_proodho(apothiki, kodikosMathimatos);
+  let katastaseis: KatastasiMathisis[] = trexousa.katastasiMathisis
+    ? [...trexousa.katastasiMathisis]
+    : [];
+
+  if (!katastaseis.some((k) => k.ennoia === ennoia)) {
+    const arxiko = arxikopoiisi_mathisis([ennoia], simera);
+    if (!arxiko.ok) {
+      return arxiko;
+    }
+    katastaseis = [...katastaseis, ...arxiko.timi];
+  }
+
+  const apotelesma = katagrafe_apotelesma(katastaseis, ennoia, sosto, simera);
+  if (!apotelesma.ok) {
+    return apotelesma;
+  }
+
+  const neaProodhos: Proodhos = {
+    ...trexousa,
+    katastasiMathisis: apotelesma.timi,
+  };
+  const grapse = await grapse_proodho(apothiki, kodikosMathimatos, neaProodhos);
+  if (!grapse.ok) {
+    return grapse;
+  }
+
+  return apotelesma;
+}
+
+/**
+ * Καταγράφει ένα check-in μελέτης για μία ενότητα μαθήματος στο proodhos.json
+ * και ενημερώνει τις αριστείες ενοτήτων αν η μελέτη ολοκληρώθηκε.
+ */
+export async function katagrapse_checkin(
+  apothiki: ApothikiPyli,
+  kodikosMathimatos: string,
+  enotitaId: string,
+  lepta: number,
+  oloklirothike: boolean,
+  imerominia: string
+): Promise<Proodhos> {
+  const trexousa = await fortose_proodho(apothiki, kodikosMathimatos);
+  const neoCheckin: Checkin = {
+    enotita_id: enotitaId,
+    imerominia,
+    pragmatika_lepta: lepta,
+    oloklirothike,
+  };
+  const checkins: Checkin[] = [...(trexousa.checkins ?? []), neoCheckin];
+
+  let aristeiesEnotiton = [...trexousa.aristeiesEnotiton];
+  if (oloklirothike && !aristeiesEnotiton.includes(enotitaId)) {
+    aristeiesEnotiton = [...aristeiesEnotiton, enotitaId];
+  }
+
+  const neaProodhos: Proodhos = {
+    ...trexousa,
+    aristeiesEnotiton,
+    checkins,
+  };
+
+  await grapse_proodho(apothiki, kodikosMathimatos, neaProodhos);
+  return neaProodhos;
+}
+
+/**
+ * Υπολογίζει το τρέχον συνεχόμενο σερί ημερών μελέτης (streak) βάσει των check-ins.
+ * Καθαρή, ντετερμινιστική συνάρτηση (50/50 boundary).
+ */
+export function ypologismos_seri_meletis(
+  checkins: readonly Checkin[],
+  simera: string
+): number {
+  if (!checkins || checkins.length === 0) {
+    return 0;
+  }
+  const meri = parse_meri(simera);
+  if (meri === null) {
+    return 0;
+  }
+
+  const imerominies = new Set<string>();
+  for (const c of checkins) {
+    if (c.imerominia) {
+      imerominies.add(c.imerominia);
+    }
+  }
+
+  let arxiOffset = 0;
+  if (imerominies.has(simera)) {
+    arxiOffset = 0;
+  } else {
+    const xthes = add_imeres(meri, -1);
+    if (imerominies.has(xthes)) {
+      arxiOffset = 1;
+    } else {
+      return 0;
+    }
+  }
+
+  let seri = 0;
+  let offset = arxiOffset;
+  while (true) {
+    const imera = add_imeres(meri, -offset);
+    if (imerominies.has(imera)) {
+      seri++;
+      offset++;
+    } else {
+      break;
+    }
+  }
+
+  return seri;
 }

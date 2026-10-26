@@ -11,6 +11,8 @@ export interface OloniKatastasisProps<T> {
   readonly children: (dedomena: T) => ReactNode;
   /** Μήνυμα όταν η λίστα είναι κενή. */
   readonly adeioMinima?: string;
+  /** Προαιρετική ενέργεια (π.χ. CTA κουμπί) όταν η κατάσταση είναι adeio. */
+  readonly adeioAksi?: ReactNode;
   /** Κείμενο του κουμπιού επανάληψης σε σφάλμα. */
   readonly epanalipsiMinima?: string;
   /** Επανάληψη φόρτωσης όταν το χρήστη ζητήσει retry. */
@@ -41,6 +43,7 @@ export function OloniKatastasis<T>({
   katastasi,
   children,
   adeioMinima = 'Δεν υπάρχει τίποτα να δείξουμε ακόμη.',
+  adeioAksi,
   epanalipsiMinima = 'Δοκίμασε ξανά',
   epanalipsi,
 }: OloniKatastasisProps<T>) {
@@ -58,6 +61,7 @@ export function OloniKatastasis<T>({
       <div className="katastasi-periochos" data-testid="katastasi-adeio">
         <p className="katastasi-mfto">Τίποτα ακόμη</p>
         <p className="katastasi-ypokeimeno">{adeioMinima}</p>
+        {adeioAksi !== undefined && <div className="katastasi-aksi">{adeioAksi}</div>}
       </div>
     );
   }
