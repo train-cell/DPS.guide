@@ -30,6 +30,7 @@ export const ODOI: readonly { readonly diadromi: string; readonly onoma: string 
   { diadromi: '/proedri', onoma: 'Onboarding' },
   { diadromi: '/provoli/:arxeioId/:selida', onoma: 'Προβολή PDF' },
   { diadromi: '/programma', onoma: 'Πρόγραμμα' },
+  { diadromi: '/eidopoiiseis', onoma: 'Ειδοποιήσεις' },
   { diadromi: '/eidopoiseis', onoma: 'Ειδοποιήσεις' },
 ] as const;
 
@@ -92,6 +93,10 @@ export function OdoiNavigisis({
         <Route path="/tutor" element={meNav(<TutorChat />)} />
         <Route path="/rythisies" element={meNav(<Rythisies />)} />
         <Route path="/rythisies/ai" element={meNav(<RythisiesAi />)} />
+        <Route
+          path="/eidopoiiseis"
+          element={meNav(<EidopoiiseisRoute ypiresiesEidopoiseon={ypiresiesEidopoiseon} />)}
+        />
         <Route
           path="/eidopoiseis"
           element={meNav(<EidopoiiseisRoute ypiresiesEidopoiseon={ypiresiesEidopoiseon} />)}

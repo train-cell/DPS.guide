@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { IonButton, IonSpinner } from '@ionic/react';
 import type { Enotita, Mathima, Selida } from '@dps/core';
@@ -47,6 +47,44 @@ export const DRASEIS_TUTOR = [
 const MAX_CONTEXT_CHARACTERS = 24_000;
 const MAX_HISTORY_MESSAGES = 10;
 const GREETING = 'Έχω φορτώσει τοπικά το κείμενο των αρχείων αυτού του μαθήματος. Ρώτησέ με κάτι που τεκμηριώνεται σε αυτό.';
+const REGEX_PARAPOMPIS_TUTOR = /\[\[([^:]+?):(?:\s*σ\.\s*)?(\d+)\]\]/g;
+
+/**
+ * Μετατρέπει τις παραπομπές τύπου [[arxeio_id:selida]] σε διαδραστικούς συνδέσμους προβολής PDF.
+ */
+export function apodhosi_keimenou_me_parapompes(keimeno: string): (string | ReactNode)[] {
+  const stoixeia: (string | ReactNode)[] = [];
+  let teleftaioIndex = 0;
+  const regex = new RegExp(REGEX_PARAPOMPIS_TUTOR);
+  let tairiasma: RegExpExecArray | null;
+
+  while ((tairiasma = regex.exec(keimeno)) !== null) {
+    const arxi = tairiasma.index;
+    if (arxi > teleftaioIndex) {
+      stoixeia.push(keimeno.slice(teleftaioIndex, arxi));
+    }
+    const arxeioId = tairiasma[1]?.trim() ?? '';
+    const selida = tairiasma[2]?.trim() ?? '1';
+    const keimenoParapompis = tairiasma[0];
+    stoixeia.push(
+      <Link
+        key={`parapompi-${arxi}-${arxeioId}-${selida}`}
+        to={`/provoli/${encodeURIComponent(arxeioId)}/${selida}`}
+        className="tutor-parapompi"
+        data-testid="tutor-parapompi"
+      >
+        {keimenoParapompis}
+      </Link>
+    );
+    teleftaioIndex = regex.lastIndex;
+  }
+
+  if (teleftaioIndex < keimeno.length) {
+    stoixeia.push(keimeno.slice(teleftaioIndex));
+  }
+
+  return stoixeia.length > 0 ? stoixeia : [keimeno];
+}
 
 function safeCourseSegment(value: string): string {
   return encodeURIComponent(value).replaceAll('%', '_');
@@ -331,7 +369,9 @@ export default function TutorChat() {
                 key={`${index}-${message.rolos}`}
                 className={message.rolos === 'xristis' ? 'imerologia-gramma imerologia-bolakia' : 'imerologia-gramma imerologia-apantisi'}
               >
-                {message.keimeno}
+                {message.rolos === 'tutor'
+                  ? apodhosi_keimenou_me_parapompes(message.keimeno)
+                  : message.keimeno}
               </div>
             ))}
           </div>

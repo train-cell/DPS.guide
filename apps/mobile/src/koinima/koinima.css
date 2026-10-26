@@ -65,6 +65,64 @@ a {
   align-items: center;
 }
 
+.mathima-kartela {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.mathima-dentro-arxeion {
+  margin-top: calc(-1 * var(--diastima-1));
+  margin-left: var(--diastima-3);
+  margin-right: var(--diastima-3);
+  padding: var(--diastima-2) var(--diastima-3);
+  background: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-kouti);
+}
+
+.dentro-arxeion-titlos {
+  display: block;
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-apoxromatismeno);
+  margin-bottom: var(--diastima-1);
+}
+
+.dentro-arxeion-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.dentro-arxeio-stoixeio {
+  display: flex;
+}
+
+.dentro-arxeio-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: var(--diastima-1) var(--diastima-2);
+  border-radius: var(--aktina-kapsoula);
+  text-decoration: none;
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-size: var(--grammatoseira-mikro);
+}
+
+.dentro-arxeio-link:hover {
+  background: var(--xroma-epifaneia-patimeni);
+}
+
+.arxeio-megethos {
+  color: var(--xroma-apoxromatismeno);
+  font-size: var(--grammatoseira-mikro);
+}
+
 .karta:active {
   transform: scale(0.985);
 }
@@ -399,6 +457,26 @@ button.pilegma:disabled {
   font-size: var(--grammatoseira-meso);
 }
 
+.tutor-parapompi {
+  display: inline-block;
+  margin: 0 var(--diastima-1);
+  padding: 2px var(--diastima-2);
+  border-radius: var(--aktina-kapsoula);
+  background-color: var(--xroma-fonto);
+  color: var(--xroma-entono);
+  font-weight: var(--grammatoseira-baros-entono);
+  text-decoration: none;
+  font-size: var(--grammatoseira-mikro);
+  border: 1px solid var(--xroma-synorio);
+  cursor: pointer;
+}
+
+.tutor-parapompi:hover,
+.tutor-parapompi:focus {
+  background-color: var(--xroma-karta);
+  text-decoration: underline;
+}
+
 .imerologia-paixidi {
   display: flex;
   gap: var(--diastima-2);
@@ -457,6 +535,71 @@ button.pilegma:disabled {
 
 .odigos-parapompi-koumpi:active {
   background: var(--xroma-epifaneia-patimeni);
+}
+
+/* Odigos autoelegchos */
+.odigos-autoelegchos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  margin-bottom: var(--diastima-3);
+}
+
+.odigos-autoelegchos-kouti {
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  background: var(--xroma-karta);
+  padding: var(--diastima-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.odigos-autoelegchos-kefali {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--diastima-2);
+}
+
+.odigos-autoelegchos-erwtisi {
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+  margin: 0;
+  line-height: var(--grammatoseira-grammi-kanoniki);
+  flex: 1;
+}
+
+.odigos-autoelegchos-toggle {
+  align-self: flex-start;
+  font-size: var(--grammatoseira-mikro);
+  cursor: pointer;
+  border: 1px solid var(--xroma-synorio);
+}
+
+.odigos-autoelegchos-apantisi {
+  border-top: 1px dashed var(--xroma-synorio);
+  padding-top: var(--diastima-2);
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-defteron);
+  line-height: var(--grammatoseira-grammi-kanoniki);
+}
+
+.odigos-autoelegchos-apantisi p {
+  margin: 0;
+}
+
+.odigos-autoelegchos-draseis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--diastima-2);
+  align-items: center;
+  padding-top: var(--diastima-1);
+}
+
+.odigos-autoelegchos-koumpi {
+  cursor: pointer;
+  font-size: var(--grammatoseira-mikro);
 }
 
 .enotita-kartela {
@@ -811,4 +954,92 @@ button.pilegma:disabled {
   font-weight: var(--grammatoseira-baros-entono);
   color: var(--xroma-entono);
   white-space: nowrap;
+}
+
+/* Simera - Streak & Quick Check-in (Stream C) */
+.simera-seri-karta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--diastima-3);
+  padding: var(--diastima-3) var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.simera-seri-kefali {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.simera-seri-titlos {
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.simera-seri-ypotitlos {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.simera-checkin-karta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.simera-checkin-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.simera-checkin-titlos {
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.simera-checkin-perigrafi {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.simera-checkin-draseis {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--diastima-2);
+  margin-top: var(--diastima-1);
+}
+
+.simera-checkin-koumpi {
+  cursor: pointer;
+  border: 1px solid var(--xroma-synorio);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.simera-checkin-lepta {
+  width: 72px;
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-mikro);
+  background: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: inherit;
+  font-size: var(--grammatoseira-meso);
+  padding: var(--diastima-1) var(--diastima-2);
+}
+
+.simera-checkin-minima {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-entono);
+  font-weight: var(--grammatoseira-baros-entono);
 }

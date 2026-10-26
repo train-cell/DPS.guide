@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IonButton } from '@ionic/react';
+import type { Checkin, EisodosProgrammatos, Enotita, MathimaProgrammatos, Programma } from '@dps/core';
+import { ftiaxe_programma } from '@dps/core';
 import { Karta, OloniKatastasis, Pilegma, ProskelesioOmonimas } from '../koinima/index.js';
-import { fortosi, etimo, type Katastasi } from '../kathstasi/index.js';
+import { etimo, type Katastasi } from '../kathstasi/index.js';
 import type { Rytheseis } from '../apothiki/index.js';
-import { fortose_rytheseis, grapse_rytheseis } from '../apothiki/index.js';
+import { fortose_proodho, fortose_rytheseis, grapse_rytheseis, xrisiApothekisis } from '../apothiki/index.js';
+import { fortose_mathimata_apo_apothiki, fortose_xartis_apo_apothiki } from '../ypiresies/index.js';
 import { xrisiPeriballontos } from '../periballon/index.js';
 import {
   IMERES_EVDOMADAS,
@@ -36,11 +39,23 @@ interface OverrideDraft {
 }
 
 /** Το προσχέδιο της φόρμας προγράμματος, όπως το κρατά η οθόνη. */
-interface DraftProgrammatos {
+export interface DraftProgrammatos {
   readonly exetaseis: readonly ExetasiP1[];
   readonly arxiExetastikis: string;
   readonly templateLepton: TemplateLepton;
   readonly overrides: readonly OverrideDraft[];
+}
+
+/** Δεδομένα μαθήματος για τον υπολογισμό του προγράμματος μελέτης. */
+export interface DedomenaMathimatosMeleti {
+  readonly kodikos: string;
+  readonly enotites: readonly Enotita[];
+  readonly checkins: readonly Checkin[];
+}
+
+export interface RythmiseisProgrammatosProps {
+  readonly arxikaMathimata?: readonly DedomenaMathimatosMeleti[];
+  readonly arxikoDraft?: DraftProgrammatos;
 }
 
 /** Κείμενο κουμπιού προσθήκης εξέτασης. */
@@ -53,7 +68,7 @@ const KEIMENO_PROSTHESIS_OVERRIDE = '+ Εξαίρεση';
 const NEES_OVERRIDES_KEIMENO = 'Καμία εξαίρεση ακόμη.';
 
 /** Μετατρέπει αποθηκευμένες ρυθμίσεις σε προσχέδιο φόρμας. */
-function draft_apo_rytheseis(rytheseis: Rytheseis): DraftProgrammatos {
+export function draft_apo_rytheseis(rytheseis: Rytheseis): DraftProgrammatos {
   const programma = pare_programma_rytheseis(rytheseis);
   return {
     exetaseis: programma.exetaseis.map((e) => ({
@@ -71,13 +86,24 @@ function draft_apo_rytheseis(rytheseis: Rytheseis): DraftProgrammatos {
 }
 
 /** Οθόνη ρυθμίσεων προγράμματος: εξετάσεις, έναρξη εξεταστικής, template λεπτών, εξαιρέσεις. */
-export default function RythmiseisProgrammatos() {
+export default function RythmiseisProgrammatos({
+  arxikaMathimata,
+  arxikoDraft,
+}: RythmiseisProgrammatosProps = {}) {
   const periballon = xrisiPeriballontos();
-  const [katastasi, setKatastasi] = useState<Katastasi<Rytheseis>>(fortosi<Rytheseis>());
-  const [rytheseis, setRytheseis] = useState<Rytheseis | null>(null);
-  const [draft, setDraft] = useState<DraftProgrammatos | null>(null);
+  const apothiki = xrisiApothekisis();
+  const [katastasi, setKatastasi] = useState<Katastasi<Rytheseis>>(() =>
+    etimo<Rytheseis>(apothiki.rytheseis)
+  );
+  const [rytheseis, setRytheseis] = useState<Rytheseis | null>(() => apothiki.rytheseis);
+  const [draft, setDraft] = useState<DraftProgrammatos | null>(() =>
+    arxikoDraft ?? draft_apo_rytheseis(apothiki.rytheseis)
+  );
   const [apothikefthike, setApothikefthike] = useState(false);
   const [minimaSfalmatos, setMinimaSfalmatos] = useState<string | null>(null);
+  const [mathimataMeletis, setMathimataMeletis] = useState<readonly DedomenaMathimatosMeleti[]>(
+    () => arxikaMathimata ?? []
+  );
 
   const fortose = useCallback(() => {
     void (async () => {
@@ -85,8 +111,104 @@ export default function RythmiseisProgrammatos() {
       setKatastasi(etimo<Rytheseis>(fotismenes));
       setRytheseis(fotismenes);
       setDraft(draft_apo_rytheseis(fotismenes));
+
+      const mathimataApotelesma = await fortose_mathimata_apo_apothiki(periballon.apothiki);
+      const mathimataLista = mathimataApotelesma.katastasi === 'etimo' ? mathimataApotelesma.dedomena : [];
+      const sygxronismena = mathimataLista.filter(
+        (m) =>
+          fotismenes.mathimataSynch.includes(m.kodikos) ||
+          m.katastasi_sygxronismou === 'Συγχρονισμένο' ||
+          m.epilegmeno
+      );
+      const mathimataGiaFortosi = sygxronismena.length > 0 ? sygxronismena : mathimataLista;
+
+      const dedomena: DedomenaMathimatosMeleti[] = [];
+      for (const m of mathimataGiaFortosi) {
+        const [xartisApotelesma, proodhos] = await Promise.all([
+          fortose_xartis_apo_apothiki(periballon.apothiki, m.kodikos),
+          fortose_proodho(periballon.apothiki, m.kodikos),
+        ]);
+        if (xartisApotelesma.katastasi === 'etimo' && xartisApotelesma.dedomena.enotites.length > 0) {
+          dedomena.push({
+            kodikos: m.kodikos,
+            enotites: xartisApotelesma.dedomena.enotites,
+            checkins: proodhos.checkins ?? [],
+          });
+        }
+      }
+      setMathimataMeletis(dedomena);
     })();
   }, [periballon.apothiki]);
+
+  const programma = useMemo<Programma | null>(() => {
+    if (draft === null || mathimataMeletis.length === 0) {
+      return null;
+    }
+
+    const simeraImerominia = new Date().toISOString().slice(0, 10);
+    const arxiKathari = draft.arxiExetastikis.trim();
+    const arxiExetastikis =
+      arxiKathari.length > 0 && stilise_imerominia(arxiKathari) !== null ? arxiKathari : null;
+
+    const mathimataProgrammatos: MathimaProgrammatos[] = [];
+    for (const m of mathimataMeletis) {
+      const exetasi = draft.exetaseis.find((e) => e.kodikos === m.kodikos);
+      const imerominiaExetasis =
+        exetasi && exetasi.imerominia.trim().length > 0 && stilise_imerominia(exetasi.imerominia.trim()) !== null
+          ? exetasi.imerominia.trim()
+          : null;
+
+      if (imerominiaExetasis === null && arxiExetastikis === null) {
+        continue;
+      }
+
+      const enotites: Enotita[] = m.enotites.map((en) => ({
+        ...en,
+        lepta_ektimisi:
+          en.lepta_ektimisi !== null && Number.isFinite(en.lepta_ektimisi) && en.lepta_ektimisi >= 0
+            ? en.lepta_ektimisi
+            : 30,
+      }));
+
+      mathimataProgrammatos.push({
+        kodikos_mathimatos: m.kodikos,
+        enotites,
+        imerominia_exetasis: imerominiaExetasis,
+      });
+    }
+
+    if (mathimataProgrammatos.length === 0) {
+      return null;
+    }
+
+    const ana_imera_evdomadas = [1, 2, 3, 4, 5, 6, 7].map((imeraNum) => {
+      const grammi = draft.templateLepton.find((g) => g.imera === imeraNum);
+      return grammi ? kilise_lepta(grammi.lepta) : 0;
+    });
+
+    const overrides: Record<string, number> = {};
+    for (const o of draft.overrides) {
+      if (o.imerominia.trim().length > 0 && stilise_imerominia(o.imerominia.trim()) !== null) {
+        overrides[o.imerominia.trim()] = kilise_lepta(Number(o.lepta));
+      }
+    }
+
+    const checkins: Checkin[] = mathimataMeletis.flatMap((m) => [...m.checkins]);
+
+    const eisodos: EisodosProgrammatos = {
+      mathimata: mathimataProgrammatos,
+      diathesimotita: {
+        ana_imera_evdomadas,
+        overrides,
+      },
+      checkins,
+      simera: simeraImerominia,
+      arxi_exetastikis: arxiExetastikis,
+    };
+
+    const apotelesma = ftiaxe_programma(eisodos);
+    return apotelesma.ok ? apotelesma.timi : null;
+  }, [draft, mathimataMeletis]);
 
   useEffect(() => {
     fortose();
@@ -472,10 +594,95 @@ export default function RythmiseisProgrammatos() {
                   <Pilegma keimeno={minimaSfalmatos} />
                 )}
               </div>
+
+              <XronodiagrammaMeletis programma={programma} />
             </>
           )
         }
       </OloniKatastasis>
     </div>
+  );
+}
+
+export interface XronodiagrammaMeletisProps {
+  readonly programma: Programma | null;
+}
+
+/** Οπτικό χρονοδιάγραμμα μελέτης (EDF) με ημέρες, εργασίες και πρόταση επιβίωσης. */
+export function XronodiagrammaMeletis({ programma }: XronodiagrammaMeletisProps) {
+  return (
+    <Karta
+      titlos="Χρονοδιάγραμμα Μελέτης"
+      ypokeimeno="Αυτόματος υπολογισμός ημερήσιου προγράμματος με τον αλγόριθμο EDF."
+      stoixeia={
+        <div data-testid="programma-xronodiagramma" className="programma-xronodiagramma">
+          {programma === null || programma.meres.length === 0 ? (
+            <Pilegma keimeno="Δεν υπάρχουν προγραμματισμένες εργασίες μελέτης. Συμπληρώστε τις εξετάσεις και τη διαθεσιμότητα." />
+          ) : (
+            <>
+              {programma.protasi_epiviosis && programma.protasi_epiviosis.length > 0 && (
+                <div className="programma-epiviosi-karta" data-testid="programma-protasi-epiviosis">
+                  <span className="programma-epiviosi-titlos">⚠️ Πρόταση Προσαρμογής (Survival Mode)</span>
+                  <p className="programma-epiviosi-perigrafi">
+                    Ο χρόνος μέχρι τις εξετάσεις είναι περιορισμένος. Προτείνεται η παράλειψη ή συντόμευση των παρακάτω ενοτήτων:
+                  </p>
+                  <div className="programma-epiviosi-lista">
+                    {programma.protasi_epiviosis.map((p) => (
+                      <div key={p.kodikos_mathimatos} className="programma-epiviosi-mathima">
+                        <strong>{p.kodikos_mathimatos}:</strong>
+                        <ul>
+                          {p.ypopshfies.map((yp) => (
+                            <li key={yp.enotita_id}>
+                              {yp.titlos} ({yp.lepta} λεπτά)
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="programma-meres-plegma">
+                {programma.meres.map((mera) => {
+                  const synoloLepton = mera.ergasies.reduce((athr, e) => athr + e.lepta, 0);
+                  const morfiImerominias = stilise_imerominia(mera.imerominia) ?? mera.imerominia;
+                  return (
+                    <div
+                      key={mera.imerominia}
+                      className="programma-mera"
+                      data-testid="programma-mera"
+                    >
+                      <div className="programma-mera-kefali">
+                        <span className="programma-mera-imerominia">{morfiImerominias}</span>
+                        <span className="programma-mera-synolo">{synoloLepton} λεπτά</span>
+                      </div>
+                      <div className="programma-ergasies-lista">
+                        {mera.ergasies.map((ergasia, thesi) => (
+                          <div
+                            key={`${mera.imerominia}-${thesi}`}
+                            className="programma-ergasia"
+                            data-testid="programma-ergasia"
+                          >
+                            <div className="programma-ergasia-koryfi">
+                              <Pilegma
+                                keimeno={ergasia.eidos === 'nea_yli' ? 'Νέα ύλη' : 'Επανάληψη'}
+                                entono={ergasia.eidos === 'nea_yli'}
+                              />
+                              <span className="programma-ergasia-kodikos">{ergasia.kodikos_mathimatos}</span>
+                              <span className="programma-ergasia-lepta">{ergasia.lepta} λεπτά</span>
+                            </div>
+                            <span className="programma-ergasia-titlos">{ergasia.titlos}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      }
+    />
   );
 }

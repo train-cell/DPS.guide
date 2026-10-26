@@ -13,7 +13,11 @@ const ORISTO = dirname(fileURLToPath(import.meta.url));
 const ARXIKOS_ODOI = readFileSync(join(ORISTO, 'odoi.tsx'), 'utf8');
 
 describe('odoi — χάρτης διαδρομών εφαρμογής', () => {
-  it('περιλαμβάνει τη διαδρομή /eidopoiseis με ελληνικό όνομα', () => {
+  it('περιλαμβάνει τη διορθωμένη διαδρομή /eidopoiiseis καθώς και τη συμβατή /eidopoiseis με ελληνικό όνομα', () => {
+    const eidopoiiseisOdos = ODOI.find((o) => o.diadromi === '/eidopoiiseis');
+    expect(eidopoiiseisOdos).toBeDefined();
+    expect(eidopoiiseisOdos?.onoma).toBe('Ειδοποιήσεις');
+
     const eidopoiseisOdos = ODOI.find((o) => o.diadromi === '/eidopoiseis');
     expect(eidopoiseisOdos).toBeDefined();
     expect(eidopoiseisOdos?.onoma).toBe('Ειδοποιήσεις');

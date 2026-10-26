@@ -11,6 +11,7 @@ import {
 } from '../../design/themata.js';
 import { EikonidioPanepistimiou, PANEPISTIMIA_LISTA } from '../../design/eikonidia-panepistimion.js';
 import type { PanepistimioId } from '../../design/eikonidia-panepistimion.js';
+import { useVaultSecurity } from '../../vault/vault-gate.js';
 
 /** Επιλογές διαθέσιμων θεμάτων εμφάνισης. */
 const THEMATA_EPILOGES: readonly { readonly id: ThemaId; readonly titlos: string }[] = [
@@ -38,6 +39,7 @@ export function pare_editable_rytheseis(rytheseis: Rytheseis): GrammataRythmiseo
 
 /** Οθόνη ρυθμίσεων: τιμές από την αποθήκευση, επεξεργάσιμες και αποθηκευμένες στη συσκευή. */
 export default function Rythisies() {
+  const vaultSecurity = useVaultSecurity();
   const apothiki = xrisiApothekisis();
   const { baseUrl, einaiEidopoieseis } = apothiki.rytheseis;
   const [grammata, setGrammata] = useState<GrammataRythmiseon>(() =>
@@ -200,6 +202,21 @@ export default function Rythisies() {
         stoixeia={
           <div data-testid="rythisies-apothikeysi">
             <Pilegma keimeno="Τοπικό κρυπτογραφημένο vault στη συσκευή" />
+            <div className="odoni-xeiris">
+              <button
+                type="button"
+                className="pilegma pilegma-entono"
+                data-testid="rythisies-kleidoma-vault"
+                onClick={() => {
+                  if (vaultSecurity !== null) {
+                    vaultSecurity.lockVault();
+                  }
+                }}
+                aria-label="Κλείδωμα Vault Τώρα"
+              >
+                Κλείδωμα Vault Τώρα
+              </button>
+            </div>
           </div>
         }
       />

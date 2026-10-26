@@ -3,7 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, it, expect } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import OdigosMeletis, { ParapompiTmimatos } from './odigos.js';
+import OdigosMeletis, {
+  AutoelegchosAkordeon,
+  AutoelegchosErwtisi,
+  ParapompiTmimatos,
+  analise_erwtisi_autoelegchou,
+  lezanta_leitner_koutioy,
+} from './odigos.js';
 import { EPKEFALIDES_TMIMATON, LEKIKIA_TMIMATON } from '../../ypiresies/index.js';
 import { ODIGOI_PSEUDOI } from '../../../test-fixtures/pseudomata/index.js';
 import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
@@ -162,5 +168,98 @@ describe('odigos — συμβόλαιο data-testid στον πηγαίο κώδ
     expect(arxeio).not.toContain('@ts-ignore');
     expect(arxeio).not.toContain('@ts-expect-error');
     expect(arxeio).not.toMatch(/!\s*[.;,)]/);
+  });
+});
+
+describe('odigos — AutoelegchosAkordeon & Leitner 5-box', () => {
+  it('η lezanta_leitner_koutioy αντιστοιχεί σωστά τα κουτιά 1 έως 5', () => {
+    expect(lezanta_leitner_koutioy(1)).toBe('Κουτί 1');
+    expect(lezanta_leitner_koutioy(2)).toBe('Κουτί 2');
+    expect(lezanta_leitner_koutioy(3)).toBe('Κουτί 3');
+    expect(lezanta_leitner_koutioy(4)).toBe('Κουτί 4');
+    expect(lezanta_leitner_koutioy(5)).toBe('Κουτί 5: Κατοχυρωμένη');
+    expect(lezanta_leitner_koutioy(undefined)).toBe('Κουτί 1');
+  });
+
+  it('η analise_erwtisi_autoelegchou διαχωρίζει ερώτηση και απάντηση', () => {
+    const parsed1 = analise_erwtisi_autoelegchou(
+      'Ερώτηση: Ποια δομή ακολουθεί LIFO; Απάντηση: «Η στοίβα.»',
+      0,
+      'en-1'
+    );
+    expect(parsed1.erwtisi).toBe('Ποια δομή ακολουθεί LIFO;');
+    expect(parsed1.apantisi).toBe('Η στοίβα.');
+    expect(parsed1.ennoia).toBe('Ποια δομή ακολουθεί LIFO;');
+
+    const parsed2 = analise_erwtisi_autoelegchou(
+      'Πώς λειτουργεί ο διερμηνέας;',
+      1,
+      'en-1'
+    );
+    expect(parsed2.erwtisi).toBe('Πώς λειτουργεί ο διερμηνέας;');
+    expect(parsed2.apantisi).toContain('Ανατρέξτε στην αντίστοιχη πηγή');
+  });
+
+  it('η AutoelegchosErwtisi αποδίδει ερώτηση, toggle απάντησης, badge κουτιού και κουμπιά αυτοαξιολόγησης', () => {
+    const htmlKleisto = renderToStaticMarkup(
+      me_periballon_test(
+        <AutoelegchosErwtisi
+          arithmos={1}
+          erwtisi="Τι είναι αναδρομή;"
+          apantisi="Μία συνάρτηση που καλεί τον εαυτό της."
+          ennoia="Αναδρομή"
+          kouti={3}
+          arxikaAnoixto={false}
+        />
+      )
+    );
+    expect(htmlKleisto).toContain('Ερώτηση 1:');
+    expect(htmlKleisto).toContain('Τι είναι αναδρομή;');
+    expect(htmlKleisto).toContain('Κουτί 3');
+    expect(htmlKleisto).toContain('Εμφάνιση απάντησης');
+    expect(htmlKleisto).not.toContain('Μία συνάρτηση που καλεί τον εαυτό της.');
+    expect(htmlKleisto).toContain('data-testid="autoelegchos-apantisi-koumpi"');
+    expect(htmlKleisto).toContain('Το ήξερα');
+    expect(htmlKleisto).toContain('Χρειάζομαι επανάληψη');
+
+    const htmlAnoixto = renderToStaticMarkup(
+      me_periballon_test(
+        <AutoelegchosErwtisi
+          arithmos={2}
+          erwtisi="Τι είναι ουρά;"
+          apantisi="Δομή FIFO."
+          ennoia="Ουρά"
+          kouti={5}
+          arxikaAnoixto={true}
+        />
+      )
+    );
+    expect(htmlAnoixto).toContain('Κουτί 5: Κατοχυρωμένη');
+    expect(htmlAnoixto).toContain('Απόκρυψη');
+    expect(htmlAnoixto).toContain('Δομή FIFO.');
+  });
+
+  it('το AutoelegchosAkordeon αποδίδει τη λίστα ερωτήσεων με Leitner badges', () => {
+    const keimena = [
+      'Ερώτηση: Τι είναι int; Απάντηση: Ακέραιος.',
+      'Ερώτηση: Τι είναι float; Απάντηση: Δεκαδικός.',
+    ];
+    const html = renderToStaticMarkup(
+      me_periballon_test(
+        <MemoryRouter>
+          <AutoelegchosAkordeon
+            keimena={keimena}
+            kodikosMathimatos="CS101"
+            enotitaId="en-1"
+          />
+        </MemoryRouter>
+      )
+    );
+    expect(html).toContain('odigos-autoelegchos-lista');
+    expect(html).toContain('Ερώτηση 1:');
+    expect(html).toContain('Τι είναι int;');
+    expect(html).toContain('Ερώτηση 2:');
+    expect(html).toContain('Τι είναι float;');
+    expect(html).toContain('Κουτί 1');
   });
 });

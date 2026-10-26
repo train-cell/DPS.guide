@@ -19,6 +19,7 @@ const APOTELEMATA = [
   'rythisies-eidopoieseis',
   'rythisies-apothekeysto',
   'rythisies-eidopoiseis-othoni',
+  'rythisies-kleidoma-vault',
 ] as const;
 
 /** Αποδίδει την οθόνη χωρίς Provider· ο γαντζότης πέφτει στις προεπιλογές της αποθήκευσης.
@@ -189,5 +190,13 @@ describe('Rythisies — περιορισμοί κώδικα', () => {
     expect(ARXIKOS).toContain("from '../../apothiki/index.js'");
     expect(ARXIKOS).toContain("from '../../koinima/index.js'");
     expect(ARXIKOS).not.toMatch(/from '\.\.?\/[^']*[^s]'/);
+  });
+
+  it('περιλαμβάνει κουμπί άμεσου κλειδώματος του vault με σωστή σήμανση', () => {
+    const html = apostrophes_rythisi();
+    expect(html).toContain('data-testid="rythisies-kleidoma-vault"');
+    expect(html).toContain('Κλείδωμα Vault Τώρα');
+    expect(ARXIKOS).toContain('useVaultSecurity');
+    expect(ARXIKOS).toContain('lockVault()');
   });
 });

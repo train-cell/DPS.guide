@@ -37,6 +37,15 @@ const FILTRA_KATHGORION: readonly { readonly id: KatigoriaPanepistimiou; readonl
   { id: 'custom', titlos: 'Custom' },
 ];
 
+/** Katharizei tonous kai peza grammata gia accent-insensitive anazitisi. */
+export function katharise_tonous(keimeno: string): string {
+  return keimeno
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 /** Proepilegmeno panepistimio gia anaktisi me asfaleia typon. */
 const PROEPILEGMENTO_PANEPISTIMIO: PanepistimioDedomena = {
   id: 'unipi',
@@ -93,15 +102,20 @@ export default function Proedri({ periballon }: ProedriProps) {
         ? PANEPISTIMIA_LISTA
         : PANEPISTIMIA_LISTA.filter((pan) => pan.katigoria === epilegmeniKatigoria);
 
-    const lexi = anazitisi.trim().toLowerCase();
+    const lexi = katharise_tonous(anazitisi);
     if (lexi.length > 0) {
-      lista = lista.filter(
-        (pan) =>
-          pan.onoma.toLowerCase().includes(lexi) ||
-          pan.syntomiOnomasia.toLowerCase().includes(lexi) ||
-          pan.perigrafi.toLowerCase().includes(lexi) ||
-          pan.id.toLowerCase().includes(lexi)
-      );
+      lista = lista.filter((pan) => {
+        const onoma = katharise_tonous(pan.onoma);
+        const syntomi = katharise_tonous(pan.syntomiOnomasia);
+        const perigrafi = katharise_tonous(pan.perigrafi);
+        const id = katharise_tonous(pan.id);
+        return (
+          onoma.includes(lexi) ||
+          syntomi.includes(lexi) ||
+          perigrafi.includes(lexi) ||
+          id.includes(lexi)
+        );
+      });
     }
     return lista;
   }, [epilegmeniKatigoria, anazitisi]);

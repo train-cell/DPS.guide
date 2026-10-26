@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IonButton } from '@ionic/react';
-import { Karta, OloniKatastasis, ProskelesioOmonimas } from '../../koinima/index.js';
+import type { KatastasiMathisis, KoutiLeitner } from '@dps/core';
+import { Karta, OloniKatastasis, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
 import { fortosi, type Katastasi } from '../../kathstasi/index.js';
-import { xrisiApothekisis } from '../../apothiki/index.js';
+import { fortose_proodho, katagrapse_leitner_apantisi, xrisiApothekisis } from '../../apothiki/index.js';
 import { xrisiPeriballontos } from '../../periballon/index.js';
 import { fortose_odigo_apo_apothiki } from '../../ypiresies/index.js';
 import type { OdigosEnotitas } from '../../ypiresies/index.js';
@@ -36,6 +37,233 @@ export function ParapompiTmimatos({ parapompi }: { readonly parapompi: string })
     >
       {stilise_parapompi(analise)}
     </button>
+  );
+}
+
+/** Επιστρέφει τη λεζάντα για το κουτί Leitner (1 έως 5). */
+export function lezanta_leitner_koutioy(kouti?: number): string {
+  if (kouti === 5) return 'Κουτί 5: Κατοχυρωμένη';
+  if (kouti === 4) return 'Κουτί 4';
+  if (kouti === 3) return 'Κουτί 3';
+  if (kouti === 2) return 'Κουτί 2';
+  return 'Κουτί 1';
+}
+
+/** Δεδομένα μίας ερώτησης αυτοελέγχου. */
+export interface ErwtisiAutoelegchouDedomena {
+  readonly erwtisi: string;
+  readonly apantisi: string;
+  readonly ennoia: string;
+}
+
+/** Αναλύει μία γραμμή αυτοελέγχου σε ερώτηση, απάντηση και έννοια. */
+export function analise_erwtisi_autoelegchou(
+  keimeno: string,
+  index: number,
+  enotitaId?: string
+): ErwtisiAutoelegchouDedomena {
+  const match = keimeno.match(/^(.*?)(?:Απάντηση:)\s*(.*)$/s);
+  let erwtisi = keimeno.trim();
+  let apantisi = 'Ανατρέξτε στην αντίστοιχη πηγή της ενότητας.';
+  if (match) {
+    const q = match[1]?.trim();
+    const a = match[2]?.trim();
+    if (q) erwtisi = q;
+    if (a) apantisi = a;
+  }
+  erwtisi = erwtisi.replace(/^Ερώτηση:\s*/i, '').trim();
+  apantisi = apantisi.replace(/^[«"']\s*/, '').replace(/\s*[»"']$/, '').trim();
+  const ennoia = erwtisi || `${enotitaId ?? 'enotita'}-erwtisi-${index + 1}`;
+  return { erwtisi, apantisi, ennoia };
+}
+
+export interface AutoelegchosErwtisiProps {
+  readonly erwtisi: string;
+  readonly apantisi: string;
+  readonly ennoia: string;
+  readonly arithmos: number;
+  readonly kouti?: number;
+  readonly onApantisi?: (sosto: boolean) => Promise<void> | void;
+  readonly arxikaAnoixto?: boolean;
+}
+
+export function AutoelegchosErwtisi({
+  erwtisi,
+  apantisi,
+  arithmos,
+  kouti = 1,
+  onApantisi,
+  arxikaAnoixto = false,
+}: AutoelegchosErwtisiProps) {
+  const [anoixto, setAnoixto] = useState(arxikaAnoixto);
+  const [ypovoli, setYpovoli] = useState(false);
+
+  const xeirismosApantisis = async (sosto: boolean) => {
+    if (ypovoli) return;
+    setYpovoli(true);
+    try {
+      if (onApantisi) {
+        await onApantisi(sosto);
+      }
+    } finally {
+      setYpovoli(false);
+    }
+  };
+
+  return (
+    <div className="odigos-autoelegchos-kouti">
+      <div className="odigos-autoelegchos-kefali">
+        <p className="odigos-autoelegchos-erwtisi">
+          <strong>Ερώτηση {arithmos}:</strong> {erwtisi}
+        </p>
+        <Pilegma keimeno={lezanta_leitner_koutioy(kouti)} entono={kouti === 5} />
+      </div>
+      <button
+        type="button"
+        className="pilegma odigos-autoelegchos-toggle"
+        onClick={() => {
+          setAnoixto((palio) => !palio);
+        }}
+      >
+        {anoixto ? 'Απόκρυψη' : 'Εμφάνιση απάντησης'}
+      </button>
+      {anoixto && (
+        <div className="odigos-autoelegchos-apantisi">
+          <p>
+            <strong>Απάντηση:</strong> {apantisi}
+          </p>
+        </div>
+      )}
+      <div className="odigos-autoelegchos-draseis">
+        <button
+          type="button"
+          className="pilegma pilegma-entono odigos-autoelegchos-koumpi"
+          data-testid="autoelegchos-apantisi-koumpi"
+          disabled={ypovoli}
+          onClick={() => {
+            void xeirismosApantisis(true);
+          }}
+        >
+          Το ήξερα
+        </button>
+        <button
+          type="button"
+          className="pilegma odigos-autoelegchos-koumpi"
+          data-testid="autoelegchos-apantisi-koumpi"
+          disabled={ypovoli}
+          onClick={() => {
+            void xeirismosApantisis(false);
+          }}
+        >
+          Χρειάζομαι επανάληψη
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export interface AutoelegchosAkordeonProps {
+  readonly keimena: readonly string[];
+  readonly kodikosMathimatos: string;
+  readonly enotitaId: string;
+}
+
+export function AutoelegchosAkordeon({
+  keimena,
+  kodikosMathimatos,
+  enotitaId,
+}: AutoelegchosAkordeonProps) {
+  const periballon = xrisiPeriballontos();
+  const apothiki = xrisiApothekisis();
+  const [katastaseis, setKatastaseis] = useState<Record<string, KatastasiMathisis>>(() => {
+    const arxiko: Record<string, KatastasiMathisis> = {};
+    if (apothiki.proodhos.katastasiMathisis) {
+      for (const item of apothiki.proodhos.katastasiMathisis) {
+        arxiko[item.ennoia] = item;
+      }
+    }
+    return arxiko;
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    if (!kodikosMathimatos) return;
+    void fortose_proodho(periballon.apothiki, kodikosMathimatos).then((proodhos) => {
+      if (mounted && proodhos.katastasiMathisis) {
+        setKatastaseis((palies) => {
+          const map = { ...palies };
+          if (proodhos.katastasiMathisis) {
+            for (const item of proodhos.katastasiMathisis) {
+              map[item.ennoia] = item;
+            }
+          }
+          return map;
+        });
+      }
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [periballon.apothiki, kodikosMathimatos]);
+
+  const xeirismosApantisisGiaEnnoia = async (ennoia: string, sosto: boolean) => {
+    const trexonKouti = katastaseis[ennoia]?.kouti ?? 1;
+    const neoKouti = sosto ? ((Math.min(5, trexonKouti + 1) as KoutiLeitner)) : (1 as KoutiLeitner);
+    setKatastaseis((palies) => ({
+      ...palies,
+      [ennoia]: {
+        ennoia,
+        kouti: neoKouti,
+        epomeni_epanalipsi: '',
+        sosta_seiri: sosto ? (palies[ennoia]?.sosta_seiri ?? 0) + 1 : 0,
+      },
+    }));
+
+    if (kodikosMathimatos) {
+      try {
+        const simera = periballon.rologi.tora().toISOString().slice(0, 10);
+        const res = await katagrapse_leitner_apantisi(
+          periballon.apothiki,
+          kodikosMathimatos,
+          ennoia,
+          sosto,
+          simera
+        );
+        if (res.ok) {
+          setKatastaseis((palies) => {
+            const map = { ...palies };
+            for (const item of res.timi) {
+              map[item.ennoia] = item;
+            }
+            return map;
+          });
+        }
+      } catch {
+        // Safe error boundary
+      }
+    }
+  };
+
+  const erwtiseis = useMemo(() => {
+    return keimena.map((keimeno, index) =>
+      analise_erwtisi_autoelegchou(keimeno, index, enotitaId)
+    );
+  }, [keimena, enotitaId]);
+
+  return (
+    <div className="odigos-autoelegchos-lista">
+      {erwtiseis.map((e, index) => (
+        <AutoelegchosErwtisi
+          key={`${e.ennoia}-${index}`}
+          arithmos={index + 1}
+          erwtisi={e.erwtisi}
+          apantisi={e.apantisi}
+          ennoia={e.ennoia}
+          kouti={katastaseis[e.ennoia]?.kouti ?? 1}
+          onApantisi={(sosto) => xeirismosApantisisGiaEnnoia(e.ennoia, sosto)}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -215,11 +443,19 @@ export default function OdigosMeletis() {
                   <h2 className="odigos-epikefalida" data-testid="odigos-epikefalida">
                     {EPKEFALIDES_TMIMATON[kleidi]}
                   </h2>
-                  <div className="odigos-paragrafos">
-                    {tmima.keimena.map((keimeno) => (
-                      <p key={keimeno}>{keimeno}</p>
-                    ))}
-                  </div>
+                  {kleidi === 'autoelegchos' ? (
+                    <AutoelegchosAkordeon
+                      keimena={tmima.keimena}
+                      kodikosMathimatos={kodikosMathimatos}
+                      enotitaId={enotitaId}
+                    />
+                  ) : (
+                    <div className="odigos-paragrafos">
+                      {tmima.keimena.map((keimeno) => (
+                        <p key={keimeno}>{keimeno}</p>
+                      ))}
+                    </div>
+                  )}
                   <ParapompiTmimatos parapompi={tmima.parapompi} />
                 </section>
               );

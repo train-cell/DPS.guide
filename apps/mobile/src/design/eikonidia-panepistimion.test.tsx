@@ -136,7 +136,7 @@ describe('kanonikopoiise_panepistimio_id & pare_panepistimio_dedomena', () => {
   });
 
   it('PANEPISTIMIA_LISTA perilamvanei ta vasika idrymata tis Elladas', () => {
-    expect(PANEPISTIMIA_LISTA.length).toBeGreaterThanOrEqual(8);
+    expect(PANEPISTIMIA_LISTA.length).toBe(28);
     const ids = PANEPISTIMIA_LISTA.map((p) => p.id);
     expect(ids).toContain('unipi');
     expect(ids).toContain('uoa');
@@ -145,8 +145,26 @@ describe('kanonikopoiise_panepistimio_id & pare_panepistimio_dedomena', () => {
     expect(ids).toContain('auth');
     expect(ids).toContain('upatras');
     expect(ids).toContain('uoc');
+    expect(ids).toContain('duth');
+    expect(ids).toContain('tuc_ece');
+    expect(ids).toContain('uom_dai');
     expect(ids).toContain('stem');
     expect(ids).toContain('custom');
+  });
+
+  it('ola ta stoixeia tis PANEPISTIMIA_LISTA exoun egkyres katigories kai lms', () => {
+    const egkyresKatigories = new Set(['athina', 'thessaloniki', 'perifereia', 'stem', 'custom']);
+    const egkyraLms = new Set(['open-eclass', 'moodle', 'unsupported', 'auto']);
+
+    for (const p of PANEPISTIMIA_LISTA) {
+      expect(egkyresKatigories.has(p.katigoria), `Mi egkyri katigoria sto ${p.id}`).toBe(true);
+      if (p.lms) {
+        expect(egkyraLms.has(p.lms), `Mi egkyro lms sto ${p.id}`).toBe(true);
+      }
+      if (p.id !== 'custom') {
+        expect(p.baseEclass.startsWith('https://'), `To ${p.id} den exei https url: ${p.baseEclass}`).toBe(true);
+      }
+    }
   });
 });
 

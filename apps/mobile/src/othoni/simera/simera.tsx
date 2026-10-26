@@ -3,6 +3,7 @@ import type { MouseEvent as GeventoPedomati } from 'react';
 import { Link } from 'react-router-dom';
 import type { Enotita, Mathima, XartisMathimatos } from '@dps/core';
 import { xrisiApothekisis } from '../../apothiki/index.js';
+import { katagrapse_checkin, ypologismos_seri_meletis } from '../../apothiki/index.js';
 import { xrisiPeriballontos } from '../../periballon/index.js';
 import {
   Karta,
@@ -223,6 +224,46 @@ export function Simera() {
       )
     : null;
 
+  const [checkinLepta, setCheckinLepta] = useState(30);
+  const [checkinMinima, setCheckinMinima] = useState<string | null>(null);
+  const [checkinEktelountai, setCheckinEktelountai] = useState(false);
+
+  const checkins = apothiki.proodhos.checkins ?? [];
+  const seri = ypologismos_seri_meletis(checkins, simeraImerominia);
+
+  const xeirismosCheckin = useCallback(async () => {
+    if (checkinEktelountai) return;
+    setCheckinEktelountai(true);
+    setCheckinMinima(null);
+    try {
+      const kodikos = apothiki.kodikosMathimatos || (sygxronismena[0]?.kodikos ?? '');
+      const enotitaId = protiMiOlokliromeni || (xartisDedomena?.enotites[0]?.id ?? 'en-1');
+      await katagrapse_checkin(
+        periballon.apothiki,
+        kodikos,
+        enotitaId,
+        checkinLepta,
+        false,
+        simeraImerominia
+      );
+      setCheckinMinima('Καταγράφηκε επιτυχώς!');
+      if (kodikos) {
+        apothiki.allaxe_kodiko_mathimatos(kodikos);
+      }
+    } finally {
+      setCheckinEktelountai(false);
+    }
+  }, [
+    checkinEktelountai,
+    apothiki,
+    sygxronismena,
+    protiMiOlokliromeni,
+    xartisDedomena,
+    periballon.apothiki,
+    checkinLepta,
+    simeraImerominia,
+  ]);
+
   return (
     <div className="odoni-lista" data-testid="simera-ekran">
       <ProskelesioOmonimas
@@ -235,6 +276,55 @@ export function Simera() {
           </div>
         ) : undefined}
       />
+
+      <div className="simera-seri-karta">
+        <div className="simera-seri-kefali">
+          <span className="simera-seri-titlos" data-testid="simera-seri">
+            {seri === 1 ? '🔥 1 μέρα σερί' : `🔥 Σερί μελέτης: ${seri} ημέρες`}
+          </span>
+          <span className="simera-seri-ypotitlos">
+            {seri > 0
+              ? `🔥 ${seri} ${seri === 1 ? 'μέρα' : 'μέρες'} σερί`
+              : 'Κατάγραψε τη σημερινή σου μελέτη για να ξεκινήσεις το σερί!'}
+          </span>
+        </div>
+      </div>
+
+      <div className="simera-checkin-karta">
+        <div className="simera-checkin-header">
+          <span className="simera-checkin-titlos">⚡ Γρήγορο Check-in Μελέτης</span>
+          <span className="simera-checkin-perigrafi">
+            Κατάγραψε τα λεπτά που μελέτησες σήμερα για να συνεχίσεις το σερί σου.
+          </span>
+        </div>
+        <div className="simera-checkin-draseis">
+          <input
+            type="number"
+            min={5}
+            max={480}
+            step={5}
+            aria-label="Λεπτά μελέτης"
+            className="simera-checkin-lepta"
+            value={checkinLepta}
+            onChange={(gevma) => setCheckinLepta(Number(gevma.target.value) || 0)}
+          />
+          <span className="odoni-xeiris-zeugos">λεπτά</span>
+          <button
+            type="button"
+            className="pilegma pilegma-entono simera-checkin-koumpi"
+            data-testid="simera-checkin"
+            disabled={checkinEktelountai}
+            onClick={() => {
+              void xeirismosCheckin();
+            }}
+          >
+            {checkinEktelountai ? 'Καταγραφή…' : 'Καταγραφή μελέτης'}
+          </button>
+          {checkinMinima !== null && (
+            <span className="simera-checkin-minima">{checkinMinima}</span>
+          )}
+        </div>
+      </div>
 
       <div className="simera-draseis-plegma">
         <Link to={dromosProtisEnotitas} className="simera-drasis-karta">

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { IonButton } from '@ionic/react';
-import type { Mathima } from '@dps/core';
+import type { Mathima, Arxeio } from '@dps/core';
 import { Karta, OloniKatastasis, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
 import { fortosi, sfalma } from '../../kathstasi/index.js';
@@ -9,6 +9,73 @@ import { xrisiPeriballontos } from '../../periballon/index.js';
 import { xrisiApothekisis } from '../../apothiki/index.js';
 import { fortose_mathimata_apo_apothiki } from '../../ypiresies/index.js';
 import { epanasygxronise_mathimata_apo_apothiki } from '../../ypiresies/syndesi-eclass.js';
+import { fortose_eurethrio } from '../../provoli-pdf/provoli-ypiresies.js';
+
+/** Μετατρέπει μέγεθος byte σε ευανάγνωστη μορφή KB/MB. */
+export function morfopoiise_megethos_arxeiou(bytes: number | null | undefined): string {
+  if (bytes === null || bytes === undefined || !Number.isFinite(bytes) || bytes < 0) {
+    return 'Άγνωστο';
+  }
+  if (bytes < 1024 * 1024) {
+    const kb = bytes / 1024;
+    return `${kb.toFixed(1)} KB`;
+  }
+  const mb = bytes / (1024 * 1024);
+  return `${mb.toFixed(1)} MB`;
+}
+
+/** Προβολή δέντρου αρχείων μαθήματος με συνδέσμους προς το PDF reader. */
+export function DentroArxeionMathimatos({
+  mathima,
+}: {
+  readonly mathima: Mathima;
+}) {
+  const periballon = xrisiPeriballontos();
+  const [arxeia, setArxeia] = useState<readonly Arxeio[]>([]);
+  const [fortonei, setFortonei] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    void fortose_eurethrio(periballon.apothiki, mathima.kodikos).then((apotelema) => {
+      if (active) {
+        if (apotelema.ok) {
+          setArxeia(apotelema.timi);
+        }
+        setFortonei(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [periballon.apothiki, mathima.kodikos]);
+
+  if (fortonei || arxeia.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mathima-dentro-arxeion" data-testid={`mathima-dentro-arxeion-${mathima.kodikos}`}>
+      <span className="dentro-arxeion-titlos">Έγγραφα &amp; Αρχεία ({arxeia.length})</span>
+      <ul className="dentro-arxeion-lista">
+        {arxeia.map((arxeio) => {
+          const onomaArxeiou = arxeio.diadromi.split('/').pop() || arxeio.id;
+          return (
+            <li key={arxeio.id} className="dentro-arxeio-stoixeio">
+              <Link
+                to={`/provoli/${encodeURIComponent(arxeio.id)}/1`}
+                className="dentro-arxeio-link"
+                data-testid="arxeio-pdf-link"
+              >
+                <span className="arxeio-onoma">📄 {onomaArxeiou}</span>
+                <span className="arxeio-megethos">{morfopoiise_megethos_arxeiou(arxeio.megethos)}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
 
 /** Ετικέτα που σημαίνει ότι το μάθημα είναι ήδη συγχρονισμένο. */
 export const MINIMA_SYNXRONISMENOU = 'Συγχρονισμένο';
@@ -132,6 +199,12 @@ export default function Mathimata() {
     }
   }, [periballon]);
 
+  const kenoCta = (
+    <Link to="/proedri" className="pilegma pilegma-entono" data-testid="mathimata-keno-cta">
+      Σύνδεση στο eClass →
+    </Link>
+  );
+
   return (
     <div className="episkefsi" data-testid="mathimata-ekran">
       <ProskelesioOmonimas titlos="Μαθήματα" ypokeimeno={YPOKEIMENO_MATHIMATON} />
@@ -145,8 +218,27 @@ export default function Mathimata() {
           </p>
         )}
       </div>
-      <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_LISTAS} epanalipsi={epanalipsi}>
+      <OloniKatastasis
+        katastasi={katastasi}
+        adeioMinima={MINIMA_KENOY_LISTAS}
+        adeioAksi={kenoCta}
+        epanalipsi={epanalipsi}
+      >
         {(mathimata) => {
+          if (mathimata.length === 0) {
+            return (
+              <div className="odoni-lista" data-testid="mathimata-lista">
+                <div className="mathimata-keno-kouti" data-testid="mathimata-keno-perioxi">
+                  <Karta
+                    titlos="Δεν υπάρχουν μαθήματα"
+                    ypokeimeno={MINIMA_KENOY_LISTAS}
+                    akseis={kenoCta}
+                  />
+                </div>
+              </div>
+            );
+          }
+
           const kathara = anazitisi.trim().toLowerCase();
           const filtroMathimata = mathimata.filter((m) => {
             const tairiaseiKeimeno =
@@ -213,11 +305,17 @@ export default function Mathimata() {
                   />
                 ) : (
                   filtroMathimata.map((mathima) => (
-                    <KartaMathimatos
+                    <div
                       key={mathima.kodikos}
-                      mathima={mathima}
-                      einaiTrexon={mathima.kodikos === kodikosMathimatos}
-                    />
+                      className="mathima-kartela"
+                      data-testid={`mathima-kartela-${mathima.kodikos}`}
+                    >
+                      <KartaMathimatos
+                        mathima={mathima}
+                        einaiTrexon={mathima.kodikos === kodikosMathimatos}
+                      />
+                      <DentroArxeionMathimatos mathima={mathima} />
+                    </div>
                   ))
                 )}
               </div>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { BiometricAuth, AndroidBiometryStrength } from '@aparajita/capacitor-biometric-auth';
 import type { Periballon } from '../periballon/periballon.js';
@@ -27,6 +27,7 @@ export interface VaultSecurityControls {
   readonly enableBiometrics: () => Promise<void>;
   readonly disableBiometrics: () => Promise<void>;
   readonly createEncryptedBackup: (backupPassword: string) => Promise<Blob>;
+  readonly lockVault: () => void;
 }
 
 const VaultSecurityContext = createContext<VaultSecurityControls | null>(null);
@@ -130,17 +131,18 @@ export function VaultGate({ children }: Props) {
     return () => { active = false; };
   }, [device]);
 
+  const lock = useCallback((): void => {
+    if (session === null && pendingSession === null) return;
+    setSession(null);
+    setPendingSession(null);
+    setRecoveryKey(null);
+    setMasterPassword('');
+    setConfirmation('');
+    setCredential('');
+    setMode('unlock');
+  }, [session, pendingSession]);
+
   useEffect(() => {
-    const lock = (): void => {
-      if (session === null && pendingSession === null) return;
-      setSession(null);
-      setPendingSession(null);
-      setRecoveryKey(null);
-      setMasterPassword('');
-      setConfirmation('');
-      setCredential('');
-      setMode('unlock');
-    };
     const onVisibility = (): void => {
       if (document.visibilityState === 'hidden' && (session !== null || pendingSession !== null)) lock();
     };
@@ -150,7 +152,7 @@ export function VaultGate({ children }: Props) {
       window.removeEventListener('pagehide', lock);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [session, pendingSession]);
+  }, [lock, session, pendingSession]);
 
   async function setup(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -346,6 +348,7 @@ export function VaultGate({ children }: Props) {
       enableBiometrics,
       disableBiometrics,
       createEncryptedBackup: (password) => createEncryptedBackup(device.apothiki, device.mystika, password),
+      lockVault: lock,
     }}>
       <ParoxosPeriballontos periballon={periballon}>{children}</ParoxosPeriballontos>
     </VaultSecurityContext.Provider>

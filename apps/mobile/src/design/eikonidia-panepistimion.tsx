@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { LISTA_PANEPISTIMION } from '@dps/core';
 
 /**
  * Onomata kai anagnoristika ellinikon panepistimion.
@@ -6,13 +7,38 @@ import type { ReactNode } from 'react';
  */
 export type PanepistimioId =
   | 'unipi'
+  | 'unipi_cs'
   | 'uoa'
+  | 'uoa_dit'
   | 'ntua'
+  | 'ntua_mycourses'
   | 'aueb'
+  | 'aueb_cs'
   | 'auth'
+  | 'auth_cs'
   | 'upatras'
+  | 'upatras_ceid'
   | 'uoc'
+  | 'uoc_csd'
+  | 'tuc_ece'
   | 'duth'
+  | 'duth_ee'
+  | 'uoi_cs'
+  | 'uth_inf'
+  | 'hua_dit'
+  | 'panteion'
+  | 'aegean_icsd'
+  | 'ionio_di'
+  | 'uowm_ece'
+  | 'uop_dit'
+  | 'uniwa_ice'
+  | 'hmu_cs'
+  | 'ihu_iee'
+  | 'aua'
+  | 'asfa'
+  | 'aspete'
+  | 'eap'
+  | 'uom_dai'
   | 'stem'
   | 'custom'
   | 'geniko';
@@ -40,98 +66,96 @@ export interface PanepistimioDedomena {
 /** Proepilegmeno megethos tou eikonidiou se px. */
 export const PROEPILEGMENTO_MEGETHOS_EIKONIDIOU = 32;
 
-/** Lista me ta ypostirizomena panepistimia gia to onboarding. */
+function kanoniko_id_apo_core(id: string): PanepistimioId {
+  switch (id) {
+    case 'uoa_dit':
+      return 'uoa';
+    case 'ntua_mycourses':
+      return 'ntua';
+    case 'aueb_cs':
+      return 'aueb';
+    case 'auth_cs':
+      return 'auth';
+    case 'upatras_ceid':
+      return 'upatras';
+    case 'uoc_csd':
+      return 'uoc';
+    case 'duth_ee':
+      return 'duth';
+    default:
+      return id as PanepistimioId;
+  }
+}
+
+function katigoria_apo_core(id: string, perioxh: string): KatigoriaPanepistimiou {
+  if (id === 'ntua_mycourses' || id === 'ntua') {
+    return 'stem';
+  }
+  if (perioxh === 'athina') {
+    return 'athina';
+  }
+  if (perioxh === 'thessaloniki') {
+    return 'thessaloniki';
+  }
+  return 'perifereia';
+}
+
+function lms_apo_core(id: string, typos_lms: string): 'open-eclass' | 'moodle' | 'unsupported' | 'auto' {
+  if (id === 'ntua_mycourses' || id === 'ntua') {
+    return 'unsupported';
+  }
+  if (typos_lms === 'moodle') {
+    return 'moodle';
+  }
+  if (typos_lms === 'openeclass') {
+    return 'open-eclass';
+  }
+  return 'unsupported';
+}
+
+const DEDOMENA_STEM: PanepistimioDedomena = {
+  id: 'stem',
+  onoma: 'Γενικό STEM / Πληροφορική',
+  syntomiOnomasia: 'STEM',
+  baseEclass: 'https://eclass.gunet.gr',
+  katigoria: 'stem',
+  perigrafi: 'Open eClass / GUnet STEM',
+  lms: 'open-eclass',
+};
+
+const DEDOMENA_CUSTOM: PanepistimioDedomena = {
+  id: 'custom',
+  onoma: 'Προσαρμοσμένο URL / Άλλο',
+  syntomiOnomasia: 'Custom',
+  baseEclass: '',
+  katigoria: 'custom',
+  perigrafi: 'Χειροκίνητη εισαγωγή διεύθυνσης eClass',
+  lms: 'auto',
+};
+
+/** Lista me ta ypostirizomena panepistimia gia to onboarding. Perilamvanei ola ta 26 idrymata tou @dps/core syn stem kai custom. */
 export const PANEPISTIMIA_LISTA: readonly PanepistimioDedomena[] = Object.freeze([
-  {
-    id: 'unipi',
-    onoma: 'Πανεπιστήμιο Πειραιώς',
-    syntomiOnomasia: 'ΠΑΠΕΙ',
-    baseEclass: 'https://thales.cs.unipi.gr',
-    katigoria: 'athina',
-    perigrafi: 'Τμήμα Πληροφορικής & eClass ΠΑΠΕΙ',
-    lms: 'open-eclass',
-  },
-  {
-    id: 'uoa',
-    onoma: 'Εθνικό & Καποδιστριακό Πανεπιστήμιο Αθηνών',
-    syntomiOnomasia: 'ΕΚΠΑ',
-    baseEclass: 'https://eclass.uoa.gr',
-    katigoria: 'athina',
-    perigrafi: 'Πλατφόρμα Τηλεκπαίδευσης ΕΚΠΑ',
-    lms: 'open-eclass',
-  },
-  {
-    id: 'ntua',
-    onoma: 'Εθνικό Μετσόβιο Πολυτεχνείο',
-    syntomiOnomasia: 'ΕΜΠ',
-    baseEclass: 'https://mycourses.ntua.gr',
-    katigoria: 'stem',
-    perigrafi: 'MyCourses ΕΜΠ',
-    lms: 'unsupported',
-  },
-  {
-    id: 'aueb',
-    onoma: 'Οικονομικό Πανεπιστήμιο Αθηνών',
-    syntomiOnomasia: 'ΟΠΑ',
-    baseEclass: 'https://eclass.aueb.gr',
-    katigoria: 'athina',
-    perigrafi: 'eClass ΟΠΑ (ΑΣΟΕΕ)',
-    lms: 'open-eclass',
-  },
-  {
-    id: 'auth',
-    onoma: 'Αριστοτέλειο Πανεπιστήμιο Θεσσαλονίκης',
-    syntomiOnomasia: 'ΑΠΘ',
-    baseEclass: 'https://elearning.auth.gr',
-    katigoria: 'thessaloniki',
-    perigrafi: 'eLearning ΑΠΘ',
-    lms: 'moodle',
-  },
-  {
-    id: 'upatras',
-    onoma: 'Πανεπιστήμιο Πατρών',
-    syntomiOnomasia: 'ΠΑΤΡΑ',
-    baseEclass: 'https://eclass.upatras.gr',
-    katigoria: 'perifereia',
-    perigrafi: 'eClass Πανεπιστημίου Πατρών',
-    lms: 'open-eclass',
-  },
-  {
-    id: 'uoc',
-    onoma: 'Πανεπιστήμιο Κρήτης',
-    syntomiOnomasia: 'ΚΡΗΤΗ',
-    baseEclass: 'https://elearn.uoc.gr',
-    katigoria: 'perifereia',
-    perigrafi: 'eLearn Πανεπιστημίου Κρήτης',
-    lms: 'moodle',
-  },
-  {
-    id: 'duth',
-    onoma: 'Δημοκρίτειο Πανεπιστήμιο Θράκης',
-    syntomiOnomasia: 'ΔΠΘ',
-    baseEclass: 'https://eclass.duth.gr',
-    katigoria: 'perifereia',
-    perigrafi: 'eClass ΔΠΘ',
-    lms: 'open-eclass',
-  },
-  {
-    id: 'stem',
-    onoma: 'Γενικό STEM / Πληροφορική',
-    syntomiOnomasia: 'STEM',
-    baseEclass: 'https://eclass.gunet.gr',
-    katigoria: 'stem',
-    perigrafi: 'Open eClass / GUnet STEM',
-    lms: 'open-eclass',
-  },
-  {
-    id: 'custom',
-    onoma: 'Προσαρμοσμένο URL / Άλλο',
-    syntomiOnomasia: 'Custom',
-    baseEclass: '',
-    katigoria: 'custom',
-    perigrafi: 'Χειροκίνητη εισαγωγή διεύθυνσης eClass',
-    lms: 'auto',
-  },
+  ...LISTA_PANEPISTIMION.map((p): PanepistimioDedomena => {
+    const id = kanoniko_id_apo_core(p.id);
+    const baseEclass = p.id === 'unipi' ? 'https://thales.cs.unipi.gr' : p.base_url;
+    const perigrafi =
+      p.id === 'unipi' || p.id === 'unipi_cs'
+        ? 'Τμήμα Πληροφορικής & eClass ΠΑΠΕΙ'
+        : p.tmima && p.tmima.length > 0
+          ? p.tmima
+          : p.onoma;
+    return {
+      id,
+      onoma: p.onoma,
+      syntomiOnomasia: p.syntomi_onomasia,
+      baseEclass,
+      katigoria: katigoria_apo_core(p.id, p.perioxh),
+      perigrafi,
+      lms: lms_apo_core(p.id, p.typos_lms),
+    };
+  }),
+  DEDOMENA_STEM,
+  DEDOMENA_CUSTOM,
 ]);
 
 /** Kanonikopoiei opoiodipote anagnoristiko panepistimiou sto egkyro PanepistimioId. */
@@ -141,31 +165,92 @@ export function kanonikopoiise_panepistimio_id(id: string): PanepistimioId {
     case 'unipi':
     case 'papei':
       return 'unipi';
+    case 'unipi_cs':
+      return 'unipi_cs';
     case 'uoa':
+    case 'uoa_dit':
     case 'ekpa':
       return 'uoa';
     case 'ntua':
+    case 'ntua_mycourses':
     case 'emp':
       return 'ntua';
     case 'aueb':
+    case 'aueb_cs':
     case 'opa':
     case 'asoee':
       return 'aueb';
     case 'auth':
+    case 'auth_cs':
     case 'apth':
       return 'auth';
     case 'upatras':
+    case 'upatras_ceid':
     case 'patra':
     case 'patras':
     case 'uop':
       return 'upatras';
     case 'uoc':
+    case 'uoc_csd':
     case 'kriti':
     case 'uok':
       return 'uoc';
     case 'duth':
+    case 'duth_ee':
     case 'thraki':
       return 'duth';
+    case 'tuc':
+    case 'tuc_ece':
+      return 'tuc_ece';
+    case 'uoi':
+    case 'uoi_cs':
+      return 'uoi_cs';
+    case 'uth':
+    case 'uth_inf':
+      return 'uth_inf';
+    case 'hua':
+    case 'hua_dit':
+      return 'hua_dit';
+    case 'panteion':
+      return 'panteion';
+    case 'aegean':
+    case 'aegean_icsd':
+      return 'aegean_icsd';
+    case 'ionio':
+    case 'ionio_di':
+      return 'ionio_di';
+    case 'uowm':
+    case 'uowm_ece':
+      return 'uowm_ece';
+    case 'uop_dit':
+      return 'uop_dit';
+    case 'uniwa':
+    case 'uniwa_ice':
+    case 'pada':
+      return 'uniwa_ice';
+    case 'hmu':
+    case 'hmu_cs':
+    case 'elmepa':
+      return 'hmu_cs';
+    case 'ihu':
+    case 'ihu_iee':
+    case 'dipae':
+      return 'ihu_iee';
+    case 'aua':
+    case 'gpa':
+      return 'aua';
+    case 'asfa':
+    case 'askt':
+      return 'asfa';
+    case 'aspete':
+    case 'aspaite':
+      return 'aspete';
+    case 'eap':
+      return 'eap';
+    case 'uom':
+    case 'uom_dai':
+    case 'pamak':
+      return 'uom_dai';
     case 'stem':
     case 'pliroforiki':
     case 'cs':
@@ -182,7 +267,11 @@ export function kanonikopoiise_panepistimio_id(id: string): PanepistimioId {
 /** Epistrefei ta dedomena panepistimiou vasei tou anagnoristikou. */
 export function pare_panepistimio_dedomena(id: string): PanepistimioDedomena | undefined {
   const kanoniko = kanonikopoiise_panepistimio_id(id);
-  return PANEPISTIMIA_LISTA.find((panepistimio) => panepistimio.id === kanoniko);
+  const katharo = id.trim().toLowerCase();
+  return (
+    PANEPISTIMIA_LISTA.find((panepistimio) => panepistimio.id === kanoniko) ??
+    PANEPISTIMIA_LISTA.find((panepistimio) => panepistimio.id === katharo)
+  );
 }
 
 /** Dilosi idiotiton gia to EikonidioPanepistimiou. */
