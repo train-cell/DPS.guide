@@ -27,6 +27,7 @@ export interface VaultSecurityControls {
   readonly enableBiometrics: () => Promise<void>;
   readonly disableBiometrics: () => Promise<void>;
   readonly createEncryptedBackup: (backupPassword: string) => Promise<Blob>;
+  readonly restoreBackupFromFile: (backupFile: File, backupPassword: string) => Promise<void>;
   readonly lockVault: () => void;
 }
 
@@ -211,6 +212,35 @@ export function VaultGate({ children }: Props) {
     }
   }
 
+  const restoreBackupFromFile = useCallback(
+    async (file: File, password: string): Promise<void> => {
+      setError(null);
+      setBusy(true);
+      try {
+        const existing = await device.apothiki.lista('.dps-vault');
+        if (existing.ok) {
+          for (const filePath of existing.timi) {
+            await device.apothiki.diagrafi(filePath);
+          }
+        }
+        await device.mystika.svise('vault_biometric_unlock');
+        await restoreEncryptedBackup(device.apothiki, device.mystika, file, password);
+        setSession(null);
+        setPendingSession(null);
+        setRecoveryKey(null);
+        setMasterPassword('');
+        setConfirmation('');
+        setCredential('');
+        setBiometricEnabled(false);
+        setError('Το backup επαναφέρθηκε. Ξεκλείδωσε με τον master password ή το recovery key του backup.');
+        setMode('unlock');
+      } finally {
+        setBusy(false);
+      }
+    },
+    [device],
+  );
+
   async function enableBiometrics(): Promise<void> {
     if (!device.native || session === null && pendingSession === null) {
       throw new Error('Τα βιομετρικά ξεκλειδώματα είναι διαθέσιμα μόνο αφού ανοίξει native vault.');
@@ -348,6 +378,7 @@ export function VaultGate({ children }: Props) {
       enableBiometrics,
       disableBiometrics,
       createEncryptedBackup: (password) => createEncryptedBackup(device.apothiki, device.mystika, password),
+      restoreBackupFromFile,
       lockVault: lock,
     }}>
       <ParoxosPeriballontos periballon={periballon}>{children}</ParoxosPeriballontos>

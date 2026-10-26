@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { IonButton } from '@ionic/react';
+import { IonButton, IonProgressBar } from '@ionic/react';
 import type { Mathima, Arxeio } from '@dps/core';
 import { Karta, OloniKatastasis, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
 import type { Katastasi } from '../../kathstasi/index.js';
@@ -92,6 +92,83 @@ export const MINIMA_SFALMATOS_LISTAS = 'Δεν ήταν δυνατή η φόρτ
 /** Κωδικός σφάλματος δικτύου, κοινός σε όλα τα φορτωτά δεδομένα. */
 export const KODIKOS_SFALMATOS_DIKTYOU = 'DIKTYO';
 
+/** Στάδια της διαδικασίας συγχρονισμού από το LMS. */
+export const STADIA_SYGXRONISMOU: readonly string[] = [
+  'Σύνδεση στο LMS & ανάκτηση λίστας μαθημάτων...',
+  'Έλεγχος νέων αρχείων & λήψη...',
+  'Κρυπτογράφηση & αποθήκευση στο vault...',
+];
+
+/** Ιδιότητες προόδου συγχρονισμού. */
+export interface ProodosSygxronismouProps {
+  readonly stadio?: number;
+  readonly pososto?: number;
+}
+
+/** Component αναλυτικής προόδου συγχρονισμού με granular feedback και IonProgressBar. */
+export function ProodosSygxronismou({
+  stadio = 1,
+  pososto,
+}: ProodosSygxronismouProps) {
+  const trexonStadio = Math.max(1, Math.min(STADIA_SYGXRONISMOU.length, stadio));
+  const telikoPososto = pososto !== undefined
+    ? Math.max(0, Math.min(100, Math.round(pososto)))
+    : Math.round((trexonStadio / STADIA_SYGXRONISMOU.length) * 100);
+  const trexonKeimeno = STADIA_SYGXRONISMOU[trexonStadio - 1] ?? STADIA_SYGXRONISMOU[0];
+
+  return (
+    <div
+      className="proodos-sygxronismou-kouti"
+      data-testid="mathimata-proodos-sygxronismou"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="proodos-sygxronismou-kefali">
+        <span className="proodos-sygxronismou-stadio-titlos">
+          Στάδιο {trexonStadio} από {STADIA_SYGXRONISMOU.length}
+        </span>
+        <span className="proodos-sygxronismou-pososto" data-testid="proodos-pososto">
+          {telikoPososto}%
+        </span>
+      </div>
+
+      <div
+        className="proodos-sygxronismou-mpara-periexon"
+        role="progressbar"
+        aria-valuenow={telikoPososto}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={trexonKeimeno}
+      >
+        <IonProgressBar value={telikoPososto / 100} />
+      </div>
+
+      <div className="proodos-sygxronismou-keimeno">
+        {trexonKeimeno}
+      </div>
+
+      <ul className="proodos-sygxronismou-stadia-lista">
+        {STADIA_SYGXRONISMOU.map((titlosStadiou, deiktis) => {
+          const arithmos = deiktis + 1;
+          const olokliromeno = trexonStadio > arithmos;
+          const trexon = trexonStadio === arithmos;
+          return (
+            <li
+              key={titlosStadiou}
+              className={`proodos-stadio-stoixeio${olokliromeno ? ' olokliromeno' : ''}${trexon ? ' trexon' : ''}`}
+            >
+              <span className="proodos-stadio-simio">
+                {olokliromeno ? '✓' : arithmos}
+              </span>
+              <span className="proodos-stadio-titlos">{titlosStadiou}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 /** Κάρτα ενός μαθήματος που οδηγεί στον χάρτη ενοτήτων του με πλούσια UniStudents μεταδεδομένα. */
 export function KartaMathimatos({
   mathima,
@@ -146,6 +223,8 @@ export default function Mathimata() {
   const [anazitisi, setAnazitisi] = useState('');
   const [filtro, setFiltro] = useState<'ola' | 'sygxronismena' | 'ekkremei'>('ola');
   const [sygxronizetai, setSygxronizetai] = useState(false);
+  const [stadioSygxronismou, setStadioSygxronismou] = useState(1);
+  const [posostoSygxronismou, setPosostoSygxronismou] = useState(20);
   const [minimaSygxronismou, setMinimaSygxronismou] = useState<{
     readonly typos: 'epitychia' | 'sfalma';
     readonly keimeno: string;
@@ -176,13 +255,35 @@ export default function Mathimata() {
 
   const sygxronise = useCallback(async () => {
     setSygxronizetai(true);
+    setStadioSygxronismou(1);
+    setPosostoSygxronismou(20);
     setMinimaSygxronismou(null);
+
+    const xronodiakoptis = setInterval(() => {
+      setPosostoSygxronismou((palio) => {
+        if (palio < 50) {
+          return palio + 15;
+        }
+        if (palio < 80) {
+          setStadioSygxronismou(2);
+          return palio + 15;
+        }
+        if (palio < 95) {
+          setStadioSygxronismou(3);
+          return palio + 5;
+        }
+        return palio;
+      });
+    }, 350);
+
     try {
       const result = await epanasygxronise_mathimata_apo_apothiki(periballon);
       if (!result.ok) {
         setMinimaSygxronismou({ typos: 'sfalma', keimeno: result.sfalma.minima });
         return;
       }
+      setStadioSygxronismou(3);
+      setPosostoSygxronismou(100);
       const refreshed = await fortose_mathimata_apo_apothiki(periballon.apothiki);
       setKatastasi(refreshed);
       setMinimaSygxronismou({
@@ -195,6 +296,7 @@ export default function Mathimata() {
         keimeno: 'Ο συγχρονισμός απέτυχε. Έλεγξε τη σύνδεση και δοκίμασε ξανά.',
       });
     } finally {
+      clearInterval(xronodiakoptis);
       setSygxronizetai(false);
     }
   }, [periballon]);
@@ -210,9 +312,15 @@ export default function Mathimata() {
       <ProskelesioOmonimas titlos="Μαθήματα" ypokeimeno={YPOKEIMENO_MATHIMATON} />
       <div className="mathimata-sygxronismos" data-testid="mathimata-sygxronismos">
         <IonButton type="button" onClick={() => void sygxronise()} disabled={sygxronizetai}>
-          {sygxronizetai ? 'Συγχρονισμός…' : 'Συγχρονισμός από LMS'}
+          {sygxronizetai ? 'Συγχρονισμός σε εξέλιξη…' : 'Συγχρονισμός από LMS'}
         </IonButton>
-        {minimaSygxronismou !== null && (
+        {sygxronizetai && (
+          <ProodosSygxronismou
+            stadio={stadioSygxronismou}
+            pososto={posostoSygxronismou}
+          />
+        )}
+        {minimaSygxronismou !== null && !sygxronizetai && (
           <p role={minimaSygxronismou.typos === 'sfalma' ? 'alert' : 'status'}>
             {minimaSygxronismou.keimeno}
           </p>

@@ -20,6 +20,10 @@ const APOTELEMATA = [
   'rythisies-apothekeysto',
   'rythisies-eidopoiseis-othoni',
   'rythisies-kleidoma-vault',
+  'rythisies-backup-export',
+  'rythisies-backup-restore',
+  'rythisies-backup-file',
+  'rythisies-export-logs',
 ] as const;
 
 /** Αποδίδει την οθόνη χωρίς Provider· ο γαντζότης πέφτει στις προεπιλογές της αποθήκευσης.
@@ -113,10 +117,11 @@ describe('Rythisies — επεξεργασία και αποθήκευση', () 
     expect(ARXIKOS).toMatch(/await apothiki\.allaxe_rytheseis/);
   });
 
-  it('η οθόνη έχει δύο επεξεργάσιμα πεδία κειμένου και κουμπί αποθήκευσης', () => {
+  it('η οθόνη έχει επεξεργάσιμα πεδία κειμένου, επιλογέα αρχείου και κουμπί αποθήκευσης', () => {
     const html = apostrophes_rythisi();
-    expect((html.match(/<input/g) ?? []).length).toBe(1);
+    expect((html.match(/<input/g) ?? []).length).toBe(2);
     expect(html).toContain('rythisies-apothekeysto');
+    expect(html).toContain('rythisies-backup-file');
     expect(ARXIKOS).toContain('onSubmit={ypostiripse}');
   });
 
@@ -126,6 +131,9 @@ describe('Rythisies — επεξεργασία και αποθήκευση', () 
     expect(html).toContain('aria-label="Όνομα μοντέλου AI"');
     expect(html).toContain('aria-label="Τοπικές ειδοποιήσεις"');
     expect(html).toContain('aria-label="Αποθήκευση ρυθμίσεων"');
+    expect(html).toContain('aria-label="Εξαγωγή Αντιγράφου Ασφαλείας"');
+    expect(html).toContain('aria-label="Επαναφορά Αντιγράφου Ασφαλείας"');
+    expect(html).toContain('aria-label="Αρχείο επαναφοράς backup"');
   });
 
   it('οι ειδοποιήσεις είναι role=switch, όχι γυμνό checkbox', () => {
@@ -198,5 +206,17 @@ describe('Rythisies — περιορισμοί κώδικα', () => {
     expect(html).toContain('Κλείδωμα Vault Τώρα');
     expect(ARXIKOS).toContain('useVaultSecurity');
     expect(ARXIKOS).toContain('lockVault()');
+  });
+
+  it('περιλαμβάνει εργαλεία εξαγωγής και επαναφοράς κρυπτογραφημένου backup (.enc)', () => {
+    const html = apostrophes_rythisi();
+    expect(html).toContain('data-testid="rythisies-backup-export"');
+    expect(html).toContain('data-testid="rythisies-backup-restore"');
+    expect(html).toContain('data-testid="rythisies-backup-file"');
+    expect(html).toContain('Εξαγωγή Backup (.enc)');
+    expect(html).toContain('Επαναφορά Backup');
+    expect(ARXIKOS).toContain('createEncryptedBackup');
+    expect(ARXIKOS).toContain('restoreBackupFromFile');
+    expect(ARXIKOS).toContain('deliverEncryptedBackup');
   });
 });

@@ -7,6 +7,8 @@ import OdigosMeletis, {
   AutoelegchosAkordeon,
   AutoelegchosErwtisi,
   ParapompiTmimatos,
+  ProodosDimiourgiasOdigou,
+  STADIA_DIMIOURGIAS_ODIGOU,
   analise_erwtisi_autoelegchou,
   lezanta_leitner_koutioy,
 } from './odigos.js';
@@ -137,6 +139,7 @@ describe('odigos — συμβόλαιο data-testid στον πηγαίο κώδ
       'odigos-episostrofh',
       'odigos-parapompi',
       'odigos-dimiourgia',
+      'odigos-proodos-analisis',
     ]) {
       expect(arxeio).toContain(`data-testid="${testid}"`);
     }
@@ -261,5 +264,39 @@ describe('odigos — AutoelegchosAkordeon & Leitner 5-box', () => {
     expect(html).toContain('Ερώτηση 2:');
     expect(html).toContain('Τι είναι float;');
     expect(html).toContain('Κουτί 1');
+  });
+
+  describe('odigos — ProodosDimiourgiasOdigou (Stream 3)', () => {
+    it('περιλαμβάνει και τα τρία στάδια ανάλυσης και σύνθεσης οδηγού', () => {
+      expect(STADIA_DIMIOURGIAS_ODIGOU).toEqual([
+        'Ανάγνωση τοπικά αποθηκευμένου υλικού...',
+        'Εξαγωγή εννοιών & λυμένων παραδειγμάτων...',
+        'Σύνθεση οδηγού 7 ενοτήτων & παραπομπών...',
+      ]);
+    });
+
+    it('αποδίδει το component με data-testid="odigos-proodos-analisis", progress bar και ποσοστό', () => {
+      const html = renderToStaticMarkup(<ProodosDimiourgiasOdigou stadio={1} pososto={33} />);
+      expect(html).toContain('data-testid="odigos-proodos-analisis"');
+      expect(html).toContain('role="progressbar"');
+      expect(html).toContain('aria-valuenow="33"');
+      expect(html).toContain('33%');
+      expect(html).toContain('ion-progress-bar');
+      expect(html).toContain('Ανάγνωση τοπικά αποθηκευμένου υλικού...');
+      expect(html).toContain('Εξαγωγή εννοιών &amp; λυμένων παραδειγμάτων...');
+      expect(html).toContain('Σύνθεση οδηγού 7 ενοτήτων &amp; παραπομπών...');
+    });
+
+    it('αποδίδει ένδειξη ολοκλήρωσης σταδίων 2 και 3', () => {
+      const html2 = renderToStaticMarkup(<ProodosDimiourgiasOdigou stadio={2} pososto={66} />);
+      expect(html2).toContain('aria-valuenow="66"');
+      expect(html2).toContain('66%');
+      expect(html2).toContain('Στάδιο 2/3');
+
+      const html3 = renderToStaticMarkup(<ProodosDimiourgiasOdigou stadio={3} pososto={100} />);
+      expect(html3).toContain('aria-valuenow="100"');
+      expect(html3).toContain('100%');
+      expect(html3).toContain('Στάδιο 3/3');
+    });
   });
 });

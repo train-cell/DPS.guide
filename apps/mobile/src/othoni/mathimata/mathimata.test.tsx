@@ -4,7 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import type { ReactElement } from 'react';
-import Mathimata, { KartaMathimatos, DentroArxeionMathimatos, morfopoiise_megethos_arxeiou } from './mathimata.js';
+import Mathimata, {
+  KartaMathimatos,
+  DentroArxeionMathimatos,
+  ProodosSygxronismou,
+  STADIA_SYGXRONISMOU,
+  morfopoiise_megethos_arxeiou,
+} from './mathimata.js';
 import { pseudos_mathimata } from '../../../test-fixtures/pseudomata/index.js';
 import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
 
@@ -94,5 +100,54 @@ describe('mathimata — οθόνη λίστας μαθημάτων', () => {
     expect(pigi).toContain('fortose_eurethrio');
     expect(pigi).toContain('/provoli/');
     expect(pigi).toContain('arxeio-pdf-link');
+  });
+
+  describe('ProodosSygxronismou — αναλυτική πρόοδος συγχρονισμού (Stream 3)', () => {
+    it('περιλαμβάνει και τα τρία απαιτούμενα στάδια συγχρονισμού', () => {
+      expect(STADIA_SYGXRONISMOU).toEqual([
+        'Σύνδεση στο LMS & ανάκτηση λίστας μαθημάτων...',
+        'Έλεγχος νέων αρχείων & λήψη...',
+        'Κρυπτογράφηση & αποθήκευση στο vault...',
+      ]);
+    });
+
+    it('αποδίδει το component με data-testid="mathimata-proodos-sygxronismou", progress bar και ποσοστό', () => {
+      const html = renderToStaticMarkup(<ProodosSygxronismou stadio={1} pososto={33} />);
+      expect(html).toContain('data-testid="mathimata-proodos-sygxronismou"');
+      expect(html).toContain('role="progressbar"');
+      expect(html).toContain('aria-valuenow="33"');
+      expect(html).toContain('33%');
+      expect(html).toContain('ion-progress-bar');
+      expect(html).toContain('Σύνδεση στο LMS &amp; ανάκτηση λίστας μαθημάτων...');
+      expect(html).toContain('Έλεγχος νέων αρχείων &amp; λήψη...');
+      expect(html).toContain('Κρυπτογράφηση &amp; αποθήκευση στο vault...');
+    });
+
+    it('αποδίδει σωστά ένδειξη ολοκλήρωσης σταδίων στο στάδιο 2 και 3', () => {
+      const html2 = renderToStaticMarkup(<ProodosSygxronismou stadio={2} pososto={66} />);
+      expect(html2).toContain('aria-valuenow="66"');
+      expect(html2).toContain('66%');
+      expect(html2).toContain('Στάδιο 2 από 3');
+
+      const html3 = renderToStaticMarkup(<ProodosSygxronismou stadio={3} pososto={100} />);
+      expect(html3).toContain('aria-valuenow="100"');
+      expect(html3).toContain('100%');
+      expect(html3).toContain('Στάδιο 3 από 3');
+    });
+
+    it('η πηγή της οθόνης περιλαμβάνει το testid της αναλυτικής προόδου και τα testids', () => {
+      const pigi = readFileSync(MONI_PIGIS, 'utf8');
+      expect(pigi).toContain('mathimata-proodos-sygxronismou');
+      expect(pigi).toContain('ProodosSygxronismou');
+      for (const testid of [
+        'mathimata-ekran',
+        'mathimata-karta',
+        'mathimata-lista',
+        'mathimata-sygxronismos',
+        'mathimata-keno-cta',
+      ]) {
+        expect(pigi).toContain(`"${testid}"`);
+      }
+    });
   });
 });

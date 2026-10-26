@@ -12,6 +12,8 @@ import {
 import { EikonidioPanepistimiou, PANEPISTIMIA_LISTA } from '../../design/eikonidia-panepistimion.js';
 import type { PanepistimioId } from '../../design/eikonidia-panepistimion.js';
 import { useVaultSecurity } from '../../vault/vault-gate.js';
+import { deliverEncryptedBackup } from '../../vault/backup-file.js';
+import { eksagoge_tilemetrias_json } from '../../tilemetria/tilemetria.js';
 
 /** Επιλογές διαθέσιμων θεμάτων εμφάνισης. */
 const THEMATA_EPILOGES: readonly { readonly id: ThemaId; readonly titlos: string }[] = [
@@ -47,6 +49,9 @@ export default function Rythisies() {
   );
   const [apothikefthike, setApothikefthike] = useState(false);
   const [trexonThema, setTrexonThema] = useState<ThemaId>(() => pare_trexon_thema(apothiki.rytheseis.themaId));
+  const [backupArxeio, setBackupArxeio] = useState<File | null>(null);
+  const [backupMinima, setBackupMinima] = useState<string | null>(null);
+  const [backupSeEkseliksi, setBackupSeEkseliksi] = useState(false);
 
   useEffect(() => {
     setGrammata({ baseUrl, einaiEidopoieseis });
@@ -80,6 +85,77 @@ export default function Rythisies() {
     thete_thema(themaId);
     setTrexonThema(themaId);
     void apothiki.allaxe_rytheseis({ ...apothiki.rytheseis, themaId });
+  }
+
+  async function exagogi_backup(): Promise<void> {
+    if (vaultSecurity === null) {
+      setBackupMinima('Το vault δεν είναι διαθέσιμο.');
+      return;
+    }
+    const kodikos =
+      typeof window !== 'undefined' && window.prompt
+        ? window.prompt('Εισάγετε κωδικό αντιγράφου ασφαλείας (τουλάχιστον 12 χαρακτήρες):')
+        : '';
+    if (!kodikos) {
+      return;
+    }
+    if (kodikos.trim().length < 12) {
+      setBackupMinima('Ο κωδικός backup πρέπει να έχει τουλάχιστον 12 χαρακτήρες.');
+      return;
+    }
+    setBackupSeEkseliksi(true);
+    setBackupMinima(null);
+    try {
+      const blob = await vaultSecurity.createEncryptedBackup(kodikos);
+      const onoma = `DPS.guide-${new Date().toISOString().slice(0, 10)}.enc`;
+      await deliverEncryptedBackup(blob, onoma);
+      setBackupMinima('Το αντίγραφο ασφαλείας εξήχθη επιτυχώς.');
+    } catch (sfalmaExagogis) {
+      setBackupMinima(
+        sfalmaExagogis instanceof Error
+          ? sfalmaExagogis.message
+          : 'Αποτυχία δημιουργίας αντιγράφου ασφαλείας.'
+      );
+    } finally {
+      setBackupSeEkseliksi(false);
+    }
+  }
+
+  async function epanastasi_backup(): Promise<void> {
+    if (vaultSecurity === null) {
+      setBackupMinima('Το vault δεν είναι διαθέσιμο.');
+      return;
+    }
+    if (backupArxeio === null) {
+      setBackupMinima('Επιλέξτε πρώτα αρχείο αντιγράφου ασφαλείας (.enc).');
+      return;
+    }
+    const kodikos =
+      typeof window !== 'undefined' && window.prompt
+        ? window.prompt('Εισάγετε τον κωδικό του αντιγράφου ασφαλείας:')
+        : '';
+    if (!kodikos) {
+      return;
+    }
+    if (kodikos.trim().length < 12) {
+      setBackupMinima('Ο κωδικός backup πρέπει να έχει τουλάχιστον 12 χαρακτήρες.');
+      return;
+    }
+    setBackupSeEkseliksi(true);
+    setBackupMinima(null);
+    try {
+      await vaultSecurity.restoreBackupFromFile(backupArxeio, kodikos);
+      setBackupMinima('Το αντίγραφο επαναφέρθηκε επιτυχώς.');
+      setBackupArxeio(null);
+    } catch (sfalmaEpanastasis) {
+      setBackupMinima(
+        sfalmaEpanastasis instanceof Error
+          ? sfalmaEpanastasis.message
+          : 'Αποτυχία επαναφοράς αντιγράφου ασφαλείας.'
+      );
+    } finally {
+      setBackupSeEkseliksi(false);
+    }
   }
 
   function ypostiripse(erevma: FormEvent<HTMLFormElement>): void {
@@ -216,7 +292,59 @@ export default function Rythisies() {
               >
                 Κλείδωμα Vault Τώρα
               </button>
+              <button
+                type="button"
+                className="pilegma pilegma-entono"
+                data-testid="rythisies-backup-export"
+                disabled={backupSeEkseliksi}
+                onClick={() => void exagogi_backup()}
+                aria-label="Εξαγωγή Αντιγράφου Ασφαλείας"
+              >
+                {backupSeEkseliksi ? 'Εξαγωγή…' : 'Εξαγωγή Backup (.enc)'}
+              </button>
+              <button
+                type="button"
+                className="pilegma pilegma-entono"
+                data-testid="rythisies-export-logs"
+                onClick={() => {
+                  const json = eksagoge_tilemetrias_json();
+                  const blob = new Blob([json], { type: 'application/json' });
+                  deliverEncryptedBackup(blob, 'dps-telemetry-logs.json');
+                }}
+                aria-label="Εξαγωγή Logs Τηλεμετρίας"
+              >
+                Εξαγωγή Logs (JSON)
+              </button>
             </div>
+            <div className="odoni-xeiris">
+              <label className="odoni-xeiris-zeugos" htmlFor="rythisies-backup-file">
+                Επαναφορά αντιγράφου (.enc)
+              </label>
+              <input
+                id="rythisies-backup-file"
+                data-testid="rythisies-backup-file"
+                type="file"
+                accept=".enc,.dpsbackup,application/octet-stream,application/vnd.dps-guide.backup"
+                className="pilegma"
+                onChange={(erevma) => setBackupArxeio(erevma.target.files?.[0] ?? null)}
+                aria-label="Αρχείο επαναφοράς backup"
+              />
+              <button
+                type="button"
+                className="pilegma pilegma-entono"
+                data-testid="rythisies-backup-restore"
+                disabled={backupSeEkseliksi || backupArxeio === null}
+                onClick={() => void epanastasi_backup()}
+                aria-label="Επαναφορά Αντιγράφου Ασφαλείας"
+              >
+                {backupSeEkseliksi ? 'Επαναφορά…' : 'Επαναφορά Backup'}
+              </button>
+            </div>
+            {backupMinima !== null && (
+              <p role="status" className="karta-ypokeimeno">
+                {backupMinima}
+              </p>
+            )}
           </div>
         }
       />

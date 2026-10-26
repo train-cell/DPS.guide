@@ -36,8 +36,8 @@ async function writeBlobToPrivateCache(blob: Blob, path: string): Promise<void> 
 }
 
 /** Downloads on desktop browsers or opens the native share sheet from the app-private cache. */
-export async function deliverEncryptedBackup(blob: Blob): Promise<void> {
-  const filename = backupName();
+export async function deliverEncryptedBackup(blob: Blob, onomaArxeiou?: string): Promise<void> {
+  const filename = onomaArxeiou ?? backupName();
   if (!Capacitor.isNativePlatform()) {
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');

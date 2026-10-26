@@ -6,7 +6,7 @@ import { Karta, OloniKatastasis, Pilegma, ProskelesioOmonimas } from '../koinima
 import { etimo, type Katastasi } from '../kathstasi/index.js';
 import type { Rytheseis } from '../apothiki/index.js';
 import { fortose_proodho, fortose_rytheseis, grapse_rytheseis, xrisiApothekisis } from '../apothiki/index.js';
-import { fortose_mathimata_apo_apothiki, fortose_xartis_apo_apothiki } from '../ypiresies/index.js';
+import { fortose_apodosi, fortose_mathimata_apo_apothiki, fortose_xartis_apo_apothiki } from '../ypiresies/index.js';
 import { xrisiPeriballontos } from '../periballon/index.js';
 import {
   IMERES_EVDOMADAS,
@@ -21,6 +21,7 @@ import {
   MINIMA_AKYRIS_ARXIS,
   MINIMA_AKYRIS_EXETASIS,
   MINIMA_AKYRON_OVERRIDES,
+  PROEDAFO_TEMPLATE,
   einai_egkyri_exetasi,
   enimerose_template,
   exetasi_simvolaiou,
@@ -31,6 +32,8 @@ import {
   synolika_lepta_template,
 } from './programma-vohthia.js';
 import './programma.css';
+
+export { PROEDAFO_TEMPLATE };
 
 /** Μια ημερομηνία με τα λεπτά της, όπως τη συμπληρώνει η φόρμα (τα λεπτά ως κείμενο). */
 interface OverrideDraft {
@@ -51,11 +54,12 @@ export interface DedomenaMathimatosMeleti {
   readonly kodikos: string;
   readonly enotites: readonly Enotita[];
   readonly checkins: readonly Checkin[];
+  readonly apodosi?: Readonly<Record<string, number>> | undefined;
 }
 
 export interface RythmiseisProgrammatosProps {
-  readonly arxikaMathimata?: readonly DedomenaMathimatosMeleti[];
-  readonly arxikoDraft?: DraftProgrammatos;
+  readonly arxikaMathimata?: readonly DedomenaMathimatosMeleti[] | undefined;
+  readonly arxikoDraft?: DraftProgrammatos | undefined;
 }
 
 /** Κείμενο κουμπιού προσθήκης εξέτασης. */
@@ -102,7 +106,13 @@ export default function RythmiseisProgrammatos({
   const [apothikefthike, setApothikefthike] = useState(false);
   const [minimaSfalmatos, setMinimaSfalmatos] = useState<string | null>(null);
   const [mathimataMeletis, setMathimataMeletis] = useState<readonly DedomenaMathimatosMeleti[]>(
-    () => arxikaMathimata ?? []
+    () => (arxikaMathimata ?? []).map((m) => ({
+      ...m,
+      enotites: m.enotites.map((en) => ({
+        ...en,
+        apodosi_exetasis: m.apodosi?.[en.id] ?? en.apodosi_exetasis ?? null,
+      })),
+    }))
   );
 
   const fortose = useCallback(() => {
@@ -124,15 +134,21 @@ export default function RythmiseisProgrammatos({
 
       const dedomena: DedomenaMathimatosMeleti[] = [];
       for (const m of mathimataGiaFortosi) {
-        const [xartisApotelesma, proodhos] = await Promise.all([
+        const [xartisApotelesma, proodhos, apodosiRecord] = await Promise.all([
           fortose_xartis_apo_apothiki(periballon.apothiki, m.kodikos),
           fortose_proodho(periballon.apothiki, m.kodikos),
+          fortose_apodosi(periballon.apothiki, m.kodikos),
         ]);
         if (xartisApotelesma.katastasi === 'etimo' && xartisApotelesma.dedomena.enotites.length > 0) {
+          const enotitesMeApodosi: Enotita[] = xartisApotelesma.dedomena.enotites.map((en) => ({
+            ...en,
+            apodosi_exetasis: apodosiRecord[en.id] ?? en.apodosi_exetasis ?? null,
+          }));
           dedomena.push({
             kodikos: m.kodikos,
-            enotites: xartisApotelesma.dedomena.enotites,
+            enotites: enotitesMeApodosi,
             checkins: proodhos.checkins ?? [],
+            apodosi: apodosiRecord,
           });
         }
       }
@@ -164,6 +180,7 @@ export default function RythmiseisProgrammatos({
 
       const enotites: Enotita[] = m.enotites.map((en) => ({
         ...en,
+        apodosi_exetasis: m.apodosi?.[en.id] ?? en.apodosi_exetasis ?? null,
         lepta_ektimisi:
           en.lepta_ektimisi !== null && Number.isFinite(en.lepta_ektimisi) && en.lepta_ektimisi >= 0
             ? en.lepta_ektimisi
@@ -181,13 +198,14 @@ export default function RythmiseisProgrammatos({
       return null;
     }
 
+    const templateLepton = draft.templateLepton ?? PROEDAFO_TEMPLATE;
     const ana_imera_evdomadas = [1, 2, 3, 4, 5, 6, 7].map((imeraNum) => {
-      const grammi = draft.templateLepton.find((g) => g.imera === imeraNum);
+      const grammi = templateLepton.find((g) => g.imera === imeraNum);
       return grammi ? kilise_lepta(grammi.lepta) : 0;
     });
 
     const overrides: Record<string, number> = {};
-    for (const o of draft.overrides) {
+    for (const o of draft.overrides ?? []) {
       if (o.imerominia.trim().length > 0 && stilise_imerominia(o.imerominia.trim()) !== null) {
         overrides[o.imerominia.trim()] = kilise_lepta(Number(o.lepta));
       }
@@ -595,7 +613,7 @@ export default function RythmiseisProgrammatos({
                 )}
               </div>
 
-              <XronodiagrammaMeletis programma={programma} />
+              <XronodiagrammaMeletis programma={programma} mathimata={mathimataMeletis} />
             </>
           )
         }
@@ -606,10 +624,11 @@ export default function RythmiseisProgrammatos({
 
 export interface XronodiagrammaMeletisProps {
   readonly programma: Programma | null;
+  readonly mathimata?: readonly DedomenaMathimatosMeleti[] | undefined;
 }
 
 /** Οπτικό χρονοδιάγραμμα μελέτης (EDF) με ημέρες, εργασίες και πρόταση επιβίωσης. */
-export function XronodiagrammaMeletis({ programma }: XronodiagrammaMeletisProps) {
+export function XronodiagrammaMeletis({ programma, mathimata }: XronodiagrammaMeletisProps) {
   return (
     <Karta
       titlos="Χρονοδιάγραμμα Μελέτης"
@@ -627,20 +646,86 @@ export function XronodiagrammaMeletis({ programma }: XronodiagrammaMeletisProps)
                     Ο χρόνος μέχρι τις εξετάσεις είναι περιορισμένος. Προτείνεται η παράλειψη ή συντόμευση των παρακάτω ενοτήτων:
                   </p>
                   <div className="programma-epiviosi-lista">
-                    {programma.protasi_epiviosis.map((p) => (
-                      <div key={p.kodikos_mathimatos} className="programma-epiviosi-mathima">
-                        <strong>{p.kodikos_mathimatos}:</strong>
-                        <ul>
-                          {p.ypopshfies.map((yp) => (
-                            <li key={yp.enotita_id}>
-                              {yp.titlos} ({yp.lepta} λεπτά)
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
+                    {programma.protasi_epiviosis.map((p) => {
+                      const mathima = mathimata?.find((m) => m.kodikos === p.kodikos_mathimatos);
+                      const pigesEnotiton = mathima ? mathima.enotites : p.ypopshfies;
+                      const ypsilisApodosis = [...pigesEnotiton]
+                        .map((en) => {
+                          const enId = 'id' in en ? en.id : en.enotita_id;
+                          const apod = mathima?.apodosi?.[enId] ?? en.apodosi_exetasis ?? 0;
+                          return {
+                            id: enId,
+                            titlos: en.titlos,
+                            apodosi_exetasis: apod,
+                          };
+                        })
+                        .filter((en) => (en.apodosi_exetasis ?? 0) > 0)
+                        .sort((a, b) => (b.apodosi_exetasis ?? 0) - (a.apodosi_exetasis ?? 0));
+
+                      return (
+                        <div key={p.kodikos_mathimatos} className="programma-epiviosi-mathima">
+                          <strong>{p.kodikos_mathimatos}:</strong>
+                          <ul>
+                            {p.ypopshfies.map((yp) => (
+                              <li key={yp.enotita_id}>
+                                {yp.titlos} ({yp.lepta} λεπτά)
+                              </li>
+                            ))}
+                          </ul>
+                          {ypsilisApodosis.length > 0 && (
+                            <div className="programma-epiviosi-proteraiotita" data-testid="programma-systasi-proteraiotitas">
+                              <span className="programma-epiviosi-proteraiotita-titlos">
+                                🎯 Προτεραιότητα Μελέτης (Υψηλή Απόδοση Θεμάτων):
+                              </span>
+                              <ul>
+                                {ypsilisApodosis.map((yp) => (
+                                  <li key={yp.id} data-testid="programma-proteraiotita-enotita">
+                                    ⭐ {yp.titlos} (+{yp.apodosi_exetasis} μονάδες)
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
+              )}
+              {(!programma.protasi_epiviosis || programma.protasi_epiviosis.length === 0) &&
+                mathimata &&
+                mathimata.some((m) => m.enotites.some((e) => ((m.apodosi?.[e.id] ?? e.apodosi_exetasis) ?? 0) > 0)) && (
+                  <div className="programma-epiviosi-karta" data-testid="programma-systasi-proteraiotitas">
+                    <span className="programma-epiviosi-titlos">🎯 Σύσταση Προτεραιότητας Μελέτης</span>
+                    <p className="programma-epiviosi-perigrafi">
+                      Ενότητες με τη μεγαλύτερη απόδοση στις εξετάσεις:
+                    </p>
+                    <div className="programma-epiviosi-lista">
+                      {mathimata
+                        .filter((m) => m.enotites.some((e) => ((m.apodosi?.[e.id] ?? e.apodosi_exetasis) ?? 0) > 0))
+                        .map((m) => {
+                          const ypsilis = [...m.enotites]
+                            .map((e) => ({
+                              ...e,
+                              apodosi_exetasis: m.apodosi?.[e.id] ?? e.apodosi_exetasis ?? 0,
+                            }))
+                            .filter((e) => (e.apodosi_exetasis ?? 0) > 0)
+                            .sort((a, b) => (b.apodosi_exetasis ?? 0) - (a.apodosi_exetasis ?? 0));
+                          return (
+                            <div key={m.kodikos} className="programma-epiviosi-mathima">
+                              <strong>{m.kodikos}:</strong>
+                              <ul>
+                                {ypsilis.map((e) => (
+                                  <li key={e.id} data-testid="programma-proteraiotita-enotita">
+                                    ⭐ {e.titlos} (+{e.apodosi_exetasis} μονάδες)
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
               )}
               <div className="programma-meres-plegma">
                 {programma.meres.map((mera) => {
