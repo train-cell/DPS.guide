@@ -1,5 +1,6 @@
 import type { AntistoixisiThematos, ApothikiPyli, Apotelesma } from '@dps/core';
 import { ok, ypologise_apodosi } from '@dps/core';
+import { me_tilemetria } from '../tilemetria/tilemetria.js';
 
 /**
  * Διαδρομή φακέλου παλιών θεμάτων ενός μαθήματος στο vault.
@@ -81,13 +82,19 @@ export async function ypologise_kai_apothikefse_apodosi(
   kodikos: string,
   antistoixiseis: AntistoixisiThematos[]
 ): Promise<Apotelesma<Record<string, number>>> {
-  const ypologismos = ypologise_apodosi(antistoixiseis);
-  if (!ypologismos.ok) {
-    return ypologismos;
-  }
-  const apothikefsi = await apothikefse_apodosi(apothiki, kodikos, ypologismos.timi);
-  if (!apothikefsi.ok) {
-    return apothikefsi;
-  }
-  return ok(ypologismos.timi);
+  return me_tilemetria(
+    'ypologise_kai_apothikefse_apodosi',
+    async () => {
+      const ypologismos = ypologise_apodosi(antistoixiseis);
+      if (!ypologismos.ok) {
+        return ypologismos;
+      }
+      const apothikefsi = await apothikefse_apodosi(apothiki, kodikos, ypologismos.timi);
+      if (!apothikefsi.ok) {
+        return apothikefsi;
+      }
+      return ok(ypologismos.timi);
+    },
+    { kodikos, arithmosThematon: antistoixiseis.length }
+  );
 }

@@ -30,6 +30,9 @@ describe('RythmiseisProgrammatos — συμβόλαιο οθόνης και χρ
     expect(markup).toContain('data-testid="programma-template"');
     expect(markup).toContain('data-testid="programma-overrides"');
     expect(markup).toContain('data-testid="programma-apothikefsi"');
+    expect(markup).toContain('data-testid="programma-export-ics"');
+    expect(markup).toContain('aria-label="Εξαγωγή Προγράμματος σε Ημερολόγιο (.ics)"');
+    expect(markup).toContain('Εξαγωγή Ημερολογίου (.ics)');
     expect(markup).toContain('data-testid="programma-xronodiagramma"');
   });
 
@@ -246,5 +249,19 @@ describe('RythmiseisProgrammatos — συμβόλαιο οθόνης και χρ
     expect(markup).toContain('data-testid="programma-systasi-proteraiotitas"');
     expect(markup).toContain('Σύσταση Προτεραιότητας Μελέτης');
     expect(markup).toContain('⭐ Βασικές αρχές και ιστορικό (+30 μονάδες)');
+  });
+
+  it('παρέχει κουμπί εξαγωγής προγράμματος σε αρχείο .ics με σωστή σήμανση προσβασιμότητας', () => {
+    const markup = renderToStaticMarkup(
+      me_periballon_test(
+        <MemoryRouter>
+          <RythmiseisProgrammatos />
+        </MemoryRouter>
+      )
+    );
+
+    expect(markup).toContain('data-testid="programma-export-ics"');
+    expect(markup).toContain('aria-label="Εξαγωγή Προγράμματος σε Ημερολόγιο (.ics)"');
+    expect(markup).toContain('Εξαγωγή Ημερολογίου (.ics)');
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MnimiApothiki } from '@dps/core/testing';
+import { pare_tilemetria_arxeio, katharise_tilemetria } from '../tilemetria/tilemetria.js';
 import {
   apothikefse_apodosi,
   diadromi_apodosis,
@@ -96,5 +97,19 @@ describe('themata ypiresia — υπολογισμός και αποθήκευσ�
 
     const yparxei = await apothiki.yparxei(diadromi_apodosis('PLH101'));
     expect(yparxei).toBe(false);
+  });
+
+  it('ypologise_kai_apothikefse_apodosi καταγράφει τηλεμετρία με me_tilemetria', async () => {
+    katharise_tilemetria();
+    const apothiki = new MnimiApothiki();
+    const antistoixiseis = [{ enotita_id: 'en-1', monades: 10 }];
+
+    await ypologise_kai_apothikefse_apodosi(apothiki, 'PLH101', antistoixiseis);
+
+    const logs = pare_tilemetria_arxeio();
+    expect(logs.length).toBeGreaterThanOrEqual(2);
+    expect(logs[0]?.minima).toBe('[START] ypologise_kai_apothikefse_apodosi');
+    expect(logs[1]?.minima).toBe('[SUCCESS] ypologise_kai_apothikefse_apodosi');
+    expect(logs[0]?.metadedomena?.['spanId']).toBe(logs[1]?.metadedomena?.['spanId']);
   });
 });

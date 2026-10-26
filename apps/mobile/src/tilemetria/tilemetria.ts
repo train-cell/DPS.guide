@@ -119,3 +119,63 @@ export function katharise_tilemetria(): void {
 export function eksagoge_tilemetrias_json(): string {
   return JSON.stringify(eggrafes, null, 2);
 }
+
+/** Παράγει ένα μοναδικό αναγνωριστικό span (spanId) για συσχέτιση καταγραφών. */
+export function paragogi_span_id(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `span-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+/**
+ * Εκτελεί μία ασύγχρονη λειτουργία περιβάλλοντάς την με αναλυτική τηλεμετρία.
+ * Καταγράφει [START], [SUCCESS] και [FAIL] με υπολογισμό diarkeiaMs,
+ * ενιαίο spanId συσχέτισης και αυτόματο καθαρισμό ευαίσθητων δεδομένων.
+ */
+export async function me_tilemetria<T>(
+  onoma_leitourgias: string,
+  ektelesi: () => Promise<T>,
+  metadedomena?: Record<string, unknown>
+): Promise<T> {
+  const spanId = paragogi_span_id();
+  const katharaMetadedomena = metadedomena
+    ? (scrub_eyaisthita_dedomena(metadedomena) as Record<string, unknown>)
+    : {};
+
+  katagrapse_tilemetria(
+    'info',
+    `[START] ${onoma_leitourgias}`,
+    { ...katharaMetadedomena, spanId }
+  );
+
+  const arxi = performance.now();
+  try {
+    const apotelesma = await ektelesi();
+    const diarkeiaMs = Math.round((performance.now() - arxi) * 100) / 100;
+    katagrapse_tilemetria(
+      'info',
+      `[SUCCESS] ${onoma_leitourgias}`,
+      { ...katharaMetadedomena, spanId, diarkeiaMs },
+      diarkeiaMs
+    );
+    return apotelesma;
+  } catch (sfalma) {
+    const diarkeiaMs = Math.round((performance.now() - arxi) * 100) / 100;
+    const sfalmaMinima = sfalma instanceof Error ? sfalma.message : String(sfalma);
+    const sfalmaStack = sfalma instanceof Error ? sfalma.stack : undefined;
+    katagrapse_tilemetria(
+      'error',
+      `[FAIL] ${onoma_leitourgias}`,
+      {
+        ...katharaMetadedomena,
+        spanId,
+        diarkeiaMs,
+        sfalma: sfalmaMinima,
+        ...(sfalmaStack ? { sfalmaStack } : {}),
+      },
+      diarkeiaMs
+    );
+    throw sfalma;
+  }
+}

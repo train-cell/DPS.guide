@@ -1,6 +1,9 @@
 export {
   ftiaxe_programma,
 } from './programma.js';
+export {
+  parage_arxeio_ics,
+} from './imerologio-ics.js';
 export type {
   EisodosProgrammatos,
   MathimaProgrammatos,
@@ -12,4 +15,5 @@ export type {
   YpopshfiaEnotita,
   ProtasiEpiviosis,
   Programma,
+  ProgrammaMeletis,
 } from './programma.js';

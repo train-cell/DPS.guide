@@ -13,7 +13,7 @@ import { EikonidioPanepistimiou, PANEPISTIMIA_LISTA } from '../../design/eikonid
 import type { PanepistimioId } from '../../design/eikonidia-panepistimion.js';
 import { useVaultSecurity } from '../../vault/vault-gate.js';
 import { deliverEncryptedBackup } from '../../vault/backup-file.js';
-import { eksagoge_tilemetrias_json } from '../../tilemetria/tilemetria.js';
+import { eksagoge_tilemetrias_json, me_tilemetria } from '../../tilemetria/tilemetria.js';
 
 /** Επιλογές διαθέσιμων θεμάτων εμφάνισης. */
 const THEMATA_EPILOGES: readonly { readonly id: ThemaId; readonly titlos: string }[] = [
@@ -106,10 +106,16 @@ export default function Rythisies() {
     setBackupSeEkseliksi(true);
     setBackupMinima(null);
     try {
-      const blob = await vaultSecurity.createEncryptedBackup(kodikos);
-      const onoma = `DPS.guide-${new Date().toISOString().slice(0, 10)}.enc`;
-      await deliverEncryptedBackup(blob, onoma);
-      setBackupMinima('Το αντίγραφο ασφαλείας εξήχθη επιτυχώς.');
+      await me_tilemetria(
+        'exagogi_backup',
+        async () => {
+          const blob = await vaultSecurity.createEncryptedBackup(kodikos);
+          const onoma = `DPS.guide-${new Date().toISOString().slice(0, 10)}.enc`;
+          await deliverEncryptedBackup(blob, onoma);
+          setBackupMinima('Το αντίγραφο ασφαλείας εξήχθη επιτυχώς.');
+        },
+        { onomaLeitourgias: 'exagogi_backup' }
+      );
     } catch (sfalmaExagogis) {
       setBackupMinima(
         sfalmaExagogis instanceof Error
@@ -144,9 +150,15 @@ export default function Rythisies() {
     setBackupSeEkseliksi(true);
     setBackupMinima(null);
     try {
-      await vaultSecurity.restoreBackupFromFile(backupArxeio, kodikos);
-      setBackupMinima('Το αντίγραφο επαναφέρθηκε επιτυχώς.');
-      setBackupArxeio(null);
+      await me_tilemetria(
+        'epanastasi_backup',
+        async () => {
+          await vaultSecurity.restoreBackupFromFile(backupArxeio, kodikos);
+          setBackupMinima('Το αντίγραφο επαναφέρθηκε επιτυχώς.');
+          setBackupArxeio(null);
+        },
+        { arxeioOnoma: backupArxeio.name, arxeioMegethos: backupArxeio.size }
+      );
     } catch (sfalmaEpanastasis) {
       setBackupMinima(
         sfalmaEpanastasis instanceof Error

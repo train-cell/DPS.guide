@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { IonButton } from '@ionic/react';
 import type { Checkin, EisodosProgrammatos, Enotita, MathimaProgrammatos, Programma } from '@dps/core';
-import { ftiaxe_programma } from '@dps/core';
+import { ftiaxe_programma, parage_arxeio_ics } from '@dps/core';
+import { deliverEncryptedBackup } from '../vault/backup-file.js';
 import { Karta, OloniKatastasis, Pilegma, ProskelesioOmonimas } from '../koinima/index.js';
 import { etimo, type Katastasi } from '../kathstasi/index.js';
 import type { Rytheseis } from '../apothiki/index.js';
@@ -270,6 +271,29 @@ export default function RythmiseisProgrammatos({
     setRytheseis(nees);
     setApothikefthike(true);
   }
+
+  const [eksagete, setEksagete] = useState(false);
+
+  const xeirismosEksagogisIcs = useCallback(async () => {
+    if (eksagete) return;
+    setEksagete(true);
+    try {
+      const icsString = parage_arxeio_ics(
+        programma ?? { meres: [], slack_ana_mathima: {}, protasi_epiviosis: [] },
+        rytheseis?.exetaseis ? [...rytheseis.exetaseis] : [],
+        mathimataMeletis.map((m) => ({
+          kodikos: m.kodikos,
+          titlos: m.kodikos,
+          url: '',
+          epilegmeno: true,
+        }))
+      );
+      const blob = new Blob([icsString], { type: 'text/calendar;charset=utf-8' });
+      await deliverEncryptedBackup(blob, 'dps-programma.ics');
+    } finally {
+      setEksagete(false);
+    }
+  }, [eksagete, programma, rytheseis?.exetaseis, mathimataMeletis]);
 
   return (
     <div className="odoni-lista" data-testid="programma-ekran">
@@ -606,6 +630,17 @@ export default function RythmiseisProgrammatos({
                   }}
                 >
                   Αποθήκευση προγράμματος
+                </IonButton>
+                <IonButton
+                  fill="outline"
+                  data-testid="programma-export-ics"
+                  aria-label="Εξαγωγή Προγράμματος σε Ημερολόγιο (.ics)"
+                  disabled={eksagete}
+                  onClick={() => {
+                    void xeirismosEksagogisIcs();
+                  }}
+                >
+                  {eksagete ? 'Εξαγωγή…' : 'Εξαγωγή Ημερολογίου (.ics)'}
                 </IonButton>
                 {apothikefthike && <Pilegma keimeno="Αποθηκεύτηκε" entono />}
                 {minimaSfalmatos !== null && (

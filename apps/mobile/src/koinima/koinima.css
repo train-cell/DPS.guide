@@ -1177,3 +1177,206 @@ button.pilegma:disabled {
 .proodos-stadio-titlos {
   flex: 1;
 }
+
+/* Dokimastiki Exetasi (Mock Exam Simulator) - Kanonas D11 */
+.exetasi-plaisio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-4);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.exetasi-kefali {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--diastima-3);
+  padding-bottom: var(--diastima-2);
+  border-bottom: 1px solid var(--xroma-synorio);
+}
+
+.exetasi-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.exetasi-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--diastima-1);
+  padding: var(--diastima-1) var(--diastima-3);
+  border-radius: var(--aktina-kapsoula);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-entono);
+  color: var(--xroma-entono);
+  font-size: var(--grammatoseira-meso);
+  font-weight: var(--grammatoseira-baros-entono);
+  font-variant-numeric: tabular-nums;
+}
+
+.exetasi-erwtisi-kouti {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.exetasi-erwtisi-kefali {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--diastima-2);
+}
+
+.exetasi-erwtisi-deiktis {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+  font-weight: var(--grammatoseira-baros-entono);
+}
+
+.exetasi-erwtisi-keimeno {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+  line-height: var(--grammatoseira-grammi-kanoniki);
+}
+
+.exetasi-epiloges-omada {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.exetasi-epilogi-label {
+  display: flex;
+  align-items: center;
+  gap: var(--diastima-3);
+  padding: var(--diastima-3);
+  border-radius: var(--aktina-mikro);
+  border: 1px solid var(--xroma-synorio);
+  background-color: var(--xroma-karta);
+  cursor: pointer;
+  transition: border-color var(--diarkeia-grigori) ease-out, background-color var(--diarkeia-grigori) ease-out;
+}
+
+.exetasi-epilogi-label:hover {
+  border-color: var(--xroma-keimeno-defteron);
+}
+
+.exetasi-epilogi-label.epilegmeno {
+  border-color: var(--xroma-entono);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+}
+
+.exetasi-epilogi-radio {
+  accent-color: var(--xroma-entono);
+  cursor: pointer;
+}
+
+.exetasi-epilogi-keimeno {
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.exetasi-ypovoli-koumpi,
+.odigos-start-mock-exam {
+  cursor: pointer;
+  text-align: center;
+  font-size: var(--grammatoseira-meso);
+}
+
+.exetasi-apotelesmata {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-4);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.exetasi-apotelesmata-kefali {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--diastima-3);
+}
+
+.exetasi-apotelesmata-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.exetasi-skor-emvlima {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--diastima-1);
+}
+
+.exetasi-skor-arithmos {
+  font-size: var(--grammatoseira-titlos);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-entono);
+}
+
+.exetasi-skor-katastasi {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.exetasi-metriseis-grammi {
+  display: flex;
+  gap: var(--diastima-4);
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.exetasi-analysi-ennoion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.exetasi-ennoia-grammi {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--diastima-2) var(--diastima-3);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-mikro);
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.exetasi-analytikes-apantiseis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+}
+
+.exetasi-apantisi-kouti {
+  padding: var(--diastima-3);
+  border-radius: var(--aktina-mikro);
+  border: 1px solid var(--xroma-synorio);
+  background-color: var(--xroma-karta);
+  font-size: var(--grammatoseira-meso);
+}
+
+.exetasi-apantisi-kouti.sosto {
+  border-left: var(--diastima-1) solid var(--xroma-entono);
+}
+
+.exetasi-apantisi-kouti.lathos {
+  border-left: var(--diastima-1) solid var(--xroma-apoxromatismeno);
+}

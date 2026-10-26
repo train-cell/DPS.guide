@@ -14,6 +14,7 @@ import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { generateCourseGuide } from '../../ypiresies/pipeline-analisis.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
+import { me_tilemetria } from '../../tilemetria/tilemetria.js';
 
 /** Μία παραπομπή τμήματος οδηγού: tap ανοίγει το PDF στη σωστή σελίδα, αλλιώς μένει απλό κείμενο. */
 export function ParapompiTmimatos({ parapompi }: { readonly parapompi: string }) {
@@ -408,25 +409,31 @@ export default function OdigosMeletis() {
     }, 400);
 
     try {
-      const result = await generateCourseGuide(
-        periballon,
-        kodikosMathimatos,
-        enotitaId,
-        selectedModel,
-        privacy.authorizeGeneration,
-        selectedProvider,
+      await me_tilemetria(
+        'dimiourgia_odigou',
+        async () => {
+          const result = await generateCourseGuide(
+            periballon,
+            kodikosMathimatos,
+            enotitaId,
+            selectedModel,
+            privacy.authorizeGeneration,
+            selectedProvider,
+          );
+          if (!result.ok) {
+            setKatastasi({ katastasi: 'sfalma', sfalma: result.sfalma });
+            return;
+          }
+          setStadioAnalisis(3);
+          setPosostoAnalisis(100);
+          const loaded = await fortose_odigo_apo_apothiki(periballon.apothiki, kodikosMathimatos, enotitaId);
+          setKatastasi(loaded);
+          if (loaded.katastasi === 'adeio') {
+            setKatastasi({ katastasi: 'sfalma', sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'Ο οδηγός παράχθηκε αλλά δεν μπόρεσε να φορτωθεί.' } });
+          }
+        },
+        { kodikosMathimatos, enotitaId, selectedModel, selectedProvider }
       );
-      if (!result.ok) {
-        setKatastasi({ katastasi: 'sfalma', sfalma: result.sfalma });
-        return;
-      }
-      setStadioAnalisis(3);
-      setPosostoAnalisis(100);
-      const loaded = await fortose_odigo_apo_apothiki(periballon.apothiki, kodikosMathimatos, enotitaId);
-      setKatastasi(loaded);
-      if (loaded.katastasi === 'adeio') {
-        setKatastasi({ katastasi: 'sfalma', sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'Ο οδηγός παράχθηκε αλλά δεν μπόρεσε να φορτωθεί.' } });
-      }
     } catch (reason) {
       setKatastasi({
         katastasi: 'sfalma',

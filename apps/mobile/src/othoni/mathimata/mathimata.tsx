@@ -10,6 +10,7 @@ import { xrisiApothekisis } from '../../apothiki/index.js';
 import { fortose_mathimata_apo_apothiki } from '../../ypiresies/index.js';
 import { epanasygxronise_mathimata_apo_apothiki } from '../../ypiresies/syndesi-eclass.js';
 import { fortose_eurethrio } from '../../provoli-pdf/provoli-ypiresies.js';
+import { me_tilemetria } from '../../tilemetria/tilemetria.js';
 
 /** Μετατρέπει μέγεθος byte σε ευανάγνωστη μορφή KB/MB. */
 export function morfopoiise_megethos_arxeiou(bytes: number | null | undefined): string {
@@ -277,19 +278,25 @@ export default function Mathimata() {
     }, 350);
 
     try {
-      const result = await epanasygxronise_mathimata_apo_apothiki(periballon);
-      if (!result.ok) {
-        setMinimaSygxronismou({ typos: 'sfalma', keimeno: result.sfalma.minima });
-        return;
-      }
-      setStadioSygxronismou(3);
-      setPosostoSygxronismou(100);
-      const refreshed = await fortose_mathimata_apo_apothiki(periballon.apothiki);
-      setKatastasi(refreshed);
-      setMinimaSygxronismou({
-        typos: 'epitychia',
-        keimeno: `Ο συγχρονισμός ολοκληρώθηκε για ${result.timi.length} μαθήματα.`,
-      });
+      await me_tilemetria(
+        'sygxronismos_mathimaton',
+        async () => {
+          const result = await epanasygxronise_mathimata_apo_apothiki(periballon);
+          if (!result.ok) {
+            setMinimaSygxronismou({ typos: 'sfalma', keimeno: result.sfalma.minima });
+            return;
+          }
+          setStadioSygxronismou(3);
+          setPosostoSygxronismou(100);
+          const refreshed = await fortose_mathimata_apo_apothiki(periballon.apothiki);
+          setKatastasi(refreshed);
+          setMinimaSygxronismou({
+            typos: 'epitychia',
+            keimeno: `Ο συγχρονισμός ολοκληρώθηκε για ${result.timi.length} μαθήματα.`,
+          });
+        },
+        { onoma_leitourgias: 'sygxronise' }
+      );
     } catch {
       setMinimaSygxronismou({
         typos: 'sfalma',

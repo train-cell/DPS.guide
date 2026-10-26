@@ -7,6 +7,8 @@ import {
   eksagoge_tilemetrias_json,
   scrub_eyaisthita_dedomena,
   MEGISTO_ORIO_EGGRAFON,
+  me_tilemetria,
+  paragogi_span_id,
 } from './tilemetria.js';
 
 describe('tilemetria — Structured Logging & Observability Engine', () => {
@@ -82,5 +84,97 @@ describe('tilemetria — Structured Logging & Observability Engine', () => {
     const parsed: unknown = JSON.parse(json);
     expect(Array.isArray(parsed)).toBe(true);
     expect((parsed as unknown[]).length).toBe(3);
+  });
+
+  describe('me_tilemetria — Universal Observability Wrapper', () => {
+    it('παράγει μοναδικό spanId', () => {
+      const id1 = paragogi_span_id();
+      const id2 = paragogi_span_id();
+      expect(typeof id1).toBe('string');
+      expect(id1.length).toBeGreaterThan(0);
+      expect(id1).not.toBe(id2);
+    });
+
+    it('καταγράφει [START] και [SUCCESS] με κοινό spanId και υπολογισμό diarkeiaMs', async () => {
+      const apotelesma = await me_tilemetria(
+        'fortosi_dedomenon',
+        async () => {
+          await new Promise((resolve) => setTimeout(resolve, 15));
+          return { vathmos: 10 };
+        },
+        { tmima: 'DIT' }
+      );
+
+      expect(apotelesma).toEqual({ vathmos: 10 });
+
+      const arxeio = pare_tilemetria_arxeio();
+      expect(arxeio).toHaveLength(2);
+
+      const [startLog, successLog] = arxeio;
+      expect(startLog?.minima).toBe('[START] fortosi_dedomenon');
+      expect(startLog?.epipedo).toBe('info');
+      expect(startLog?.metadedomena?.['tmima']).toBe('DIT');
+      const spanId = startLog?.metadedomena?.['spanId'];
+      expect(typeof spanId).toBe('string');
+
+      expect(successLog?.minima).toBe('[SUCCESS] fortosi_dedomenon');
+      expect(successLog?.epipedo).toBe('info');
+      expect(successLog?.metadedomena?.['spanId']).toBe(spanId);
+      expect(successLog?.metadedomena?.['tmima']).toBe('DIT');
+      expect(successLog?.diarkeiaMs).toBeGreaterThanOrEqual(10);
+      expect(successLog?.metadedomena?.['diarkeiaMs']).toBe(successLog?.diarkeiaMs);
+    });
+
+    it('καταγράφει [START] και [FAIL] με κοινό spanId σε περίπτωση σφάλματος και το αναπαράγει', async () => {
+      const sfalmaDokiMis = new Error('Αποτυχία δικτύου eClass');
+
+      await expect(
+        me_tilemetria(
+          'syndesi_eclass',
+          async () => {
+            await new Promise((resolve) => setTimeout(resolve, 10));
+            throw sfalmaDokiMis;
+          },
+          { url: 'https://eclass.uoa.gr' }
+        )
+      ).rejects.toThrow('Αποτυχία δικτύου eClass');
+
+      const arxeio = pare_tilemetria_arxeio();
+      expect(arxeio).toHaveLength(2);
+
+      const [startLog, failLog] = arxeio;
+      expect(startLog?.minima).toBe('[START] syndesi_eclass');
+      expect(failLog?.minima).toBe('[FAIL] syndesi_eclass');
+      expect(failLog?.epipedo).toBe('error');
+
+      const spanId = startLog?.metadedomena?.['spanId'];
+      expect(typeof spanId).toBe('string');
+      expect(failLog?.metadedomena?.['spanId']).toBe(spanId);
+      expect(failLog?.metadedomena?.['sfalma']).toBe('Αποτυχία δικτύου eClass');
+      expect(failLog?.diarkeiaMs).toBeGreaterThanOrEqual(5);
+    });
+
+    it('αφαιρεί αυτόματα ευαίσθητα δεδομένα (scrubbing) από τα μεταδεδομένα στο [START] και [SUCCESS]', async () => {
+      await me_tilemetria(
+        'syndesi_me_kodiko',
+        async () => 'ok',
+        {
+          xristis: 'student123',
+          kodikos: 'mypassword123',
+          token: 'bearer-secret-token',
+          apiKey: 'key-ai-gemini',
+        }
+      );
+
+      const arxeio = pare_tilemetria_arxeio();
+      expect(arxeio).toHaveLength(2);
+
+      for (const log of arxeio) {
+        expect(log.metadedomena?.['xristis']).toBe('student123');
+        expect(log.metadedomena?.['kodikos']).toBe('[REDACTED]');
+        expect(log.metadedomena?.['token']).toBe('[REDACTED]');
+        expect(log.metadedomena?.['apiKey']).toBe('[REDACTED]');
+      }
+    });
   });
 });

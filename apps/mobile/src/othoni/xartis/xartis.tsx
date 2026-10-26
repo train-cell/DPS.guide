@@ -20,6 +20,7 @@ import { generateCourseMap } from '../../ypiresies/pipeline-analisis.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
 import { diadromi_odigou } from '../../navigasi/dromoi.js';
+import { me_tilemetria } from '../../tilemetria/tilemetria.js';
 
 /** Λεπτά ανά ώρα, για τη μορφοποίηση του χρόνου εκτίμησης. */
 export const LEPTA_PER_ORA = 60;
@@ -421,16 +422,22 @@ export default function XartisEnotiton() {
     }, 400);
 
     try {
-      const result = await generateCourseMap(
-        periballon,
-        courseCode,
-        selectedModel,
-        privacy.authorizeGeneration,
-        selectedProvider,
+      await me_tilemetria(
+        'dimiourgia_xarti',
+        async () => {
+          const result = await generateCourseMap(
+            periballon,
+            courseCode,
+            selectedModel,
+            privacy.authorizeGeneration,
+            selectedProvider,
+          );
+          setStadioAnalisis(3);
+          setPosostoAnalisis(100);
+          setKatastasi(result.ok ? { katastasi: 'etimo', dedomena: result.timi } : sfalma(result.sfalma));
+        },
+        { courseCode, selectedModel, selectedProvider }
       );
-      setStadioAnalisis(3);
-      setPosostoAnalisis(100);
-      setKatastasi(result.ok ? { katastasi: 'etimo', dedomena: result.timi } : sfalma(result.sfalma));
     } catch (reason) {
       setKatastasi(sfalma({
         kodikos: KODIKOS_SFALMATOS_DIKTYOU,
