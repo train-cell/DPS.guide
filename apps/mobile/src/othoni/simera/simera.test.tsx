@@ -229,3 +229,26 @@ describe('simera — ένδειξη ενεργού μαθήματος και ε�
     expect(markup).not.toContain('ΠΛΗ201');
   });
 });
+
+describe('simera — Stream C: Σερί μελέτης και Quick Check-in', () => {
+  it('αποδίδει τον μετρητή σερί μελέτης (simera-seri)', () => {
+    const markup = renderToStaticMarkup(
+      me_periballon_test(<MemoryRouter>
+        <Simera />
+      </MemoryRouter>)
+    );
+    expect(markup).toContain('data-testid="simera-seri"');
+    expect(markup).toContain('Σερί μελέτης');
+  });
+
+  it('αποδίδει το widget γρήγορης καταγραφής μελέτης (simera-checkin)', () => {
+    const markup = renderToStaticMarkup(
+      me_periballon_test(<MemoryRouter>
+        <Simera />
+      </MemoryRouter>)
+    );
+    expect(markup).toContain('data-testid="simera-checkin"');
+    expect(markup).toContain('Γρήγορο Check-in Μελέτης');
+    expect(markup).toContain('Καταγραφή μελέτης');
+  });
+});

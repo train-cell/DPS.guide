@@ -54,3 +54,120 @@
   gap: var(--diastima-1);
   margin-top: var(--diastima-2);
 }
+
+.programma-xronodiagramma {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+}
+
+.programma-epiviosi-karta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  padding: var(--diastima-3);
+  border-radius: var(--aktina-meso);
+  background: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+}
+
+.programma-epiviosi-titlos {
+  font-size: var(--grammatoseira-meso);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-entono);
+}
+
+.programma-epiviosi-perigrafi {
+  margin: 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.programma-epiviosi-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.programma-epiviosi-mathima {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.programma-epiviosi-mathima ul {
+  margin: var(--diastima-1) 0 0 var(--diastima-4);
+  padding: 0;
+}
+
+.programma-meres-plegma {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+}
+
+.programma-mera {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  padding: var(--diastima-3);
+  border-radius: var(--aktina-meso);
+  background: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+}
+
+.programma-mera-kefali {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--xroma-synorio);
+  padding-bottom: var(--diastima-1);
+}
+
+.programma-mera-imerominia {
+  font-weight: var(--grammatoseira-baros-entono);
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.programma-mera-synolo {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.programma-ergasies-lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.programma-ergasia {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+  padding: var(--diastima-2);
+  border-radius: var(--aktina-mikro);
+  background: var(--xroma-epifaneia-patimeni);
+}
+
+.programma-ergasia-koryfi {
+  display: flex;
+  align-items: center;
+  gap: var(--diastima-2);
+}
+
+.programma-ergasia-kodikos {
+  font-weight: var(--grammatoseira-baros-entono);
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-entono);
+}
+
+.programma-ergasia-lepta {
+  margin-left: auto;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.programma-ergasia-titlos {
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+}

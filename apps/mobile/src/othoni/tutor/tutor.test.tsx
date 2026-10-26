@@ -10,6 +10,7 @@ import TutorChat, {
   APANTISI_YPARXEIS_STO_YLIKO,
   DRASEIS_TUTOR,
   apantisi_me_llm_i_topika,
+  apodhosi_keimenou_me_parapompes,
   xairetisma_tutor,
 } from './tutor.js';
 import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
@@ -119,5 +120,46 @@ describe('tutor — τύποι και import contract', () => {
     expect(TUTOR_SOURCE).not.toContain("from '../../../test-fixtures");
     expect(TUTOR_SOURCE).not.toContain('MockLlm');
     expect(TUTOR_SOURCE).not.toContain('as any');
+  });
+});
+
+describe('tutor — clickable citations', () => {
+  it('εντοπίζει παραπομπές [[arxeio_id: σ. selida]] και παράγει clickable συνδέσμους', () => {
+    const stoixeia = apodhosi_keimenou_me_parapompes('Δείτε το θεώρημα στο [[arx-1: σ. 8]].');
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <div>{stoixeia}</div>
+      </MemoryRouter>
+    );
+    expect(html).toContain('data-testid="tutor-parapompi"');
+    expect(html).toContain('href="/provoli/arx-1/8"');
+    expect(html).toContain('[[arx-1: σ. 8]]');
+  });
+
+  it('εντοπίζει παραπομπές [[arxeio_id:selida]] χωρίς το πρόθεμα σ.', () => {
+    const stoixeia = apodhosi_keimenou_me_parapompes('Αναφορά: [[arx-2:15]]');
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <div>{stoixeia}</div>
+      </MemoryRouter>
+    );
+    expect(html).toContain('data-testid="tutor-parapompi"');
+    expect(html).toContain('href="/provoli/arx-2/15"');
+    expect(html).toContain('[[arx-2:15]]');
+  });
+
+  it('κωδικοποιεί ασφαλώς το όνομα αρχείου με ειδικούς χαρακτήρες', () => {
+    const stoixeia = apodhosi_keimenou_me_parapompes('Αρχείο: [[σημειώσεις διαλέξεων: σ. 3]]');
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <div>{stoixeia}</div>
+      </MemoryRouter>
+    );
+    expect(html).toContain('href="/provoli/%CF%83%CE%B7%CE%BC%CE%B5%CE%B9%CF%8E%CF%83%CE%B5%CE%B9%CF%82%20%CE%B4%CE%B9%CE%B1%CE%BB%CE%AD%CE%BE%CE%B5%CF%89%CE%BD/3"');
+  });
+
+  it('διατηρεί το κείμενο αναλλοίωτο όταν δεν υπάρχουν παραπομπές', () => {
+    const stoixeia = apodhosi_keimenou_me_parapompes('Απλό κείμενο χωρίς παραπομπή.');
+    expect(stoixeia).toEqual(['Απλό κείμενο χωρίς παραπομπή.']);
   });
 });

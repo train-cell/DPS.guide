@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { ftiaxe_periballon_test as ftiaxe_periballon } from '../../../test-fixtures/ftiaxe-test-periballon.js';
-import Proedri, { PROEDRI_BASE_URL } from './proedri.js';
+import Proedri, { PROEDRI_BASE_URL, katharise_tonous } from './proedri.js';
 
 const ORISTO = dirname(fileURLToPath(import.meta.url));
 const ARXIKOS = readFileSync(join(ORISTO, 'proedri.tsx'), 'utf8');
@@ -159,5 +159,17 @@ describe('Proedri — Bevel x UniStudents UI & Visual Components', () => {
     expect(html).toContain('onboarding-apodeixi-karta');
     expect(html).toContain('Το ακαδημαϊκό σου προφίλ είναι έτοιμο');
     expect(html).toContain('Κρυπτογραφημένο τοπικό vault');
+  });
+
+  it('η συνάρτηση katharise_tonous καθαρίζει τόνους και πεζά για accent-insensitive αναζήτηση', () => {
+    expect(katharise_tonous('Πειραιώς')).toBe('πειραιως');
+    expect(katharise_tonous('πειραιας')).toBe('πειραιας');
+    expect(katharise_tonous('Πανεπιστήμιο')).toBe('πανεπιστημιο');
+    expect(katharise_tonous('Αθήνα')).toBe('αθηνα');
+    expect(katharise_tonous('Κρήτης')).toBe('κρητης');
+
+    const peiraiasNormalized = katharise_tonous('πειραιας');
+    const peiraiosNormalized = katharise_tonous('Πανεπιστήμιο Πειραιώς');
+    expect(peiraiosNormalized.includes(peiraiasNormalized.slice(0, 6))).toBe(true);
   });
 });
