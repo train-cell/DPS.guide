@@ -23,6 +23,9 @@ import { EikonidioPanepistimiou, PANEPISTIMIA_LISTA } from '../../design/eikonid
 import type { PanepistimioId } from '../../design/eikonidia-panepistimion.js';
 import { stilise_imerominia } from '../../programma/programma-vohthia.js';
 import { diadromi_odigou } from '../../navigasi/dromoi.js';
+import { GapRadar } from './gap-radar.js';
+
+export { GapRadar };
 
 /** Πόσες ενότητες του χάρτη προτείνονται ως στόχοι της ημέρας. */
 const PLITOS_STOCHOIS = 3;
@@ -60,6 +63,23 @@ export function MetrikesSimeras({ enotites }: SimeraEnotitesProps) {
               ypokeimeno={`${telies.length} από ${enotites.length} ολοκληρωμένες ενότητες`}
               ariaEtiketa="Πρόοδος μαθήματος"
             />
+          </div>
+        }
+      />
+    </div>
+  );
+}
+
+/** Κάρτα Knowledge Gap Radar: διάγραμμα ετοιμότητας ύλης και εντοπισμός κενών γνώσης. */
+export function RadarEtoimotitasSimeras({ enotites }: SimeraEnotitesProps) {
+  return (
+    <div data-testid="simera-radar-perioxi">
+      <Karta
+        titlos="Διάγραμμα Ετοιμότητας Ύλης"
+        ypokeimeno="Οπτική απεικόνιση κατανόησης και κάλυψης ανά ενότητα"
+        stoixeia={
+          <div className="karta-metrika">
+            <GapRadar enotites={enotites} />
           </div>
         }
       />
@@ -397,6 +417,7 @@ export function Simera() {
         {(xartis) => (
           <>
             <MetrikesSimeras enotites={xartis.enotites} />
+            <RadarEtoimotitasSimeras enotites={xartis.enotites} />
             <StochoiSimeras enotites={xartis.enotites} />
           </>
         )}

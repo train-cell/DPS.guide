@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { IonButton } from '@ionic/react';
+import { IonButton, IonProgressBar } from '@ionic/react';
 import type { KatastasiMathisis, KoutiLeitner } from '@dps/core';
 import { Karta, OloniKatastasis, Pilegma, ProskelesioOmonimas } from '../../koinima/index.js';
 import { fortosi, type Katastasi } from '../../kathstasi/index.js';
@@ -14,6 +14,7 @@ import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { generateCourseGuide } from '../../ypiresies/pipeline-analisis.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
+import { me_tilemetria } from '../../tilemetria/tilemetria.js';
 
 /** Μία παραπομπή τμήματος οδηγού: tap ανοίγει το PDF στη σωστή σελίδα, αλλιώς μένει απλό κείμενο. */
 export function ParapompiTmimatos({ parapompi }: { readonly parapompi: string }) {
@@ -37,6 +38,83 @@ export function ParapompiTmimatos({ parapompi }: { readonly parapompi: string })
     >
       {stilise_parapompi(analise)}
     </button>
+  );
+}
+
+/** Στάδια της διαδικασίας δημιουργίας οδηγού μελέτης. */
+export const STADIA_DIMIOURGIAS_ODIGOU: readonly string[] = [
+  'Ανάγνωση τοπικά αποθηκευμένου υλικού...',
+  'Εξαγωγή εννοιών & λυμένων παραδειγμάτων...',
+  'Σύνθεση οδηγού 7 ενοτήτων & παραπομπών...',
+];
+
+/** Ιδιότητες προόδου δημιουργίας οδηγού μελέτης. */
+export interface ProodosDimiourgiasOdigouProps {
+  readonly stadio?: number;
+  readonly pososto?: number;
+}
+
+/** Component πολυσταδιακής προόδου δημιουργίας οδηγού μελέτης. */
+export function ProodosDimiourgiasOdigou({
+  stadio = 1,
+  pososto,
+}: ProodosDimiourgiasOdigouProps) {
+  const trexonStadio = Math.max(1, Math.min(STADIA_DIMIOURGIAS_ODIGOU.length, stadio));
+  const telikoPososto = pososto !== undefined
+    ? Math.max(0, Math.min(100, Math.round(pososto)))
+    : Math.round((trexonStadio / STADIA_DIMIOURGIAS_ODIGOU.length) * 100);
+  const trexonKeimeno = STADIA_DIMIOURGIAS_ODIGOU[trexonStadio - 1] ?? STADIA_DIMIOURGIAS_ODIGOU[0];
+
+  return (
+    <div
+      className="proodos-analisis-plaisio"
+      data-testid="odigos-proodos-analisis"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="proodos-analisis-kefali">
+        <span className="proodos-analisis-titlos">
+          Ανάλυση &amp; Δημιουργία Οδηγού (Στάδιο {trexonStadio}/{STADIA_DIMIOURGIAS_ODIGOU.length})
+        </span>
+        <span className="proodos-analisis-pososto" data-testid="odigos-proodos-pososto">
+          {telikoPososto}%
+        </span>
+      </div>
+
+      <div
+        className="proodos-mpara-kouti"
+        role="progressbar"
+        aria-valuenow={telikoPososto}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={trexonKeimeno}
+      >
+        <IonProgressBar value={telikoPososto / 100} />
+      </div>
+
+      <div className="proodos-analisis-trexon-keimeno">
+        {trexonKeimeno}
+      </div>
+
+      <ul className="proodos-analisis-stadia-lista">
+        {STADIA_DIMIOURGIAS_ODIGOU.map((titlosStadiou, deiktis) => {
+          const arithmos = deiktis + 1;
+          const olokliromeno = trexonStadio > arithmos;
+          const trexon = trexonStadio === arithmos;
+          return (
+            <li
+              key={titlosStadiou}
+              className={`proodos-stadio-stoixeio${olokliromeno ? ' olokliromeno' : ''}${trexon ? ' trexon' : ''}`}
+            >
+              <span className="proodos-stadio-simio">
+                {olokliromeno ? '✓' : arithmos}
+              </span>
+              <span className="proodos-stadio-titlos">{titlosStadiou}</span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -278,6 +356,8 @@ export default function OdigosMeletis() {
   const [katastasi, setKatastasi] = useState<Katastasi<OdigosEnotitas>>(fortosi<OdigosEnotitas>());
   const [proseis, setProseis] = useState(0);
   const [dimiourgeitai, setDimiourgeitai] = useState(false);
+  const [stadioAnalisis, setStadioAnalisis] = useState(1);
+  const [posostoAnalisis, setPosostoAnalisis] = useState(20);
   const privacy = useCourseAiPrivacy(periballon.apothiki, kodikosMathimatos, kodikosMathimatos);
   const selectedModel = apothiki.rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
   const selectedProvider = entopise_paroxo_montelou(selectedModel, apothiki.rytheseis.paroxosLlm);
@@ -307,25 +387,53 @@ export default function OdigosMeletis() {
   const dimiourgia_odigo = useCallback(async (): Promise<void> => {
     if (!kodikosMathimatos || !enotitaId || dimiourgeitai) return;
     setDimiourgeitai(true);
+    setStadioAnalisis(1);
+    setPosostoAnalisis(20);
     setKatastasi(fortosi<OdigosEnotitas>());
+
+    const xronodiakoptis = setInterval(() => {
+      setPosostoAnalisis((palio) => {
+        if (palio < 45) {
+          return palio + 10;
+        }
+        if (palio < 75) {
+          setStadioAnalisis(2);
+          return palio + 10;
+        }
+        if (palio < 95) {
+          setStadioAnalisis(3);
+          return palio + 5;
+        }
+        return palio;
+      });
+    }, 400);
+
     try {
-      const result = await generateCourseGuide(
-        periballon,
-        kodikosMathimatos,
-        enotitaId,
-        selectedModel,
-        privacy.authorizeGeneration,
-        selectedProvider,
+      await me_tilemetria(
+        'dimiourgia_odigou',
+        async () => {
+          const result = await generateCourseGuide(
+            periballon,
+            kodikosMathimatos,
+            enotitaId,
+            selectedModel,
+            privacy.authorizeGeneration,
+            selectedProvider,
+          );
+          if (!result.ok) {
+            setKatastasi({ katastasi: 'sfalma', sfalma: result.sfalma });
+            return;
+          }
+          setStadioAnalisis(3);
+          setPosostoAnalisis(100);
+          const loaded = await fortose_odigo_apo_apothiki(periballon.apothiki, kodikosMathimatos, enotitaId);
+          setKatastasi(loaded);
+          if (loaded.katastasi === 'adeio') {
+            setKatastasi({ katastasi: 'sfalma', sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'Ο οδηγός παράχθηκε αλλά δεν μπόρεσε να φορτωθεί.' } });
+          }
+        },
+        { kodikosMathimatos, enotitaId, selectedModel, selectedProvider }
       );
-      if (!result.ok) {
-        setKatastasi({ katastasi: 'sfalma', sfalma: result.sfalma });
-        return;
-      }
-      const loaded = await fortose_odigo_apo_apothiki(periballon.apothiki, kodikosMathimatos, enotitaId);
-      setKatastasi(loaded);
-      if (loaded.katastasi === 'adeio') {
-        setKatastasi({ katastasi: 'sfalma', sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'Ο οδηγός παράχθηκε αλλά δεν μπόρεσε να φορτωθεί.' } });
-      }
     } catch (reason) {
       setKatastasi({
         katastasi: 'sfalma',
@@ -335,6 +443,7 @@ export default function OdigosMeletis() {
         },
       });
     } finally {
+      clearInterval(xronodiakoptis);
       setDimiourgeitai(false);
     }
   }, [dimiourgeitai, enotitaId, kodikosMathimatos, periballon, privacy.authorizeGeneration, selectedModel, selectedProvider]);
@@ -465,7 +574,12 @@ export default function OdigosMeletis() {
           </OloniKatastasis>
         </>
       )}
-      {dimiourgeitai && <p role="status" className="karta-ypokeimeno">Δημιουργία οδηγού από τοπικά αποθηκευμένο υλικό…</p>}
+      {dimiourgeitai && (
+        <ProodosDimiourgiasOdigou
+          stadio={stadioAnalisis}
+          pososto={posostoAnalisis}
+        />
+      )}
       {privacy.dialog}
     </div>
   );

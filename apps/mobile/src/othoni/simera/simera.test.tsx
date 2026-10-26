@@ -5,7 +5,14 @@ import { MemoryRouter } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import { pseudos_xartis } from '../../../test-fixtures/pseudomata/index.js';
 import { lepita_aristeias, pososto_aristeias } from '../../ypiresies/metrikes-mathimatos.js';
-import Simera, { KEIMENO_STOXOU, KEIMENO_TELIOU, MetrikesSimeras, StochoiSimeras, StoxosEnotitas } from './simera.js';
+import Simera, {
+  KEIMENO_STOXOU,
+  KEIMENO_TELIOU,
+  MetrikesSimeras,
+  RadarEtoimotitasSimeras,
+  StochoiSimeras,
+  StoxosEnotitas,
+} from './simera.js';
 import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
 
 const KODIKOS_SIMERAS = readFileSync(new URL('./simera.tsx', import.meta.url), 'utf8');
@@ -250,5 +257,23 @@ describe('simera — Stream C: Σερί μελέτης και Quick Check-in', (
     expect(markup).toContain('data-testid="simera-checkin"');
     expect(markup).toContain('Γρήγορο Check-in Μελέτης');
     expect(markup).toContain('Καταγραφή μελέτης');
+  });
+
+  it('αποδίδει το διάγραμμα ετοιμότητας ύλης (simera-gap-radar) με σωστά testids και προσβασιμότητα', () => {
+    const markup = renderToStaticMarkup(
+      me_periballon_test(
+        <MemoryRouter>
+          <RadarEtoimotitasSimeras enotites={pseudos_xartis().enotites} />
+        </MemoryRouter>
+      )
+    );
+
+    expect(markup).toContain('data-testid="simera-radar-perioxi"');
+    expect(markup).toContain('data-testid="simera-gap-radar"');
+    expect(markup).toContain('role="img"');
+    expect(markup).toContain('aria-label="Διάγραμμα Ετοιμότητας Ύλης"');
+    expect(markup).toContain('Διάγραμμα Ετοιμότητας Ύλης');
+    expect(markup).toContain('stroke="var(--xroma-entono)"');
+    expect(markup).toContain('fill="var(--xroma-epifaneia-patimeni)"');
   });
 });
