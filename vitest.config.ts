@@ -15,7 +15,7 @@ export default defineConfig({
     environment: 'node',
     pool: 'threads',
     maxWorkers: 2,
-    exclude: [...configDefaults.exclude, '**/e2e/**', '**/test-results/**'],
+    exclude: [...configDefaults.exclude, '**/dist/**', '**/e2e/**', '**/test-results/**'],
     coverage: {
       provider: 'v8',
       include: ['packages/*/src/**', 'apps/*/src/**'],

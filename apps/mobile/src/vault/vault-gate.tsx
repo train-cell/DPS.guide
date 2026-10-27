@@ -37,49 +37,6 @@ export function useVaultSecurity(): VaultSecurityControls | null {
   return useContext(VaultSecurityContext);
 }
 
-const pageStyle = {
-  minHeight: '100dvh',
-  display: 'grid',
-  placeItems: 'center',
-  padding: '24px',
-  background: 'var(--ion-background-color, #10131a)',
-  color: 'var(--ion-text-color, #f4f5f8)',
-  fontFamily: 'system-ui, sans-serif',
-} as const;
-
-const panelStyle = {
-  width: 'min(100%, 520px)',
-  display: 'grid',
-  gap: '16px',
-  padding: '24px',
-  border: '1px solid #ffffff22',
-  borderRadius: '20px',
-  background: '#181d27',
-  boxShadow: '0 24px 80px #0006',
-} as const;
-
-const inputStyle = {
-  width: '100%',
-  minHeight: '48px',
-  boxSizing: 'border-box' as const,
-  padding: '12px',
-  borderRadius: '10px',
-  border: '1px solid #ffffff35',
-  color: 'inherit',
-  background: '#0d1118',
-  fontSize: '16px',
-};
-
-const buttonStyle = {
-  minHeight: '48px',
-  border: 0,
-  borderRadius: '12px',
-  background: '#78a9ff',
-  color: '#10131a',
-  fontSize: '16px',
-  fontWeight: 700,
-};
-
 export function VaultGate({ children }: Props) {
   const device = useMemo(createDeviceStorage, []);
   const [mode, setMode] = useState<Mode>('loading');
@@ -304,67 +261,67 @@ export function VaultGate({ children }: Props) {
   }
 
   const form = (
-    <main style={pageStyle}>
-      <section style={panelStyle} aria-live="polite">
-        <div aria-hidden="true" style={{ fontSize: 36 }}>🔐</div>
-        <h1 style={{ margin: 0 }}>DPS.guide · τοπικό vault</h1>
+    <main className="vault-gate-selida">
+      <section className="vault-gate-kouti" aria-live="polite">
+        <div aria-hidden="true" className="vault-gate-eikonidio">🔐</div>
+        <h1 className="vault-gate-titlos">DPS.guide · τοπικό vault</h1>
         {mode === 'loading' && <p>Έλεγχος τοπικής αποθήκευσης…</p>}
         {mode === 'setup' && (
           <>
-            <form onSubmit={(event) => void setup(event)} style={{ display: 'grid', gap: 12 }}>
+            <form onSubmit={(event) => void setup(event)} className="vault-gate-forma">
               <p>Όλα τα μαθήματα, αρχεία και μυστικά κρυπτογραφούνται στη συσκευή. Ο κύριος κωδικός δεν αποθηκεύεται.</p>
               <label htmlFor="vault-master">Κύριος κωδικός · τουλάχιστον 12 χαρακτήρες</label>
-              <input id="vault-master" style={inputStyle} type="password" autoComplete="new-password" minLength={12} required value={masterPassword} onChange={(event) => setMasterPassword(event.target.value)} />
+              <input id="vault-master" className="vault-gate-eisodos" type="password" autoComplete="new-password" minLength={12} required value={masterPassword} onChange={(event) => setMasterPassword(event.target.value)} />
               <label htmlFor="vault-confirm">Επιβεβαίωση κύριου κωδικού</label>
-              <input id="vault-confirm" style={inputStyle} type="password" autoComplete="new-password" minLength={12} required value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
-              <button style={buttonStyle} disabled={busy}>{busy ? 'Δημιουργία…' : 'Δημιουργία κρυπτογραφημένου vault'}</button>
+              <input id="vault-confirm" className="vault-gate-eisodos" type="password" autoComplete="new-password" minLength={12} required value={confirmation} onChange={(event) => setConfirmation(event.target.value)} />
+              <button className="vault-gate-koumpi" disabled={busy}>{busy ? 'Δημιουργία…' : 'Δημιουργία κρυπτογραφημένου vault'}</button>
             </form>
-            <section style={{ display: 'grid', gap: 10, paddingTop: 16, borderTop: '1px solid #ffffff22' }}>
-              <h2 style={{ margin: 0, fontSize: 18 }}>Επαναφορά encrypted backup</h2>
-              <p style={{ margin: 0 }}>Η επαναφορά γίνεται μόνο σε καθαρή εγκατάσταση. Το αρχείο περιέχει αποκλειστικά κρυπτογραφημένα δεδομένα και απαιτεί τον ξεχωριστό κωδικό backup.</p>
+            <section className="vault-gate-tmima-backup">
+              <h2 className="vault-gate-titlos-tmimatos">Επαναφορά encrypted backup</h2>
+              <p className="vault-gate-keimeno">Η επαναφορά γίνεται μόνο σε καθαρή εγκατάσταση. Το αρχείο περιέχει αποκλειστικά κρυπτογραφημένα δεδομένα και απαιτεί τον ξεχωριστό κωδικό backup.</p>
               <label htmlFor="vault-backup-file">Αρχείο DPS.guide backup</label>
-              <input id="vault-backup-file" style={inputStyle} type="file" accept=".dpsbackup,application/octet-stream,application/vnd.dps-guide.backup" onChange={(event) => setBackupFile(event.target.files?.[0] ?? null)} />
+              <input id="vault-backup-file" className="vault-gate-eisodos" type="file" accept=".dpsbackup,application/octet-stream,application/vnd.dps-guide.backup" onChange={(event) => setBackupFile(event.target.files?.[0] ?? null)} />
               <label htmlFor="vault-backup-password">Κωδικός backup</label>
-              <input id="vault-backup-password" style={inputStyle} type="password" autoComplete="off" minLength={12} value={backupPassword} onChange={(event) => setBackupPassword(event.target.value)} />
-              <button type="button" style={{ ...buttonStyle, background: '#b8d8ff' }} disabled={busy || backupFile === null || backupPassword.trim().length < 12} onClick={() => void restoreBackup()}>
+              <input id="vault-backup-password" className="vault-gate-eisodos" type="password" autoComplete="off" minLength={12} value={backupPassword} onChange={(event) => setBackupPassword(event.target.value)} />
+              <button type="button" className="vault-gate-koumpi vault-gate-koumpi-defterevon" disabled={busy || backupFile === null || backupPassword.trim().length < 12} onClick={() => void restoreBackup()}>
                 {busy ? 'Επαναφορά…' : 'Επαναφορά και ξεκλείδωμα'}
               </button>
             </section>
           </>
         )}
         {mode === 'recovery' && recoveryKey !== null && (
-          <div style={{ display: 'grid', gap: 12 }}>
+          <div className="vault-gate-recovery-kouti">
             <p><strong>Αποθήκευσε το recovery key τώρα.</strong> Είναι η μόνη εναλλακτική αν ξεχάσεις τον κύριο κωδικό. Δεν θα εμφανιστεί ξανά.</p>
-            <code style={{ padding: 16, borderRadius: 12, background: '#0d1118', overflowWrap: 'anywhere', userSelect: 'all', fontSize: 18 }}>{recoveryKey}</code>
+            <code className="vault-gate-kodikas">{recoveryKey}</code>
             {device.native && biometricAvailable && !biometricEnabled && (
-              <button type="button" style={{ ...buttonStyle, background: '#b8d8ff' }} onClick={() => void enableBiometrics().catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Δεν ενεργοποιήθηκαν τα βιομετρικά.'))}>
+              <button type="button" className="vault-gate-koumpi vault-gate-koumpi-defterevon" onClick={() => void enableBiometrics().catch((reason: unknown) => setError(reason instanceof Error ? reason.message : 'Δεν ενεργοποιήθηκαν τα βιομετρικά.'))}>
                 Προαιρετικό γρήγορο ξεκλείδωμα με Face ID / δακτυλικό αποτύπωμα
               </button>
             )}
-            <button style={buttonStyle} onClick={finishRecovery}>Το αποθήκευσα — άνοιγμα εφαρμογής</button>
+            <button className="vault-gate-koumpi" onClick={finishRecovery}>Το αποθήκευσα — άνοιγμα εφαρμογής</button>
           </div>
         )}
         {mode === 'unlock' && (
-          <form onSubmit={(event) => void unlock(event)} style={{ display: 'grid', gap: 12 }}>
+          <form onSubmit={(event) => void unlock(event)} className="vault-gate-forma">
             <p>Το vault κλειδώθηκε. Ξεκλείδωσε με τον κύριο κωδικό ή με το recovery key.</p>
             <label htmlFor="vault-credential">Κύριος κωδικός ή recovery key</label>
-            <input id="vault-credential" style={inputStyle} type="password" autoComplete="current-password" required value={credential} onChange={(event) => setCredential(event.target.value)} />
-            <button style={buttonStyle} disabled={busy}>{busy ? 'Ξεκλείδωμα…' : 'Ξεκλείδωμα'}</button>
+            <input id="vault-credential" className="vault-gate-eisodos" type="password" autoComplete="current-password" required value={credential} onChange={(event) => setCredential(event.target.value)} />
+            <button className="vault-gate-koumpi" disabled={busy}>{busy ? 'Ξεκλείδωμα…' : 'Ξεκλείδωμα'}</button>
             {device.native && biometricEnabled && (
-              <button type="button" style={{ ...buttonStyle, background: '#b8d8ff' }} disabled={busy} onClick={() => void unlockWithBiometrics()}>
+              <button type="button" className="vault-gate-koumpi vault-gate-koumpi-defterevon" disabled={busy} onClick={() => void unlockWithBiometrics()}>
                 {busy ? 'Έλεγχος…' : 'Γρήγορο ξεκλείδωμα με βιομετρικά'}
               </button>
             )}
             {device.native && biometricEnabled && (
-              <button type="button" onClick={() => void disableBiometrics().catch(() => setError('Δεν αφαιρέθηκε το βιομετρικό κλειδί.'))}>
+              <button type="button" className="vault-gate-koumpi-kleidi" onClick={() => void disableBiometrics().catch(() => setError('Δεν αφαιρέθηκε το βιομετρικό κλειδί.'))}>
                 Απενεργοποίηση βιομετρικού ξεκλειδώματος
               </button>
             )}
           </form>
         )}
-        {error !== null && <p role="alert" style={{ color: '#ff8f8f', margin: 0 }}>{error}</p>}
+        {error !== null && <p role="alert" className="vault-gate-sfalma">{error}</p>}
         {mode !== 'loading' && mode !== 'ready' && (
-          <p style={{ marginBottom: 0, opacity: 0.75 }}>Το vault κλειδώνει αμέσως όταν η εφαρμογή πάει στο παρασκήνιο.</p>
+          <p className="vault-gate-ypovathro">Το vault κλειδώνει αμέσως όταν η εφαρμογή πάει στο παρασκήνιο.</p>
         )}
       </section>
     </main>

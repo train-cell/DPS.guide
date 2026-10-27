@@ -58,9 +58,9 @@
 
 .rythisies-paroxos-koumpi.energo {
   background-color: var(--xroma-entono);
-  color: #ffffff;
+  color: var(--xroma-keimeno-prwtarxiko);
   border-color: var(--xroma-entono);
-  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 10px var(--xroma-epifaneia-ypsomeni);
 }
 
 .rythisies-kleidi-pedio-perioxh {

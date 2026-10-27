@@ -17,6 +17,7 @@ import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
 import { createAuthorizedCourseLlm } from '../../ypiresies/pipeline-analisis.js';
+import { katagrapse_tilemetria } from '../../tilemetria/tilemetria.js';
 
 export const APANTISI_YPARXEIS_STO_YLIKO = 'Δεν υπάρχει στο υλικό.';
 
@@ -127,7 +128,11 @@ async function loadCourseContext(
           }
         }
       }
-    } catch {
+    } catch (sfalma) {
+      katagrapse_tilemetria('warn', 'Apotyxia parsing exaxthimenou keimenou selidon tutor', {
+        path,
+        sfalma: sfalma instanceof Error ? sfalma.message : String(sfalma),
+      });
       // One damaged extraction is skipped; no content is invented to replace it.
     }
   }
@@ -352,7 +357,11 @@ export default function TutorChat() {
                   type="checkbox"
                   checked={privacy.optIn}
                   disabled={privacy.loading || privacy.saving}
-                  onChange={(event) => void privacy.setOptIn(event.target.checked).catch(() => undefined)}
+                  onChange={(event) => void privacy.setOptIn(event.target.checked).catch((sfalma) => {
+                    katagrapse_tilemetria('warn', 'Apotyxia allagis optIn privacy sto tutor', {
+                      sfalma: sfalma instanceof Error ? sfalma.message : String(sfalma),
+                    });
+                  })}
                 />
                 Επιτρέπω στο Gemini να λάβει το απόσπασμα υλικού και το ιστορικό αυτού του μαθήματος.
               </label>

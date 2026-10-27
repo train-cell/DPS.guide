@@ -95,11 +95,13 @@ async function ypologise_sha256(keimeno: string): Promise<string> {
  * @param dedomenaVault Το σειριοποιημένο JSON κείμενο του vault.
  * @param kleidi Ο προσωπικός κωδικός/κλειδί κρυπτογράφησης του χρήστη.
  * @param ekdosi Ο μονοτονικά αυξανόμενος αριθμός έκδοσης του πακέτου.
+ * @param xronosToraIso Προαιρετικό ISO timestamp (για ντετερμινισμό και tests).
  */
 export async function dimiourgia_sync_paketou(
   dedomenaVault: string,
   kleidi: string,
-  ekdosi: number
+  ekdosi: number,
+  xronosToraIso: string = new Date().toISOString()
 ): Promise<DpsSyncPackage> {
   const salt = globalThis.crypto.getRandomValues(new Uint8Array(16));
   const iv = globalThis.crypto.getRandomValues(new Uint8Array(12));
@@ -119,7 +121,7 @@ export async function dimiourgia_sync_paketou(
   const manifest: DpsSyncManifest = {
     schemaEkdosi: 1,
     ekdosiPaketou: ekdosi,
-    xronosSimioIso: new Date().toISOString(),
+    xronosSimioIso: xronosToraIso,
     hashDedomenon,
     systimaDeviceId: 'dps-core-client',
     megethosBytes: encryptedBuffer.byteLength,

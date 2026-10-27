@@ -14,7 +14,7 @@ import { useCourseAiPrivacy } from '../../ypiresies/ai-generation-approval.js';
 import { generateCourseGuide } from '../../ypiresies/pipeline-analisis.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
-import { me_tilemetria } from '../../tilemetria/tilemetria.js';
+import { katagrapse_tilemetria, me_tilemetria } from '../../tilemetria/tilemetria.js';
 import { DokimastikiExetasi } from './dokimastiki-exetasi.js';
 import { Mnemonika } from './mnemonika.js';
 import { AntallagiDeck } from './antallagi-deck.js';
@@ -319,8 +319,12 @@ export function AutoelegchosAkordeon({
             return map;
           });
         }
-      } catch {
-        // Safe error boundary
+      } catch (sfalma) {
+        katagrapse_tilemetria('warn', 'Apotyxia katagrafis apantisis Leitner ston odigo', {
+          kodikosMathimatos,
+          ennoia,
+          sfalma: sfalma instanceof Error ? sfalma.message : String(sfalma),
+        });
       }
     }
   };
@@ -569,7 +573,11 @@ export default function OdigosMeletis() {
                     type="checkbox"
                     checked={privacy.optIn}
                     disabled={privacy.loading || privacy.saving || !kodikosMathimatos}
-                    onChange={(event) => void privacy.setOptIn(event.target.checked).catch(() => undefined)}
+                    onChange={(event) => void privacy.setOptIn(event.target.checked).catch((sfalma) => {
+                      katagrapse_tilemetria('warn', 'Apotyxia allagis optIn privacy ston odigo', {
+                        sfalma: sfalma instanceof Error ? sfalma.message : String(sfalma),
+                      });
+                    })}
                     data-testid="odigos-gemini-optin"
                   />
                   Επιτρέπω στο Gemini να λαμβάνει το υλικό αυτού του μαθήματος. Θα επιβεβαιώνω κάθε αποστολή ξεχωριστά.
@@ -603,7 +611,11 @@ export default function OdigosMeletis() {
                     type="checkbox"
                     checked={privacy.optIn}
                     disabled={privacy.loading || privacy.saving || !kodikosMathimatos}
-                    onChange={(event) => void privacy.setOptIn(event.target.checked).catch(() => undefined)}
+                    onChange={(event) => void privacy.setOptIn(event.target.checked).catch((sfalma) => {
+                      katagrapse_tilemetria('warn', 'Apotyxia allagis optIn privacy ston odigo', {
+                        sfalma: sfalma instanceof Error ? sfalma.message : String(sfalma),
+                      });
+                    })}
                     data-testid="odigos-gemini-optin"
                   />
                   Επιτρέπω στο Gemini να λαμβάνει το υλικό αυτού του μαθήματος. Θα επιβεβαιώνω κάθε αποστολή ξεχωριστά.

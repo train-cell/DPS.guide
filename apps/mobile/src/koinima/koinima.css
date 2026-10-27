@@ -1600,3 +1600,135 @@ button.pilegma:disabled {
   margin-bottom: var(--diastima-3);
   padding: var(--diastima-2) 0;
 }
+
+/* ==========================================================================
+   Vault Gate - Zero-Knowledge Screen & Controls (Kanonas D11 Tokens)
+   ========================================================================== */
+
+.vault-gate-selida {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--diastima-5);
+  background-color: var(--xroma-fonto);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: var(--grammatoseira-oikogeneia);
+}
+
+.vault-gate-kouti {
+  width: min(100%, 520px);
+  display: grid;
+  gap: var(--diastima-4);
+  padding: var(--diastima-5);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  background-color: var(--xroma-karta);
+  box-shadow: 0 24px 80px var(--xroma-epifaneia-patimeni);
+}
+
+.vault-gate-eikonidio {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.vault-gate-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-titlos);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.vault-gate-forma {
+  display: grid;
+  gap: var(--diastima-3);
+}
+
+.vault-gate-eisodos {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: var(--diastima-3);
+  border-radius: var(--aktina-meso);
+  border: 1px solid var(--xroma-synorio);
+  color: var(--xroma-keimeno-prwtarxiko);
+  background-color: var(--xroma-fonto);
+  font-size: var(--grammatoseira-megalo);
+}
+
+.vault-gate-eisodos:focus {
+  outline: none;
+  border-color: var(--xroma-entono);
+}
+
+.vault-gate-koumpi {
+  min-height: 48px;
+  border: 0;
+  border-radius: var(--aktina-meso);
+  background-color: var(--xroma-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  cursor: pointer;
+  transition: opacity var(--diarkeia-grigori) ease;
+}
+
+.vault-gate-koumpi:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vault-gate-koumpi-defterevon {
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.vault-gate-koumpi-kleidi {
+  background: transparent;
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  color: var(--xroma-apoxromatismeno);
+  padding: var(--diastima-2) var(--diastima-3);
+  font-size: var(--grammatoseira-meso);
+  cursor: pointer;
+}
+
+.vault-gate-tmima-backup {
+  display: grid;
+  gap: var(--diastima-2);
+  padding-top: var(--diastima-4);
+  border-top: 1px solid var(--xroma-synorio);
+}
+
+.vault-gate-titlos-tmimatos {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.vault-gate-keimeno {
+  margin: 0;
+  color: var(--xroma-keimeno-defteron);
+}
+
+.vault-gate-kodikas {
+  padding: var(--diastima-4);
+  border-radius: var(--aktina-meso);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  color: var(--xroma-keimeno-prwtarxiko);
+  overflow-wrap: anywhere;
+  user-select: all;
+  font-size: var(--grammatoseira-megalo);
+}
+
+.vault-gate-sfalma {
+  color: var(--xroma-entono);
+  margin: 0;
+}
+
+.vault-gate-ypovathro {
+  margin-bottom: 0;
+  opacity: 0.75;
+  color: var(--xroma-keimeno-defteron);
+}
+

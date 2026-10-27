@@ -4,6 +4,7 @@
  * Wrapper γύρω από το πρότυπο Web Speech API (SpeechRecognition / webkitSpeechRecognition)
  * με ασφαλές fallback για περιβάλλοντα χωρίς υποστήριξη (SSR, WebViews χωρίς άδεια μικροφώνου κ.λπ.).
  */
+import { katagrapse_tilemetria } from '../tilemetria/tilemetria.js';
 
 export interface FwnitikiEpilogi {
   /** Γλώσσα αναγνώρισης (προεπιλογή: 'el-GR'). */
@@ -141,6 +142,10 @@ export class FwnitikiExetasiYpiresia {
 
       instance.onerror = (event: SpeechRecognitionErrorEventLike) => {
         this.akroasiEnergi = false;
+        katagrapse_tilemetria('warn', 'Sfalma event fwnitikis anagnorisis', {
+          sfalma: event.error,
+          minima: event.message,
+        });
         if (onSfalma) {
           onSfalma(event.error || 'Σφάλμα φωνητικής αναγνώρισης.');
         }
@@ -157,6 +162,7 @@ export class FwnitikiExetasiYpiresia {
     } catch (err) {
       this.akroasiEnergi = false;
       const minima = err instanceof Error ? err.message : String(err);
+      katagrapse_tilemetria('warn', 'Apotyxia ekkinisis fwnitikis anagnorisis', { sfalma: minima });
       if (onSfalma) {
         onSfalma(`Αποτυχία εκκίνησης φωνητικής αναγνώρισης: ${minima}`);
       }
@@ -171,8 +177,10 @@ export class FwnitikiExetasiYpiresia {
     if (this.recognitionInstance) {
       try {
         this.recognitionInstance.stop();
-      } catch {
-        // αγνόηση αν έχει ήδη σταματήσει
+      } catch (sfalma) {
+        katagrapse_tilemetria('warn', 'Apotyxia ston termatismo fwnitikis anagnorisis (stop)', {
+          sfalma: sfalma instanceof Error ? sfalma.message : String(sfalma),
+        });
       }
       this.recognitionInstance = null;
     }
@@ -186,8 +194,10 @@ export class FwnitikiExetasiYpiresia {
     if (this.recognitionInstance) {
       try {
         this.recognitionInstance.abort();
-      } catch {
-        // αγνόηση
+      } catch (sfalma) {
+        katagrapse_tilemetria('warn', 'Apotyxia stin akyrwsi fwnitikis anagnorisis (abort)', {
+          sfalma: sfalma instanceof Error ? sfalma.message : String(sfalma),
+        });
       }
       this.recognitionInstance = null;
     }
