@@ -1380,3 +1380,223 @@ button.pilegma:disabled {
 .exetasi-apantisi-kouti.lathos {
   border-left: var(--diastima-1) solid var(--xroma-apoxromatismeno);
 }
+
+/*
+ * Κονσόλα Τηλεμετρίας & Logs (TilemetriaProvoli)
+ * Απόλυτη συμμόρφωση με τον Κανόνα D11 (αποκλειστική χρήση CSS custom properties, zero raw hex).
+ */
+.tilemetria-kouti {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.tilemetria-kefali {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.tilemetria-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-titlos);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.tilemetria-ypotitlos {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.tilemetria-metriseis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: var(--diastima-2);
+}
+
+.tilemetria-metrisi-karta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--diastima-2);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-mikro);
+}
+
+.tilemetria-metrisi-arithmos {
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.tilemetria-error-xroma {
+  color: var(--xroma-apoxromatismeno);
+  text-decoration: underline;
+}
+
+.tilemetria-warn-xroma {
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.tilemetria-metrisi-etiketa {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.tilemetria-mpara-ergaleion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.tilemetria-anazitisi-kouti {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.tilemetria-anazitisi-etiketa {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.tilemetria-anazitisi-pedio {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tilemetria-energeies-mpara {
+  display: flex;
+  gap: var(--diastima-2);
+  flex-wrap: wrap;
+}
+
+.tilemetria-katastasi-minima {
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-entono);
+  padding: var(--diastima-1) var(--diastima-2);
+}
+
+.tilemetria-lista-eggrafon {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-mikro);
+  padding: var(--diastima-2);
+  background-color: var(--xroma-fonto);
+}
+
+.tilemetria-keno-minima {
+  text-align: center;
+  padding: var(--diastima-4);
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.tilemetria-eggrafi-grammi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+  padding: var(--diastima-2);
+  border-radius: var(--aktina-mikro);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  cursor: pointer;
+  transition: background-color var(--diarkeia-grigori) ease-out;
+}
+
+.tilemetria-eggrafi-grammi:hover {
+  background-color: var(--xroma-epifaneia-ypsomeni);
+}
+
+.tilemetria-row-kefali {
+  display: flex;
+  align-items: center;
+  gap: var(--diastima-2);
+  flex-wrap: wrap;
+}
+
+.tilemetria-row-wra {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+  font-family: monospace;
+}
+
+.tilemetria-badge {
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+  padding: 2px var(--diastima-1);
+  border-radius: var(--aktina-mikro);
+  border: 1px solid var(--xroma-synorio);
+  text-transform: uppercase;
+}
+
+.badge-info {
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.badge-warn {
+  background-color: var(--xroma-epifaneia-patimeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+  border-color: var(--xroma-entono);
+}
+
+.badge-error {
+  background-color: var(--xroma-epifaneia-patimeni);
+  color: var(--xroma-entono);
+  border-color: var(--xroma-entono);
+}
+
+.badge-debug {
+  background-color: transparent;
+  color: var(--xroma-apoxromatismeno);
+}
+
+.tilemetria-row-minima {
+  flex: 1;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+  word-break: break-word;
+}
+
+.tilemetria-diarkeia-tag {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-entono);
+  font-family: monospace;
+  padding: 1px var(--diastima-1);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border-radius: var(--aktina-mikro);
+}
+
+.tilemetria-metadata-pre {
+  margin: var(--diastima-1) 0 0;
+  padding: var(--diastima-2);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-mikro);
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Μπάρα εργαλείων ενίσχυσης μελέτης στον Οδηγό (D11 Tokens) */
+.odigos-ergaleia-mpara {
+  display: flex;
+  gap: var(--diastima-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--diastima-3);
+  padding: var(--diastima-2) 0;
+}

@@ -11,6 +11,7 @@ import { fortose_mathimata_apo_apothiki } from '../../ypiresies/index.js';
 import { epanasygxronise_mathimata_apo_apothiki } from '../../ypiresies/syndesi-eclass.js';
 import { fortose_eurethrio } from '../../provoli-pdf/provoli-ypiresies.js';
 import { me_tilemetria } from '../../tilemetria/tilemetria.js';
+import { FwnitikiKarta } from './fwnitiki-karta.js';
 
 /** Μετατρέπει μέγεθος byte σε ευανάγνωστη μορφή KB/MB. */
 export function morfopoiise_megethos_arxeiou(bytes: number | null | undefined): string {
@@ -230,6 +231,7 @@ export default function Mathimata() {
     readonly typos: 'epitychia' | 'sfalma';
     readonly keimeno: string;
   } | null>(null);
+  const [emfanisiFwnitikis, setEmfanisiFwnitikis] = useState(false);
 
   useEffect(() => {
     let zontas = true;
@@ -321,6 +323,23 @@ export default function Mathimata() {
         <IonButton type="button" onClick={() => void sygxronise()} disabled={sygxronizetai}>
           {sygxronizetai ? 'Συγχρονισμός σε εξέλιξη…' : 'Συγχρονισμός από LMS'}
         </IonButton>
+        <button
+          type="button"
+          className="pilegma pilegma-entono"
+          data-testid="mathimata-toggle-voice-btn"
+          onClick={() => setEmfanisiFwnitikis((p) => !p)}
+          aria-expanded={emfanisiFwnitikis}
+        >
+          {emfanisiFwnitikis ? 'Απόκρυψη Φωνητικής' : '🎙️ Φωνητική Εξέταση'}
+        </button>
+        {emfanisiFwnitikis && (
+          <FwnitikiKarta
+            erwtisi="Ποια είναι η χρονική πολυπλοκότητα της δυαδικής αναζήτησης;"
+            stoxosApantisi="Η χρονική πολυπλοκότητα είναι λογαριθμική O(log n)."
+            lexeisKleidia={['λογαριθμικη', 'log', 'logn']}
+            ennoia="Αλγόριθμοι Αναζήτησης"
+          />
+        )}
         {sygxronizetai && (
           <ProodosSygxronismou
             stadio={stadioSygxronismou}

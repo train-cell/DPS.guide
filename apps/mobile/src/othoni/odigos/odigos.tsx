@@ -15,6 +15,9 @@ import { generateCourseGuide } from '../../ypiresies/pipeline-analisis.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
 import { me_tilemetria } from '../../tilemetria/tilemetria.js';
+import { DokimastikiExetasi } from './dokimastiki-exetasi.js';
+import { Mnemonika } from './mnemonika.js';
+import { AntallagiDeck } from './antallagi-deck.js';
 
 /** Μία παραπομπή τμήματος οδηγού: tap ανοίγει το PDF στη σωστή σελίδα, αλλιώς μένει απλό κείμενο. */
 export function ParapompiTmimatos({ parapompi }: { readonly parapompi: string }) {
@@ -448,6 +451,7 @@ export default function OdigosMeletis() {
     }
   }, [dimiourgeitai, enotitaId, kodikosMathimatos, periballon, privacy.authorizeGeneration, selectedModel, selectedProvider]);
 
+  const [energoErgaleio, setEnergoErgaleio] = useState<'kanoniko' | 'exetasi' | 'mnemonika' | 'antallagi'>('kanoniko');
   const parametroi = new URLSearchParams({ enotita: enotitaId });
   const kseis = (
     <>
@@ -482,6 +486,77 @@ export default function OdigosMeletis() {
         ypokeimeno="Οδός μελέτης με παραπομπές στο υλικό."
         akseis={kseis}
       />
+
+      <div className="odigos-ergaleia-mpara" role="toolbar" aria-label="Εργαλεία ενίσχυσης μελέτης">
+        <button
+          type="button"
+          className={`pilegma${energoErgaleio === 'exetasi' ? ' pilegma-entono' : ''}`}
+          data-testid="odigos-tool-exam"
+          onClick={() => setEnergoErgaleio((p) => (p === 'exetasi' ? 'kanoniko' : 'exetasi'))}
+        >
+          🎯 Προσομοίωση Εξέτασης
+        </button>
+        <button
+          type="button"
+          className={`pilegma${energoErgaleio === 'mnemonika' ? ' pilegma-entono' : ''}`}
+          data-testid="odigos-tool-mnemonika"
+          onClick={() => setEnergoErgaleio((p) => (p === 'mnemonika' ? 'kanoniko' : 'mnemonika'))}
+        >
+          💡 Μνημονικά
+        </button>
+        <button
+          type="button"
+          className={`pilegma${energoErgaleio === 'antallagi' ? ' pilegma-entono' : ''}`}
+          data-testid="odigos-tool-p2p"
+          onClick={() => setEnergoErgaleio((p) => (p === 'antallagi' ? 'kanoniko' : 'antallagi'))}
+        >
+          📦 P2P Decks
+        </button>
+      </div>
+
+      {energoErgaleio === 'exetasi' && (
+        <DokimastikiExetasi
+          kodikosMathimatos={kodikosMathimatos || 'CS-101'}
+          erwtiseis={[
+            {
+              erwtisi: `Ποιος είναι ο βασικός στόχος της ενότητας ${enotitaId};`,
+              apantisi: 'Κατανόηση βασικών αρχών και εφαρμογή σε ασκήσεις.',
+              ennoia: enotitaId,
+              enotita_id: enotitaId,
+              epiloges: [
+                'Κατανόηση βασικών αρχών και εφαρμογή σε ασκήσεις.',
+                'Απομνημόνευση χωρίς εφαρμογή.',
+                'Παράβλεψη των παραδειγμάτων.',
+                'Επίλυση μόνο προαιρετικών θεμάτων.',
+              ],
+            },
+          ]}
+        />
+      )}
+
+      {energoErgaleio === 'mnemonika' && (
+        <Mnemonika
+          arxikoiOroi={[enotitaId, 'Ορισμός', 'Ιδιότητες', 'Εφαρμογές']}
+          thema={`Ενότητα ${enotitaId}`}
+        />
+      )}
+
+      {energoErgaleio === 'antallagi' && (
+        <AntallagiDeck
+          trexwnPaketo={{
+            id: `deck-${enotitaId}`,
+            titlos: `Κάρτες Μελέτης: ${enotitaId}`,
+            dimiourgithike: '2026-10-27T10:00:00.000Z',
+            kartes: [
+              {
+                erwtisi: `Βασική έννοια της ενότητας ${enotitaId};`,
+                apantisi: 'Θεμελιώδης ορισμός και κανόνες εφαρμογής.',
+                ennoia: enotitaId,
+              },
+            ],
+          }}
+        />
+      )}
       {katastasi.katastasi === 'adeio' ? (
         <Karta
           titlos="Δημιουργία οδηγού μελέτης"
