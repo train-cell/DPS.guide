@@ -5,6 +5,7 @@ import {
   pare_tilemetria_arxeio,
   katharise_tilemetria,
   eksagoge_tilemetrias_json,
+  eggrafi_akroati_tilemetrias,
   scrub_eyaisthita_dedomena,
   MEGISTO_ORIO_EGGRAFON,
   me_tilemetria,
@@ -84,6 +85,22 @@ describe('tilemetria — Structured Logging & Observability Engine', () => {
     const parsed: unknown = JSON.parse(json);
     expect(Array.isArray(parsed)).toBe(true);
     expect((parsed as unknown[]).length).toBe(3);
+  });
+
+  it('ειδοποιεί εγγεγραμμένους ακροατές σε πραγματικό χρόνο', () => {
+    const elifti: string[] = [];
+    const apegrafi = eggrafi_akroati_tilemetrias((e) => {
+      elifti.push(e.minima);
+    });
+
+    katagrapse_tilemetria('info', 'Συμβάν 1');
+    katagrapse_tilemetria('warn', 'Συμβάν 2');
+
+    expect(elifti).toEqual(['Συμβάν 1', 'Συμβάν 2']);
+
+    apegrafi();
+    katagrapse_tilemetria('error', 'Συμβάν 3');
+    expect(elifti).toEqual(['Συμβάν 1', 'Συμβάν 2']);
   });
 
   describe('me_tilemetria — Universal Observability Wrapper', () => {

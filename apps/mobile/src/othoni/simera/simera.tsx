@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { MouseEvent as GeventoPedomati } from 'react';
 import { Link } from 'react-router-dom';
 import type { Enotita, Mathima, XartisMathimatos } from '@dps/core';
+import { ypologise_streak_me_pagwma } from '@dps/core';
 import { xrisiApothekisis } from '../../apothiki/index.js';
 import { katagrapse_checkin, ypologismos_seri_meletis } from '../../apothiki/index.js';
 import { xrisiPeriballontos } from '../../periballon/index.js';
@@ -24,8 +25,9 @@ import type { PanepistimioId } from '../../design/eikonidia-panepistimion.js';
 import { stilise_imerominia } from '../../programma/programma-vohthia.js';
 import { diadromi_odigou } from '../../navigasi/dromoi.js';
 import { GapRadar } from './gap-radar.js';
+import { StreakFreezeModal } from './streak-freeze-modal.js';
 
-export { GapRadar };
+export { GapRadar, StreakFreezeModal };
 
 /** Πόσες ενότητες του χάρτη προτείνονται ως στόχοι της ημέρας. */
 const PLITOS_STOCHOIS = 3;
@@ -247,9 +249,20 @@ export function Simera() {
   const [checkinLepta, setCheckinLepta] = useState(30);
   const [checkinMinima, setCheckinMinima] = useState<string | null>(null);
   const [checkinEktelountai, setCheckinEktelountai] = useState(false);
+  const [anoiktoStreakModal, setAnoiktoStreakModal] = useState(false);
 
   const checkins = apothiki.proodhos.checkins ?? [];
   const seri = ypologismos_seri_meletis(checkins, simeraImerominia);
+  const streakPagwma = useMemo(
+    () =>
+      ypologise_streak_me_pagwma(
+        checkins.map((c) => c.imerominia),
+        [],
+        simeraImerominia,
+        2
+      ),
+    [checkins, simeraImerominia]
+  );
 
   const xeirismosCheckin = useCallback(async () => {
     if (checkinEktelountai) return;
@@ -307,8 +320,27 @@ export function Simera() {
               ? `🔥 ${seri} ${seri === 1 ? 'μέρα' : 'μέρες'} σερί`
               : 'Κατάγραψε τη σημερινή σου μελέτη για να ξεκινήσεις το σερί!'}
           </span>
+          <button
+            type="button"
+            className="pilegma pilegma-entono"
+            data-testid="simera-streak-freeze-btn"
+            onClick={() => setAnoiktoStreakModal(true)}
+            aria-label="Διαχείριση παγώματος σερί και tokens"
+          >
+            ❄️ Πάγωμα / Διάσωση Σερί
+          </button>
         </div>
       </div>
+
+      <StreakFreezeModal
+        anoikto={anoiktoStreakModal}
+        trexwnStreak={streakPagwma.trexwnStreak}
+        diathesimaTokens={2 - streakPagwma.xrisimopoihmenaTokens}
+        kindynosDiakopis={streakPagwma.kindynosDiakopis}
+        onKleisimo={() => setAnoiktoStreakModal(false)}
+        onXrisiToken={() => setAnoiktoStreakModal(false)}
+        onEnarxiBlitz={() => setAnoiktoStreakModal(false)}
+      />
 
       <div className="simera-checkin-karta">
         <div className="simera-checkin-header">

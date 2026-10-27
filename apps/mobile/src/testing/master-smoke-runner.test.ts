@@ -82,6 +82,20 @@ import {
   apantisi_me_llm_i_topika,
   apodhosi_keimenou_me_parapompes,
 } from '../othoni/tutor/tutor.js';
+import {
+  TilemetriaProvoli,
+  ypologismos_statistikon_tilemetrias,
+} from '../othoni/rythisies/tilemetria-provoli.js';
+import {
+  katagrapse_tilemetria,
+  katharise_tilemetria,
+  me_tilemetria,
+} from '../tilemetria/tilemetria.js';
+import { StreakFreezeModal } from '../othoni/simera/streak-freeze-modal.js';
+import { Mnemonika } from '../othoni/odigos/mnemonika.js';
+import { AntallagiDeck } from '../othoni/odigos/antallagi-deck.js';
+import { FwnitikiKarta } from '../othoni/mathimata/fwnitiki-karta.js';
+import { DokimastikiExetasi } from '../othoni/odigos/dokimastiki-exetasi.js';
 import { me_periballon_test } from '../../test-fixtures/periballon-test-provider.js';
 import { ftiaxe_periballon_test } from '../../test-fixtures/ftiaxe-test-periballon.js';
 import { pseudos_xartis } from '../../test-fixtures/pseudomata/index.js';
@@ -1001,6 +1015,139 @@ describe('DPS.guide — Ενοποιημένος Master Smoke Test Runner', () =
       expect(html).toContain('data-testid="odigos-proodos-pososto"');
       expect(html).toContain('100%');
       expect(html).toContain('Σύνθεση οδηγού 7 ενοτήτων &amp; παραπομπών...');
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 11. Universal Telemetry & Live Log Console
+  // ─────────────────────────────────────────────────────────────────────────────
+  describe('11. Universal Telemetry & Live Log Console', () => {
+    it('καταγράφει, φιλτράρει και αποδίδει ζωντανά συμβάντα τηλεμετρίας στο TilemetriaProvoli', async () => {
+      katharise_tilemetria();
+
+      await me_tilemetria('TestOperation', async () => {
+        katagrapse_tilemetria('info', 'Δοκιμαστικό info συμβάν', { testUser: 'student' });
+        katagrapse_tilemetria('warn', 'Προειδοποίηση μνήμης', { memoryUsage: '85%' });
+        katagrapse_tilemetria('error', 'Αποτυχία συγχρονισμού', { reason: 'timeout' });
+        return 42;
+      });
+
+      const html = renderToStaticMarkup(createElement(TilemetriaProvoli, {}));
+      expect(html).toContain('data-testid="tilemetria-provoli"');
+      expect(html).toContain('data-testid="tilemetria-statistika"');
+      expect(html).toContain('data-testid="tilemetria-search-input"');
+      expect(html).toContain('data-testid="tilemetria-log-list"');
+      expect(html).toContain('Δοκιμαστικό info συμβάν');
+      expect(html).toContain('Προειδοποίηση μνήμης');
+      expect(html).toContain('Αποτυχία συγχρονισμού');
+      expect(html).toContain('role="log"');
+      expect(html).toContain('aria-live="polite"');
+    });
+
+    it('υπολογίζει αξιόπιστα τα συνολικά στατιστικά τηλεμετρίας', () => {
+      const deigma = [
+        { id: '1', timestamp: '2026-10-27T10:00:00Z', epipedo: 'info' as const, minima: 'A', diarkeiaMs: 12 },
+        { id: '2', timestamp: '2026-10-27T10:01:00Z', epipedo: 'error' as const, minima: 'B', diarkeiaMs: 24 },
+        { id: '3', timestamp: '2026-10-27T10:02:00Z', epipedo: 'warn' as const, minima: 'C' },
+      ];
+
+      const stats = ypologismos_statistikon_tilemetrias(deigma);
+      expect(stats.synolo).toBe(3);
+      expect(stats.sfalmata).toBe(1);
+      expect(stats.proeidopoiiseis).toBe(1);
+      expect(stats.mesiDiarkeiaMs).toBe(18);
+    });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 12. Integrated Study Acceleration Suite (Exam, Mnemonics, P2P, Voice, Streak)
+  // ─────────────────────────────────────────────────────────────────────────────
+  describe('12. Integrated Study Acceleration Suite', () => {
+    it('αποδίδει το StreakFreezeModal με πλήρες προσβάσιμο dialog contract', () => {
+      const html = renderToStaticMarkup(
+        createElement(StreakFreezeModal, {
+          anoikto: true,
+          trexwnStreak: 5,
+          diathesimaTokens: 2,
+          kindynosDiakopis: true,
+          onKleisimo: () => {},
+        })
+      );
+
+      expect(html).toContain('data-testid="streak-freeze-modal"');
+      expect(html).toContain('role="dialog"');
+      expect(html).toContain('aria-modal="true"');
+      expect(html).toContain('5 ημέρες');
+      expect(html).toContain('2 🧊');
+      expect(html).toContain('data-testid="streak-freeze-use-token"');
+      expect(html).toContain('data-testid="streak-freeze-start-blitz"');
+    });
+
+    it('αποδίδει το Mnemonika component με ακρωνύμιο και κατανομή', () => {
+      const html = renderToStaticMarkup(
+        createElement(Mnemonika, {
+          arxikoiOroi: ['Αλγόριθμος', 'Βάση', 'Γράφος'],
+          arxikoThema: 'Επιστήμη Υπολογιστών',
+        })
+      );
+
+      expect(html).toContain('data-testid="mnemonika-form"');
+      expect(html).toContain('data-testid="mnemoniko-akronymio"');
+      expect(html).toContain('data-testid="mnemoniko-prompt"');
+      expect(html).toContain('ΑΒΓ');
+    });
+
+    it('αποδίδει το AntallagiDeck component για P2P κρυπτογραφημένη ανταλλαγή', () => {
+      const html = renderToStaticMarkup(
+        createElement(AntallagiDeck, {
+          trexwnPaketo: {
+            id: 'deck-1',
+            titlos: 'Δομές Δεδομένων',
+            dimiourgithike: '2026-10-27T10:00:00Z',
+            kartes: [{ erwtisi: 'Τι είναι stack;', apantisi: 'LIFO' }],
+          },
+        })
+      );
+
+      expect(html).toContain('antallagi-deck-plaisio');
+      expect(html).toContain('data-testid="antallagi-export-btn"');
+      expect(html).toContain('data-testid="antallagi-import-input"');
+      expect(html).toContain('data-testid="antallagi-import-btn"');
+    });
+
+    it('αποδίδει τη FwnitikiKarta με διακόπτη μικροφώνου και προσβάσιμα roles', () => {
+      const html = renderToStaticMarkup(
+        createElement(FwnitikiKarta, {
+          erwtisi: 'Ποια είναι η πολυπλοκότητα της δυαδικής αναζήτησης;',
+          stoxosApantisi: 'O(log n)',
+          lexeisKleidia: ['log', 'logn'],
+        })
+      );
+
+      expect(html).toContain('fwnitiki-karta-plaisio');
+      expect(html).toContain('data-testid="fwnitiki-mic-btn"');
+      expect(html).toContain('aria-label="Έναρξη φωνητικής απάντησης"');
+      expect(html).toContain('data-testid="fwnitiki-katastasi"');
+    });
+
+    it('αποδίδει το DokimastikiExetasi component με δυνατότητα εκκίνησης', () => {
+      const html = renderToStaticMarkup(
+        createElement(DokimastikiExetasi, {
+          kodikosMathimatos: 'CS-101',
+          erwtiseis: [
+            {
+              erwtisi: 'Τι είναι LIFO;',
+              apantisi: 'Stack',
+              ennoia: 'Δομές Δεδομένων',
+              epiloges: ['Stack', 'Queue', 'Array'],
+            },
+          ],
+        })
+      );
+
+      expect(html).toContain('exetasi-plaisio');
+      expect(html).toContain('data-testid="odigos-start-mock-exam"');
+      expect(html).toContain('CS-101');
     });
   });
 });

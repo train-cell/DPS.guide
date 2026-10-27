@@ -23,6 +23,18 @@ const EYAISTHITA_MOTIVA = /password|kodikos|token|secret|key|auth|pass|bearer|cr
 let eggrafes: TilemetriaEggrafi[] = [];
 let metritisId = 0;
 
+/** Συνάρτηση ακροατή για άμεση ειδοποίηση νέων εγγραφών τηλεμετρίας. */
+export type TilemetriaAkroatis = (eggrafi: TilemetriaEggrafi) => void;
+const akroates = new Set<TilemetriaAkroatis>();
+
+/** Εγγράφει έναν ακροατή για ζωντανή ροή καταγραφών τηλεμετρίας. */
+export function eggrafi_akroati_tilemetrias(akroatis: TilemetriaAkroatis): () => void {
+  akroates.add(akroatis);
+  return () => {
+    akroates.delete(akroatis);
+  };
+}
+
 /** Αφαιρεί ευαίσθητες πληροφορίες από αντικείμενα πριν την καταγραφή στα logs. */
 export function scrub_eyaisthita_dedomena(dedomena: unknown): unknown {
   if (dedomena === null || typeof dedomena !== 'object') {
@@ -70,6 +82,14 @@ export function katagrapse_tilemetria(
   eggrafes.push(eggrafi);
   if (eggrafes.length > MEGISTO_ORIO_EGGRAFON) {
     eggrafes = eggrafes.slice(-MEGISTO_ORIO_EGGRAFON);
+  }
+
+  for (const akroatis of akroates) {
+    try {
+      akroatis(eggrafi);
+    } catch {
+      // Ignored to prevent telemetry listener crashes from affecting business logic
+    }
   }
 
   return eggrafi;

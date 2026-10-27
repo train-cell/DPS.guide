@@ -1,6 +1,6 @@
 import type { AntistoixisiThematos, ApothikiPyli, Apotelesma } from '@dps/core';
 import { ok, ypologise_apodosi } from '@dps/core';
-import { me_tilemetria } from '../tilemetria/tilemetria.js';
+import { katagrapse_tilemetria, me_tilemetria } from '../tilemetria/tilemetria.js';
 
 /**
  * Διαδρομή φακέλου παλιών θεμάτων ενός μαθήματος στο vault.
@@ -54,7 +54,11 @@ export async function fortose_apodosi(
       }
     }
     return katharismeno;
-  } catch {
+  } catch (sfalma) {
+    katagrapse_tilemetria('warn', 'Apotyxia parsing arxeiou apodosis JSON', {
+      kodikos,
+      sfalma: sfalma instanceof Error ? sfalma.message : String(sfalma),
+    });
     return {};
   }
 }

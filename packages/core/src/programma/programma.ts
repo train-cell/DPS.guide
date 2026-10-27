@@ -256,7 +256,10 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
       continue;
     }
     // Η ημερομηνία check-in ελέγχθηκε κατά την είσοδο, οπότε είναι πάντα έγκυρη.
-    const vasi = parse_meri(katastasi.teleutaia_meleti) as MeriImorominias;
+    const vasi = parse_meri(katastasi.teleutaia_meleti);
+    if (vasi === null) {
+      throw new Error(`Akyri imerominia teleutaias meletis: ${katastasi.teleutaia_meleti}`);
+    }
     vale_epanalipseis(katastasi, vasi);
   }
 
@@ -360,7 +363,11 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
     if (ergasies.length > 0) {
       meres.push({ imerominia: imera, ergasies });
     }
-    meri = parse_meri(add_imeres(meri, 1)) as MeriImorominias;
+    const epomenoMeri = parse_meri(add_imeres(meri, 1));
+    if (epomenoMeri === null) {
+      throw new Error(`Apotyxia ypologismou epomenis imeras apo: ${imera}`);
+    }
+    meri = epomenoMeri;
     imera = iso_apo_meri(meri);
   }
 
@@ -372,7 +379,11 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
     let iter = eisodos.simera;
     while (iter <= grammi.deadline) {
       diathesima += xorikotita(meri_iter);
-      meri_iter = parse_meri(add_imeres(meri_iter, 1)) as MeriImorominias;
+      const epomenoMeriIter = parse_meri(add_imeres(meri_iter, 1));
+      if (epomenoMeriIter === null) {
+        throw new Error(`Apotyxia ypologismou epomenis imeras apo: ${iter}`);
+      }
+      meri_iter = epomenoMeriIter;
       iter = iso_apo_meri(meri_iter);
     }
     let apaitoumena = 0;

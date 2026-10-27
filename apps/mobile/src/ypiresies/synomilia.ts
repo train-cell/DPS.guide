@@ -1,4 +1,5 @@
 import type { ApothikiPyli } from '@dps/core';
+import { katagrapse_tilemetria } from '../tilemetria/tilemetria.js';
 
 /** Ποιος έγραψε ένα γράμμα στο ιστορικό της συνομιλίας. */
 export type RologosImerrologiou = 'xristis' | 'tutor';
@@ -47,7 +48,12 @@ export async function fortose_synomilia_apo_apothiki(
       ) {
         grammes.push(anagnose as GrammiImerrologiou);
       }
-    } catch {
+    } catch (sfalma) {
+      katagrapse_tilemetria('warn', 'Apotyxia parsing grammis istorikou synomilias', {
+        kodikos_mathimatos,
+        enotita_id,
+        sfalma: sfalma instanceof Error ? sfalma.message : String(sfalma),
+      });
       continue;
     }
   }

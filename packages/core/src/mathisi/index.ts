@@ -23,3 +23,13 @@ export type {
   FsrsApotelesma,
 } from './fsrs.js';
 
+export {
+  KATWFLI_EPITYXIAS_FWNITIKIS,
+  kanonikopoiise_fwnitika,
+  ypologise_levenshtein,
+  ypologise_omoiotita_levenshtein,
+  ypologise_fwnitiki_omoiotita,
+} from './fwnitiko-matching.js';
+
+export type { ApotelesmaFwnitikisOmoiotitas } from './fwnitiko-matching.js';
+
