@@ -144,7 +144,7 @@
   flex-direction: column;
   align-items: center;
   padding: var(--diastima-3);
-  background: linear-gradient(160deg, #1f1f23 0%, #111113 100%);
+  background: linear-gradient(160deg, var(--xroma-karta) 0%, var(--xroma-fonto) 100%);
   border: 1px solid rgb(255 255 255 / 16%);
   border-radius: var(--aktina-meso);
   box-shadow:

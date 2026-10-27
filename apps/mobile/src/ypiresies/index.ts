@@ -6,4 +6,5 @@ export * from './synomilia.js';
 export * from './syndesi-eclass.js';
 export * from './themata.js';
 export * from './exetasi-simulator.js';
+export * from './fwnitiki-exetasi.js';
 

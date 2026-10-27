@@ -39,22 +39,10 @@ ion-content.episkefsi {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #060709;
+    background-color: var(--xroma-fonto);
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  [data-theme='light'] body {
-    background-color: #e2e8f0;
-  }
-
-  [data-theme='unistudents'] body {
-    background-color: #050814;
-  }
-
-  [data-theme='emerald'] body {
-    background-color: #040e0b;
   }
 
   #root {

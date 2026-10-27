@@ -14,6 +14,7 @@ import type { PanepistimioId } from '../../design/eikonidia-panepistimion.js';
 import { useVaultSecurity } from '../../vault/vault-gate.js';
 import { deliverEncryptedBackup } from '../../vault/backup-file.js';
 import { eksagoge_tilemetrias_json, me_tilemetria } from '../../tilemetria/tilemetria.js';
+import { TilemetriaProvoli } from './tilemetria-provoli.js';
 
 /** Επιλογές διαθέσιμων θεμάτων εμφάνισης. */
 const THEMATA_EPILOGES: readonly { readonly id: ThemaId; readonly titlos: string }[] = [
@@ -52,6 +53,7 @@ export default function Rythisies() {
   const [backupArxeio, setBackupArxeio] = useState<File | null>(null);
   const [backupMinima, setBackupMinima] = useState<string | null>(null);
   const [backupSeEkseliksi, setBackupSeEkseliksi] = useState(false);
+  const [emfanisiTilemetrias, setEmfanisiTilemetrias] = useState(false);
 
   useEffect(() => {
     setGrammata({ baseUrl, einaiEidopoieseis });
@@ -356,6 +358,32 @@ export default function Rythisies() {
               <p role="status" className="karta-ypokeimeno">
                 {backupMinima}
               </p>
+            )}
+          </div>
+        }
+      />
+
+      <Karta
+        titlos="Διαγνωστικά & Τηλεμετρία Συμβάντων"
+        ypokeimeno="Ζωντανή παρακολούθηση logs, χρόνων εκτέλεσης και αναλυτικών μετρήσεων."
+        stoixeia={
+          <div className="odoni-lista">
+            <button
+              type="button"
+              className="pilegma pilegma-entono"
+              data-testid="rythisies-toggle-telemetry-btn"
+              onClick={() => setEmfanisiTilemetrias((palia) => !palia)}
+              aria-expanded={emfanisiTilemetrias}
+            >
+              {emfanisiTilemetrias ? 'Απόκρυψη Κονσόλας Logs' : 'Προβολή Ζωντανής Κονσόλας Logs'}
+            </button>
+            {emfanisiTilemetrias && (
+              <TilemetriaProvoli
+                onEksagwgi={(json) => {
+                  const blob = new Blob([json], { type: 'application/json' });
+                  deliverEncryptedBackup(blob, 'dps-telemetry-logs.json');
+                }}
+              />
             )}
           </div>
         }

@@ -31,3 +31,9 @@ export * as panepistimia from './panepistimia/index.js';
 export * from './anazitisi/index.js';
 export * as anazitisi from './anazitisi/index.js';
 
+export * from './mnemonika/index.js';
+export * as mnemonika from './mnemonika/index.js';
+
+export * from './kryptografia/index.js';
+export * as kryptografia from './kryptografia/index.js';
+
