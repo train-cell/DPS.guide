@@ -10,3 +10,5 @@
 
 Προορισμός: fixtures/ αποθήκευση (gitignored αν δεν υπάρχει εξαίρεση).
 Η άδεια OFL επιτρέπει αναδιανομή μαζί με το repo.
+
+Full copyright and license notice: [OFL.txt](OFL.txt).
