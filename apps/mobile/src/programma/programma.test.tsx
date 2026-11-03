@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { ftiaxe_programma } from '@dps/core';
@@ -12,6 +12,15 @@ import { me_periballon_test } from '../../test-fixtures/periballon-test-provider
 import { pseudos_xartis } from '../../test-fixtures/pseudomata/index.js';
 
 describe('RythmiseisProgrammatos — συμβόλαιο οθόνης και χρονοδιάγραμμα', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-26T10:00:00.000Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('εξάγει component συνάρτησης', () => {
     expect(typeof RythmiseisProgrammatos).toBe('function');
   });
