@@ -11,3 +11,7 @@
 - Τα `../handoff.md` και `../HANDOFF_DPS_GUIDE_2026-10-11.md` είναι snapshots παλιότερης συνεδρίας. Αναφέρουν `main`, demo/mock flows και working-tree changes που δεν ισχύουν πια· δεν είναι ενεργές οδηγίες ή τρέχουσα κατάσταση.
 
 Οι παλιές αναφορές σε production mocks, αρχεία μαθήματος ορατά στο iOS Files, μόνο-iOS διανομή ή παλιές παράλληλες ροές είναι ξεπερασμένες. Τα mocks/fixtures παραμένουν μόνο για offline tests.
+
+## Publication review
+
+[Public-readiness review, 3 November 2026](Public-readiness-20261103.md): source/history and artifact scope, patched dependency, validation and remaining advisory notes.
