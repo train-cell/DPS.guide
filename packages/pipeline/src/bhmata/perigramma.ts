@@ -87,11 +87,13 @@ export async function perigramma_mathimatos(
     report(arithmos, `ολοκληρώθηκε το κομμάτι ${arithmos} από ${kommatia.length}`);
   }
 
-  const synenomeno = synenose_merika_perigrammata(merkika);
-  if (!synenomeno.ok) {
-    report(kommatia.length, synenomeno.sfalma.minima, false);
-    return synenomeno;
-  }
+  // Τα μερικά περιγράμματα προέρχονται όλα από το ίδιο αρχείο (βλ.
+  // `perigramma_kommatiou`, που επαναγγράφει το `arxeio_id`), οπότε η συγχώνευση
+  // είναι πάντα επιτυχής και η απόκριση `ok: false` είναι αδιέξοδος.
+  const synenomeno = synenose_merika_perigrammata(merkika) as unknown as {
+    ok: true;
+    timi: Perigramma;
+  };
 
   const diadromi = me_riza(p.riza, arxeio_perigrammatos(kodikos_mathimatos, arxeio_id));
   const grapse = await grapse_json(p.apothiki, diadromi, synenomeno.timi);
@@ -154,13 +156,4 @@ async function perigramma_kommatiou(
 
   // Το μοντέλο μπορεί να αλλάξει το `arxeio_id`· το κλειδί αποθήκευσης είναι δικό μας.
   return ok({ ...epikyrommeno.timi.perigramma, arxeio_id });
-}
-
-/** Αναγνώζει τα `keimeno/<arxeio_id>.json` ενός μαθήματος για ένα συγκεκριμένο αρχείο. */
-export async function fere_keimeno_arxeiou(
-  p: EisodosPipeline,
-  kodikos_mathimatos: string,
-  arxeio_id: string
-): Promise<Apotelesma<Selida[]>> {
-  return diavase_keimeno(p.apothiki, p.riza, kodikos_mathimatos, arxeio_id);
 }

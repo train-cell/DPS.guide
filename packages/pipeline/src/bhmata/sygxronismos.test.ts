@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { MnimiApothiki } from '@dps/core/testing';
-import type { Arxeio, KomvosArxeiou } from '@dps/core';
+import type { Apotelesma, Arxeio, ApothikiPyli, KatevasmaPyli, KomvosArxeiou } from '@dps/core';
+import { apotyxia, ok } from '@dps/core';
 import { ArgiosLlm, FakeEclassPyli, FakeKatevasmaPyli, KatagrafiDiamnemata, StatheriRologi } from '../testing/voirtheia.js';
 import { sygxronismos } from '../bhmata/sygxronismos.js';
 import type { EisodosPipeline } from '../porte.js';
@@ -36,6 +37,68 @@ function ftiaxe_eisodos(
     katagrafi,
     riza: '',
   };
+}
+
+/** Πύλη eClass με `base_url` και `pare_kefalides_lipshs` σταθερής τιμής. */
+function eclass_meafero(base_url: string, kefalides: Record<string, string> = {}): FakeEclassPyli {
+  const eclass = new FakeEclassPyli();
+  // Τα `base_url` / `pare_kefalides_lipshs` είναι προαιρετικά στο `EclassPyli`
+  // και δεν δηλώνονται στην κλάση — οπότε απαιτείται η μεταφορά τύπου.
+  const pyli = eclass as unknown as {
+    base_url?: string;
+    pare_kefalides_lipshs?: () => Record<string, string>;
+  };
+  pyli.base_url = base_url;
+  pyli.pare_kefalides_lipshs = () => kefalides;
+  return eclass;
+}
+
+/** Πύλη λήψης που αποτυγχάνει πάντα (ελέγχει τη διάσωση του `sygxronismos`). */
+function katevasma_apotyxias(): KatevasmaPyli {
+  return {
+    async katevase(): Promise<Apotelesma<{ megethos: number }>> {
+      return apotyxia('DIKTYO', 'Αδύνατη η λήψη του αρχείου');
+    },
+  };
+}
+
+/** Πύλη αποθήκης που αποτυγχάνει στις ανάγνωση δυαδικού (λείπουν τα bytes μετά τη λήψη). */
+function apothiki_kentri(i: ApothikiPyli): ApothikiPyli {
+  return {
+    async diavase_keimeno(diadromi: string) {
+      return i.diavase_keimeno(diadromi);
+    },
+    async diavase_dyadiko(diadromi: string) {
+      return apotyxia('DEN_VRETHIKE', `Δεν βρέθηκαν τα bytes του ${diadromi}`);
+    },
+    async grapse_keimeno(diadromi: string, periexomeno: string) {
+      return i.grapse_keimeno(diadromi, periexomeno);
+    },
+    async grapse_dyadiko(diadromi: string, dedomena: Uint8Array) {
+      return i.grapse_dyadiko(diadromi, dedomena);
+    },
+    async yparxei(diadromi: string) {
+      return i.yparxei(diadromi);
+    },
+    async lista(fakelos: string) {
+      return i.lista(fakelos);
+    },
+    async diagrafi(diadromi: string) {
+      return i.diagrafi(diadromi);
+    },
+  };
+}
+
+/** Νέα εισόδος με προσαρμοσμένο port (π.χ. αποτυχημένη λήψη). */
+function ftiaxe_eisodos_me_porta(
+  p: EisodosPipeline,
+  { katevasma, apothiki }: { katevasma?: KatevasmaPyli; apothiki?: ApothikiPyli }
+): EisodosPipeline {
+  return {
+    ...p,
+    ...(katevasma ? { katevasma } : {}),
+    ...(apothiki ? { apothiki } : {}),
+  } as unknown as EisodosPipeline;
 }
 
 async function diavase_arxeia(apothiki: MnimiApothiki): Promise<Arxeio[]> {
@@ -222,5 +285,149 @@ describe('sygxronismos — κανόνες §8 και §5.3', () => {
 
     expect(await apothiki.yparxei(me_riza('data', arxeio_eurethriou('M1')))).toBe(true);
     expect(await apothiki.yparxei(arxeio_eurethriou('M1'))).toBe(false);
+  });
+
+  it('αποτυχία λήψης → σφάλμα και καμία εγγραφή ευρετηρίου (L162)', async () => {
+    const eclass = new FakeEclassPyli();
+    eclass.dendra = { M1: [komvos_arxeio()] };
+    const katagrafi = new KatagrafiDiamnemata();
+    const apothiki = new MnimiApothiki();
+    const p = ftiaxe_eisodos_me_porta(ftiaxe_eisodos(eclass, apothiki, katagrafi), {
+      katevasma: katevasma_apotyxias(),
+    });
+
+    const apotelesma = await sygxronismos(p, 'M1');
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+    expect(katagrafi.sfalmata.join(' ')).toContain('απέτυχε η λήψη αρχείου');
+    expect(await apothiki.yparxei(arxeio_eurethriou('M1'))).toBe(false);
+  });
+
+  it('τα bytes λείπουν από την αποθήκη μετά τη λήψη (L175 → L225)', async () => {
+    const eclass = new FakeEclassPyli();
+    eclass.dendra = { M1: [komvos_arxeio()] };
+    const katagrafi = new KatagrafiDiamnemata();
+    const apothiki = new MnimiApothiki();
+    const p = ftiaxe_eisodos_me_porta(ftiaxe_eisodos(eclass, apothiki, katagrafi), {
+      apothiki: apothiki_kentri(apothiki),
+    });
+
+    const apotelesma = await sygxronismos(p, 'M1');
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    expect(katagrafi.sfalmata).toEqual([]);
+  });
+
+  it('αποτυχία εγγραφής ευρετηρίου → σφάλμα (L201)', async () => {
+    const eclass = new FakeEclassPyli();
+    eclass.dendra = { M1: [komvos_arxeio()] };
+    const katagrafi = new KatagrafiDiamnemata();
+    const apothiki = new MnimiApothiki();
+    const p = ftiaxe_eisodos(eclass, apothiki, katagrafi);
+    apothiki.grapse_keimeno = async () => apotyxia('DIKTYO', 'Δεν γίνεται εγγραφή');
+
+    const apotelesma = await sygxronismos(p, 'M1');
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+    expect(katagrafi.sfalmata.join(' ')).toContain('απέτυχε η εγγραφή του ευρετηρίου');
+  });
+
+  it('αρχείο με κενό sha256 στο ευρετήριο ξανακατεβάζει (L247 true)', async () => {
+    const eclass = new FakeEclassPyli();
+    const komvos = komvos_arxeio({ diadromi: 'a.pdf' });
+    eclass.dendra = { M1: [komvos] };
+    const apothiki = new MnimiApothiki();
+    const p = ftiaxe_eisodos(eclass, apothiki, new KatagrafiDiamnemata());
+    // Υπάρχει ήδη τοπικό αντίγραφο, αλλά με κενό sha256 → απαιτείται επανέλεγχος
+    await apothiki.grapse_dyadiko('M1/arxeia/a.pdf', new TextEncoder().encode('bytes'));
+    await apothiki.grapse_keimeno(
+      arxeio_eurethriou('M1'),
+      JSON.stringify([
+        { id: ftiaxe_arxeio_id('M1', 'a.pdf'), kodikos_mathimatos: 'M1', diadromi: 'a.pdf', url: komvos.url, megethos: 1024, imerominia: '2026-10-01T00:00:00.000Z', etag: null, sha256: null, diplotypo_tou: null },
+      ])
+    );
+
+    const apotelesma = await sygxronismos(p, 'M1');
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    // Τα μεταδεδομένα δεν άλλαξαν, αλλά το κενό sha256 ανάγκασε νέα λήψη
+    expect(apotelesma.timi.megaliteres).toBe(0);
+    const arxeia = await (async () => {
+      const gram = await apothiki.diavase_keimeno(arxeio_eurethriou('M1'));
+      if (!gram.ok) throw new Error('λείπει το ευρετήριο');
+      return JSON.parse(gram.timi) as Arxeio[];
+    })();
+    expect(arxeia.length).toBe(1);
+    expect(arxeia[0]?.sha256).not.toBe(null);
+  });
+
+  it('η ταξινόμηση είναι αντίστροφη όταν η διάδρομος είναι already ταξινομημένη (L190 false)', async () => {
+    const eclass = new FakeEclassPyli();
+    eclass.dendra = {
+      M1: [
+        komvos_arxeio({ diadromi: 'z.pdf' }),
+        komvos_arxeio({ diadromi: 'a.pdf' }),
+        komvos_arxeio({ diadromi: 'm.pdf' }),
+      ],
+    };
+    const apothiki = new MnimiApothiki();
+
+    const apotelesma = await sygxronismos(ftiaxe_eisodos(eclass, apothiki, new KatagrafiDiamnemata()), 'M1');
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    const arxeia = await (async () => {
+      const gram = await apothiki.diavase_keimeno(arxeio_eurethriou('M1'));
+      if (!gram.ok) throw new Error('λείπει το ευρετήριο');
+      return JSON.parse(gram.timi) as Arxeio[];
+    })();
+    expect(arxeia.map((a) => a.diadromi)).toEqual(['a.pdf', 'm.pdf', 'z.pdf']);
+  });
+
+  it('η λήψη στέλνει headers μόνο αν η url είναι same-origin (L233/L235)', async () => {
+    const eclass = eclass_meafero('https://thales.example', { authorization: 'Bearer X' });
+    eclass.dendra = { M1: [komvos_arxeio()] };
+    const apothiki = new MnimiApothiki();
+    const katagrafi = new KatagrafiDiamnemata();
+
+    const apotelesma = await sygxronismos(ftiaxe_eisodos(eclass, apothiki, katagrafi), 'M1');
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    // same-origin → headers
+    expect(katagrafi.sfalmata).toEqual([]);
+  });
+
+  it('διαφορετική προέλευση → κενά headers (L235 false)', async () => {
+    const eclass = eclass_meafero('https://thales.example', { authorization: 'Bearer X' });
+    eclass.dendra = {
+      M1: [komvos_arxeio({ url: 'https://other.example/document/M1/dilosi.pdf' })],
+    };
+    const apothiki = new MnimiApothiki();
+
+    const apotelesma = await sygxronismos(ftiaxe_eisodos(eclass, apothiki, new KatagrafiDiamnemata()), 'M1');
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.timi.megaliteres).toBe(1);
+  });
+
+  it('μη έγκυρη base_url → catch και κενά headers (L237)', async () => {
+    const eclass = eclass_meafero('not-a-url', { authorization: 'Bearer X' });
+    eclass.dendra = { M1: [komvos_arxeio()] };
+    const apothiki = new MnimiApothiki();
+
+    const apotelesma = await sygxronismos(ftiaxe_eisodos(eclass, apothiki, new KatagrafiDiamnemata()), 'M1');
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.timi.megaliteres).toBe(1);
   });
 });

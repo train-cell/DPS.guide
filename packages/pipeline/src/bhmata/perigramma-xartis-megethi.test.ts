@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { MnimiApothiki } from '@dps/core/testing';
 import type { Arxeio, Selida } from '@dps/core';
-import { FakeEclassPyli, FakeKatevasmaPyli, KatagrafiDiamnemata, LigmaArchiou, StatheriRologi } from '../testing/voirtheia.js';
+import type { LlmPyli } from '@dps/core';
+import { ArgiosLlm, FakeEclassPyli, FakeKatevasmaPyli, KatagrafiDiamnemata, LigmaArchiou, StatheriRologi } from '../testing/voirtheia.js';
+import { apotyxia } from '@dps/core';
 import { ftiaxe_docx } from '../testing/fixtures-arxeia.js';
 import { perigramma_mathimatos } from '../bhmata/perigramma.js';
 import { xartis } from '../bhmata/xartis.js';
@@ -27,6 +29,20 @@ function ftiaxe_eisodos(apothiki: MnimiApothiki, llm: LigmaArchiou, katagrafi: K
     katevasma: new FakeKatevasmaPyli(apothiki),
     // Η ροή περνάει ΠΑΝΤΑ από το me_cache του @dps/ai (δεν γράφει δικό της cache).
     llm: me_cache(llm.llm, apothiki, `${KODIKOS}/.spoudes/cache/llm`),
+    mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
+    rologi: new StatheriRologi(),
+    katagrafi,
+    riza: '',
+  };
+}
+
+/** Ίδια είσοδος, αλλά με δικό της `LlmPyli` (π.χ. `ArgiosLlm` που αποτυγχάνει πάντα). */
+function ftiaxe_eisodos_me_llm(apothiki: MnimiApothiki, llm: unknown, katagrafi: KatagrafiDiamnemata): EisodosPipeline {
+  return {
+    eclass: new FakeEclassPyli(),
+    apothiki,
+    katevasma: new FakeKatevasmaPyli(apothiki),
+    llm: me_cache(llm as LlmPyli, apothiki, `${KODIKOS}/.spoudes/cache/llm`),
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
     rologi: new StatheriRologi(),
     katagrafi,
@@ -143,6 +159,77 @@ describe('perigramma', () => {
     expect(apotelesma.ok).toBe(false);
     if (apotelesma.ok) throw new Error('aπέτυχε');
     expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    expect(await apothiki.yparxei(arxeio_perigrammatos(KODIKOS, arxeio.id))).toBe(false);
+  });
+
+  it('αποτυχία του μοντέλου → σφάλμα (ArgiosLlm)', async () => {
+    const apothiki = new MnimiApothiki();
+    const argios = new ArgiosLlm();
+    const arxeio = await these_arxeio_keimeno(apothiki, [
+      selida(1, 'μια λίστα είναι μια ακολουθία στοιχείων', arxeio_test(DIADROMI).id),
+    ]);
+    const p = ftiaxe_eisodos_me_llm(apothiki, new ArgiosLlm(), new KatagrafiDiamnemata());
+
+    const apotelesma = await perigramma_mathimatos(p, KODIKOS, arxeio.id);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    expect(await apothiki.yparxei(arxeio_perigrammatos(KODIKOS, arxeio.id))).toBe(false);
+  });
+
+  it('κενό keimeno (μηδέν σελίδες) → DEN_VRETHIKE, όχι κλήση LLM', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_arxeio_keimeno(apothiki, []);
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await perigramma_mathimatos(p, KODIKOS, arxeio.id);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    expect(llm.fortiseis).toBe(0);
+  });
+
+  it('ανεστραμμένο εύρος σελίδων απορρίπτεται από την επικύρωση (L138)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_arxeio_keimeno(apothiki, [
+      selida(1, 'μια λίστα', arxeio_test(DIADROMI).id),
+      selida(2, 'δεν είναι', arxeio_test(DIADROMI).id),
+      selida(3, 'ακολουθία', arxeio_test(DIADROMI).id),
+    ]);
+    llm.orise({
+      arxeio_id: arxeio.id,
+      titlos: 'χαλάει',
+      tmimata: [{ titlos: 'inverted', selides: { apo: 3, eos: 1 }, typos: 'theoria', ennoies: [], proapaitoumena: [] }],
+    });
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await perigramma_mathimatos(p, KODIKOS, arxeio.id);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    expect(await apothiki.yparxei(arxeio_perigrammatos(KODIKOS, arxeio.id))).toBe(false);
+  });
+
+  it('αποτυχία εγγραφής → σφάλμα, όχι ημιτελές αποτέλεσμα', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_arxeio_keimeno(apothiki, [
+      selida(1, 'μια λίστα είναι μια ακολουθία στοιχείων', arxeio_test(DIADROMI).id),
+    ]);
+    llm.orise({ ...PERIGRAMMA_ANTISKEPSI, arxeio_id: arxeio.id });
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+    apothiki.grapse_keimeno = async () => apotyxia('DIKTYO', 'Δεν γίνεται εγγραφή');
+
+    const apotelesma = await perigramma_mathimatos(p, KODIKOS, arxeio.id);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
     expect(await apothiki.yparxei(arxeio_perigrammatos(KODIKOS, arxeio.id))).toBe(false);
   });
 

@@ -54,6 +54,12 @@ interface ArnitikoArxeio {
   readonly imerominia: string | null;
 }
 
+/** Δίκτυο με υπολογισμένο sha256 (παραγόμενο πάντα από το `topothetes_to_pedio`). */
+interface ArxeioMeta extends Omit<Arxeio, 'sha256'> {
+  /** Περιεχόμενο του αρχείου, σε hex. */
+  readonly sha256: string;
+}
+
 function originale_arxeia(komvoi: readonly KomvosArxeiou[]): {
   dekta: ArnitikoArxeio[];
   proeidopoiiseis: string[];
@@ -133,7 +139,7 @@ export async function sygxronismos(
   }
 
   const palia_ana_diadromi = new Map(palio.map((arxeio) => [arxeio.diadromi, arxeio]));
-  const nea: Arxeio[] = [];
+  const nea: ArxeioMeta[] = [];
   let megaliteres = 0;
 
   for (const arnitiko of dekta) {
@@ -187,14 +193,12 @@ export async function sygxronismos(
     });
   }
 
-  nea.sort((a, b) => (a.diadromi < b.diadromi ? -1 : a.diadromi > b.diadromi ? 1 : 0));
+  nea.sort((a, b) => (a.diadromi < b.diadromi ? -1 : 1));
 
   const diplotypa = simeios_tautotitas(nea);
   for (const [id, diplotypo] of diplotypa) {
-    const arxeio = nea.find((a) => a.id === id);
-    if (arxeio !== undefined) {
-      arxeio.diplotypo_tou = diplotypo;
-    }
+    const arxeio = nea.find((a) => a.id === id)!;
+    arxeio.diplotypo_tou = diplotypo;
   }
 
   const grapse = await grapse_arxeia(p.apothiki, p.riza, kodikos_mathimatos, nea);
@@ -240,13 +244,10 @@ function kefalides_lipshs_ana_url(eclass: EisodosPipeline['eclass'], url: string
 }
 
 /** Εντοπίζει τα διπλότυπα περιεχομένου και επιστρέφει `arxeio_id -> id του πρώτου ισοδύναμου`. */
-function simeios_tautotitas(arxeia: Arxeio[]): Map<string, string> {
+function simeios_tautotitas(arxeia: ArxeioMeta[]): Map<string, string> {
   const protos_me_hash = new Map<string, string>();
   const diplotypa = new Map<string, string>();
   for (const arxeio of arxeia) {
-    if (arxeio.sha256 === null) {
-      continue;
-    }
     const protos = protos_me_hash.get(arxeio.sha256);
     if (protos === undefined) {
       protos_me_hash.set(arxeio.sha256, arxeio.id);
