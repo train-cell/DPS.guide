@@ -106,6 +106,11 @@ export function diadromi_thematon(kodikos_mathimatos: string): string {
   return `${kodikos_mathimatos}/themata`;
 }
 
+/** Αρχείο απόδοσης εξεταστικής ενός μαθήματος (§5.3, T3). */
+export function arxeio_apodosis(kodikos_mathimatos: string): string {
+  return `${kodikos_mathimatos}/${KATALYMMA_YPOKEIMENON}/apodosi.json`;
+}
+
 /**
  * Προσθέτει τη ρίζα αποθήκευσης σε μια σχετική διαδρομή του §5.3.
  * Κενή ρίζα = οι διαδρομές μένουν σχετικές με τη θύρα του `ApothikiPyli`.

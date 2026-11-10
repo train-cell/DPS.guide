@@ -38,6 +38,8 @@ export { srixi_tutor, srixi_tutor_mathimatos } from './bhmata/tutor.js';
 export { programma } from './bhmata/programma.js';
 export { trekse_analysi, trekse_oloklirosi, trekse_mathimata } from './bhmata/trekse.js';
 
+export { ftiaxe_analysi_thematon } from './themata/themata.js';
+
 export type { ProodosEvent, IparastypotisProodou } from './grammata/proodos.js';
 export { proodos } from './grammata/proodos.js';
 

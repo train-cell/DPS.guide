@@ -4,7 +4,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { MathimaSchema } from '@dps/core';
 import type { Apotelesma, EclassPyli, KomvosArxeiou, Mathima, Sfalma } from '@dps/core';
-import { MockEclassPyli, RIZA_FIXTURES_PAKETA } from '../src/index.js';
+import {
+  MockEclassPyli,
+  RIZA_FIXTURES_PAKETA,
+  einai_komvos_arxeiou,
+  elegxe_komvos_arxeiou,
+} from '../src/index.js';
 
 function sfalma(r: Apotelesma<unknown>): Sfalma {
   if (r.ok) {
@@ -394,11 +399,110 @@ describe('MockEclassPyli — fere_dentro_arxeion', () => {
     expect(sfalma(await pyli.fere_dentro_arxeion('PLI101')).kodikos).toBe('DEN_VRETHIKE');
   });
 
+  it('μη πίνακας στο δέντρο → MI_EGKYRO_SXIMA', async () => {
+    const riza = path.join(riza_prosorini, 'fixtures');
+    await grapse_arxeio(path.join(riza, 'dentro', 'PLI101.json'), JSON.stringify({ dendro: [] }));
+    const pyli = new MockEclassPyli({ riza_fixture: riza });
+    expect(sfalma(await pyli.fere_dentro_arxeion('PLI101')).kodikos).toBe('MI_EGKYRO_SXIMA');
+  });
+
+  it('μάθημα null στο αρχείο → MI_EGKYRO_SXIMA με κενή διαδρομή θέσης', async () => {
+    const riza = path.join(riza_prosorini, 'fixtures');
+    await grapse_arxeio(
+      path.join(riza, 'mathimata.json'),
+      JSON.stringify([
+        { kodikos: 'PLI101', titlos: 'Εντάξει', url: 'u', epilegmeno: true },
+        null,
+      ])
+    );
+    const pyli = new MockEclassPyli({ riza_fixture: riza });
+    const s = sfalma(await pyli.fere_mathimata());
+    expect(s.kodikos).toBe('MI_EGKYRO_SXIMA');
+    expect(s.minima).toContain('expected object, received null');
+  });
+
   it('μη έγκυρο JSON στο δέντρο → MI_EGKYRO_SXIMA', async () => {
     const riza = path.join(riza_prosorini, 'fixtures');
     await grapse_arxeio(path.join(riza, 'dentro', 'PLI101.json'), '[[[');
     const pyli = new MockEclassPyli({ riza_fixture: riza });
     expect(sfalma(await pyli.fere_dentro_arxeion('PLI101')).kodikos).toBe('MI_EGKYRO_SXIMA');
+  });
+});
+
+describe('MockEclassPyli — elegxe_komvos_arxeiou', () => {
+  it('δεν είναι αντικείμενο', () => {
+    expect(elegxe_komvos_arxeiou('όχι αντικείμενο')).toBe('Ο κόμβος δεν είναι αντικείμενο JSON.');
+    expect(elegxe_komvos_arxeiou(null)).toBe('Ο κόμβος δεν είναι αντικείμενο JSON.');
+    expect(elegxe_komvos_arxeiou([1])).toBe('Ο κόμβος δεν είναι αντικείμενο JSON.');
+  });
+
+  it('δεν έχει πεδίο typos', () => {
+    expect(elegxe_komvos_arxeiou({})).toContain('typos');
+  });
+
+  it('έχει άγνωστο typos', () => {
+    expect(elegxe_komvos_arxeiou({ typos: 'symlinko', diadromi: 'x', onoma: 'x', url: 'https://thales.cs.unipi.gr/x' })).toContain(
+      'typos'
+    );
+  });
+
+  it('diadromi δεν είναι string', () => {
+    expect(elegxe_komvos_arxeiou({ typos: 'fakelos', diadromi: 42, onoma: 'x', url: 'https://thales.cs.unipi.gr/x' })).toContain(
+      'diadromi'
+    );
+  });
+
+  it('diadromi απόλυτη διαδρομή', () => {
+    expect(elegxe_komvos_arxeiou({ typos: 'fakelos', diadromi: '/etc/passwd', onoma: 'x', url: 'https://thales.cs.unipi.gr/x' })).toContain(
+      'σχετική διαδρομή'
+    );
+    expect(elegxe_komvos_arxeiou({ typos: 'fakelos', diadromi: 'C:\\Users', onoma: 'x', url: 'https://thales.cs.unipi.gr/x' })).toContain(
+      'σχετική διαδρομή'
+    );
+    expect(elegxe_komvos_arxeiou({ typos: 'fakelos', diadromi: '..\\x', onoma: 'x', url: 'https://thales.cs.unipi.gr/x' })).toContain(
+      'δεν επιτρέπεται'
+    );
+  });
+
+  it('onoma δεν είναι string', () => {
+    expect(elegxe_komvos_arxeiou({ typos: 'fakelos', diadromi: 'x', onoma: 42, url: 'https://thales.cs.unipi.gr/x' })).toContain(
+      'onoma'
+    );
+  });
+
+  it('κενό onoma εκτός ρίζας', () => {
+    expect(elegxe_komvos_arxeiou({ typos: 'fakelos', diadromi: 'x', onoma: '', url: 'https://thales.cs.unipi.gr/x' })).toContain(
+      'κενό εκτός'
+    );
+    expect(elegxe_komvos_arxeiou({ typos: 'fakelos', diadromi: 'x', onoma: '  ', url: 'https://thales.cs.unipi.gr/x' })).toContain(
+      'κενό εκτός'
+    );
+  });
+
+  it('url δεν είναι http', () => {
+    expect(elegxe_komvos_arxeiou({ typos: 'fakelos', diadromi: '', onoma: '', url: 'ftp://x' })).toContain('url');
+  });
+
+  it('megethos μη ακέραιο', () => {
+    expect(elegxe_komvos_arxeiou({ typos: 'fakelos', diadromi: '', onoma: '', url: 'https://thales.cs.unipi.gr/x', megethos: 1.5 })).toContain(
+      'megethos'
+    );
+  });
+
+  it('imerominia μη ISO-8601', () => {
+    expect(elegxe_komvos_arxeiou({ typos: 'fakelos', diadromi: '', onoma: '', url: 'https://thales.cs.unipi.gr/x', megethos: null, imerominia: 'χτες' })).toContain(
+      'imerominia'
+    );
+  });
+
+  it('δέχεται έγκυρο κόμβο', () => {
+    const stoixeio = { typos: 'fakelos', diadromi: '', onoma: '', url: 'https://thales.cs.unipi.gr/x', megethos: null, imerominia: null };
+    expect(elegxe_komvos_arxeiou(stoixeio)).toBeNull();
+    expect(einai_komvos_arxeiou(stoixeio)).toBe(true);
+  });
+
+  it('δεν δέχεται μη έγκυρο κόμβο', () => {
+    expect(einai_komvos_arxeiou({})).toBe(false);
   });
 });
 

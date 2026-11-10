@@ -11,7 +11,8 @@
   "dependencies": {
     "@dps/core": "workspace:*",
     "@dps/ai": "workspace:*",
-    "@dps/extract": "workspace:*"
+    "@dps/extract": "workspace:*",
+    "zod": "^4.6.6"
   },
   "devDependencies": {
     "typescript": "^5.8.2",
