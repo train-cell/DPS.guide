@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { LLM_TIMEOUT_MS, MEGISTES_EPANALIPSEIS } from '@dps/core';
 import { FakeHttp, FakeMystika, FakeRologi } from '@dps/core/testing';
@@ -30,6 +30,16 @@ class PylesiPleiromenon implements HttpPyli {
   async aitima(a: HttpAitima): Promise<Apotelesma<HttpApantisi>> {
     this.kliseis.push(a);
     throw new Error('syndesi akoustise');
+  }
+}
+
+/** Πετάει μία συμβολοσειρά αντί για Error — καλύπτει το `typeof err` (L331). */
+class PylesiMetisou implements HttpPyli {
+  kliseis: HttpAitima[] = [];
+
+  async aitima(a: HttpAitima): Promise<Apotelesma<HttpApantisi>> {
+    this.kliseis.push(a);
+    throw 'δεν είναι σφάλμα';
   }
 }
 
@@ -356,6 +366,21 @@ describe('parage_json', () => {
     expect(kodikos(apotelesma)).toBe('MI_EGKYRO_SXIMA');
   });
 
+it('DIKTYO όταν το HttpPyli πετάει μη-Error, μετά από εξαντλημένες επαναλήψεις', async () => {
+    const http = new PylesiMetisou();
+    const mystika = new FakeMystika();
+    await mystika.vale('llm_api_key', KLEIDI);
+    const llm = ftiaxe_gemini_llm(http, mystika, new FakeRologi(), new MnimiKatagrafi(), {
+      montelo: MONTELO,
+      perimeno_ms: async (): Promise<void> => undefined,
+    });
+
+    const apotelesma = await llm.parage_json(aitima_json());
+
+    expect(kodikos(apotelesma)).toBe('DIKTYO');
+    expect(http.kliseis).toHaveLength(MEGISTES_EPANALIPSEIS);
+  });
+
   it('DIKTYO όταν το HttpPyli κάνει throw, μετά από εξαντλημένες επαναλήψεις', async () => {
     const http = new PylesiPleiromenon();
     const mystika = new FakeMystika();
@@ -518,6 +543,26 @@ describe('retry και backoff', () => {
 });
 
 describe('timeout', () => {
+  it('TIMEOUT όταν περάσει το όριο χρόνου από τον εσωτερικό χρονοδιακόπτη', async () => {
+    const b = await ftiaxe_periballon();
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+    setTimeoutSpy.mockImplementation((cb: () => void) => {
+      cb();
+      return 0 as unknown as ReturnType<typeof setTimeout>;
+    });
+    try {
+      b.http.orise_apantisi(ANTIPOCHO, () => apantisi(503, '{}'));
+
+      const apotelesma = await b.llm.parage_json(aitima_json());
+
+      expect(kodikos(apotelesma)).toBe('TIMEOUT');
+      // η κλήση ακυρώνεται πριν προλάβει να γίνει το αίτημα
+      expect(b.http.kliseis).toHaveLength(0);
+    } finally {
+      setTimeoutSpy.mockRestore();
+    }
+  });
+
   it('TIMEOUT όταν ο caller ακυρώνει ενώ η κλήση εκκρεμεί', async () => {
     const b = await ftiaxe_periballon();
     let emakesi: () => void = () => undefined;
@@ -644,6 +689,24 @@ describe('parage_keimeno', () => {
     expect(apotelesma.ok).toBe(true);
     if (!apotelesma.ok) throw new Error('απέτυχε');
     expect(apotelesma.timi).toBe('αβγδ');
+  });
+
+  it('δεν στέλνει generationConfig όταν το μοντέλο είναι gemini-3+ και δεν υπάρχει schema', async () => {
+    const b = await ftiaxe_periballon();
+    const llm = ftiaxe_gemini_llm(b.http, b.mystika, b.rologi, b.katagrafi, {
+      montelo: 'gemini-3.8-flash',
+    });
+    b.http.orise_apantisi(ANTIPOCHO, () => apantisi(200, soma_apantisis('Οκ.')));
+
+    await llm.parage_keimeno({
+      systima: 'Είσαι tutor.',
+      minimata: [{ rolos: 'xristis', keimeno: 'γράψε' }],
+      thermokrasia: 0.1,
+    });
+
+    const soma = lektika_tou_somatos(b.http.kliseis[0] ?? { soma_json: undefined });
+    expect(soma['generationConfig']).toBeUndefined();
+    expect(soma['systemInstruction']).toEqual({ parts: [{ text: 'Είσαι tutor.' }] });
   });
 
   it('δεν στέλνει systemInstruction όταν το systima είναι κενό', async () => {

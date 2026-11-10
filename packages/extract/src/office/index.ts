@@ -112,7 +112,7 @@ function slides_taxinomimena(zip: JSZip): Apotelesma<string[]> {
 
 /** Ευθύνη: διαβάζει τις παραγράφους του `w:body` με το επίπεδο επικεφαλίδας κάθε μίας. */
 function diavase_paragraphous(eggrafo: unknown): { epikefalida: number | null; keimeno: string }[] {
-  const riza = einai_komvos(eggrafo) ? ((eggrafo as KomvosXml)['w:document'] as unknown) : undefined;
+  const riza = (eggrafo as KomvosXml)['w:document'];
   const soma = einai_komvos(riza) ? ((riza as KomvosXml)['w:body'] as unknown) : undefined;
   const paragr = einai_komvos(soma) ? ((soma as KomvosXml)['w:p'] as unknown) : undefined;
 
@@ -168,11 +168,8 @@ export async function exagage_pptx(
 
   const selides: Selida[] = [];
   for (let i = 0; i < slides.timi.length; i += 1) {
-    const onoma = slides.timi[i] ?? '';
+    const onoma = slides.timi[i];
     const arxeio = fortosi.timi.file(onoma);
-    if (arxeio === null) {
-      return apotyxia('MI_EGKYRO_SXIMA', `Λείπει το slide ${onoma} από το pptx`);
-    }
     const keimena: string[] = [];
     synekdose_keimenon(analutis.parse(await arxeio.async('string')), 'a:t', keimena);
     selides.push(ftiaxe_selida(arxeio_id, i + 1, keimena.join('\n')));
@@ -225,8 +222,6 @@ export async function exagage_docx(
     }
     trexon.push(parag.keimeno);
   }
-  if (trexon.length > 0) {
-    selides.push(ftiaxe_selida(arxeio_id, selides.length + 1, trexon.join('\n')));
-  }
+  selides.push(ftiaxe_selida(arxeio_id, selides.length + 1, trexon.join('\n')));
   return ok(selides);
 }

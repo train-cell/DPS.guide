@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   arxiki_katastasi_fsrs,
   metatropi_vathmologias,
+  pare_baros,
   PROEPILOGMENA_VARH_FSRS,
   ypologise_epomeni_epanalipsi_fsrs,
   ypologise_retrievability,
   type FsrsKatastasi,
+  type FsrsVathmologia,
 } from './fsrs.js';
 
 describe('FSRS-4 Spaced Repetition Core (@dps/core)', () => {
@@ -29,6 +31,11 @@ describe('FSRS-4 Spaced Repetition Core (@dps/core)', () => {
       expect(katastasi.reps).toBe(0);
       expect(katastasi.lapses).toBe(0);
     });
+
+    it('χρησιμοποιεί την παρόσα ημερομηνία όταν δίνεται', () => {
+      const katastasi = arxiki_katastasi_fsrs(new Date('2025-01-01T00:00:00Z'));
+      expect(katastasi.lastReview).toBe('2025-01-01');
+    });
   });
 
   describe('metatropi_vathmologias', () => {
@@ -41,6 +48,25 @@ describe('FSRS-4 Spaced Repetition Core (@dps/core)', () => {
       expect(metatropi_vathmologias('kalo')).toBe(3);
       expect(metatropi_vathmologias(4)).toBe(4);
       expect(metatropi_vathmologias('efkolo')).toBe(4);
+    });
+
+    it('δένει το βάρος του δείκτη εκτός εύρους (1.0)', () => {
+    expect(pare_baros(-1)).toBe(1.0);
+    expect(pare_baros(17)).toBe(1.0);
+  });
+
+  it('μετατρέπει μη έγκυρο αριθμό (εκτός 1..4) στο 3', () => {
+      expect(metatropi_vathmologias(5 as FsrsVathmologia)).toBe(3);
+      expect(metatropi_vathmologias(0 as FsrsVathmologia)).toBe(3);
+      expect(metatropi_vathmologias(-1 as FsrsVathmologia)).toBe(3);
+    });
+
+    it('μετατρέπει άγνωστη λεκτική ετικέτα στο 3', () => {
+      expect(metatropi_vathmologias('xana' as FsrsVathmologia)).toBe(1);
+      expect(metatropi_vathmologias('diskolo' as FsrsVathmologia)).toBe(2);
+      expect(metatropi_vathmologias('kalo' as FsrsVathmologia)).toBe(3);
+      expect(metatropi_vathmologias('efkolo' as FsrsVathmologia)).toBe(4);
+      expect(metatropi_vathmologias('αόριστο' as FsrsVathmologia)).toBe(3);
     });
   });
 
@@ -85,6 +111,17 @@ describe('FSRS-4 Spaced Repetition Core (@dps/core)', () => {
   });
 
   describe('ypologise_epomeni_epanalipsi_fsrs - Πρώτη αξιολόγηση (First review)', () => {
+    it('χρησιμοποιεί την σημερινή ημερομηνία όταν δεν δίνεται η tora', () => {
+      const arxiki = arxiki_katastasi_fsrs(STATHERI_IMEROMINIA);
+      const r = ypologise_epomeni_epanalipsi_fsrs(arxiki, 'kalo');
+      // Η επόμενη ημερομηνία είναι today + round(2.4) = today + 2 ημέρες
+      const simera = new Date();
+      const expected = new Date(simera.getTime() + 2 * 86_400_000).toISOString().slice(0, 10);
+      expect(r.epomeni_imerominia).toBe(expected);
+      expect(r.nea_katastasi.reps).toBe(1);
+      expect(r.nea_katastasi.stability).toBe(PROEPILOGMENA_VARH_FSRS[2]);
+    });
+
     it('αρχικοποιεί σταθερότητα και δυσκολία με βάση τις παραμέτρους w0..w3 για κάθε βαθμό', () => {
       const arxiki = arxiki_katastasi_fsrs(STATHERI_IMEROMINIA);
 
@@ -178,6 +215,18 @@ describe('FSRS-4 Spaced Repetition Core (@dps/core)', () => {
       const run2 = ypologise_epomeni_epanalipsi_fsrs(katastasi, 'kalo', tora);
 
       expect(run1).toEqual(run2);
+    });
+    it('αντιμετωπίζει μη έγκυρη lastReview (null) με 0 ημέρες που πέρασαν', () => {
+      const katastasi: FsrsKatastasi = {
+        stability: 9.0,
+        difficulty: 5.0,
+        reps: 1,
+        lapses: 0,
+        lastReview: '2026-13-45', // άκυρη ημερομηνία
+      };
+      const r = ypologise_epomeni_epanalipsi_fsrs(katastasi, 'kalo', new Date('2026-10-10T00:00:00Z'));
+      expect(r.nea_katastasi.reps).toBe(2);
+      expect(r.diastima_imeron).toBe(Math.round(Math.max(0.1, katastasi.stability)));
     });
   });
 });

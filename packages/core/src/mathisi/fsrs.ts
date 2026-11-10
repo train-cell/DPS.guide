@@ -1,4 +1,5 @@
 import { add_imeres, parse_meri } from '../imeres/index.js';
+import type { MeriImorominias } from '../imeres/index.js';
 
 /**
  * Κατάσταση μνήμης FSRS-4 (Free Spaced Repetition Scheduler v4).
@@ -37,7 +38,7 @@ export const PROEPILOGMENA_VARH_FSRS: readonly number[] = [
 ];
 
 /** Επιστρέφει με ασφάλεια τύπων τον συντελεστή βάρους w[index]. */
-function pare_baros(index: number): number {
+export function pare_baros(index: number): number {
   return PROEPILOGMENA_VARH_FSRS[index] ?? 1.0;
 }
 
@@ -191,11 +192,8 @@ export function ypologise_epomeni_epanalipsi_fsrs(
     diastima_imeron = Math.max(1, Math.round(nea_stability));
   }
 
-  const meriSimera = parse_meri(simeraStr) ?? {
-    etos: simeraDate.getUTCFullYear(),
-    minas: simeraDate.getUTCMonth() + 1,
-    imera: simeraDate.getUTCDate(),
-  };
+  // Το simeraStr είναι πάντα έγκυρο ISO (παράγεται από Date.toISOString)
+  const meriSimera = parse_meri(simeraStr) as MeriImorominias;
   const epomeni_imerominia = add_imeres(meriSimera, diastima_imeron);
 
   const nea_katastasi: FsrsKatastasi = {

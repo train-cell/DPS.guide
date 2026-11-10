@@ -1,9 +1,15 @@
 import { ParapompiSchema, MAX_SELIDES_ANA_KLISI, MAX_XARAKTIRES_ANA_KLISI } from '@dps/core';
-import type { Enotita, Selida } from '@dps/core';
+import type { Enotita, Selida, TroposExetasis } from '@dps/core';
 import { z } from 'zod';
 import { EKDOSI_PROMPT_P3 } from './ekdoseis.js';
 import type { AitisiPrompt } from './koines.js';
+import type { YfosExigisis } from './tropos/yfos.js';
 import { enotita_se_keimeno, perivale_dedomena } from './koines.js';
+import {
+  YFOS_EXIGISIS_PROEPILOGI,
+  enotita_tropou_tis_xristis,
+  enotita_yfos_tis_sistimatos,
+} from './tropos/yfos.js';
 import { kopse_se_kommatia } from './perigramma.js';
 
 export const ENOTITES_ODIGOU = [
@@ -25,7 +31,8 @@ export const OdigosApotelesmaSchema = z.object({
 });
 export type OdigosApotelesma = z.infer<typeof OdigosApotelesmaSchema>;
 
-const SISTIMA_P3 =
+/** Βασικό σύστημα P3, πριν το ύφος — σταθερό, δεν εξαρτάται από τις ρυθμίσεις. */
+const SISTIMA_BASE_P3 =
   enotita_se_keimeno('Ρόλος', [
     'Γράφεις τον οδηγό μελέτης μιας ενότητας για μαθητή ελληνικού πανεπιστημίου, στα ελληνικά.',
   ]) +
@@ -47,6 +54,10 @@ const SISTIMA_P3 =
 export interface EisodosOdigou {
   enotita: Enotita;
   selides: Selida[];
+  /** Τρόπος εξέτασης του μαθήματος — αλλάζει τις οδηγίες ύφους του οδηγού (T4). */
+  tropos?: TroposExetasis;
+  /** Υψος απαιτήσεων ύφους — καθοδηγεί το συστηματικό ύφος (T4). */
+  yfos_exigisis?: YfosExigisis;
 }
 
 export function prompt_odigou(eisodos: EisodosOdigou): AitisiPrompt<OdigosApotelesma> {
@@ -63,14 +74,25 @@ export function prompt_odigou(eisodos: EisodosOdigou): AitisiPrompt<OdigosApotel
     );
   }
 
+  const yfos_exigisis = eisodos.yfos_exigisis ?? YFOS_EXIGISIS_PROEPILOGI;
+  const tropos = enotita_tropou_tis_xristis(eisodos.tropos);
+  if (!tropos.ok) {
+    throw new Error(`P3: άγνωστος τρόπος εξέτασης «${String(eisodos.tropos)}».`);
+  }
+
   return {
-    sistima: SISTIMA_P3,
+    sistima:
+      // Το ύφος (T4): ρυθμίζει το συστηματικό ύφος βάσει των ρυθμίσεων.
+      enotita_yfos_tis_sistimatos(yfos_exigisis) +
+      SISTIMA_BASE_P3,
     xristis:
       enotita_se_keimeno('Ενότητα', [
         `id: ${eisodos.enotita.id}`,
         `τίτλος: ${eisodos.enotita.titlos}`,
         `έννοιες: ${eisodos.enotita.ennoies.join(', ')}`,
       ]) +
+      // Ο τρόπος εξέτασης (T4): οδηγίες ύφους συγκεκριμένες για τον τύπο εξετάσεως.
+      tropos.timi +
       enotita_se_keimeno('Επιτρεπόμενες παραπομπές', [
         'Οι παραπομπές πρέπει να πέφτουν ΜΟΝΟ στα παρακάτω εύρη:',
         ...epitrepomenes,

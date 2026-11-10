@@ -101,10 +101,6 @@ async function ypologiseSha256Checksum(dedomena: Uint8Array): Promise<string> {
 
 /** Επικυρώνει τη δομή και τους τύπους δεδομένων ενός αποκρυπτογραφημένου αντικειμένου. */
 export function epikyrosi_paketou(obj: unknown): asserts obj is PaketoKartonPayload {
-  if (!obj || typeof obj !== 'object') {
-    throw new Error('Μη έγκυρο πακέτο: τα δεδομένα δεν αποτελούν αντικείμενο.');
-  }
-
   const p = obj as Record<string, unknown>;
 
   if (typeof p.id !== 'string' || !p.id.trim()) {
@@ -267,12 +263,7 @@ export async function eisagwgi_kryptografimenou_paketou(
   }
 
   const plaintextJson = new TextDecoder().decode(decryptedBytes);
-  let parsedPayload: unknown;
-  try {
-    parsedPayload = JSON.parse(plaintextJson);
-  } catch {
-    throw new Error('Μη έγκυρη μορφή JSON στα αποκρυπτογραφημένα δεδομένα.');
-  }
+  const parsedPayload: unknown = JSON.parse(plaintextJson);
 
   // Επικύρωση τύπων
   epikyrosi_paketou(parsedPayload);

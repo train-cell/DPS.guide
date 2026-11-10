@@ -60,7 +60,7 @@ function kleidi_akmis(apo: string, pros: string): string {
 }
 
 /** Αναλλοίωτη κατάσταση: κάθε κόμβος του γράφου έχει καταχώριση γειτόνων (ίσως κενή). */
-function geitonesTou(grafima: Grafima, v: string): AkmiGrafou[] {
+export function geitonesTou(grafima: Grafima, v: string): AkmiGrafou[] {
   return grafima.geitones.get(v) ?? [];
 }
 
@@ -91,7 +91,7 @@ function ftiaxe_geitones(
  * Αποτυγχάνει με MI_EGKYRO_SXIMA σε διπλό id και με DEN_VRETHIKE
  * σε αναφορά προς ανύπαρκτη ενότητα.
  */
-function kane_grafima(enotites: Enotita[]): Apotelesma<Grafima> {
+export function kane_grafima(enotites: Enotita[]): Apotelesma<Grafima> {
   const seira = new Map<string, number>();
   for (const enotita of enotites) {
     if (seira.has(enotita.id)) {
@@ -218,18 +218,6 @@ function kyreose_kryo(grafima: Grafima): string[] {
   }
 }
 
-/** Κανονικό κλειδί κύκλου: η λεξικογραφικά ελάχιστη περιστροφή της ακολουθίας ids. */
-function kleidi_kyklou(ids: string[]): string {
-  let kaliteri = ids.join('\u0000');
-  for (let i = 1; i < ids.length; i += 1) {
-    const peristrofi = ids.slice(i).concat(ids.slice(0, i)).join('\u0000');
-    if (peristrofi < kaliteri) {
-      kaliteri = peristrofi;
-    }
-  }
-  return kaliteri;
-}
-
 /**
  * Αναζητά όλους τους κύκλους μέσα στον πυρήνα (κύκλων) με DFS από τον
  * μικρότερο κόμβο κάθε κύκλου. Μετά την εύρεση κύκλου για τον ίδιο κόμβο
@@ -244,7 +232,6 @@ function anazitisi_kyklon(
 ): ApotelesmaAnazitisis {
   const kores = kyreose_kryo(grafima);
   const kykloi: Kiklos[] = [];
-  const evretike = new Set<string>();
   let eksantlithike = false;
   let ipervasi_orou = false;
 
@@ -268,14 +255,10 @@ function anazitisi_kyklon(
           return;
         }
         if (akmi.pros === arxi) {
-          const kleidi = kleidi_kyklou(diadromiIds);
-          if (!evretike.has(kleidi)) {
-            evretike.add(kleidi);
-            kykloi.push({ ids: [...diadromiIds], akmes: [...diadromiAkmon, akmi] });
-            if (kykloi.length >= MEGISTOS_ARITHMOS_KYKLON) {
-              ipervasi_orou = true;
-              return;
-            }
+          kykloi.push({ ids: [...diadromiIds], akmes: [...diadromiAkmon, akmi] });
+          if (kykloi.length >= MEGISTOS_ARITHMOS_KYKLON) {
+            ipervasi_orou = true;
+            return;
           }
           continue;
         }

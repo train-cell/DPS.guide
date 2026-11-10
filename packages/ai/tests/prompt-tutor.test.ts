@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { prompt_tutor, EKDOSI_PROMPT_P4, MEGISTO_MIKOS_ISTORIKOU } from '../src/prompts/index.js';
 import type { LeitourgiaTutor } from '../src/prompts/index.js';
+import { YFOS_EXIGISIS_PROEPILOGI } from '../src/prompts/index.js';
+import { TITLOS_YFOS } from '../src/prompts/tropos/yfos.js';
 import { ftiaxe_enotita } from './voitheia.js';
 
 const LEITOURGIES: LeitourgiaTutor[] = ['exigisi', 'exetasi_me', 'kathodigisi_askisis'];
@@ -93,6 +95,44 @@ describe('prompt_tutor (P4)', () => {
     expect(prompt_tutor(eisodos_tutor('exigisi'))).not.toEqual(
       prompt_tutor(eisodos_tutor('exetasi_me'))
     );
+  });
+
+  it('ενσωματώνει το ύφος στις οδηγίες συστήματος με προεπιλογή κανονικό', () => {
+    const { sistima } = prompt_tutor(eisodos_tutor('exigisi'));
+    expect(sistima).toContain(TITLOS_YFOS);
+    expect(sistima).toContain(`yfos_exigisis: ${YFOS_EXIGISIS_PROEPILOGI}`);
+    expect(sistima).toContain('Τυπική ακαδημαϊκή γλώσσα');
+  });
+
+  it('ενσωματώνει το ύφος στις οδηγίες συστήματος όταν ορίζεται', () => {
+    const { sistima } = prompt_tutor({
+      ...eisodos_tutor('exigisi'),
+      yfos_exigisis: 'apla',
+    });
+    expect(sistima).toContain('απλή γλώσσα');
+    expect(sistima).toContain('σαν να μαθαίνει ο μαθητής το θέμα για πρώτη φορά');
+    expect(sistima).toContain('Παράδειγμα από καθημερινή ζωή');
+  });
+
+  it('ενσωματώνει τον τρόπο εξέτασης στα δεδομένα χρήστη όταν ορίζεται', () => {
+    const { xristis } = prompt_tutor({
+      ...eisodos_tutor('exigisi'),
+      tropos: 'polapli_epilogi_arnitiki',
+    });
+    expect(xristis).toContain('Τρόπος εξέτασης');
+    expect(xristis).toContain('tropos: polapli_epilogi_arnitiki');
+    expect(xristis).toContain('ΔΕΝ ισχύει');
+  });
+
+  it('δεν ενσωματώνει τρόπο όταν δεν ορίζεται', () => {
+    const { xristis } = prompt_tutor(eisodos_tutor('exigisi'));
+    expect(xristis).not.toContain('tropos:');
+  });
+
+  it('δίνει σφάλμα για άγνωστο τρόπο εξέτασης', () => {
+    expect(() =>
+      prompt_tutor({ ...eisodos_tutor('exigisi'), tropos: 'mi_egkyros_tropos' as any })
+    ).toThrow('P4: άγνωστος τρόπος εξέτασης «mi_egkyros_tropos»');
   });
 
   it('snapshot P4', () => {

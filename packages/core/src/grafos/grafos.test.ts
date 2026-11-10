@@ -12,7 +12,9 @@ import {
   episkevi_kyklon,
   topologiki_taxinomisi,
   vres_kyklous,
-} from './index.js';
+  kane_grafima,
+  geitonesTou,
+} from './grafos.js';
 
 function proapaitoumeno(
   enotita_id: string,
@@ -157,12 +159,42 @@ describe('topologiki_taxinomisi', () => {
     }
   });
 
+  it('διατηρεί isxyri ακμή όταν υπάρχει διπλή εγγραφή με isxyri', () => {
+    const enotites = [
+      enotita('a', 1, [proapaitoumeno('b', 'isxyri'), proapaitoumeno('b', 'isxyri')]),
+      enotita('b', 2, [proapaitoumeno('a')]),
+    ];
+
+    const episkevi = episkevi_kyklon(enotites);
+    expect(episkevi.ok).toBe(true);
+    if (episkevi.ok) {
+      expect(episkevi.timi.afairemenes_akmes).toEqual([
+        { apo: 'a', pros: 'b', isxys: 'isxyri' },
+      ]);
+    }
+  });
+
   it('returns an empty order for empty input', () => {
     const res = topologiki_taxinomisi([]);
     expect(res.ok).toBe(true);
     if (res.ok) {
       expect(res.timi).toEqual([]);
     }
+  });
+
+  it('επιστρέφει κενή λίστα γειτόνων όταν ο κόμβος δεν έχει καταχωριση', () => {
+    const enotites = [
+      enotita('a', 0, [proapaitoumeno('b', 'isxyri')]),
+      enotita('b', 1, []),
+    ];
+    const grafimaRes = kane_grafima(enotites);
+    expect(grafimaRes.ok).toBe(true);
+    if (!grafimaRes.ok) return;
+
+    // Ο κόμβος 'a' δεν έχει εξερχόμενες ακμές (κενή λίστα)
+    expect(geitonesTou(grafimaRes.timi, 'a')).toEqual([]);
+    // Κόμβος εκτός γράφου -> κενή λίστα (fallback ?? [])
+    expect(geitonesTou(grafimaRes.timi, 'ano')).toEqual([]);
   });
 
   it('is deterministic under shuffled input', () => {

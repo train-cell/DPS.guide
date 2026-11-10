@@ -1,6 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { ektelese_ergaleio, kanonikopoie_imeronomeni } from '../src/tutor/index.js';
 import { ergaleia_mathimatos as toolbox } from './tutor-voitheia.js';
+import { onoma_zitisis } from '../src/tutor/index.js';
+
+describe('onoma_zitisis', () => {
+  it('δίνει το όνομα όταν το αντικείμενο το φέρει', () => {
+    expect(onoma_zitisis({ onoma: 'anoixe_selida' })).toBe('anoixe_selida');
+  });
+
+  it('δίνει άγνωστο όταν το αντικείμενο δεν φέρει όνομα', () => {
+    expect(onoma_zitisis({ })).toBe('άγνωστο');
+    expect(onoma_zitisis({ onoma: 5 })).toBe('άγνωστο');
+  });
+
+  it('δίνει άγνωστο όταν δεν είναι αντικείμενο', () => {
+    expect(onoma_zitisis(null)).toBe('άγνωστο');
+    expect(onoma_zitisis(undefined)).toBe('άγνωστο');
+    expect(onoma_zitisis('κείμενο')).toBe('άγνωστο');
+    expect(onoma_zitisis(5)).toBe('άγνωστο');
+  });
+});
 
 describe('ErgaleiaTutor', () => {
   it('anoixe_selida επιστρέφει το κείμενο της σελίδας και την παραπομπή', () => {

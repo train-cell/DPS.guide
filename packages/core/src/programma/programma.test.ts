@@ -408,6 +408,31 @@ describe('ftiaxe_programma validation and branches', () => {
     expect(res.timi.protasi_epiviosis[0]?.ypopshfies.map((y) => y.enotita_id)).toEqual(['e-agnosto', 'e-agnosto2', 'e-flira', 'e-mid', 'e-mid2', 'e-sos']);
   });
 
+  it('ταξινομεί υποψήφιους επιβίωσης όταν δύο μαθήματα έχουν αρνητικό υπόλοιπο', () => {
+    const res = ftiaxe_programma(
+      eisodos(
+        [
+          mathima('PLI-1', [
+            enotita('e-flira', 1000, [], 5, 0),
+            enotita('e-sos', 60, [], 90, 1),
+          ], '2026-10-13'),
+          mathima('MHT-1', [
+            enotita('e-flira2', 1000, [], 5, 0),
+            enotita('e-sos2', 60, [], 90, 1),
+          ], '2026-10-13'),
+        ]
+      )
+    );
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.timi.protasi_epiviosis).toHaveLength(2);
+    expect(res.timi.slack_ana_mathima['PLI-1'] ?? 0).toBeLessThan(0);
+    expect(res.timi.slack_ana_mathima['MHT-1'] ?? 0).toBeLessThan(0);
+    // Ταξινομείται αλφαβητικά: MHT-1 πριν το PLI-1
+    expect(res.timi.protasi_epiviosis[0]?.kodikos_mathimatos).toBe('MHT-1');
+    expect(res.timi.protasi_epiviosis[1]?.kodikos_mathimatos).toBe('PLI-1');
+  });
+
   it('fills a gap with revision of already-studied units when new material is closed', () => {
     // Ξεκινάει η εξεταστική: η νέα ύλη είναι κλειστή και δεν υπάρχουν οφειλές
     // επανάληψης (κανένα unit δεν έχει ολοκληρωθεί). Το κενό της ημέρας πρέπει να

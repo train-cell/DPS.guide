@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  epikyrosi_paketou,
   exagwgi_kryptografimenou_paketou,
   eisagwgi_kryptografimenou_paketou,
   type PaketoKartonPayload,
@@ -101,6 +102,40 @@ describe('antallagi-karton (Peer-to-Peer Encrypted Study Decks)', () => {
     ).rejects.toThrow(/μη έγκυρο|αλφαριθμητικό/i);
   });
 
+  it('επακυρώνει το πακέτο μέσω της συνάρτησης τύπων (κάθε πεδίο)', () => {
+    // id: δεν είναι string
+    expect(() => epikyrosi_paketou({ ...deigmaPaketou, id: 42 })).toThrow(/αλφαριθμητικό/);
+    // id: κενό
+    expect(() => epikyrosi_paketou({ ...deigmaPaketou, id: '' })).toThrow(/αλφαριθμητικό/);
+    // titlos: δεν είναι string
+    expect(() => epikyrosi_paketou({ ...deigmaPaketou, titlos: 1 })).toThrow(/τίτλος/);
+    // kartes: δεν είναι πίνακας
+    expect(() => epikyrosi_paketou({ ...deigmaPaketou, kartes: 'όχι πίνακας' })).toThrow(/πίνακας/);
+
+    // κάρτα: δεν είναι αντικείμενο
+    expect(
+      () => epikyrosi_paketou({ ...deigmaPaketou, kartes: [null] as never })
+    ).toThrow(/κάρτα στη θέση/);
+    // κάρτα: λείπει η ερώτηση
+    expect(
+      () => epikyrosi_paketou({ ...deigmaPaketou, kartes: [{ apantisi: 'ναι' }] as never })
+    ).toThrow(/λείπει έγκυρη ερώτηση/);
+    // κάρτα: λείπει η απάντηση
+    expect(
+      () => epikyrosi_paketou({ ...deigmaPaketou, kartes: [{ erwtisi: 'ναι' }] as never })
+    ).toThrow(/λείπει έγκυρη απάντηση/);
+  });
+
+  it('χρησιμοποιεί το προεπιλεγμένο πλήθος επαναλήψεων PBKDF2 όταν λείπει το πεδίο', async () => {
+    const encoded = await exagwgi_kryptografimenou_paketou(deigmaPaketou, kleidi);
+    const payload = JSON.parse(atob(encoded));
+    delete payload.epanalipseisKdf;
+    const withoutKdf = btoa(JSON.stringify(payload));
+
+    const decoded = await eisagwgi_kryptografimenou_paketou(withoutKdf, kleidi);
+    expect(decoded).toEqual(deigmaPaketou);
+  });
+
   it('πετάει σφάλμα αν δοθεί κενό κλειδί ή κενό κωδικοποιημένο string', async () => {
     await expect(
       exagwgi_kryptografimenou_paketou(deigmaPaketou, '')
@@ -109,5 +144,22 @@ describe('antallagi-karton (Peer-to-Peer Encrypted Study Decks)', () => {
     await expect(
       eisagwgi_kryptografimenou_paketou('', kleidi)
     ).rejects.toThrow(/κεν/i);
+
+    // Κενό μυστικό κλειδί (δεύτερος έλεγχος)
+    const encoded = await exagwgi_kryptografimenou_paketou(deigmaPaketou, kleidi);
+    await expect(eisagwgi_kryptografimenou_paketou(encoded, '')).rejects.toThrow(/μυστικό κλειδί/);
+  });
+
+  it('απορρίπτει μη base64 συμβολοσειρά', async () => {
+    await expect(eisagwgi_kryptografimenou_paketou('όχι base64!!!', kleidi)).rejects.toThrow(
+      /Μη έγκυρη μορφή πακέτου/
+    );
+  });
+
+  it('απορρίπτει πακέτο με ελλιπή δομή κρυπτογράφησης', async () => {
+    const jsonStr = btoa(JSON.stringify({ ekdosi: 1, algarithmos: 'AES-256-GCM', kdf: 'PBKDF2-SHA256' }));
+    await expect(eisagwgi_kryptografimenou_paketou(jsonStr, kleidi)).rejects.toThrow(
+      /Μη έγκυρη μορφή φακέλου/
+    );
   });
 });

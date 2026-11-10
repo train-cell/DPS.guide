@@ -92,7 +92,6 @@ export function parage_akronymio_kai_leikseis(oroi: readonly string[]): Kataskev
 
   for (const oros of katharoiOroi) {
     const protoXaraktiras = oros[0];
-    if (!protoXaraktiras) continue;
     const protoGramma = kanonikopoiisi_xaraktira(protoXaraktiras);
     grammataAkronymio.push(protoGramma);
 
@@ -160,7 +159,7 @@ export function kataskevase_prompt_mnemonikou(aitima: MnemonikoAitima): string {
     grammesPrompt.push(
       'ΖΗΤΟΥΜΕΝΟ: Σύνδεσε κάθε όρο με τα κλασικά νοητικά άγκιστρα (1: Κερί, 2: Κύκνος, 3: Τρίαινα, κ.ο.κ.) δημιουργώντας έντονες νοητικές εικόνες.'
     );
-  } else if (eidos === 'istoria') {
+  } else {
     grammesPrompt.push('ΕΙΔΟΣ ΜΝΗΜΟΝΙΚΟΥ: Μνημονική Ιστορία (Narrative Chaining)');
     grammesPrompt.push(
       'ΖΗΤΟΥΜΕΝΟ: Σύνθεσε μια σύντομη, συνεκτική και διασκεδαστική μικρο-ιστορία 3-5 προτάσεων που συνδέει όλους τους παραπάνω όρους με τη σειρά εμφάνισής τους.'

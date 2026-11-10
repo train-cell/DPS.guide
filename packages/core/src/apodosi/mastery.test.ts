@@ -83,6 +83,32 @@ describe('mastery — Knowledge Gap & Mastery Calculation', () => {
     expect(apotelesma['en-1']).toBe(100);
   });
 
+  it('δεν μετράει λεπτά που δεν είναι έγκυρα (0, αρνητικά, NaN)', () => {
+    const checkins: Checkin[] = [
+      {
+        enotita_id: 'en-1',
+        imerominia: '2026-10-26',
+        pragmatika_lepta: 0,
+        oloklirothike: false,
+      },
+      {
+        enotita_id: 'en-1',
+        imerominia: '2026-10-27',
+        pragmatika_lepta: -10,
+        oloklirothike: false,
+      },
+      {
+        enotita_id: 'en-1',
+        imerominia: '2026-10-28',
+        pragmatika_lepta: 60,
+        oloklirothike: false,
+      },
+    ];
+    const apotelesma = ypologise_katastasi_mastery([enotita1], checkins, {});
+    // μόνο τα 60 μετράνε
+    expect(apotelesma['en-1']).toBeLessThan(60);
+  });
+
   it('συνδυάζει σωστά διαφορετικά κουτιά Leitner', () => {
     const proodos: ProodhosXristi = {
       checkins: [

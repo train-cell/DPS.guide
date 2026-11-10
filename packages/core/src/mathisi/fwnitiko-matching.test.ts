@@ -138,5 +138,17 @@ describe('fwnitiko-matching', () => {
       expect(apotelesmaLathos.epityxia).toBe(false);
       expect(apotelesmaLathos.posostoOmoiotitas).toBeLessThan(70);
     });
+
+    it('επιστρέφει 0% ομοιότητα όταν ο στόχος είναι κενός αλλά δόθηκε απάντηση', () => {
+      const apotelesma = ypologise_fwnitiki_omoiotita(
+        'Αλγόριθμος Dijkstra',
+        '',
+        []
+      );
+
+      expect(apotelesma.epityxia).toBe(false);
+      expect(apotelesma.posostoOmoiotitas).toBe(0);
+      expect(apotelesma.vretheisanLexeis).toEqual([]);
+    });
   });
 });

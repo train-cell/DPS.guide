@@ -75,6 +75,86 @@ describe('ypologise_streak_me_pagwma', () => {
     expect(apotelesma.xrisimopoihmenaTokens).toBe(0);
     expect(apotelesma.kindynosDiakopis).toBe(false);
   });
+  it('παγώνει την προχθεσινή ημέρα με freeze token (χθες κενή, πρωτοχθες μελέτη)', () => {
+    const hmerominies = ['2026-10-25'];
+    const pagwmata: string[] = [];
+    const simera = '2026-10-27';
+
+    const apotelesma = ypologise_streak_me_pagwma(hmerominies, pagwmata, simera, 2);
+
+    expect(apotelesma.trexwnStreak).toBe(2); // 26 (token), 25
+    expect(apotelesma.xrisimopoihmenaTokens).toBe(1);
+    expect(apotelesma.kindynosDiakopis).toBe(true);
+    expect(apotelesma.megistoStreak).toBe(2);
+  });
+
+  it('δεν χρησιμοποιεί freeze token όταν η προχθεσινή ημέρα είναι κενή (tokens > 0)', () => {
+    const hmerominies = ['2026-10-20'];
+    const pagwmata: string[] = [];
+    const simera = '2026-10-27';
+
+    const apotelesma = ypologise_streak_me_pagwma(hmerominies, pagwmata, simera, 3);
+
+    expect(apotelesma.trexwnStreak).toBe(0);
+    expect(apotelesma.megistoStreak).toBe(1);
+    expect(apotelesma.kindynosDiakopis).toBe(false);
+    expect(apotelesma.xrisimopoihmenaTokens).toBe(0);
+  });
+
+  it('δεν χρησιμοποιεί freeze token όταν η προχθεσινή ημέρα είναι κενή (tokens = 0)', () => {
+    const hmerominies = ['2026-10-20'];
+    const pagwmata: string[] = [];
+    const simera = '2026-10-27';
+
+    const apotelesma = ypologise_streak_me_pagwma(hmerominies, pagwmata, simera, 0);
+
+    expect(apotelesma.trexwnStreak).toBe(0);
+    expect(apotelesma.megistoStreak).toBe(1);
+    expect(apotelesma.kindynosDiakopis).toBe(false);
+    expect(apotelesma.xrisimopoihmenaTokens).toBe(0);
+  });
+
+  it('παγώνει με token προχθεσινή ημέρα που είχε παγώσει (άλλαξε ημερομηνία)', () => {
+    const hmerominies: string[] = [];
+    const pagwmata = ['2026-10-25'];
+    const simera = '2026-10-27';
+
+    const apotelesma = ypologise_streak_me_pagwma(hmerominies, pagwmata, simera, 1);
+
+    expect(apotelesma.trexwnStreak).toBe(2); // 25 (token), 25
+    expect(apotelesma.xrisimopoihmenaTokens).toBe(1);
+    expect(apotelesma.kindynosDiakopis).toBe(true);
+    expect(apotelesma.megistoStreak).toBe(2);
+  });
+
+  it('υπολογίζει μέγιστο ιστορικό streak από παλαιότερη συνεχόμενη σειρά', () => {
+    const hmerominies = [
+      '2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04', '2026-10-05',
+    ];
+    const pagwmata: string[] = [];
+    const simera = '2026-10-27';
+
+    const apotelesma = ypologise_streak_me_pagwma(hmerominies, pagwmata, simera, 0);
+
+    expect(apotelesma.trexwnStreak).toBe(0);
+    expect(apotelesma.megistoStreak).toBe(5);
+    expect(apotelesma.kindynosDiakopis).toBe(false);
+    expect(apotelesma.xrisimopoihmenaTokens).toBe(0);
+  });
+
+  it('σβήνει τον κίνδυνο όταν η σημερινή ημέρα έχει μελέτη (και χρησιμοποιεί token)', () => {
+    const hmerominies = ['2026-10-27'];
+    const pagwmata: string[] = [];
+    const simera = '2026-10-27';
+
+    const apotelesma = ypologise_streak_me_pagwma(hmerominies, pagwmata, simera, 1);
+
+    expect(apotelesma.trexwnStreak).toBe(1);
+    expect(apotelesma.megistoStreak).toBe(1);
+    expect(apotelesma.kindynosDiakopis).toBe(false);
+    expect(apotelesma.xrisimopoihmenaTokens).toBe(0);
+  });
+
 });
 
 describe('ypologise_diasosi_streak_blitz', () => {
@@ -105,4 +185,21 @@ describe('ypologise_diasosi_streak_blitz', () => {
     expect(neaKatastasi.kindynosDiakopis).toBe(true);
     expect(neaKatastasi.trexwnStreak).toBe(5);
   });
+  it('διατηρεί το streak όταν η τελευταία ημέρα μελέτης είναι σήμερα', () => {
+    const katastasi: KatastasiStreak = {
+      trexwnStreak: 5,
+      megistoStreak: 10,
+      xrisimopoihmenaTokens: 0,
+      diathesimaTokens: 1,
+      kindynosDiakopis: false,
+      pagwmenesHmerominies: [],
+      teleutaiaImeraMeletis: '2026-10-27',
+    };
+    const simera = '2026-10-27';
+    const neaKatastasi = ypologise_diasosi_streak_blitz(true, simera, katastasi);
+
+    expect(neaKatastasi.trexwnStreak).toBe(5);
+    expect(neaKatastasi.teleutaiaImeraMeletis).toBe(simera);
+  });
+
 });

@@ -110,6 +110,55 @@ describe('imerologio-ics — RFC 5545 Calendar Export', () => {
     expect(plithosAlarms).toBe(3);
   });
 
+  it('χρησιμοποιεί τον κωδικό μαθήματος όταν δεν υπάρχει το μάθημα στο αρχείο (branch ??)', () => {
+    const ics = parage_arxeio_ics(
+      {
+        meres: [
+          {
+            imerominia: '2026-11-02',
+            ergasies: [
+              {
+                eidos: 'nea_yli',
+                kodikos_mathimatos: 'PHYS101', // δεν υπάρχει στα mathimata
+                enotita_id: 'en-2',
+                titlos: 'Μηχανική',
+                lepta: 45,
+              },
+            ],
+          },
+        ],
+        slack_ana_mathima: {},
+        protasi_epiviosis: [],
+      },
+      paradeigmaExetaseon,
+      mathimaDedomena
+    );
+
+    // Η ανώνυμη εργασία χρησιμοποιεί τον κωδικό του μαθήματος
+    expect(ics).toContain('Μάθημα: PHYS101 (PHYS101)');
+    expect(ics).toContain('SUMMARY:[DPS] Νέα ύλη: Μηχανική (PHYS101)');
+  });
+
+  it('δεν έχει το μάθημα στα mathimata -> χρησιμοποιεί τον κωδικό ως τίτλο (κλάδος ??)', () => {
+    const ics = parage_arxeio_ics(
+      { meres: [], slack_ana_mathima: {}, protasi_epiviosis: [] },
+      [
+        {
+          kodikos_mathimatos: 'PHYS101', // δεν υπάρχει στα mathimata
+          imerominia: '2027-01-16',
+          tropos: 'kleista_vivlia',
+        },
+      ],
+      mathimaDedomena
+    );
+
+    expect(ics).toContain('SUMMARY:[DPS] Εξέταση: PHYS101 (PHYS101)');
+    expect(ics).toContain('DESCRIPTION:Εξέταση μαθήματος: PHYS101 (PHYS101)');
+    expect(ics).toContain('UID:exetasi-PHYS101-2027-01-16@dps.guide');
+    const plithosAlarms = (ics.match(/BEGIN:VALARM/g) ?? []).length;
+    expect(plithosAlarms).toBe(1);
+  });
+
   it('παράγει VEVENT για εξετάσεις και παραλείπει εξετάσεις χωρίς ημερομηνία', () => {
     const ics = parage_arxeio_ics({ meres: [], slack_ana_mathima: {}, protasi_epiviosis: [] }, paradeigmaExetaseon, mathimaDedomena);
 
@@ -122,6 +171,53 @@ describe('imerologio-ics — RFC 5545 Calendar Export', () => {
 
     // Η εξέταση MATH101 έχει imerominia: null, άρα δεν παράγεται συμβάν
     expect(ics).not.toContain('MATH101');
+  });
+
+  it('παραλείπει ημέρες με άκυρη ημερομηνία και κενές εργασίες', () => {
+    const ics = parage_arxeio_ics(
+      {
+        meres: [
+          { imerominia: '2026-13-45', ergasies: [] }, // άκυρη ημερομηνία
+          {
+            imerominia: '2026-11-02',
+            ergasies: [
+              {
+                eidos: 'nea_yli' as const,
+                kodikos_mathimatos: 'CS101',
+                enotita_id: 'en-1',
+                titlos: 'Αλγόριθμοι και Δομές',
+                lepta: 60,
+              },
+              undefined as unknown as never, // κενή εργασία
+            ] as never,
+          },
+          { imerominia: '2026-11-03', ergasies: [] },
+        ],
+        slack_ana_mathima: {},
+        protasi_epiviosis: [],
+      },
+      paradeigmaExetaseon,
+      mathimaDedomena
+    );
+
+    // Μόνο η 2026-11-02 παράγει VEVENT (η 13-45 απορρίπτεται, η κενή εργασία παραλείπεται)
+    expect(ics).toContain('DTSTART:20261102T090000Z');
+    expect(ics).not.toContain('DTSTART:20261103');
+    expect(ics).toContain('DTEND:20261102T100000Z');
+  });
+
+  it('παραλείπει εξετάσεις με άκυρη ημερομηνία', () => {
+    const ics = parage_arxeio_ics(
+      { meres: [], slack_ana_mathima: {}, protasi_epiviosis: [] },
+      [
+        { kodikos_mathimatos: 'CS101', imerominia: '2026-02-30', tropos: 'kleista_vivlia' },
+        { kodikos_mathimatos: 'MATH101', imerominia: '2027-01-15', tropos: 'anoixta_vivlia' },
+      ],
+      mathimaDedomena
+    );
+
+    expect(ics).toContain('UID:exetasi-MATH101-2027-01-15@dps.guide');
+    expect(ics).not.toContain('UID:exetasi-CS101-2026-02-30');
   });
 
   it('είναι 100% pure και deterministic (ίδια είσοδος -> ίδια έξοδος)', () => {

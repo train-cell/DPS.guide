@@ -37,9 +37,9 @@ const MILLIS_ANA_IMERA = 86_400_000;
  */
 function iso_se_utc_millis(iso: string): number {
   const parts = iso.split('-').map(Number);
-  const etos = parts[0] ?? 1970;
-  const minas = parts[1] ?? 1;
-  const imera = parts[2] ?? 1;
+  const etos = parts[0] as number;
+  const minas = parts[1] as number;
+  const imera = parts[2] as number;
   return Date.UTC(etos, minas - 1, imera);
 }
 
@@ -104,14 +104,11 @@ export function ypologise_streak_me_pagwma(
   }
 
   const olesOiImeres = Array.from(new Set([...hmerominiesMeletis, ...pagwmata])).sort();
-  const elaxisthImeraMillis =
-    olesOiImeres.length > 0 && olesOiImeres[0] !== undefined
-      ? iso_se_utc_millis(olesOiImeres[0])
-      : null;
+  const elaxisthImeraMillis = iso_se_utc_millis(olesOiImeres[0]);
 
   let trexwnStreak = 0;
 
-  if (toraIso !== null && elaxisthImeraMillis !== null) {
+  if (toraIso !== null) {
     let cur = toraIso;
     // Αν το χθες παγώθηκε αυτόματα με token
     if (xrisimopoihmenaTokens > 0) {

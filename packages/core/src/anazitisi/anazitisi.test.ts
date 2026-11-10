@@ -73,7 +73,7 @@ describe('anazitisi — Local Full-Text Search Engine', () => {
       expect(eurethrio.antistrafoEurethrio.has('χημειασ')).toBe(true);
     });
 
-    it('διαγράφει έγγραφο και καθαρίζει τα tokens από το ανεστραμμένο ευρετήριο', () => {
+        it('διαγράφει έγγραφο και καθαρίζει τα tokens από το ανεστραμμένο ευρετήριο', () => {
       const eurethrio = ftiaxe_eurethrio_keimenou();
       prosthese_eggrafo_eurethriou(eurethrio, {
         id: 'doc-1',
@@ -84,6 +84,45 @@ describe('anazitisi — Local Full-Text Search Engine', () => {
       expect(eurethrio.eggrafa.size).toBe(0);
       expect(eurethrio.antistrafoEurethrio.has('μοναδικη')).toBe(false);
       expect(diagrapse_eggrafo_eurethriou(eurethrio, 'doc-1')).toBe(false);
+    });
+
+    it('διαγράφει έγγραφο που δεν υπάρχει στο mikosEggrafon (fallback 0)', () => {
+      const eurethrio = ftiaxe_eurethrio_keimenou();
+      prosthese_eggrafo_eurethriou(eurethrio, {
+        id: 'doc-1',
+        keimeno: 'Μοναδική λέξη',
+      });
+      eurethrio.mikosEggrafon.delete('doc-1');
+
+      expect(diagrapse_eggrafo_eurethriou(eurethrio, 'doc-1')).toBe(true);
+      expect(eurethrio.eggrafa.size).toBe(0);
+    });
+
+    it('διαγράφει έγγραφο όταν τα docMap δεν περιέχουν το id (κλάδος false) και κρατούν μέγεθος', () => {
+      const eurethrio = ftiaxe_eurethrio_keimenou();
+      prosthese_eggrafo_eurethriou(eurethrio, {
+        id: 'doc-1',
+        keimeno: 'Κοινή λέξη και μοναδική',
+      });
+      prosthese_eggrafo_eurethriou(eurethrio, {
+        id: 'doc-2',
+        keimeno: 'Άλλη κοινή λέξη',
+      });
+      prosthese_eggrafo_eurethriou(eurethrio, {
+        id: 'doc-3',
+        keimeno: 'Μόνο',
+      });
+      // 'κοινη' -> doc-1, doc-2 | 'μοναδικη' -> doc-1 | 'αλλη' -> doc-2 | 'μονο' -> doc-3
+      eurethrio.antistrafoEurethrio.get('μοναδικη')?.delete('doc-2');
+      eurethrio.antistrafoEurethrio.get('αλλη')?.delete('doc-1');
+      eurethrio.antistrafoEurethrio.get('μονο')?.delete('doc-1');
+
+      expect(diagrapse_eggrafo_eurethriou(eurethrio, 'doc-1')).toBe(true);
+      // Το doc-2 απομένει στο docMap της 'κοινής' λέξης (μέγεθος > 0)
+      expect(eurethrio.antistrafoEurethrio.get('κοινη')?.size).toBe(1);
+      expect(eurethrio.antistrafoEurethrio.get('μοναδικη')).toBeUndefined();
+      expect(eurethrio.antistrafoEurethrio.get('αλλη')?.size).toBe(1);
+      expect(eurethrio.antistrafoEurethrio.get('μονο')?.size).toBe(1);
     });
   });
 
@@ -103,6 +142,17 @@ describe('anazitisi — Local Full-Text Search Engine', () => {
       expect(scoreTf5).toBeGreaterThan(scoreTf1);
       // Ο διπλασιασμός δεν είναι γραμμικός λόγω κορεσμού BM25
       expect(scoreTf5).toBeLessThan(scoreTf1 * 5);
+    });
+
+    it('επιστρέφει 0 το IDF όταν δεν υπάρχουν έγγραφα ή όροι', () => {
+      expect(ypologise_idf_bm25(0, 0)).toBe(0);
+      expect(ypologise_idf_bm25(10, 0)).toBe(0);
+      expect(ypologise_idf_bm25(0, 5)).toBe(0);
+    });
+
+    it('επιστρέφει 0 το BM25 όταν η συχνότητα ή το IDF είναι μη θετικά', () => {
+      expect(ypologise_oro_bm25(0, 20, 20, 1.5)).toBe(0);
+      expect(ypologise_oro_bm25(1, 20, 20, 0)).toBe(0);
     });
   });
 
@@ -182,6 +232,20 @@ describe('anazitisi — Local Full-Text Search Engine', () => {
       expect(res[0]?.tairiasmenoiOroi).toContain('πρωτοκολλα');
     });
 
+    it('χρησιμοποιεί συντελεστή ρίζας όταν η ρίζα ταιριάζει αλλά όχι το πλήρες token', () => {
+      const eurethrio = ftiaxe_eurethrio_keimenou();
+      // Η λέξη 'αλγόριθμω' ξεκινάει με τη ρίζα 'αλγόριθμ' που προκύπτει από το 'αλγόριθμος',
+      // αλλά δεν ταιριάζει πλήρως με το query.
+      prosthese_eggrafo_eurethriou(eurethrio, {
+        id: 'doc-1',
+        titlos: 'Αλγόριθμοι',
+        keimeno: 'Η πολυπλοκότητα αλγόριθμω και δομών δεδομένων.',
+      });
+
+      const apotelesmata = anazitise_keimeno(eurethrio, 'αλγόριθμος');
+      expect(apotelesmata.map((a) => a.eggrafoId)).toEqual(['doc-1']);
+    });
+
     it('υποστηρίζει prefix search για όρους μήκους >= 3', () => {
       const eurethrio = ftiaxe_eurethrio_keimenou();
       prosthese_eggrafo_eurethriou(eurethrio, {
@@ -193,6 +257,70 @@ describe('anazitisi — Local Full-Text Search Engine', () => {
       const res = anazitise_keimeno(eurethrio, 'κρυπτο');
       expect(res.length).toBeGreaterThanOrEqual(1);
       expect(res[0]?.eggrafoId).toBe('doc-kryptografia');
+    });
+
+    it('χρησιμοποιεί το μέσο μήκος εγγράφου όταν λείπει η καταχώριση mikosEggrafon', () => {
+      const eurethrio = ftiaxe_eurethrio_keimenou();
+      prosthese_eggrafo_eurethriou(eurethrio, {
+        id: 'doc-1',
+        titlos: 'Ασφάλεια',
+        keimeno: 'Κρυπτογραφία και συμμετρικοί αλγόριθμοι κρυπτογράφησης.',
+      });
+      eurethrio.mikosEggrafon.delete('doc-1');
+
+      const res = anazitise_keimeno(eurethrio, 'κρυπτο');
+      expect(res).toHaveLength(1);
+      expect(res[0]?.eggrafoId).toBe('doc-1');
+      expect(res[0]?.vathmologia).toBeGreaterThan(0);
+    });
+
+    it('χρησιμοποιεί το μέσο μήκος εγγράφου σε ακριβή ταύτιση όταν λείπει η καταχώριση', () => {
+      const eurethrio = ftiaxe_eurethrio_keimenou();
+      prosthese_eggrafo_eurethriou(eurethrio, {
+        id: 'doc-1',
+        titlos: 'Ασφάλεια',
+        keimeno: 'Κρυπτο και συμμετρικοί αλγόριθμοι.',
+      });
+      eurethrio.mikosEggrafon.delete('doc-1');
+
+      const res = anazitise_keimeno(eurethrio, 'κρυπτο');
+      expect(res).toHaveLength(1);
+      expect(res[0]?.eggrafoId).toBe('doc-1');
+      expect(res[0]?.vathmologia).toBeGreaterThan(0);
+    });
+
+    it('δεν εφαρμόζει prefix/root search για query μικρότερο των 3 χαρακτήρων', () => {
+      const eurethrio = ftiaxe_eurethrio_keimenou();
+      prosthese_eggrafo_eurethriou(eurethrio, {
+        id: 'doc-1',
+        titlos: 'Ασφάλεια',
+        keimeno: 'Κρυπτογραφία και συμμετρικοί αλγόριθμοι κρυπτογράφησης.',
+      });
+
+      const res = anazitise_keimeno(eurethrio, 'κρ');
+      expect(res).toHaveLength(0);
+    });
+
+    it('εφαρμόζει συντελεστή προθέματος μόνο σε έγγραφα που δεν ταιριάζουν ακριβώς', () => {
+      const eurethrio = ftiaxe_eurethrio_keimenou();
+      // doc-1: η λέξη 'κρυπτο' ταιριάζει ακριβώς με το query
+      prosthese_eggrafo_eurethriou(eurethrio, {
+        id: 'doc-1',
+        titlos: 'Κρυπτογραφία',
+        keimeno: 'Κρυπτο και συμμετρικοί αλγόριθμοι.',
+      });
+      // doc-2: η λέξη 'κρυπτογραφία' ταιριάζει ως prefix
+      prosthese_eggrafo_eurethriou(eurethrio, {
+        id: 'doc-2',
+        titlos: 'Ασφάλεια',
+        keimeno: 'Κρυπτογραφία και συμμετρικοί αλγόριθμοι κρυπτογράφησης.',
+      });
+
+      const res = anazitise_keimeno(eurethrio, 'κρυπτο');
+      expect(res).toHaveLength(2);
+      // Και τα δύο έχουν βαθμολογία > 0 (ακριβές και prefix)
+      expect(res[0]?.vathmologia).toBeGreaterThan(0);
+      expect(res[1]?.vathmologia).toBeGreaterThan(0);
     });
 
     it('σέβεται το όριο αποτελεσμάτων (orio)', () => {

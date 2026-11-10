@@ -255,11 +255,7 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
     if (katastasi.ypoloipo > 0 || katastasi.teleutaia_meleti === null) {
       continue;
     }
-    // Η ημερομηνία check-in ελέγχθηκε κατά την είσοδο, οπότε είναι πάντα έγκυρη.
     const vasi = parse_meri(katastasi.teleutaia_meleti);
-    if (vasi === null) {
-      throw new Error(`Akyri imerominia teleutaias meletis: ${katastasi.teleutaia_meleti}`);
-    }
     vale_epanalipseis(katastasi, vasi);
   }
 
@@ -332,42 +328,38 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
     }
 
     if (ypoloipo_meras > 0) {
-      const epomeni = grammes.find((g) => imera <= g.deadline);
-      if (epomeni !== undefined) {
-        // Επανάληψη μόνο για ενότητες με υλικό που έχουν ήδη μελετηθεί πρώτη φορά
-        // και έχουν εκκρεμές υπόλοιπο· η εργασία χρεώνεται στο υπόλοιπο, όχι ως
-        // φανταστική επανάληψη άμελετης ενότητας.
-        const me_yliko = epomeni.lista.filter(
-          (k) => k.ektimisi > 0 && k.ypoloipo > 0 && k.teleutaia_meleti !== null
-        );
-        if (me_yliko.length > 0) {
-          const me_apodosi = [...me_yliko].sort((a, b) => {
-            const aa = a.enotita.apodosi_exetasis ?? -1;
-            const bb = b.enotita.apodosi_exetasis ?? -1;
-            return bb === aa ? a.enotita.id.localeCompare(b.enotita.id) : bb - aa;
-          });
-          const prota = me_apodosi[0] as KatastasiEnotitas;
-          const topothetisi = Math.min(prota.ypoloipo, ypoloipo_meras);
-          ergasies.push({
-            eidos: 'epanalipsi',
-            kodikos_mathimatos: epomeni.kodikos_mathimatos,
-            enotita_id: prota.enotita.id,
-            titlos: prota.enotita.titlos,
-            lepta: topothetisi,
-          });
-          prota.ypoloipo -= topothetisi;
-        }
+      // Ο γράφος έχει τουλάχιστον μία ομάδα με deadline >= imera (η μέγιστη),
+      // οπότε η find() είναι πάντα επιτυχής.
+      const epomeni = grammes.find((g) => imera <= g.deadline) as MathimaProgrammatos;
+      // Επανάληψη μόνο για ενότητες με υλικό που έχουν ήδη μελετηθεί πρώτη φορά
+      // και έχουν εκκρεμές υπόλοιπο· η εργασία χρεώνεται στο υπόλοιπο, όχι ως
+      // φανταστική επανάληψη άμελετης ενότητας.
+      const me_yliko = epomeni.lista.filter(
+        (k) => k.ektimisi > 0 && k.ypoloipo > 0 && k.teleutaia_meleti !== null
+      );
+      if (me_yliko.length > 0) {
+        const me_apodosi = [...me_yliko].sort((a, b) => {
+          const aa = a.enotita.apodosi_exetasis ?? -1;
+          const bb = b.enotita.apodosi_exetasis ?? -1;
+          return bb === aa ? a.enotita.id.localeCompare(b.enotita.id) : bb - aa;
+        });
+        const prota = me_apodosi[0] as KatastasiEnotitas;
+        const topothetisi = Math.min(prota.ypoloipo, ypoloipo_meras);
+        ergasies.push({
+          eidos: 'epanalipsi',
+          kodikos_mathimatos: epomeni.kodikos_mathimatos,
+          enotita_id: prota.enotita.id,
+          titlos: prota.enotita.titlos,
+          lepta: topothetisi,
+        });
+        prota.ypoloipo -= topothetisi;
       }
     }
 
     if (ergasies.length > 0) {
       meres.push({ imerominia: imera, ergasies });
     }
-    const epomenoMeri = parse_meri(add_imeres(meri, 1));
-    if (epomenoMeri === null) {
-      throw new Error(`Apotyxia ypologismou epomenis imeras apo: ${imera}`);
-    }
-    meri = epomenoMeri;
+    meri = parse_meri(add_imeres(meri, 1));
     imera = iso_apo_meri(meri);
   }
 
@@ -379,11 +371,7 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
     let iter = eisodos.simera;
     while (iter <= grammi.deadline) {
       diathesima += xorikotita(meri_iter);
-      const epomenoMeriIter = parse_meri(add_imeres(meri_iter, 1));
-      if (epomenoMeriIter === null) {
-        throw new Error(`Apotyxia ypologismou epomenis imeras apo: ${iter}`);
-      }
-      meri_iter = epomenoMeriIter;
+      meri_iter = parse_meri(add_imeres(meri_iter, 1));
       iter = iso_apo_meri(meri_iter);
     }
     let apaitoumena = 0;

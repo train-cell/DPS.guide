@@ -7,11 +7,13 @@ import {
   FRASIS_KATHODIGISI_ASKISIS,
   MEGISTES_KALLES_ERGALEION,
   PLIO_MESOI_ISTORIKOU,
+  perigraphi_symkrisis,
   ftiaxe_michania_tutor,
   pram_ena_erotisi,
   zitisei_teleia_lusi,
 } from '../src/tutor/index.js';
 import type { EisodosStrih } from '../src/tutor/index.js';
+import type { SugkrisiArithmetikis } from '../src/tutor/index.js';
 import { ftiaxe_enotita } from './voitheia.js';
 import {
   IchososKatagrafi,
@@ -51,6 +53,42 @@ function metrisi_erotiseon(apantisi: string): number {
 }
 
 describe('tutor — λειτουργίες του P4', () => {
+  it('περνάει simatodotis στο μοντέλο', async () => {
+    const controller = new AbortController();
+    const llm = new SkribinioLlm([apantisi_leitourgias()]);
+    const michania = ftiaxe_michania_tutor({
+      llm,
+      ergaleia: new IerosErgaleia(ergaleia_mathimatos()),
+      katagrafi: new IchososKatagrafi(),
+      simatodotis: controller.signal,
+    });
+
+    const apotelesma = await michania.strih(eisodos_strih({ leitourgia: 'exigisi' }));
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) {
+      return;
+    }
+    expect(llm.zitiseis).toHaveLength(1);
+  });
+
+  it('δεν περνάει simatodotis όταν δεν δόθηκε', async () => {
+    const llm = new SkribinioLlm([apantisi_leitourgias()]);
+    const michania = ftiaxe_michania_tutor({
+      llm,
+      ergaleia: new IerosErgaleia(ergaleia_mathimatos()),
+      katagrafi: new IchososKatagrafi(),
+    });
+
+    const apotelesma = await michania.strih(eisodos_strih({ leitourgia: 'exigisi' }));
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) {
+      return;
+    }
+    expect(llm.zitiseis).toHaveLength(1);
+  });
+
   it('exigisi: απαντά grounded με παραπομπές και κρατά το ιστορικό', async () => {
     const eisodos = eisodos_strih({ leitourgia: 'exigisi' });
     const llm = new MockLlm();
@@ -518,6 +556,28 @@ describe('tutor — κανόνας 50/50 στα αριθμητικά', () => {
   });
 });
 
+describe('tutor — κανόνες σύγκρισης', () => {
+  it('δεν έχει αναμενόμενη και απάντηση όταν λείπουν από τη σύγκριση', () => {
+    const symkrisi = { poreia: 'sosto' } as SugkrisiArithmetikis;
+
+    expect(perigraphi_symkrisis(symkrisi)).toBe(
+      '- αναμενόμενη τιμή: δεν υπάρχει αναμενόμενη τιμή στο υλικό · απάντηση μαθητή: δεν αναγνωρίστηκε αριθμητική απάντηση · πόρισμα: sosto'
+    );
+  });
+
+  it('δίνει τιμές όταν υπάρχουν', () => {
+    const symkrisi = {
+      poreia: 'lathos',
+      anamomeni: '3,14',
+      apantisi_mafis: '3,15',
+    } as SugkrisiArithmetikis;
+
+    expect(perigraphi_symkrisis(symkrisi)).toBe(
+      '- αναμενόμενη τιμή: 3,14 · απάντηση μαθητή: 3,15 · πόρισμα: lathos'
+    );
+  });
+});
+
 describe('tutor — αντοχή και ντετερμινισμός', () => {
   it('μεταδίδει τη σφάλμα του μοντέλου χωρίς να το κρύψει', async () => {
     const llm = new SkribinioLlm([]);
@@ -590,6 +650,15 @@ describe('tutor — αντοχή και ντετερμινισμός', () => {
 describe('tutor — καθαροί κανόνες κειμένου', () => {
   it('κρατά μόνο την πρώτη ερώτηση', () => {
     expect(pram_ena_erotisi('Πρώτη\u037E Δεύτερη\u037E')).toBe('Πρώτη\u037E');
+    expect(pram_ena_erotisi('Χωρίς ερώτηση')).toBe('Χωρίς ερώτηση');
+  });
+
+  it('κλέβει τη μικρότερη θέση ερώτησης και στις δύο κατευθύνσεις', () => {
+    // το '\u037E' έρχεται πρώτο, οπότε η επόμενη ερώτηση είναι μικρότερη
+    expect(pram_ena_erotisi('Τι\u037E Ερώτηση?')).toBe('Τι\u037E');
+    // το '?' έρχεται πρώτο, η '；' είναι μεγαλύτερη → παραλείπεται
+    expect(pram_ena_erotisi('Ερώτηση? \u037E και περισσότερα')).toBe('Ερώτηση?');
+    // κανένα σύμβολο
     expect(pram_ena_erotisi('Χωρίς ερώτηση')).toBe('Χωρίς ερώτηση');
   });
 

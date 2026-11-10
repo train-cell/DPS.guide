@@ -170,7 +170,7 @@ export function ypologise_oro_bm25(
   if (tf <= 0 || idf <= 0) {
     return 0;
   }
-  const kanonikoMikos = mesoMikosEggrafon > 0 ? mikosEggrafou / mesoMikosEggrafon : 1.0;
+  const kanonikoMikos = mikosEggrafou / mesoMikosEggrafon;
   const arithmitis = tf * (BM25_K1 + 1);
   const paronomastis = tf + BM25_K1 * (1 - BM25_B + BM25_B * kanonikoMikos);
   return idf * (arithmitis / paronomastis);
@@ -232,7 +232,7 @@ export function anazitise_keimeno(
     }
 
     // Έλεγχος ρίζας και προθέματος αν το query token έχει αρκετό μήκος
-    if (q.length >= ELAXISTO_MIKOS_PREFIX || qRiza.length >= ELAXISTO_MIKOS_PREFIX) {
+    if (q.length >= ELAXISTO_MIKOS_PREFIX) {
       for (const [oros, docMapOrou] of eurethrio.antistrafoEurethrio.entries()) {
         if (oros === q) {
           continue;
@@ -270,13 +270,7 @@ export function anazitise_keimeno(
   const apotelesmata: ApotelesmaAnazitisis[] = [];
 
   for (const [eggrafoId, dedomena] of pinakasVathmon.entries()) {
-    if (dedomena.score <= 0) {
-      continue;
-    }
     const eggrafo = eurethrio.eggrafa.get(eggrafoId);
-    if (!eggrafo) {
-      continue;
-    }
 
     apotelesmata.push({
       eggrafoId,

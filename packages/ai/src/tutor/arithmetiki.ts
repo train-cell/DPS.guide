@@ -32,7 +32,7 @@ export function kanonikopoie_arithmo(keimeno: string): string | null {
   const arge = xerismeno.startsWith(MINUS) ? MINUS : '';
   const xwris_yalon = xerismeno.replace(/^[+-]/u, '');
   const meros = xwris_yalon.split('.');
-  const akolytho = meros[0] ?? '';
+  const akolytho = meros[0];
   const ok_dekadikos = akolytho.length === 0 ? '0' : akolytho.replace(/^0+(?=\d)/u, '');
   const dekadika = (meros[1] ?? '').replace(/0+$/u, '');
   const timi = dekadika.length === 0 ? ok_dekadikos : `${ok_dekadikos}.${dekadika}`;

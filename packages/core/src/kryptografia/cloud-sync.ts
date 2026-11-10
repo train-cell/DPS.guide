@@ -35,7 +35,7 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
   let binary = '';
   const len = bytes.byteLength;
   for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i] ?? 0);
+    binary += String.fromCharCode(bytes[i]);
   }
   return btoa(binary);
 }
@@ -53,7 +53,7 @@ function bufferToHex(buffer: ArrayBuffer): string {
   const byteArray = new Uint8Array(buffer);
   let hex = '';
   for (let i = 0; i < byteArray.length; i++) {
-    const b = byteArray[i] ?? 0;
+    const b = byteArray[i];
     hex += b.toString(16).padStart(2, '0');
   }
   return hex;
@@ -198,14 +198,12 @@ export function epalithefsi_kai_epilysi_sygkrouseon(
     return 'sygkrousi';
   }
 
-  // 4. Απομακρυσμένο έχει μεγαλύτερη έκδοση
-  if (apomakrysmeno.ekdosiPaketou > topiko.ekdosiPaketou) {
+  // 4. Απομακρυσμένο έχει μεγαλύτερη έκδοση (η μοναδική περίπτωση που φτάνει εδώ)
+  else {
     if (apomakrysmenoXronos >= topikoXronos) {
       return 'apomakrysmeno_neotero';
     }
     // Χρονική ανακολουθία
     return 'sygkrousi';
   }
-
-  return 'sygkrousi';
 }

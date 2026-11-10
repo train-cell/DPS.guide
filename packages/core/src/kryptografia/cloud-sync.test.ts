@@ -98,6 +98,18 @@ describe('Zero-Knowledge Cloud Backup Sync (cloud-sync.ts)', () => {
       expect(apotelesma).toBe('sygkrousi');
     });
 
+    it('πετάει σφάλμα ακεραιότητας όταν το hash του manifest έχει τροποποιηθεί', async () => {
+      const paketo = await dimiourgia_sync_paketou(dokimastikaDedomena, kleidi, 4);
+      const tampered = {
+        ...paketo,
+        manifest: { ...paketo.manifest, hashDedomenon: 'tampered-0000000000000000000000000000000000000000000000000000000000000000' },
+      };
+
+      await expect(apokryptografisi_sync_paketou(tampered, kleidi)).rejects.toThrow(
+        /ακεραιότητας/
+      );
+    });
+
     it('εντοπίζει sygkrousi όταν υπάρχει χρονική ανακολουθία (μεγαλύτερη έκδοση αλλά παλαιότερος χρόνος)', () => {
       const topiko: DpsSyncManifest = {
         ...vasikoManifest,
@@ -112,6 +124,38 @@ describe('Zero-Knowledge Cloud Backup Sync (cloud-sync.ts)', () => {
 
       const apotelesma = epalithefsi_kai_epilysi_sygkrouseon(topiko, apomakrysmeno);
       expect(apotelesma).toBe('sygkrousi');
+    });
+
+    it('εντοπίζει sygkrousi όταν η απομακρυσμένη έκδοση είναι μεγαλύτερη αλλά ο χρόνος παλαιότερος', () => {
+      const topiko: DpsSyncManifest = {
+        ...vasikoManifest,
+        ekdosiPaketou: 6,
+        xronosSimioIso: '2026-10-27T11:00:00.000Z',
+      };
+      const apomakrysmeno: DpsSyncManifest = {
+        ...vasikoManifest,
+        ekdosiPaketou: 7,
+        xronosSimioIso: '2026-10-27T10:00:00.000Z', // νεότερη έκδοση αλλά παλαιότερο στιγμιότυπο
+      };
+
+      const apotelesma = epalithefsi_kai_epilysi_sygkrouseon(topiko, apomakrysmeno);
+      expect(apotelesma).toBe('sygkrousi');
+    });
+
+    it('επιστρέφει apomakrysmeno_neotero όταν η απομακρυσμένη έκδοση είναι μεγαλύτερη και ο χρόνος μεταγενέστερος', () => {
+      const topiko: DpsSyncManifest = {
+        ...vasikoManifest,
+        ekdosiPaketou: 5,
+        xronosSimioIso: '2026-10-27T10:00:00.000Z',
+      };
+      const apomakrysmeno: DpsSyncManifest = {
+        ...vasikoManifest,
+        ekdosiPaketou: 6,
+        xronosSimioIso: '2026-10-27T11:00:00.000Z',
+      };
+
+      const apotelesma = epalithefsi_kai_epilysi_sygkrouseon(topiko, apomakrysmeno);
+      expect(apotelesma).toBe('apomakrysmeno_neotero');
     });
   });
 });

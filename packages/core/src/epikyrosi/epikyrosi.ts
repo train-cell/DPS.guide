@@ -185,8 +185,8 @@ export function epikyrose_odigo(
 
   const parapompes: Parapompi[] = [];
   for (const match of markdown.matchAll(PATTERN_PARAPOMPIS)) {
-    const arxeio_id = match[1] ?? '';
-    const selida = Number.parseInt(match[2] ?? '', 10);
+    const arxeio_id = match[1] as string;
+    const selida = Number.parseInt(match[2] as string, 10);
     const entos = epitrepomenes.some(
       (p) => p.arxeio_id === arxeio_id && p.apo <= selida && selida <= p.eos
     );

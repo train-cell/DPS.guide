@@ -6,6 +6,8 @@ import {
   ELAXISTES_EROTISEIS_AUTOELGXOU,
   MEGISTES_EROTISEIS_AUTOELGXOU,
 } from '../src/prompts/index.js';
+import { YFOS_EXIGISIS_PROEPILOGI } from '../src/prompts/index.js';
+import { TITLOS_YFOS } from '../src/prompts/tropos/yfos.js';
 import { ftiaxe_enotita, ftiaxe_selides } from './voitheia.js';
 
 function eisodos_odigou() {
@@ -96,6 +98,57 @@ describe('prompt_odigou (P3)', () => {
 
   it('είναι ντετερμινιστικό για πανομοιότυπη είσοδο', () => {
     expect(prompt_odigou(eisodos_odigou())).toEqual(prompt_odigou(eisodos_odigou()));
+  });
+
+  it('ενσωματώνει το ύφος στις οδηγίες συστήματος με προεπιλογή κανονικό', () => {
+    const { sistima } = prompt_odigou(eisodos_odigou());
+    expect(sistima).toContain(TITLOS_YFOS);
+    expect(sistima).toContain(`yfos_exigisis: ${YFOS_EXIGISIS_PROEPILOGI}`);
+    expect(sistima).toContain('Τυπική ακαδημαϊκή γλώσσα');
+  });
+
+  it('ενσωματώνει το ύφος στις οδηγίες συστήματος όταν ορίζεται', () => {
+    const { sistima } = prompt_odigou({
+      ...eisodos_odigou(),
+      yfos_exigisis: 'texniko',
+    });
+    expect(sistima).toContain('τεχνικό τύπο');
+    expect(sistima).toContain('αυστηρή ορολογία');
+  });
+
+  it('ενσωματώνει τον τρόπο εξέτασης στα δεδομένα χρήστη όταν ορίζεται', () => {
+    const { xristis } = prompt_odigou({
+      ...eisodos_odigou(),
+      tropos: 'anoixta_vivlia',
+    });
+    expect(xristis).toContain('Τρόπος εξέτασης');
+    expect(xristis).toContain('tropos: anoixta_vivlia');
+    expect(xristis).toContain('ανοικτά βιβλία');
+  });
+
+  it('δεν ενσωματώνει τρόπο όταν δεν ορίζεται', () => {
+    const { xristis } = prompt_odigou(eisodos_odigou());
+    expect(xristis).not.toContain('tropos:');
+  });
+
+  it('δίνει σφάλμα για άγνωστο τρόπο εξέτασης', () => {
+    expect(() =>
+      prompt_odigou({ ...eisodos_odigou(), tropos: 'mi_egkyros_tropos' as any })
+    ).toThrow('P3: άγνωστος τρόπος εξέτασης «mi_egkyros_tropos»');
+  });
+
+  it('πέφτει όταν οι σελίδες ξεπερνούν το MAX_SELIDES_ANA_KLISI (40)', () => {
+    const selides = ftiaxe_selides(
+      Array.from({ length: 41 }, (_, i) => i),
+      (i) => `Κείμενο σελίδας ${i + 1}: λίστες και δένδρα.`
+    );
+
+    expect(() =>
+      prompt_odigou({
+        enotita: ftiaxe_enotita(),
+        selides,
+      })
+    ).toThrow(/MAX_SELIDES_ANA_KLISI/);
   });
 
   it('snapshot P3', () => {

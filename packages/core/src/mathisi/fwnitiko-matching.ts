@@ -72,9 +72,9 @@ export function ypologise_levenshtein(a: string, b: string): number {
     curr[0] = i;
     const charA = a[i - 1];
     for (let j = 1; j <= n; j++) {
-      const pJ = prev[j] ?? 0;
-      const cJ1 = curr[j - 1] ?? 0;
-      const pJ1 = prev[j - 1] ?? 0;
+      const pJ = prev[j];
+      const cJ1 = curr[j - 1];
+      const pJ1 = prev[j - 1];
       const kostos = charA === b[j - 1] ? 0 : 1;
       curr[j] = Math.min(
         pJ + 1,        // διαγραφή
@@ -87,7 +87,7 @@ export function ypologise_levenshtein(a: string, b: string): number {
     curr = temp;
   }
 
-  return prev[n] ?? 0;
+  return prev[n];
 }
 
 /**
@@ -96,7 +96,6 @@ export function ypologise_levenshtein(a: string, b: string): number {
 export function ypologise_omoiotita_levenshtein(a: string, b: string): number {
   if (a === b) return 1;
   const maxMikos = Math.max(a.length, b.length);
-  if (maxMikos === 0) return 1;
   const apostasi = ypologise_levenshtein(a, b);
   return Math.max(0, 1 - apostasi / maxMikos);
 }
@@ -106,8 +105,6 @@ export function ypologise_omoiotita_levenshtein(a: string, b: string): number {
  * είτε ως μέρος του κειμένου, είτε με ανοχή φωνητικού σφάλματος (fuzzy match >= 0.75).
  */
 function elegxos_lexis_kleidi(lexiKanoniki: string, apantisiKanoniki: string, apantisiTokens: readonly string[]): boolean {
-  if (!lexiKanoniki) return false;
-
   // 1. Ακριβής ύπαρξη ως token ή ως substring
   if (apantisiTokens.includes(lexiKanoniki) || apantisiKanoniki.includes(lexiKanoniki)) {
     return true;

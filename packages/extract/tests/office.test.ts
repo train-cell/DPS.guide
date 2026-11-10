@@ -4,7 +4,7 @@ import { ELAXISTES_LEKSEIS_SELIDAS, SelidaSchema } from '@dps/core';
 import { exagage_docx, exagage_pptx } from '../src/office/index.js';
 
 const ARXEIO_ID = 'arx-office-probe';
-const ENCODERS = new TextEncoder();
+export const ENCODERS = new TextEncoder();
 const OLE_MAGIKO = Uint8Array.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1]);
 const DOS_DATE = ((2024 - 1980) << 9) | (1 << 5) | 1;
 const DOS_TIME = 0;
@@ -51,7 +51,7 @@ interface EisodosZip {
   readonly dedomena: Uint8Array;
 }
 
-function store_zip(eisodoi: ReadonlyArray<EisodosZip>): Uint8Array {
+export function store_zip(eisodoi: ReadonlyArray<EisodosZip>): Uint8Array {
   const topika: Uint8Array[] = [];
   const kentrika: Uint8Array[] = [];
   let offset = 0;
