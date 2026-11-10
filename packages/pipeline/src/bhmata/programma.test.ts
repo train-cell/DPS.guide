@@ -54,17 +54,25 @@ function proodhos_keno(): ProodhosMathimatos {
   return { epilipses_enotiton: [], imerominies_epilipses: {} };
 }
 
+/**
+ * Γράφει τα αρχεία εισόδου: τα `rythmiseis.json` λαμβάνουν τις ρυθμίσεις
+ * προεπιλογής με επιτρέποντες τις αντικαταστάσεις (overriding).
+ */
 async function these_arxeia(
   apothiki: MnimiApothiki,
   xartis: XartisMathimatos,
   proodhos: ProodhosMathimatos,
-  rythmiseis: RythiseisProgrammatos = RYTHMISEIS_STEREOTYPEDES
+  rythmiseis: Record<string, unknown> = {}
 ): Promise<void> {
   const mathimata = await grapse_json(apothiki, ARXEIO_MATHIMATON, [
     { kodikos: 'M1', titlos: 'Δομές', url: '/M1', epilegmeno: true },
   ]);
   if (!mathimata.ok) throw new Error('aπέτυχε');
-  const ry = await grapse_json(apothiki, ARXEIO_RYTHMISEON, rythmiseis);
+  const ry = await grapse_json(
+    apothiki,
+    ARXEIO_RYTHMISEON,
+    { ...RYTHMISEIS_STEREOTYPEDES, ...rythmiseis }
+  );
   if (!ry.ok) throw new Error('aπέτυχε');
   const xa = await grapse_json(apothiki, arxeio_xarti('M1'), xartis);
   if (!xa.ok) throw new Error('aπέτυχε');
@@ -366,7 +374,7 @@ describe('programma — καρτα P2 (L04 + ρυθμίσεις → programma.js
     await these_arxeia(
       apothiki,
       xartis_test([enotita_test('e1', 300, 1)]),
-      { epilipses_enotiton: ['e1'] }
+      { epilipses_enotiton: ['e1'], imerominies_epilipses: {} }
     );
     const p = ftiaxe_eisodos(apothiki, new StatheriRologi(new Date('2026-10-09T08:00:00.000Z')));
 
