@@ -54,6 +54,15 @@ describe('path normalization (§5.3 rules)', () => {
     expect(res.ok).toBe(false);
   });
 
+  it('rejects path που δεν αφήνει κανένα τμήμα', () => {
+    const res = karnikopoise_diadromi('/');
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      expect(res.sfalma.minima).toBe('Η διαδρομή δεν περιέχει όνομα αρχείου');
+    }
+  });
+
   it('sanitizes forbidden characters / \\ : * ? " < > |', () => {
     const res = karnikopoise_diadromi('a:b*c?d"e<f>g|h\\i');
     expect(res.ok).toBe(true);

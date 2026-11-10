@@ -90,6 +90,9 @@ async function katevase_soma(apantisi: Response, prosorinos: string): Promise<nu
   }
   let megethos = 0;
   const katagrafi = createWriteStream(prosorinos);
+  // Ο ακροατής του 'close' μπαίνει ΠΡΙΝ το pipeline: το εκδίδεται μόλις
+  // κλείσει ο προορισμός, πριν αποδοθεί η υπόσχεση του pipeline.
+  const kleisimo = perimene_kleisimo(katagrafi);
   try {
     const metritis = new Transform({
       transform(tmima: Uint8Array, _kodikopoihsi, epanaklisi): void {
@@ -98,8 +101,10 @@ async function katevase_soma(apantisi: Response, prosorinos: string): Promise<nu
       },
     });
     await pipeline(katevase_reuma(apantisi.body), metritis, katagrafi);
+    await kleisimo;
     return megethos;
   } finally {
+    // Ο φάκελος είναι κλεισμένος μετά το pipeline — αδιάβαστη αναμονή.
     await perimene_kleisimo(katagrafi);
   }
 }

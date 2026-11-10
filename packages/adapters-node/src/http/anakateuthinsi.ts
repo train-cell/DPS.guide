@@ -136,12 +136,7 @@ function syndyasmos_simaton(
   };
 
   if (exoteriko !== undefined) {
-    if (exoteriko.aborted) {
-      akyrothike = true;
-      elegktis.abort();
-    } else {
-      exoteriko.addEventListener('abort', se_akyrosi_exoterikou, { once: true });
-    }
+    exoteriko.addEventListener('abort', se_akyrosi_exoterikou, { once: true });
   }
 
   return {

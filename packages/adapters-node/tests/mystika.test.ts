@@ -170,6 +170,11 @@ describe('KeyringMystika fallback', () => {
     expect(await mystika.pare('llm_api_key')).toBeNull();
   });
 
+  it('svise είναι no-op όταν το keyring δεν είναι διαθέσιμο', async () => {
+    const mystika = new KeyringMystika();
+    await expect(mystika.svise('llm_api_key')).resolves.toBeUndefined();
+  });
+
   it('pare falls back to env when the keyring throws (store locked)', async () => {
     orise_keyring_gia_elegxo(() => ({
       async getPassword(): Promise<string | null> {

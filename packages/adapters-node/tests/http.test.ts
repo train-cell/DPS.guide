@@ -621,6 +621,133 @@ describe('anakateuthinsi (με ψεύτικο εκδότη)', () => {
     expect(ena_keimeno).toBe(1);
     expect(dyo_keimeno).toBe(1);
   });
+
+  it('xronos_orio_ms: 0 → χωρίς χρονικό όριο (L126/L152 false)', async () => {
+    const ekdotis = dimiourgise_ekdoti([dimiourgise_apantisi(200, { url: 'http://127.0.0.1/teliko', keimeno: 'τελικό' })]);
+
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({ url: 'http://127.0.0.1/arxiki', xronos_orio_ms: 0 }),
+      ekdotis.ekdotis,
+      new CookieJar()
+    );
+
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi.keimeno).toBe('τελικό');
+    }
+  });
+
+  it('εξωτερικό σήμα χωρίς προ-ακύρωση (L138/L143/L155/L156)', async () => {
+    const elegktis = new AbortController();
+    const ekdotis = dimiourgise_ekdoti([dimiourgise_apantisi(200, { url: 'http://127.0.0.1/teliko', keimeno: 'τελικό' })]);
+
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({ url: 'http://127.0.0.1/arxiki', simatodotis: elegktis.signal }),
+      ekdotis.ekdotis,
+      new CookieJar()
+    );
+
+    expect(apotelesma.ok).toBe(true);
+    expect(ekdotis.kliseis()).toBe(1);
+  });
+
+  it('ακύρωση κατά την εκτέλεση → AKYROTHIKE (L351/L352)', async () => {
+    const elegktis = new AbortController();
+    const ekdotis: EkdotisAitimaton = async (aitima) => {
+      await new Promise<void>((lysi) => {
+        setTimeout(lysi, 30);
+      });
+      if (aitima.sima.aborted) {
+        throw new Error('ακυρώθηκε');
+      }
+      return dimiourgise_apantisi(200, { url: 'http://127.0.0.1/teliko', keimeno: 'τελικό' });
+    };
+    setTimeout(() => elegktis.abort(), 10);
+
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({ url: 'http://127.0.0.1/arxiki', simatodotis: elegktis.signal }),
+      ekdotis,
+      new CookieJar()
+    );
+
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AKYROTHIKE');
+    }
+  });
+
+  it('δεν έχει Cookie κεφαλίδα στον καλούντα (L165/L192 false)', async () => {
+    const ekdotis = dimiourgise_ekdoti([dimiourgise_apantisi(200, { url: 'http://127.0.0.1/teliko', keimeno: 'τελικό' })]);
+    const zakari = new CookieJar();
+    zakari.val(dimiourgise_cookie({ onoma: 'jar', timi: 'j', host: '127.0.0.1' }));
+
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({
+        url: 'http://127.0.0.1/arxiki',
+        kefalides: { 'content-type': 'application/json' },
+      }),
+      ekdotis.ekdotis,
+      zakari
+    );
+
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi.keimeno).toBe('τελικό');
+    }
+    expect(ekdotis.teleftaio()?.kefalides['Cookie']).toBe('jar=j');
+  });
+
+  it('κενή apantisi.url → teliko_url η τρέχουσα (L231 true)', async () => {
+    const ekdotis = dimiourgise_ekdoti([dimiourgise_apantisi(200, { url: '', keimeno: 'τελικό' })]);
+
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({ url: 'http://127.0.0.1/arxiki' }),
+      ekdotis.ekdotis,
+      new CookieJar()
+    );
+
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi.teliko_url).toBe('http://127.0.0.1/arxiki');
+    }
+  });
+
+  it('keimeno() ρίχνει σφάλμα → DIKTYO (L248)', async () => {
+    const ekdotis = async (): Promise<ApantisiEkdoti> =>
+      ({
+        url: 'http://127.0.0.1/teliko',
+        katastasi: 200,
+        kefalides: {},
+        keimeno: async () => {
+          throw new Error('δεν μπορώ');
+        },
+        dyadiko: async () => new Uint8Array(),
+      }) as never;
+
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({ url: 'http://127.0.0.1/arxiki' }),
+      ekdotis,
+      new CookieJar()
+    );
+
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+    }
+  });
+
+  it('άκυρο URL → MI_EGKYRO_SXIMA (L276)', async () => {
+    const apotelesma = await anakateuthinsi(
+      dimiourgise_basika({ url: 'όχι url' }),
+      dimiourgise_ekdoti([dimiourgise_apantisi(200)]).ekdotis,
+      new CookieJar()
+    );
+
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+  });
 });
 
 let server: Server;

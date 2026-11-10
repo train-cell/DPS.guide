@@ -1,10 +1,20 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AddressInfo } from 'node:net';
 import { createServer, type Server } from 'node:http';
-import { mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
+import { rmSync } from 'node:fs';
+import { mkdtemp, readdir, readFile, rm, realRm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { NodeKatevasmaPyli, dimiourgise_katevasma_pyli } from '../src/storage/index.js';
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const original = await importOriginal();
+  return { ...original, rm: vi.fn(), realRm: original.rm };
+});
+
+beforeEach(() => {
+  vi.mocked(rm).mockImplementation(async (...args: Parameters<typeof realRm>) => realRm(...args));
+});
 
 const DEDOMENA_DYADIKA = [0, 1, 2, 250, 255];
 const PERIEXOMENO_KEIMENOU = 'Περιεχόμενο αρχείου δοκιμής με τόνους';
@@ -21,7 +31,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await rm(riza, { recursive: true, force: true });
+  rmSync(riza, { recursive: true, force: true });
 });
 
 let server: Server;
@@ -56,6 +66,10 @@ beforeAll(async () => {
       case '/echo-cookie':
         apantisi.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
         apantisi.end(`cookie<${cookie}>`);
+        return;
+      case '/pefano':
+        apantisi.writeHead(302, { Location: '/pefano' });
+        apantisi.end();
         return;
       case '/sfalma-misasi':
         apantisi.writeHead(200, { 'Content-Length': '100' });
@@ -219,5 +233,137 @@ describe('NodeKatevasmaPyli', () => {
     const eggrafes = await arxeia_fakelou('.');
     expect(eggrafes).not.toContain('arga.bin');
     expect(eggrafes.filter((onoma) => onoma.startsWith('arga.bin.tmp'))).toEqual([]);
+  });
+
+  it('προ-ακυρωμένο σήμα → AKYROTHIKE χωρίς εκκίνηση (L128 true)', async () => {
+    const elegktis = new AbortController();
+    elegktis.abort();
+    const apotelesma = await pyli.katevase(diefthinsi('/keimeno'), 'akyr.bin', {}, elegktis.signal);
+
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AKYROTHIKE');
+      expect(apotelesma.sfalma.minima).toBe('Η λήψη ακυρώθηκε πριν από την εκκίνησή της');
+    }
+    const eggrafes = await arxeia_fakelou('.');
+    expect(eggrafes).not.toContain('akyr.bin');
+  });
+
+  it('άκυρο URL → MI_EGKYRO_SXIMA', async () => {
+    const apotelesma = await pyli.katevase('όχι url', 'kali.bin', {});
+
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+    const eggrafes = await arxeia_fakelou('.');
+    expect(eggrafes).not.toContain('kali.bin');
+  });
+
+  it('υπέρβαση ορίου ανακατευθύνσεων → DIKTYO', async () => {
+    const url = diefthinsi('/pefano');
+    const apotelesma = await pyli.katevase(url, 'pefano.txt', {});
+
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+      expect(apotelesma.sfalma.minima).toContain('Υπέρβαση μέγιστου αριθμού ανακατευθύνσεων');
+    }
+  });
+
+  it('διαβάζει κεφαλίδα Cookie με κεφαλαία (L45/L46 true)', async () => {
+    const apotelesma = await pyli.katevase(diefthinsi('/echo-cookie'), 'kapitala.txt', {
+      COOKIE: MYSTIKO_COOKIE,
+    });
+
+    expect(apotelesma.ok).toBe(true);
+    const keimeno = await readFile(path.join(riza, 'kapitala.txt'), 'utf8');
+    expect(keimeno).toBe(`cookie<${MYSTIKO_COOKIE}>`);
+  });
+
+  it('ενώνει το cookie του καλούντα με το jar (L64 false)', async () => {
+    const elegktis = vi.spyOn(global, 'fetch');
+    elegktis.mockImplementation(async () =>
+      new Response('ok', {
+        status: 200,
+        headers: { 'set-cookie': 'jar=1; Path=/', 'content-type': 'text/plain' },
+      })
+    );
+
+    const apotelesma = await pyli.katevase(diefthinsi('/echo'), 'sym.txt', {
+      Cookie: MYSTIKO_COOKIE,
+    });
+
+    elegktis.mockRestore();
+    expect(apotelesma.ok).toBe(true);
+  });
+
+  it('σώμα null → κενό αρχείο (L87 true)', async () => {
+    const elegktis = vi.spyOn(global, 'fetch');
+    elegktis.mockImplementation(async () => new Response());
+
+    const apotelesma = await pyli.katevase(diefthinsi('/keno'), 'keno2.bin', {});
+
+    elegktis.mockRestore();
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi.megethos).toBe(0);
+    }
+    const statistiko = await stat(path.join(riza, 'keno2.bin'));
+    expect(statistiko.size).toBe(0);
+  });
+
+  it('σφάλμα διαγραφής temp → απορροφάται (L195)', async () => {
+    const sfalma = new Error('δεν μπορώ να διαγράψω');
+    vi.mocked(rm).mockImplementationOnce(() => Promise.reject(sfalma));
+
+    const apotelesma = await pyli.katevase(diefthinsi('/keimeno'), 'lixi2.txt', {});
+
+    vi.mocked(rm).mockImplementation(async () => undefined);
+    expect(apotelesma.ok).toBe(true);
+  });
+
+  it('ενώνει το cookie του καλούντα με το jar (L45/L46/L64 false)', async () => {
+    const apotelesma = await pyli.katevase(diefthinsi('/anakateuthinsi'), 'syn.txt', {
+      Cookie: MYSTIKO_COOKIE,
+    });
+
+    expect(apotelesma.ok).toBe(true);
+    const keimeno = await readFile(path.join(riza, 'syn.txt'), 'utf8');
+    expect(keimeno).toBe(`teliko cookie<${MYSTIKO_COOKIE}; seed=abc>`);
+  });
+
+  it('δεν έχει Cookie κεφαλίδα στον καλούντα (L45 false)', async () => {
+    const apotelesma = await pyli.katevase(diefthinsi('/anakateuthinsi'), 'syn2.txt', {
+      Authorization: 'Bearer xristis',
+    });
+
+    expect(apotelesma.ok).toBe(true);
+    const keimeno = await readFile(path.join(riza, 'syn2.txt'), 'utf8');
+    expect(keimeno).toBe(`teliko cookie<seed=abc>`);
+  });
+
+  it('σώμα με cancel() που ρίχνει σφάλμα (L114)', async () => {
+    const elegktis = vi.spyOn(global, 'fetch');
+    elegktis.mockImplementation(async () => ({
+      status: 404,
+      headers: {
+        get: () => null,
+        getSetCookie: () => [],
+      },
+      body: {
+        cancel: async () => {
+          throw new Error('δεν γίνεται');
+        },
+      },
+    }));
+
+    const apotelesma = await pyli.katevase(diefthinsi('/den-vrethike'), 'kali.bin', {});
+
+    elegktis.mockRestore();
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    }
   });
 });
