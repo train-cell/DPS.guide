@@ -351,6 +351,181 @@ describe('xartis', () => {
     expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
     expect(llm.fortiseis).toBe(0);
   });
+
+  it('λείπει το περίγραμμα ενός αρχείου → συνεχίζει με τα άλλα (L39)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio1 = await these_perigramma(apothiki, PERIGRAMMA_ANTISKEPSI.tmimata);
+    const arxeio2 = await these_arxeio_keimeno(apothiki, [
+      selida(1, 'ένα δέντρο έχει ρίζα', arxeio_test('allo.docx').id),
+    ]);
+    await grapse_json(apothiki, arxeio_eurethriou(KODIKOS), [arxeio1, arxeio2]);
+
+    llm.orise({
+      kodikos_mathimatos: KODIKOS,
+      enotites: [
+        {
+          id: 'en1',
+          titlos: 'Λίστες',
+          piges: [{ arxeio_id: arxeio1.id, apo: 1, eos: 2 }],
+          ennoies: ['λίστα'],
+          proapaitoumenes: [],
+          seira: 1,
+          lepta_ektimisi: null,
+          apodosi_exetasis: null,
+        },
+      ],
+      ekdosi_prompt: 'p2@1',
+      dimiourgithike: '2026-10-09',
+    });
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await xartis(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.timi.enotites).toHaveLength(1);
+    expect(await apothiki.yparxei(arxeio_xarti(KODIKOS))).toBe(true);
+  });
+
+  it('υπάρχουν αρχεία αλλά δεν υπάρχουν περιγράμματα → DEN_VRETHIKE (L45)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_arxeio_keimeno(apothiki, [selida(1, 'μια λίστα', arxeio_test(DIADROMI).id)]);
+    await grapse_json(apothiki, arxeio_eurethriou(KODIKOS), [arxeio]);
+
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await xartis(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    expect(llm.fortiseis).toBe(0);
+  });
+
+  it('αποτυχία μοντέλου LLM → σφάλμα, όχι ημιτελές αποτέλεσμα (L64)', async () => {
+    const apothiki = new MnimiApothiki();
+    await these_perigramma(apothiki, PERIGRAMMA_ANTISKEPSI.tmimata);
+    const p = ftiaxe_eisodos_me_llm(apothiki, new ArgiosLlm(), new KatagrafiDiamnemata());
+
+    const apotelesma = await xartis(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    expect(await apothiki.yparxei(arxeio_xarti(KODIKOS))).toBe(false);
+  });
+
+  it('αποτυχία επικύρωσης → σφάλμα, όχι ημιτελές αποτέλεσμα (L74)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_perigramma(apothiki, PERIGRAMMA_ANTISKEPSI.tmimata);
+    llm.orise({
+      kodikos_mathimatos: KODIKOS,
+      enotites: [
+        {
+          id: 'en1',
+          titlos: 'Λίστες',
+          piges: [{ arxeio_id: arxeio.id, apo: 1, eos: 2 }],
+          ennoies: [],
+          proapaitoumenes: [],
+          seira: 1,
+          lepta_ektimisi: null,
+          apodosi_exetasis: null,
+        },
+        {
+          id: 'en1',
+          titlos: 'Λίστες',
+          piges: [{ arxeio_id: arxeio.id, apo: 1, eos: 2 }],
+          ennoies: [],
+          proapaitoumenes: [],
+          seira: 2,
+          lepta_ektimisi: null,
+          apodosi_exetasis: null,
+        },
+      ],
+      ekdosi_prompt: 'p2@1',
+      dimiourgithike: '2026-10-09',
+    });
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await xartis(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    expect(await apothiki.yparxei(arxeio_xarti(KODIKOS))).toBe(false);
+  });
+
+  it('πολλοί κύκλοι (> όριο) → αποτυχία ελέγχου γράφου (L86)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_perigramma(apothiki, PERIGRAMMA_ANTISKEPSI.tmimata);
+    const enotites: unknown[] = [
+      { id: 'a1', titlos: 'Α1', piges: [{ arxeio_id: arxeio.id, apo: 1, eos: 2 }], ennoies: [], proapaitoumenes: [{ enotita_id: 'a12', isxys: 'isxyri' as const }], seira: 1, lepta_ektimisi: null, apodosi_exetasis: null },
+    ];
+    for (let i = 2; i <= 12; i += 1) {
+      const proap = ['a1'];
+      for (let j = 1; j < i - 1; j += 1) proap.push(`a${j + 1}`);
+      enotites.push({
+        id: `a${i}`,
+        titlos: `A${i}`,
+        piges: [{ arxeio_id: arxeio.id, apo: 1, eos: 2 }],
+        ennoies: [],
+        proapaitoumenes: proap.map((id) => ({ enotita_id: id, isxys: 'isxyri' as const })),
+        seira: i,
+        lepta_ektimisi: null,
+        apodosi_exetasis: null,
+      });
+    }
+    llm.orise({
+      kodikos_mathimatos: KODIKOS,
+      enotites,
+      ekdosi_prompt: 'p2@1',
+      dimiourgithike: '2026-10-09',
+    });
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await xartis(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    expect(await apothiki.yparxei(arxeio_xarti(KODIKOS))).toBe(false);
+  });
+
+  it('αποτυχία εγγραφής → σφάλμα, όχι ημιτελές αποτέλεσμα (L118)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_perigramma(apothiki, PERIGRAMMA_ANTISKEPSI.tmimata);
+    llm.orise({
+      kodikos_mathimatos: KODIKOS,
+      enotites: [
+        {
+          id: 'en1',
+          titlos: 'Λίστες',
+          piges: [{ arxeio_id: arxeio.id, apo: 1, eos: 2 }],
+          ennoies: [],
+          proapaitoumenes: [],
+          seira: 1,
+          lepta_ektimisi: null,
+          apodosi_exetasis: null,
+        },
+      ],
+      ekdosi_prompt: 'p2@1',
+      dimiourgithike: '2026-10-09',
+    });
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+    apothiki.grapse_keimeno = async () => apotyxia('DIKTYO', 'Δεν γίνεται εγγραφή');
+
+    const apotelesma = await xartis(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+    expect(await apothiki.yparxei(arxeio_xarti(KODIKOS))).toBe(false);
+  });
 });
 
 describe('megethi', () => {
