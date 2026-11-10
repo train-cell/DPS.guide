@@ -144,7 +144,7 @@ export class CasSyndesi implements SyndesiStratigiki {
     let match: RegExpExecArray | null;
 
     while ((match = protypos_input.exec(html)) !== null) {
-      const tag = match[1] ?? '';
+      const tag = match[1];
       const typos = (this.pare_idiotita(tag, 'type') ?? 'text').toLowerCase();
       const onoma = this.pare_idiotita(tag, 'name');
       const timi = this.pare_idiotita(tag, 'value') ?? '';

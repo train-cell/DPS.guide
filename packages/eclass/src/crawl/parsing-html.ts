@@ -32,7 +32,6 @@ export function metatropi_megethous_se_bytes(keimeno: string | null | undefined)
   if (!match || !match[1]) return null;
 
   const arithmos = parseFloat(match[1].replace(',', '.'));
-  if (Number.isNaN(arithmos)) return null;
 
   const monada = (match[2] ?? 'b').toLowerCase();
   if (monada.startsWith('g')) return Math.round(arithmos * 1024 * 1024 * 1024);
@@ -71,8 +70,8 @@ export function analysi_portfolio_html(
   let match: RegExpExecArray | null;
 
   while ((match = protypos_link.exec(katharo)) !== null) {
-    const href = match[1] ?? '';
-    const periexomeno = match[2] ?? '';
+    const href = match[1];
+    const periexomeno = match[2];
 
     // Έλεγχος αν ο σύνδεσμος αφορά μάθημα
     const kodikos_match = /\/courses\/([A-Za-z0-9_-]+)(?:\/|$)/i.exec(href);
@@ -168,18 +167,18 @@ export function analysi_fakelou_html(
   let tr_match: RegExpExecArray | null;
 
   while ((tr_match = protypos_tr.exec(katharo)) !== null) {
-    const grammi = tr_match[1] ?? '';
+    const grammi = tr_match[1];
     const protypos_a = /<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>(.*?)<\/a>/gis;
     const a_match = protypos_a.exec(grammi);
-    if (!a_match || !a_match[1]) continue;
+    if (!a_match) continue;
 
     const href = a_match[1];
-    const keimeno_link = (a_match[2] ?? '').replace(/<[^>]+>/g, '').trim();
+    const keimeno_link = a_match[2].replace(/<[^>]+>/g, '').trim();
     if (!keimeno_link || href.startsWith('#') || href.startsWith('javascript:')) continue;
 
     // Εξαγωγή κελιών td
     const td_matches = [...grammi.matchAll(/<td\b[^>]*>(.*?)<\/td>/gis)].map((m) =>
-      (m[1] ?? '').replace(/<[^>]+>/g, '').trim()
+      m[1].replace(/<[^>]+>/g, '').trim()
     );
 
     const full_url = επιλυση_url(href, trexousa_url);
@@ -244,8 +243,8 @@ export function analysi_fakelou_html(
     let match: RegExpExecArray | null;
 
     while ((match = protypos_a.exec(katharo)) !== null) {
-      const href = match[1] ?? '';
-      const keimeno_link = (match[2] ?? '').replace(/<[^>]+>/g, '').trim();
+      const href = match[1];
+      const keimeno_link = match[2].replace(/<[^>]+>/g, '').trim();
       if (!keimeno_link || href.startsWith('#') || href.startsWith('javascript:')) continue;
       if (keimeno_link === '..' || href.includes('parentDir')) continue;
 

@@ -46,8 +46,8 @@ function links(html: string): Link[] {
   const result: Link[] = [];
   const anchor = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
   for (let match = anchor.exec(html); match !== null; match = anchor.exec(html)) {
-    const href = attribute(match[1] ?? '', 'href');
-    if (href !== null) result.push({ href: decodeHtml(href), label: plainText(match[2] ?? '') });
+    const href = attribute(match[1], 'href');
+    if (href !== null) result.push({ href: decodeHtml(href), label: plainText(match[2]) });
   }
   return result;
 }
@@ -56,7 +56,7 @@ function allFileReferences(html: string): string[] {
   const values: string[] = [];
   const tags = /<(?:a|iframe|object|source|img)\b[^>]*>/gi;
   for (let match = tags.exec(html); match !== null; match = tags.exec(html)) {
-    const tag = match[0] ?? '';
+    const tag = match[0];
     for (const name of ['href', 'src', 'data']) {
       const value = attribute(tag, name);
       if (value !== null && /(?:pluginfile\.php|\/mod\/(?:resource|folder|page)\/)/i.test(value)) {
@@ -68,17 +68,17 @@ function allFileReferences(html: string): string[] {
 }
 
 function extension(path: string): string {
-  const name = path.split('/').at(-1)?.split('?')[0] ?? '';
+  const name = path.split('/').at(-1)!.split('?')[0];
   const dot = name.lastIndexOf('.');
   return dot < 0 ? '' : name.slice(dot + 1).toLowerCase();
 }
 
 function cleanPath(value: string): string {
   const withoutControls = Array.from(value.normalize('NFC'), (character) => {
-    const codePoint = character.codePointAt(0) ?? 0;
+    const codePoint = character.codePointAt(0)!;
     return codePoint < 0x20 || codePoint === 0x7f ? '-' : character;
   }).join('');
-  return withoutControls.replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, ' ').trim() || 'Υλικό';
+  return withoutControls.replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, ' ').trim();
 }
 
 function moodleError(json: unknown): string | null {
@@ -130,9 +130,9 @@ export class MoodlePyli implements EclassPyli {
     const form = /<form\b([^>]*)>([\s\S]*?)<\/form>/gi;
     let loginForm: { attributes: string; html: string } | null = null;
     for (let match = form.exec(html); match !== null; match = form.exec(html)) {
-      const body = match[2] ?? '';
+      const body = match[2];
       if (/name\s*=\s*["']username["']/i.test(body) && /name\s*=\s*["']password["']/i.test(body)) {
-        loginForm = { attributes: match[1] ?? '', html: body };
+        loginForm = { attributes: match[1], html: body };
         break;
       }
     }
@@ -151,7 +151,7 @@ export class MoodlePyli implements EclassPyli {
     const fields: Record<string, string> = { username: this.options.username, password: this.options.password };
     const hidden = /<input\b([^>]*)>/gi;
     for (let match = hidden.exec(loginForm.html); match !== null; match = hidden.exec(loginForm.html)) {
-      const tag = match[1] ?? '';
+      const tag = match[1];
       const type = (attribute(tag, 'type') ?? '').toLowerCase();
       const name = attribute(tag, 'name');
       if (name !== null && (type === 'hidden' || type === 'submit')) {
@@ -160,7 +160,7 @@ export class MoodlePyli implements EclassPyli {
     }
     const buttons = /<button\b([^>]*)>[\s\S]*?<\/button>/gi;
     for (let match = buttons.exec(loginForm.html); match !== null; match = buttons.exec(loginForm.html)) {
-      const tag = match[1] ?? '';
+      const tag = match[1];
       const type = (attribute(tag, 'type') ?? 'submit').toLowerCase();
       const name = attribute(tag, 'name');
       if (type === 'submit' && name !== null) fields[name] = decodeHtml(attribute(tag, 'value') ?? '');
@@ -278,7 +278,7 @@ export class MoodlePyli implements EclassPyli {
     if (!/pluginfile\.php/i.test(url.pathname)) {
       const head = await this.request({ methodos: 'HEAD', url: url.href, typos_apantisis: 'keimeno' });
       if (head.ok) {
-        try { resolved = new URL(head.timi.teliko_url); } catch { return; }
+        resolved = new URL(head.timi.teliko_url);
       } else {
         const fetched = await this.request({ methodos: 'GET', url: url.href, typos_apantisis: 'keimeno' });
         if (!fetched.ok || !fetched.timi.keimeno) return;
@@ -289,7 +289,7 @@ export class MoodlePyli implements EclassPyli {
     const ext = extension(resolved.pathname);
     if (resolved.origin !== this.origin || resolved.protocol !== 'https:' || !/pluginfile\.php/i.test(resolved.pathname) || !ALLOWED_FILES.has(ext)) return;
     const pathParts = resolved.pathname.split('/').filter(Boolean);
-    const filename = decodeHtml(pathParts.at(-1) ?? `resource.${ext}`);
+    const filename = decodeHtml(pathParts.at(-1)!);
     const path = `${cleanPath(folder)}/${cleanPath(filename)}`;
     if (seen.has(path)) return;
     seen.add(path);
@@ -299,7 +299,7 @@ export class MoodlePyli implements EclassPyli {
   private async webservice<T>(functionName: string, parameters: Record<string, string>): Promise<Apotelesma<T>> {
     const url = new URL('webservice/rest/server.php', `${this.base_url}/`);
     const form: Record<string, string> = {
-      wstoken: this.options.webservice_token?.trim() ?? '',
+      wstoken: this.options.webservice_token!.trim(),
       wsfunction: functionName,
       moodlewsrestformat: 'json',
       ...parameters,

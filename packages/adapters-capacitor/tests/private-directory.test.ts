@@ -153,4 +153,112 @@ describe('ensurePrivateDataDirectory', () => {
     expect(h.calls).toEqual([]);
     expect(h.files.has('DATA:DPS.guide/.dps-vault/header.json')).toBe(true);
   });
+
+  it('δεν έχει migration όταν κληθεί δύο φορές με το ίδιο root (L107)', async () => {
+    seedLegacyVault();
+    const { ensurePrivateDataDirectory } = await import('../src/storage/private-directory.js');
+
+    await ensurePrivateDataDirectory('DPS.guide');
+    await ensurePrivateDataDirectory('DPS.guide');
+
+    expect(h.calls).toContain('rename:DATA:DPS.guide>LIBRARY_NO_CLOUD:DPS.guide');
+  });
+
+  it('readdir με μη-αντικείμενο σφάλμα (L18/L20 true)', async () => {
+    const plugin = await import('@capacitor/filesystem');
+    vi.mocked(plugin.Filesystem.readdir).mockImplementationOnce(async () => {
+      throw 'μη διαθέσιμο';
+    });
+    const { ensurePrivateDataDirectory } = await import('../src/storage/private-directory.js');
+
+    await expect(ensurePrivateDataDirectory('DPS.guide')).rejects.toThrow('μη διαθέσιμο');
+  });
+
+  it('readdir με μήνυμα "does not exist" αλλά άλλο κωδικό (L21 true)', async () => {
+    seedLegacyVault();
+    const plugin = await import('@capacitor/filesystem');
+    vi.mocked(plugin.Filesystem.readdir).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('does not exist'), { code: 'OTHER' });
+    });
+    const { ensurePrivateDataDirectory } = await import('../src/storage/private-directory.js');
+
+    await ensurePrivateDataDirectory('DPS.guide');
+
+    // isMissing → false μέσω μηνύματος, το legacy δεν μετακινείται
+    expect(h.calls).toEqual([]);
+  });
+
+  it('stat: η ρίζα είναι αρχείο → σφάλμα (L64)', async () => {
+    seedLegacyVault();
+    h.directories.delete('LIBRARY_NO_CLOUD:DPS.guide');
+    h.files.set('LIBRARY_NO_CLOUD:DPS.guide', 'occupied');
+    const { ensurePrivateDataDirectory } = await import('../src/storage/private-directory.js');
+
+    await expect(ensurePrivateDataDirectory('DPS.guide')).rejects.toThrow(
+      'A private storage path is occupied by a file.'
+    );
+  });
+
+  it('stat ρίχνει μη-αντικείμενο → δεν μετατρέπει το σφάλμα (L66)', async () => {
+    seedLegacyVault();
+    const plugin = await import('@capacitor/filesystem');
+    vi.mocked(plugin.Filesystem.stat).mockImplementationOnce(async () => {
+      throw 'μη διαθέσιμο';
+    });
+    const { ensurePrivateDataDirectory } = await import('../src/storage/private-directory.js');
+
+    await expect(ensurePrivateDataDirectory('DPS.guide')).rejects.toThrow('μη διαθέσιμο');
+  });
+
+  it('legacy vault κενό → readLegacyTree null (L48/L73)', async () => {
+    const { ensurePrivateDataDirectory } = await import('../src/storage/private-directory.js');
+
+    await ensurePrivateDataDirectory('DPS.guide');
+
+    expect(h.calls).toEqual([]);
+  });
+
+  it('migration: το αρχείο υπάρχει ήδη → continue (L92 true)', async () => {
+    seedLegacyVault();
+    h.directories.add('LIBRARY_NO_CLOUD:DPS.guide');
+    h.files.set('LIBRARY_NO_CLOUD:DPS.guide/.dps-vault/header.json', 'υπάρχουσα');
+    const { ensurePrivateDataDirectory } = await import('../src/storage/private-directory.js');
+
+    await ensurePrivateDataDirectory('DPS.guide');
+
+    expect(h.files.get('LIBRARY_NO_CLOUD:DPS.guide/.dps-vault/header.json')).toBe('υπάρχουσα');
+    expect(h.calls.filter((k) => k.startsWith('copy:'))).toEqual([]);
+  });
+
+  it('stat: ο φάκελος υπάρχει ήδη → directory (L64 false)', async () => {
+    seedLegacyVault();
+    h.directories.add('LIBRARY_NO_CLOUD:DPS.guide');
+    const { ensurePrivateDataDirectory } = await import('../src/storage/private-directory.js');
+
+    await ensurePrivateDataDirectory('DPS.guide');
+
+    expect(h.calls).toContain('mkdir:LIBRARY_NO_CLOUD:DPS.guide/.dps-vault');
+  });
+
+  it('readdir με μήνυμα που δεν ταιριάζει → isMissing false (L21 false)', async () => {
+    seedLegacyVault();
+    const plugin = await import('@capacitor/filesystem');
+    vi.mocked(plugin.Filesystem.readdir).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('δεν βρέθηκε'), { code: 'OTHER' });
+    });
+    const { ensurePrivateDataDirectory } = await import('../src/storage/private-directory.js');
+
+    await expect(ensurePrivateDataDirectory('DPS.guide')).rejects.toThrow('δεν βρέθηκε');
+  });
+
+  it('readdir με message null → `??` false (L21 false)', async () => {
+    seedLegacyVault();
+    const plugin = await import('@capacitor/filesystem');
+    vi.mocked(plugin.Filesystem.readdir).mockImplementationOnce(async () => {
+      throw Object.assign(new Error(), { message: null, code: 'OTHER' });
+    });
+    const { ensurePrivateDataDirectory } = await import('../src/storage/private-directory.js');
+
+    await expect(ensurePrivateDataDirectory('DPS.guide')).rejects.toThrow();
+  });
 });

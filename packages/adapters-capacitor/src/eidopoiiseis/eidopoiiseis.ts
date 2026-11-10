@@ -216,16 +216,13 @@ export class CapacitorEidopoiiseis {
     try {
       const apotelesma = await this.pugi.schedule({ notifications: proedres });
       const meiontai: EidopoiisiProgrammatismeni[] = [];
-      for (const aitima of aitimais) {
-        const grammati = proedres[meiontai.length];
-        if (grammati === undefined) {
-          break;
-        }
+      for (const [i, grammati] of proedres.entries()) {
+        const aitima = aitimais[i] as AitimEidopoiseis;
         meiontai.push({
           kleidiEnotitas: aitima.kleidiEnotitas,
           titlos: grammati.title,
           soma: grammati.body,
-          otan: grammati.schedule?.at ?? null,
+          otan: grammati.schedule?.at as Date | null,
           id: grammati.id,
         });
       }

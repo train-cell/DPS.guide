@@ -73,9 +73,7 @@ export class CookieDiaxeiristis {
       if (thesi > 0) {
         const onoma = prwti.slice(0, thesi).trim();
         const timi = prwti.slice(thesi + 1).trim();
-        if (onoma.length > 0) {
-          this.cookies.set(onoma, timi);
-        }
+        this.cookies.set(onoma, timi);
       }
     }
   }

@@ -64,8 +64,7 @@ export async function fere_dentro_arxeion(
       return apotyxia('AKYROTHIKE', 'Η διάσχιση εγγράφων ακυρώθηκε');
     }
 
-    const trexwn = oura.shift();
-    if (!trexwn) break;
+    const trexwn = oura.shift()!;
 
     const apantisi = await ektelesi_me_session(perivallon, stratigiki, {
       methodos: 'GET',

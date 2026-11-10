@@ -243,4 +243,416 @@ describe('TopikiSyndesi (L14)', () => {
       expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
     }
   });
+
+  it('στέλνει υπάρχον cookie στο GET', async () => {
+    let dektika_kefalides: Record<string, string> = {};
+
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      dektika_kefalides = { ...a.kefalides };
+      if (a.methodos === 'POST') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+          kefalides: {},
+          keimeno: '<html><body>OK</body></html>',
+        };
+      }
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+        kefalides: {},
+        keimeno: '<form action="/main/login_form.php"><input type="password" name="pass"></form>',
+      };
+    });
+
+    cookie_diaxeiristis.apothikefse('PHPSESSID', 'pre_existing');
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(dektika_kefalides['cookie']).toBe('PHPSESSID=pre_existing');
+    expect(res.ok).toBe(true);
+  });
+
+  it('σφάλμα δικτύου στο POST -> DIKTYO', async () => {
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      if (a.methodos === 'GET') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: '<form action="/main/login_form.php"><input type="password" name="pass"></form>',
+        };
+      }
+      throw new Error('Connection refused');
+    });
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DIKTYO');
+    }
+    expect(http.kliseis.length).toBe(2); // 1 GET + 1 POST
+  });
+
+  it('POST με φόρμα σύνδεσης στο response -> AUTH_APOTYXIA', async () => {
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      if (a.methodos === 'GET') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: '<form action="/main/login_form.php"><input type="password" name="pass"></form>',
+        };
+      }
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<form action="/main/portfolio.php"><input type="password" name="pass"></form>',
+      };
+    });
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+    }
+  });
+
+  it('form action απόλυτο (http) -> χρησιμοποιείται ως έχει', async () => {
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      if (a.methodos === 'GET') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: '<form action="https://sso.unipi.gr/login" method="post"><input name="uname"></form>',
+        };
+      }
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body>OK</body></html>',
+      };
+    });
+    http.orise_apantisi('sso.unipi.gr/login', (a: HttpAitima): HttpApantisi => {
+      expect(a.url).toBe('https://sso.unipi.gr/login');
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body>OK</body></html>',
+      };
+    });
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(true);
+  });
+
+  it('form action σχετική (χωρίς /) -> συνθέτει με base_url', async () => {
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      if (a.methodos === 'GET') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: '<form action="login" method="post"><input name="uname"></form>',
+        };
+      }
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body>OK</body></html>',
+      };
+    });
+    http.orise_apantisi('/main/login', (a: HttpAitima): HttpApantisi => {
+      expect(a.url).toBe(`${VASIKO_URL_ECLASS}/main/login`);
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body>OK</body></html>',
+      };
+    });
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(true);
+  });
+
+  it('input χωρίς name -> παραλείπεται από τα πεδία', async () => {
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      if (a.methodos === 'GET') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: `
+            <form action="/main/login_form.php">
+              <input type="text" name="uname">
+              <input type="text">
+              <input type="password" name="pass">
+            </form>
+          `,
+        };
+      }
+      expect(a.soma_forma).toEqual({ uname: 'u', pass: 'p' });
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body>OK</body></html>',
+      };
+    });
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(true);
+  });
+
+  it('input text με διαφορετικό όνομα -> η else-if δεν παίρνει', async () => {
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      if (a.methodos === 'GET') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: `
+            <form action="/main/login_form.php">
+              <input type="text" name="onoma_xristi">
+              <input type="text" name="epitheto">
+            </form>
+          `,
+        };
+      }
+      expect(a.soma_forma).toEqual({ onoma_xristi: 'u', pass: 'p' });
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body>OK</body></html>',
+      };
+    });
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(true);
+  });
+
+  it('response GET χωρίς keimeno -> συνεχίζει με κενό', async () => {
+    http.orise_apantisi('/main/login_form.php', (): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+      kefalides: {},
+    }));
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+    }
+  });
+
+  it('response POST χωρίς keimeno -> φόρμα σύνδεσης', async () => {
+    http.orise_apantisi('/main/login_form.php', (): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+      kefalides: {},
+      keimeno: '<form action="/main/login_form.php"><input type="password" name="pass"></form>',
+    }));
+    http.orise_apantisi('/main/login_form.php', (): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+      kefalides: {},
+    }));
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+    }
+  });
+
+  it('ανακατεύθυνση σε login μετά το POST -> AUTH_APOTYXIA', async () => {
+    http.orise_apantisi('/main/login_form.php', (): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+      kefalides: {},
+      keimeno: '<form action="/main/login_form.php"><input type="password" name="pass"></form>',
+    }));
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+      kefalides: {},
+      keimeno: '<form action="/main/login_form.php"><input type="password" name="pass"></form>',
+    }));
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+    }
+  });
+
+  it('form χωρίς action -> fallback', async () => {
+    let metritis = 0;
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      if (a.methodos === 'GET') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: '<form><input type="text" name="uname"></form>',
+        };
+      }
+      metritis += 1;
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body>OK</body></html>',
+      };
+    });
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(true);
+    expect(metritis).toBe(1);
+  });
+
+  it('input χωρίς type -> text, input χωρίς name -> παραλείπεται', async () => {
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      if (a.methodos === 'GET') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: `
+            <form action="/main/login_form.php">
+              <input name="uname">
+              <input type="password" name="pass">
+              <input type="hidden" name="csrf_token" value="xyz">
+              <button type="submit" name="login">Είσοδος</button>
+            </form>
+          `,
+        };
+      }
+      expect(a.soma_forma).toMatchObject({
+        uname: 'u',
+        pass: 'p',
+        csrf_token: 'xyz',
+        login: '',
+      });
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body>OK</body></html>',
+      };
+    });
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(true);
+  });
+
+  it('button χωρίς type -> submit, button χωρίς name -> παραλείπεται', async () => {
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      if (a.methodos === 'GET') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: `
+            <form action="/main/login_form.php">
+              <input type="text" name="uname">
+              <button name="login">Είσοδος</button>
+              <button type="reset">Cancel</button>
+            </form>
+          `,
+        };
+      }
+      expect(a.soma_forma).toMatchObject({
+        uname: 'u',
+        login: '',
+      });
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body>OK</body></html>',
+      };
+    });
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(true);
+  });
+
+  it('pare_idiotita: τιμή χωρίς εισαγωγικά', async () => {
+    http.orise_apantisi('/main/login_form.php', (a: HttpAitima): HttpApantisi => {
+      if (a.methodos === 'GET') {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: '<form action=/main/login_form.php><input name=usr></form>',
+        };
+      }
+      expect(a.soma_forma).toMatchObject({ usr: 'u' });
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<html><body>OK</body></html>',
+      };
+    });
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, base_url: VASIKO_URL_ECLASS, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(true);
+  });
+
+  it('χωρίς base_url -> VASIKO_URL_ECLASS', async () => {
+    http.orise_apantisi('/main/login_form.php', (): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+      kefalides: {},
+      keimeno: '<form action="/main/login_form.php"><input type="password" name="pass"></form>',
+    }));
+    http.orise_apantisi('/main/login_form.php', (): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+      kefalides: {},
+      keimeno: '<html><body>OK</body></html>',
+    }));
+
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'u', kodikos: 'p' });
+    const res = await stratigiki.syndesi({ http, cookie_diaxeiristis });
+
+    expect(res.ok).toBe(true);
+    expect(http.kliseis[0].url).toBe(`${VASIKO_URL_ECLASS}/main/login_form.php`);
+  });
 });

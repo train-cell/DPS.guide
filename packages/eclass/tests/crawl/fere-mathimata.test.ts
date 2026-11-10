@@ -195,4 +195,61 @@ describe('fere_mathimata (L15)', () => {
       expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
     }
   });
+
+  it('αποτυχία αιτήματος μέσω ektelesi_me_session -> επιστρέφει το σφάλμα (L29/L30)', async () => {
+    const apotyxi_stratigiki: SyndesiStratigiki = {
+      async syndesi(perivallon: AuthPerivallon): Promise<Apotelesma<void>> {
+        return {
+          ok: false,
+          sfalma: { kodikos: 'AUTH_APOTYXIA', minima: 'Αποτυχία σύνδεσης' },
+        };
+      },
+    };
+
+    const res = await fere_mathimata(perivallon, apotyxi_stratigiki);
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+    }
+  });
+
+  it('response χωρίς keimeno -> κενό κείμενο', async () => {
+    cookie_diaxeiristis.apothikefse('PHPSESSID', 'valid_sess');
+
+    http.orise_apantisi('/main/portfolio.php', (): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+      kefalides: {},
+    }));
+
+    const res = await fere_mathimata(perivallon, stratigiki);
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    }
+  });
+
+  it('χωρίς base_url χρησιμοποιεί το VASIKO_URL_ECLASS (L18)', async () => {
+    cookie_diaxeiristis.apothikefse('PHPSESSID', 'valid_sess');
+    const perivallon2: AuthPerivallon = {
+      http,
+      cookie_diaxeiristis,
+    };
+
+    http.orise_apantisi('/main/portfolio.php', (): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+      kefalides: {},
+      keimeno: '<a href="/courses/PLI101/">Μάθημα PLI101</a>',
+    }));
+
+    const res = await fere_mathimata(perivallon2, stratigiki);
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi[0]?.kodikos).toBe('PLI101');
+    }
+  });
 });

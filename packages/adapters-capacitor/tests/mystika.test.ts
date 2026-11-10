@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { SecureStorage } from '@aparajita/capacitor-secure-storage';
-import { CapacitorMystikaPyli } from '../src/mystika/idiotiki-periohi.js';
+import { CapacitorMystikaPyli, dimiourgise_mystika_pyli } from '../src/mystika/idiotiki-periohi.js';
 
 const h = vi.hoisted(() => {
   const timi = new Map<string, string>();
@@ -108,6 +108,11 @@ describe('CapacitorMystikaPyli', () => {
     h.sfalma_remove = true;
     const mystika = new CapacitorMystikaPyli();
     await expect(mystika.svise('eclass_kodikos')).resolves.toBeUndefined();
+  });
+
+  it('dimiourgise_mystika_pyli (L103)', () => {
+    const mystika = dimiourgise_mystika_pyli();
+    expect(mystika).toBeInstanceOf(CapacitorMystikaPyli);
   });
 
   it('svise αφαιρεί την αποθηκευμένη τιμή', async () => {

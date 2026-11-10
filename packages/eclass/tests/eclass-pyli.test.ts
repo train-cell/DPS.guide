@@ -123,4 +123,24 @@ describe('DpsEclassPyli (Gateway Contract)', () => {
     const exei_apothiki = await apothiki.yparxei('PLI101/arxeia/ergasia.pdf');
     expect(exei_apothiki).toBe(true);
   });
+
+  it('συντακτής με προεπιλογή cookie_diaxeiristis και base_url', () => {
+    const stratigiki = new TopikiSyndesi({ onoma_xristi: 'foititis', kodikos: 'mystiko123' });
+    const pyli2 = new DpsEclassPyli({ http, stratigiki });
+    expect(pyli2.cookie_diaxeiristis instanceof CookieDiaxeiristis).toBe(true);
+    expect(pyli2.base_url).toBe(VASIKO_URL_ECLASS);
+  });
+
+  it('getter http', () => {
+    expect(pyli.http).toBe(http);
+  });
+
+  it('pare_kefalides_lipshs: με cookie', () => {
+    pyli.cookie_diaxeiristis.apothikefse('session', 'abc');
+    expect(pyli.pare_kefalides_lipshs()).toEqual({ cookie: 'session=abc' });
+  });
+
+  it('pare_kefalides_lipshs: χωρίς cookie', () => {
+    expect(pyli.pare_kefalides_lipshs()).toEqual({});
+  });
 });

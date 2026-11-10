@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Filesystem } from '@capacitor/filesystem';
-import { CapacitorApothiki, apo_base64, se_base64 } from '../src/storage/apothiki.js';
+import { CapacitorApothiki, apo_base64, dimiourgise_apothiki_pyli, se_base64 } from '../src/storage/apothiki.js';
+import { ensurePrivateDataDirectory } from '../src/storage/private-directory.js';
 
 /** Κοινό in-memory filesystem για το mock του plugin. */
 const h = vi.hoisted(() => {
@@ -115,9 +116,30 @@ vi.mock('@capacitor/filesystem', () => {
 
 vi.mock('@capacitor/core', () => ({ Capacitor: { getPlatform: () => 'android' } }));
 
+vi.mock('../src/storage/private-directory.js', async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    ensurePrivateDataDirectory: vi.fn(original.ensurePrivateDataDirectory),
+  };
+});
+
 function diabase(elafry: string, dedomena: string): void {
   h.arxeia.set(elafry, dedomena);
 }
+
+beforeEach(() => {
+  h.arxeia.clear();
+  h.fakeloi.clear();
+  h.kliseis.length = 0;
+  vi.mocked(Filesystem.readFile).mockClear();
+  vi.mocked(Filesystem.writeFile).mockClear();
+  vi.mocked(Filesystem.deleteFile).mockClear();
+  vi.mocked(Filesystem.mkdir).mockClear();
+  vi.mocked(Filesystem.stat).mockClear();
+  vi.mocked(Filesystem.rename).mockClear();
+  vi.mocked(Filesystem.readdir).mockClear();
+});
 
 describe('se_base64 / apo_base64', () => {
   it('κάνουν round-trip δυαδικών δεδομένων', () => {
@@ -137,13 +159,6 @@ describe('se_base64 / apo_base64', () => {
 });
 
 describe('CapacitorApothiki', () => {
-  beforeEach(() => {
-    h.arxeia.clear();
-    h.fakeloi.clear();
-    h.kliseis.length = 0;
-    vi.mocked(Filesystem.readFile).mockClear();
-  });
-
   it('γράφει και διαβάζει κείμενο με κωδικοποίηση UTF-8', async () => {
     const apothiki = new CapacitorApothiki('');
     const egkrisi = await apothiki.grapse_keimeno('mathimata.json', 'κόσμος');
@@ -250,5 +265,270 @@ describe('CapacitorApothiki', () => {
     const apothiki = new CapacitorApothiki('DPS.guide');
     await apothiki.grapse_keimeno('a.json', '1');
     expect(h.arxeia.has('DPS.guide/a.json')).toBe(true);
+  });
+});
+
+describe('σφάλματα', () => {
+  it('readFile: μη-αντικείμενο σφάλμα (L44/br L43 true)', async () => {
+    vi.mocked(Filesystem.readFile).mockImplementationOnce(async () => {
+      throw 'δεν είναι σφάλμα';
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diavase_keimeno('a.json');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+    }
+  });
+
+  it('readFile: κωδικός μη string (br L47 false)', async () => {
+    vi.mocked(Filesystem.readFile).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('unknown'), { code: 42 });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diavase_keimeno('a.json');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+    }
+  });
+
+  it('readFile: μήνυμα "does not exist" με άλλο κωδικό (br L54 true)', async () => {
+    vi.mocked(Filesystem.readFile).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('does not exist'), { code: 'OTHER' });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diavase_keimeno('a.json');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    }
+  });
+
+  it('tixaio_id: fallback χωρίς crypto (L89)', async () => {
+    vi.stubGlobal('crypto', undefined);
+    try {
+      const apothiki = new CapacitorApothiki('');
+      await apothiki.grapse_keimeno('crypto-fallback.json', 'x');
+      expect(h.arxeia.has('crypto-fallback.json')).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('diavase_keimeno: non-string data (L145)', async () => {
+    vi.mocked(Filesystem.readFile).mockImplementationOnce(async () => ({ data: 42 } as never));
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diavase_keimeno('a.json');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+    }
+  });
+
+  it('diavase_keimeno: άκυρη διαδρομή → MI_EGKYRO_SXIMA (L153/L154)', async () => {
+    vi.mocked(Filesystem.readFile).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('invalid path'), { code: 'OS-PLUG-FILE-0006' });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diavase_keimeno('a.json');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+  });
+
+  it('diavase_keimeno: άλλος κωδικός → AGNOSTO (L156)', async () => {
+    vi.mocked(Filesystem.readFile).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('unknown'), { code: 'OS-PLUG-FILE-0001' });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diavase_keimeno('a.json');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+    }
+  });
+
+  it('diavase_dyadiko: άκυρη διαδρομή (L162/L163)', async () => {
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diavase_dyadiko('../ekso.json');
+    expect(apotelesma.ok).toBe(false);
+    expect(vi.mocked(Filesystem.readFile)).not.toHaveBeenCalled();
+  });
+
+  it('diavase_dyadiko: non-string data (L174)', async () => {
+    vi.mocked(Filesystem.readFile).mockImplementationOnce(async () => ({ data: 42 } as never));
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diavase_dyadiko('a.json');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+    }
+  });
+
+  it('diavase_dyadiko: DEN_VRETHIKE (L179/L180)', async () => {
+    vi.mocked(Filesystem.readFile).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('does not exist'), { code: 'OS-PLUG-FILE-0008' });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diavase_dyadiko('a.json');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    }
+  });
+
+  it('diavase_dyadiko: άλλος κωδικός → AGNOSTO (L182)', async () => {
+    vi.mocked(Filesystem.readFile).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('unknown'), { code: 'OS-PLUG-FILE-0001' });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diavase_dyadiko('a.json');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+    }
+  });
+
+  it('grapse: άκυρη διαδρομή (L201/L202)', async () => {
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.grapse_keimeno('../ekso.json', 'x');
+    expect(apotelesma.ok).toBe(false);
+    expect(vi.mocked(Filesystem.writeFile)).not.toHaveBeenCalled();
+  });
+
+  it('grapse: AGNOSTO σφάλμα εγγραφής (L233)', async () => {
+    vi.mocked(Filesystem.writeFile).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('write failed'), { code: 'OS-PLUG-FILE-0001' });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.grapse_keimeno('a.json', 'x');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+      expect(apotelesma.sfalma.minima).toContain('a.json');
+    }
+  });
+
+  it('yparxei: άκυρη διαδρομή → false (L242)', async () => {
+    const apothiki = new CapacitorApothiki('');
+    expect(await apothiki.yparxei('../ekso.json')).toBe(false);
+  });
+
+  it('yparxei: σφάλμα secure directory → false (L248)', async () => {
+    vi.mocked(ensurePrivateDataDirectory).mockImplementationOnce(async () => {
+      throw new Error('secure storage failed');
+    });
+    const apothiki = new CapacitorApothiki('');
+    expect(await apothiki.yparxei('a.json')).toBe(false);
+  });
+
+  it('lista: άκυρη διαδρομή (L254/L255)', async () => {
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.lista('../ekso.json');
+    expect(apotelesma.ok).toBe(false);
+  });
+
+  it('lista: σφάλμα secure directory → AGNOSTO (L260)', async () => {
+    vi.mocked(ensurePrivateDataDirectory).mockImplementationOnce(async () => {
+      throw new Error('secure storage failed');
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.lista('PLI101');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+    }
+  });
+
+  it('lista: readdir αποτυγχάνει → AGNOSTO (L263/L280/L284)', async () => {
+    vi.mocked(Filesystem.readdir).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('read failed'), { code: 'OS-PLUG-FILE-0001' });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.lista('PLI101');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+      expect(apotelesma.sfalma.minima).toContain('PLI101');
+    }
+  });
+
+  it('lista: readdir δεν βρήκε → κενό (L281/L282)', async () => {
+    vi.mocked(Filesystem.readdir).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('does not exist'), { code: 'OS-PLUG-FILE-0008' });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.lista('PLI101');
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi).toEqual([]);
+    }
+  });
+
+  it('lista: μη τυπικός τύπος αρχείου (L300 false)', async () => {
+    vi.mocked(Filesystem.readdir).mockImplementationOnce(async () => {
+      return {
+        files: [{ name: 'symlink', type: 'symlink' as never, size: 0, mtime: 0, ctime: 0, uri: 'file://PLI101/symlink' }],
+      } as never;
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.lista('PLI101');
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi).toEqual([]);
+    }
+  });
+
+  it('lista: αναδρομική αποτυχία → AGNOSTO (L295)', async () => {
+    vi.mocked(Filesystem.readdir).mockImplementationOnce(async () => {
+      const prothema = 'PLI101/';
+      return {
+        files: [{ name: 'upokatalogos', type: 'directory', size: 0, mtime: 0, ctime: 0, uri: 'file://PLI101/upokatalogos' }],
+      } as never;
+    }).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('read failed'), { code: 'OS-PLUG-FILE-0001' });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.lista('PLI101');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+    }
+  });
+
+  it('diagrafi: άκυρη διαδρομή (L309/L310)', async () => {
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diagrafi('../ekso.json');
+    expect(apotelesma.ok).toBe(false);
+  });
+
+  it('diagrafi: AGNOSTO σφάλμα (L322)', async () => {
+    vi.mocked(Filesystem.deleteFile).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('delete failed'), { code: 'OS-PLUG-FILE-0001' });
+    });
+    const apothiki = new CapacitorApothiki('');
+    const apotelesma = await apothiki.diagrafi('a.json');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AGNOSTO');
+      expect(apotelesma.sfalma.minima).toContain('a.json');
+    }
+  });
+
+  it('διαγραφή γραμμένου αρχείου → ok (L316)', async () => {
+    const apothiki = new CapacitorApothiki('');
+    await apothiki.grapse_keimeno('a.json', '1');
+    const apotelesma = await apothiki.diagrafi('a.json');
+    expect(apotelesma.ok).toBe(true);
+    expect(await apothiki.yparxei('a.json')).toBe(false);
+  });
+
+  it('dimiourgise_apothiki_pyli (L329)', () => {
+    const pyli = dimiourgise_apothiki_pyli('DPS.guide');
+    expect(pyli).toBeInstanceOf(CapacitorApothiki);
+    expect((pyli as { riza: string }).riza).toBe('DPS.guide');
   });
 });

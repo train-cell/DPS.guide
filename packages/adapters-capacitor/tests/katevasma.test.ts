@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FileTransfer } from '@capacitor/file-transfer';
-import { CapacitorKatevasmaPyli } from '../src/storage/katevasma.js';
+import { CapacitorKatevasmaPyli, dimiourgise_katevasma_pyli } from '../src/storage/katevasma.js';
 
 const h = vi.hoisted(() => ({
   arxeia: new Set<string>(),
@@ -156,6 +156,77 @@ describe('CapacitorKatevasmaPyli', () => {
     }
   });
 
+  it('σφάλμα μη αντικείμενο → DIKTYO (L51/L52)', async () => {
+    vi.mocked(FileTransfer.downloadFile).mockImplementationOnce(async () => {
+      throw 'δεν είναι σφάλμα';
+    });
+    const pyli = new CapacitorKatevasmaPyli('');
+    const apotelesma = await pyli.katevase('https://thales.cs.unipi.gr/a.pdf', 'a.pdf', {});
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+    }
+  });
+
+  it('HTTP status μη αριθμός → DIKTYO (L59 false)', async () => {
+    vi.mocked(FileTransfer.downloadFile).mockImplementationOnce(async () => {
+      throw Object.assign(new Error('download failed'), { data: { httpStatus: '404' } });
+    });
+    const pyli = new CapacitorKatevasmaPyli('');
+    const apotelesma = await pyli.katevase('https://thales.cs.unipi.gr/a.pdf', 'a.pdf', {});
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+    }
+  });
+
+  it('ακύρωση μετά τη λήψη → AKYROTHIKE (L131/L132)', async () => {
+    vi.mocked(FileTransfer.downloadFile).mockImplementation(async () => {
+      await new Promise<void>((lysi) => {
+        setTimeout(lysi, 50);
+      });
+    });
+    const elegktis = new AbortController();
+    const pyli = new CapacitorKatevasmaPyli('');
+    const p = pyli.katevase('https://thales.cs.unipi.gr/a.pdf', 'a.pdf', {}, elegktis.signal);
+    await new Promise<void>((lysi) => {
+      setTimeout(lysi, 25);
+    });
+    elegktis.abort();
+    const apotelesma = await p;
+    vi.mocked(FileTransfer.downloadFile).mockRestore();
+
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AKYROTHIKE');
+    }
+  });
+
+  it('ακύρωση κατά τη λήψη → AKYROTHIKE (L138/L139)', async () => {
+    const elegktis = new AbortController();
+    vi.mocked(FileTransfer.downloadFile).mockImplementation(async () => {
+      await new Promise<void>((lysi) => {
+        setTimeout(lysi, 50);
+      });
+      if (elegktis.signal.aborted) {
+        throw new Error('download failed');
+      }
+    });
+    const pyli = new CapacitorKatevasmaPyli('');
+    const p = pyli.katevase('https://thales.cs.unipi.gr/a.pdf', 'a.pdf', {}, elegktis.signal);
+    await new Promise<void>((lysi) => {
+      setTimeout(lysi, 10);
+    });
+    elegktis.abort();
+    const apotelesma = await p;
+    vi.mocked(FileTransfer.downloadFile).mockRestore();
+
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AKYROTHIKE');
+    }
+  });
+
   it('άκυρη διαδρομή προορισμού (..) → σφάλμα', async () => {
     const pyli = new CapacitorKatevasmaPyli('');
     const apotelesma = await pyli.katevase('https://thales.cs.unipi.gr/a.pdf', '../a.pdf', {});
@@ -163,10 +234,25 @@ describe('CapacitorKatevasmaPyli', () => {
     expect(vi.mocked(FileTransfer.downloadFile)).not.toHaveBeenCalled();
   });
 
-  it('η ρίζα προτάσσεται στη διαδρομή του plugin', async () => {
+  it('ή ρίζα προτάσσεται στη διαδρομή του plugin', async () => {
     const pyli = new CapacitorKatevasmaPyli('DPS.guide');
     await pyli.katevase('https://thales.cs.unipi.gr/a.pdf', 'a.pdf', {});
     const zitoumeno = vi.mocked(FileTransfer.downloadFile).mock.calls[0]?.[0] as { path?: string };
     expect(zitoumeno.path).toBe('file://DPS.guide/a.pdf');
+  });
+
+  it('δεν-URL → MI_EGKYRO_SXIMA (L93)', async () => {
+    const pyli = new CapacitorKatevasmaPyli('');
+    const apotelesma = await pyli.katevase('όχι url', 'a.pdf', {});
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+  });
+
+  it('η συντομευτική δημιουργία επιστρέφει νέο εκδότη (L153)', async () => {
+    const pyli = dimiourgise_katevasma_pyli('DPS.guide');
+    expect(pyli).toBeInstanceOf(CapacitorKatevasmaPyli);
+    expect(pyli['riza']).toBe('DPS.guide');
   });
 });

@@ -29,6 +29,13 @@ class DummyStratigiki implements SyndesiStratigiki {
   }
 }
 
+/** Στρατηγική που δεν αποθηκεύει καθόλου cookies — για έλεγχο του κλάδου `if (cookie)`. */
+class KeniStratigiki implements SyndesiStratigiki {
+  async syndesi(perivallon: AuthPerivallon): Promise<Apotelesma<void>> {
+    return ok(undefined);
+  }
+}
+
 describe('ektelesi_me_session (L14)', () => {
   let http: FakeHttp;
   let cookie_diaxeiristis: CookieDiaxeiristis;
@@ -162,5 +169,126 @@ describe('ektelesi_me_session (L14)', () => {
     if (!res.ok) {
       expect(res.sfalma.kodikos).toBe('SESSION_LIXI');
     }
+  });
+
+  it('αποτυχία αρχικής σύνδεσης -> AUTH_APOTYXIA (L25/L26)', async () => {
+    stratigiki.prepei_na_apotyxei = true;
+
+    const res = await ektelesi_me_session(perivallon, stratigiki, {
+      methodos: 'GET',
+      url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+      akolouthise_anakateuthinseis: true,
+      xronos_orio_ms: 5000,
+      typos_apantisis: 'keimeno',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+    }
+    expect(stratigiki.syndeseis_metritis).toBe(1);
+  });
+
+  it('αποτυχία αιτήματος -> DIKTYO (L32/L33)', async () => {
+    cookie_diaxeiristis.apothikefse('PHPSESSID', 'sess');
+    stratigiki.prepei_na_apotyxei = false;
+
+    http.orise_apantisi('/main/portfolio.php', (): HttpApantisi => {
+      throw new Error('σφάλμα δικτύου');
+    });
+
+    const res = await ektelesi_me_session(perivallon, stratigiki, {
+      methodos: 'GET',
+      url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+      akolouthise_anakateuthinseis: true,
+      xronos_orio_ms: 5000,
+      typos_apantisis: 'keimeno',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DIKTYO');
+    }
+    expect(stratigiki.syndeseis_metritis).toBe(0);
+  });
+
+  it('αποτυχία retry μετά την επανασύνδεση -> DIKTYO (L61/L62)', async () => {
+    cookie_diaxeiristis.apothikefse('PHPSESSID', 'old_expired_session');
+    let aitimata_metritis = 0;
+
+    http.orise_apantisi('/main/portfolio.php', (a: HttpAitima): HttpApantisi => {
+      aitimata_metritis += 1;
+      if (aitimata_metritis === 1) {
+        return {
+          katastasi: 200,
+          teliko_url: `${VASIKO_URL_ECLASS}/main/login_form.php`,
+          kefalides: {},
+          keimeno: '<form action="/main/login_form.php"><input type="password"></form>',
+        };
+      }
+      throw new Error('σφάλμα δικτύου');
+    });
+
+    const res = await ektelesi_me_session(perivallon, stratigiki, {
+      methodos: 'GET',
+      url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+      akolouthise_anakateuthinseis: true,
+      xronos_orio_ms: 5000,
+      typos_apantisis: 'keimeno',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DIKTYO');
+    }
+    expect(stratigiki.syndeseis_metritis).toBe(1);
+    expect(aitimata_metritis).toBe(2);
+  });
+
+  it('εκτελεστής-συνάρτηση (EktelestisAitimatos)', async () => {
+    const res = await ektelesi_me_session(perivallon, stratigiki, (kefalides): Promise<Apotelesma<HttpApantisi>> => {
+      expect(kefalides['user-agent']).toBeDefined();
+      return ok({
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<h1>Portfolio</h1>',
+      });
+    });
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi.keimeno).toBe('<h1>Portfolio</h1>');
+    }
+    expect(stratigiki.syndeseis_metritis).toBe(1);
+  });
+
+  it('δεν υπάρχουν cookies → κεφαλίδα cookie δεν στέλνεται (L92 false)', async () => {
+    let kefalides_dekthikan: Record<string, string> = {};
+    const stratigiki_keni = new KeniStratigiki();
+
+    http.orise_apantisi('/main/portfolio.php', (a: HttpAitima): HttpApantisi => {
+      kefalides_dekthikan = { ...a.kefalides };
+      return {
+        katastasi: 200,
+        teliko_url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+        kefalides: {},
+        keimeno: '<h1>Portfolio</h1>',
+      };
+    });
+
+    const res = await ektelesi_me_session(perivallon, stratigiki_keni, {
+      methodos: 'GET',
+      url: `${VASIKO_URL_ECLASS}/main/portfolio.php`,
+      akolouthise_anakateuthinseis: true,
+      xronos_orio_ms: 5000,
+      typos_apantisis: 'keimeno',
+    });
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi.keimeno).toBe('<h1>Portfolio</h1>');
+    }
+    expect(kefalides_dekthikan['cookie']).toBeUndefined();
   });
 });

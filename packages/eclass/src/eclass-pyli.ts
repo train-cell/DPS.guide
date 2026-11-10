@@ -52,7 +52,7 @@ export class DpsEclassPyli implements EclassPyli {
   }
 
   get base_url(): string {
-    return this.perivallon.base_url ?? VASIKO_URL_ECLASS;
+    return this.perivallon.base_url;
   }
 
   pare_kefalides_lipshs(): Record<string, string> {

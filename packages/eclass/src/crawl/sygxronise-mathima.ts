@@ -34,6 +34,13 @@ function perimene(ms: number): Promise<void> {
  * 7. 404 σε αρχείο -> προειδοποίηση και συνέχεια.
  * 8. Διακοπή μέσω AbortSignal -> αποθήκευση προόδου ώστε η επόμενη εκτέλεση να συνεχίσει.
  */
+/**
+ * Συγκρίνει δύο αρχεία ανά διαδρομή για την ταξινόμηση του ευρετηρίου.
+ */
+function synpara_diadromon(a: Arxeio, b: Arxeio): number {
+  return a.diadromi.localeCompare(b.diadromi);
+}
+
 export async function sygxronise_mathima(
   parametroi: ParametroiSygxronismou
 ): Promise<Apotelesma<ApologismosSygxronismou>> {
@@ -261,7 +268,7 @@ export async function sygxronise_mathima(
   }
 
   // 6. Ταξινόμηση και αποθήκευση ευρετηρίου
-  nea_lista_eurethriou.sort((a, b) => a.diadromi.localeCompare(b.diadromi));
+  nea_lista_eurethriou.sort(synpara_diadromon);
 
   const grapse_eurethrio = await apothiki.grapse_keimeno(
     diadromi_eurethriou,
@@ -309,7 +316,7 @@ async function apothikefse_proodo(
     }
   }
 
-  prosorini_lista.sort((a, b) => a.diadromi.localeCompare(b.diadromi));
+  prosorini_lista.sort(synpara_diadromon);
   await apothiki.grapse_keimeno(
     diadromi_eurethriou,
     `${JSON.stringify(prosorini_lista, null, 2)}\n`

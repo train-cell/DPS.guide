@@ -14,7 +14,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { MEGISTOS_ARITHMOS_EIDOPOIISEON } from '@dps/core';
 import { FakeRologi } from '@dps/core/testing';
 import type { Apotelesma, KatagrafiPyli } from '@dps/core';
-import { CapacitorEidopoiiseis } from './eidopoiiseis.js';
+import { CapacitorEidopoiiseis, dimiourgise_eidopoiseis } from './eidopoiiseis.js';
 import { arithmos_apok_stable, TYPOI_ENDYSEON } from './typoi.js';
 import type { AntilogoiGRAMMAT, EidopoiiseisPugi } from './typoi.js';
 
@@ -31,6 +31,7 @@ function psefthiko_pugi() {
     proedres,
     adia: 'granted' as 'granted' | 'denied' | 'prompt' | 'prompt-with-rationale',
     sfalma: null as Error | null,
+    sfalma_exodos: null as Error | null,
     sfalma_periousis: false,
   };
   const pugi: EidopoiiseisPugi = {
@@ -46,12 +47,14 @@ function psefthiko_pugi() {
     },
     async schedule(o) {
       kliseis.push(`schedule:${o.notifications.length}`);
+      if (zotiko.sfalma_exodos !== null) throw zotiko.sfalma_exodos;
       if (zotiko.sfalma !== null) throw zotiko.sfalma;
       proedres.push(...o.notifications);
       return { notifications: o.notifications.map((n) => ({ id: n.id })) };
     },
     async cancel(o) {
       kliseis.push(`cancel:${o.notifications.map((n) => n.id).join(',')}`);
+      if (zotiko.sfalma_exodos !== null) throw zotiko.sfalma_exodos;
       if (zotiko.sfalma !== null) throw zotiko.sfalma;
       for (const n of o.notifications) {
         const theseis = proedres.findIndex((p) => p.id === n.id);
@@ -60,6 +63,7 @@ function psefthiko_pugi() {
     },
     async cancelAll() {
       kliseis.push('cancelAll');
+      if (zotiko.sfalma_exodos !== null) throw zotiko.sfalma_exodos;
       if (zotiko.sfalma !== null) throw zotiko.sfalma;
       proedres.length = 0;
     },
@@ -211,6 +215,45 @@ describe('CapacitorEidopoiiseis — προγραμματισμός', () => {
     expect(a.ok).toBe(true);
     if (a.ok) expect(a.timi[0]?.id).toBe(arithmos_apok_stable('en-5'));
   });
+
+  it('η ίδια ενότητα σε δεύτερη κλήση χρησιμοποιεί cached id (L105)', async () => {
+    const z = psefthiko_pugi();
+    const e = neos(z);
+    await e.programmatise([aitima('en-5')]);
+    await e.programmatise([aitima('en-5')]);
+    expect(z.zotiko.proedres[0]?.id).toBe(z.zotiko.proedres[1]?.id);
+  });
+
+  it('κενό κλειδί ενότητας → MI_EGKYRO_SXIMA (L153)', async () => {
+    const z = psefthiko_pugi();
+    expect(kodikos(await neos(z).programmatise([{ ...aitima('en-1'), kleidiEnotitas: '   ' }]))).toBe(
+      'MI_EGKYRO_SXIMA'
+    );
+  });
+
+  it('άκυρη ημερομηνία (NaN) → MI_EGKYRO_SXIMA (L159)', async () => {
+    const z = psefthiko_pugi();
+    const a = await neos(z).programmatise([
+      { ...aitima('en-1'), otan: new Date('όχι ημερομηνία') },
+    ]);
+    expect(kodikos(a)).toBe('MI_EGKYRO_SXIMA');
+    expect(z.zotiko.kliseis.some((k) => k.startsWith('schedule'))).toBe(false);
+  });
+
+  it('getPending που αποτυγχάνει σε προγραμματισμό → MI_YPOSTIRIZOMENO (L204)', async () => {
+    const z = psefthiko_pugi();
+    z.zotiko.sfalma_periousis = true;
+    expect(kodikos(await neos(z).programmatise([aitima('en-1')]))).toBe('MI_YPOSTIRIZOMENO');
+  });
+
+  it('schedule που αποτυγχάνει μετά την επιτυχία → MI_YPOSTIRIZOMENO (L233/L234)', async () => {
+    const z = psefthiko_pugi();
+    const e = neos(z);
+    expect(kodikos(await e.programmatise([aitima('en-1')]))).toBe('ok');
+    z.zotiko.sfalma_exodos = new Error('plugin unavailable');
+    const a = await e.programmatise([aitima('en-2')]);
+    expect(kodikos(a)).toBe('MI_YPOSTIRIZOMENO');
+  });
 });
 
 describe('CapacitorEidopoiiseis — όριο 60 προγραμματισμένων', () => {
@@ -267,6 +310,27 @@ describe('CapacitorEidopoiiseis — ακύρωση και λίστα', () => {
     expect(await e.metra_programmatismenon()).toEqual({ ok: true, timi: 2 });
   });
 
+  it('προγραμμαρισμένη με άκυρο id παρακάμπτεται (L292)', async () => {
+    const z = psefthiko_pugi();
+    const e = neos(z);
+    await e.programmatise([aitima('en-1')]);
+    z.zotiko.proedres.push({ id: 'όχι-ακέραιος' as never, title: 'x', body: 'y', extra: {} } as never);
+    const l = await e.lista_programmatismenon();
+    expect(l.ok).toBe(true);
+    if (l.ok) expect(l.timi.map((p) => p.kleidiEnotitas)).toEqual(['en-1']);
+  });
+
+  it('προγραμμαρισμένη χωρίς schedule → null (L295)', async () => {
+    const z = psefthiko_pugi();
+    const e = neos(z);
+    await e.programmatise([aitima('en-1')]);
+    z.zotiko.proedres.push({ id: 123, title: 'x', body: 'y', extra: { kleidiEnotitas: 'en-2' } } as never);
+    const l = await e.lista_programmatismenon();
+    expect(l.ok).toBe(true);
+    if (l.ok) expect(l.timi.map((p) => p.kleidiEnotitas)).toEqual(['en-1', 'en-2']);
+    if (l.ok) expect(l.timi[1]?.otan).toBe(null);
+  });
+
   it('η λίστα είναι ταξινομημένη κατά κλειδί ενότητας, όχι κατά id', async () => {
     const z = psefthiko_pugi();
     const e = neos(z);
@@ -313,10 +377,20 @@ describe('CapacitorEidopoiiseis — σφάλμα plugin → MI_YPOSTIRIZOMENO, �
     expect(kodikos(await neos(z).lista_programmatismenon())).toBe('MI_YPOSTIRIZOMENO');
   });
 
-  it('καμία μέθοδος δεν πετάει όταν το plugin κάνει reject με μη-Error', async () => {
+  it('cancel που αποτυγχάνει μετά την επιτυχία → MI_YPOSTIRIZOMENO (L256/L257)', async () => {
     const z = psefthiko_pugi();
-    z.zotiko.sfalma = 'plain string' as unknown as Error;
-    expect(kodikos(await neos(z).zitise_adia())).toBe('MI_YPOSTIRIZOMENO');
+    const e = neos(z);
+    await e.programmatise([aitima('en-1')]);
+    z.zotiko.sfalma_exodos = new Error('plugin unavailable');
+    expect(kodikos(await e.akiro('en-1'))).toBe('MI_YPOSTIRIZOMENO');
+  });
+
+  it('cancelAll που αποτυγχάνει μετά την επιτυχία → MI_YPOSTIRIZOMENO (L272/L273)', async () => {
+    const z = psefthiko_pugi();
+    const e = neos(z);
+    await e.programmatise([aitima('en-1')]);
+    z.zotiko.sfalma_exodos = new Error('plugin unavailable');
+    expect(kodikos(await e.akiro_ol())).toBe('MI_YPOSTIRIZOMENO');
   });
 });
 
@@ -375,6 +449,18 @@ describe('CapacitorEidopoiiseis — action types (P3)', () => {
     const z = psefthiko_pugi();
     expect(kodikos(await neos(z).katasthise_typois_endyseon())).toBe('ok');
     expect(z.zotiko.kliseis).toContain('registerActionTypes');
+  });
+
+  it('χωρίς rologi χρησιμοποιεί το προεπιλεγμένο ρολόι (L40)', async () => {
+    const z = psefthiko_pugi();
+    const e = new CapacitorEidopoiiseis(z.pugi);
+    expect(kodikos(await e.programmatise([aitima('en-1')]))).toBe('ok');
+  });
+
+  it('dimiourgise_eidopoiseis χτίζει τον προσαρμογέα (L341)', () => {
+    const z = psefthiko_pugi();
+    const e = dimiourgise_eidopoiseis(z.pugi, new FakeRologi(TORA));
+    expect(e).toBeInstanceOf(CapacitorEidopoiiseis);
   });
 
   it('τα action types έχουν σταθερά ids και ελληνικούς τίτλους', () => {

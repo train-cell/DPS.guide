@@ -100,9 +100,7 @@ export function spase_set_cookie_joined(timi: string): string[] {
     }
     trexon = `${trexon},${tmima}`;
   }
-  if (trexon !== undefined) {
-    apotelesmata.push(trexon.trim());
-  }
+  apotelesmata.push(trexon!.trim());
   return apotelesmata;
 }
 

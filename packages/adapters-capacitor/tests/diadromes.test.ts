@@ -100,4 +100,14 @@ describe('path normalization (§5.3 rules)', () => {
       expect(karnikopoise_diadromi(onoma).ok).toBe(true);
     }
   });
+
+  it('rejects path that reduces to nothing (L36/L37)', () => {
+    for (const onoma of ['/', '//', '.', '..', './']) {
+      const res = karnikopoise_diadromi(onoma);
+      expect(res.ok).toBe(false);
+      if (!res.ok) {
+        expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      }
+    }
+  });
 });

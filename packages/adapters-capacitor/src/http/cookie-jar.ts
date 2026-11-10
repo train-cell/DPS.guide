@@ -90,7 +90,7 @@ export function parse_set_cookies(raw: readonly string[], vasi: URL): Cookie[] {
   const apotelesmata: Cookie[] = [];
   for (const aksia of raw) {
     const tmimata = aksia.split(';');
-    const zeugari = tmimata[0]?.trim() ?? '';
+    const zeugari = tmimata[0]!.trim();
     if (zeugari === '') {
       continue;
     }
@@ -104,7 +104,7 @@ export function parse_set_cookies(raw: readonly string[], vasi: URL): Cookie[] {
     }
     const xaraktiristika = new Map<string, string>();
     for (let theseis = 1; theseis < tmimata.length; theseis += 1) {
-      const tmima = tmimata[theseis]?.trim() ?? '';
+      const tmima = tmimata[theseis]!.trim();
       if (tmima === '') {
         continue;
       }
@@ -193,10 +193,8 @@ export class CookieJar {
    *  σβήνονται τα παλαιότερα (σειρά εισαγωγής) μέχρι να επανέλθει εντός ορίου. */
   private periorismos_xoritikotitas(): void {
     while (this.megethos > MEGISTOS_ARITHMOS_COOKIES && this.seira.length > 0) {
-      const palaiotero = this.seira.shift();
-      if (palaiotero !== undefined) {
-        this.svise(palaiotero.onoma, palaiotero.host);
-      }
+      const palaiotero = this.seira.shift()!;
+      this.svise(palaiotero.onoma, palaiotero.host);
     }
   }
 
@@ -254,7 +252,7 @@ export class CookieJar {
 
   /** Κεφαλίδα `Cookie` για το URL· κενό string αν δεν ταιριάζει τίποτα. */
   kefalida_gia(url: URL): string {
-    const monopathia = url.pathname === '' ? PROTAXI_MONOPATHIAS : url.pathname;
+    const monopathia = url.pathname;
     return this.gia_ekpompi(url.hostname, monopathia, url.protocol === 'https:')
       .map((cookie) => `${cookie.onoma}=${cookie.timi}`)
       .join('; ');

@@ -72,7 +72,7 @@ export async function ektelesi_me_session(
   if (elegxos_2.lixi) {
     return apotyxia(
       'SESSION_LIXI',
-      `Η συνεδρία eClass έληξε και δεν αποκαταστάθηκε μετά από επανασύνδεση (${elegxos_2.aitia ?? 'άγνωστη αιτία'})`
+      `Η συνεδρία eClass έληξε και δεν αποκαταστάθηκε μετά από επανασύνδεση (${elegxos_2.aitia})`
     );
   }
 

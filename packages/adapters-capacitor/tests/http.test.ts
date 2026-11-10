@@ -3,8 +3,12 @@ import { CapacitorHttp } from '@capacitor/core';
 import type { HttpAitima } from '@dps/core';
 import {
   CapacitorHttpPyli,
+  dimiourgise_http_pyli,
   spase_set_cookie_joined,
 } from '../src/http/http-pyli.js';
+import { apofasi_anakateuthinsis } from '../src/http/anakateuthinsi.js';
+import { CookieJar } from '../src/http/cookie-jar.js';
+import type { Cookie } from '../src/http/cookie-jar.js';
 
 const h = vi.hoisted(() => ({ kliseis: [] as { url: string; kefalides: Record<string, string>; methodos: string }[] }));
 
@@ -18,6 +22,19 @@ vi.mock('@capacitor/core', () => ({
   Capacitor: {},
   registerPlugin: vi.fn(),
 }));
+
+function dimiourgise_cookie(parts: Partial<Cookie> = {}): Cookie {
+  return {
+    onoma: 'onoma',
+    timi: 'timi',
+    host: 'thales.cs.unipi.gr',
+    monopathia: '/',
+    asfales: false,
+    host_only: true,
+    mexri: null,
+    ...parts,
+  };
+}
 
 function aitima(patches: Partial<HttpAitima> = {}): HttpAitima {
   return {
@@ -49,7 +66,7 @@ function stise_apantiseis(
       status: epomeni.katastasi,
       url: epomeni.url ?? opts.url,
       headers: epomeni.kefalides ?? {},
-      data: epomeni.dedomena ?? '',
+      data: epomeni.dedomena,
     };
   });
 }
@@ -215,6 +232,19 @@ describe('CapacitorHttpPyli', () => {
     expect(h.kliseis[1]?.kefalides['Authorization']).toBeUndefined();
   });
 
+  it('cross-origin redirect χωρίς Authorization → false (L187)', async () => {
+    stise_apantiseis([
+      {
+        katastasi: 302,
+        kefalides: { location: 'https://cas.unipi.gr/login' },
+      },
+      { katastasi: 200, dedomena: 'ok' },
+    ]);
+    const pyli = new CapacitorHttpPyli();
+    await pyli.aitima(aitima({ url: 'https://thales.cs.unipi.gr/main/login_form.php' }));
+    expect(h.kliseis[1]?.kefalides['Authorization']).toBeUndefined();
+  });
+
   it('αποτυχία δικτύου → DIKTYO', async () => {
     vi.mocked(CapacitorHttp.request).mockImplementation(async () => {
       throw new Error('συνδεθεί ματαίως');
@@ -259,5 +289,149 @@ describe('CapacitorHttpPyli', () => {
     await pyli.aitima(aitima());
     const zitoumeno = vi.mocked(CapacitorHttp.request).mock.calls[0]?.[0] as { disableRedirects?: boolean };
     expect(zitoumeno.disableRedirects).toBe(true);
+  });
+
+  it('POST χωρίς σώμα → null (L76)', async () => {
+    stise_apantiseis([{ katastasi: 200, dedomena: 'ok' }]);
+    const pyli = new CapacitorHttpPyli();
+    await pyli.aitima(aitima({ methodos: 'POST' }));
+    const zitoumeno = vi.mocked(CapacitorHttp.request).mock.calls[0]?.[0] as { data?: string };
+    expect(zitoumeno.data).toBeUndefined();
+  });
+
+  it('κενή data → keimeno κενό (L144/L145)', async () => {
+    stise_apantiseis([{ katastasi: 200, dedomena: undefined }]);
+    const pyli = new CapacitorHttpPyli();
+    const apotelesma = await pyli.aitima(aitima());
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi.keimeno).toBe('');
+    }
+  });
+
+  it('xronos_orio_ms > 0 → connectTimeout/readTimeout (L179/L189 true)', async () => {
+    stise_apantiseis([{ katastasi: 200, dedomena: 'ok' }]);
+    const pyli = new CapacitorHttpPyli();
+    await pyli.aitima(aitima({ xronos_orio_ms: 5000 }));
+    const zitoumeno = vi.mocked(CapacitorHttp.request).mock.calls[0]?.[0] as {
+      connectTimeout?: number;
+      readTimeout?: number;
+    };
+    expect(zitoumeno.connectTimeout).toBe(5000 + 1000);
+    expect(zitoumeno.readTimeout).toBe(5000 + 1000);
+  });
+
+  it('ακύρωση μετά την εκκίνηση → AKYROTHIKE (L343/L347)', async () => {
+    vi.mocked(CapacitorHttp.request).mockImplementation(async (_opts, sima) => {
+      await new Promise<void>((lysi) => {
+        setTimeout(lysi, 50);
+      });
+      if (sima.aborted) {
+        throw new Error('ακυρώθηκε από τον καλούντα');
+      }
+      return { status: 200, url: 'https://thales.cs.unipi.gr/main/portfolio.php', headers: {}, data: '' };
+    });
+    const elegktis = new AbortController();
+    const pyli = new CapacitorHttpPyli();
+    const p = pyli.aitima(aitima({ simatodotis: elegktis.signal }));
+    await new Promise<void>((lysi) => {
+      setTimeout(lysi, 10);
+    });
+    elegktis.abort();
+    const apotelesma = await p;
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('AKYROTHIKE');
+    }
+  });
+
+  it('dimiourgise_http_pyli (L241)', () => {
+    const pyli = dimiourgise_http_pyli();
+    expect(pyli).toBeInstanceOf(CapacitorHttpPyli);
+    expect(pyli.cookie_jar instanceof CookieJar).toBe(true);
+  });
+
+  it('apofasi_anakateuthinsis: άκυρη τοποθεσία → telos (L96)', () => {
+    expect(apofasi_anakateuthinsis('GET', 200, null, 'https://thales.cs.unipi.gr/')).toEqual({ eidos: 'telos' });
+  });
+
+  it('apofasi_anakateuthinsis: 304 → telos (L106)', () => {
+    expect(
+      apofasi_anakateuthinsis('POST', 304, 'https://thales.cs.unipi.gr/x', 'https://thales.cs.unipi.gr/y')
+    ).toEqual({
+      eidos: 'telos',
+    });
+  });
+
+  it('apofasi_anakateuthinsis: άκυρη τοποθεσία → catch (L96)', () => {
+    expect(apofasi_anakateuthinsis('GET', 302, 'http://[invalid', 'https://thales.cs.unipi.gr/')).toEqual({
+      eidos: 'telos',
+    });
+  });
+
+  it('jar cookies χωρίς Header `Cookie` (L160 false, L214 true)', async () => {
+    stise_apantiseis([{ katastasi: 200, dedomena: 'ok' }]);
+    const zakari = new CookieJar();
+    zakari.val(dimiourgise_cookie({ onoma: 'jar', timi: 'j', host: 'thales.cs.unipi.gr' }));
+    const pyli = new CapacitorHttpPyli(zakari);
+    await pyli.aitima(aitima({ kefalides: { Accept: 'application/json' } }));
+    expect(h.kliseis[0]?.kefalides['Cookie']).toBe('jar=j');
+  });
+
+  it('κεφαλίδα Cookie με πεζό αναζήτηση (L160/L161)', async () => {
+    stise_apantiseis([{ katastasi: 200, dedomena: 'ok' }]);
+    const zakari = new CookieJar();
+    zakari.val(dimiourgise_cookie({ onoma: 'jar', timi: 'j', host: 'thales.cs.unipi.gr' }));
+    const pyli = new CapacitorHttpPyli(zakari);
+    await pyli.aitima(aitima({ kefalides: { Cookie: 'jar=j' } }));
+    expect(h.kliseis[0]?.kefalides['Cookie']).toBe('jar=j; jar=j');
+  });
+
+  it('url απάντησης κενή → teliko_url η τρέχουσα (L226)', async () => {
+    stise_apantiseis([{ katastasi: 200, url: '', dedomena: 'ok' }]);
+    const pyli = new CapacitorHttpPyli();
+    const apotelesma = await pyli.aitima(aitima());
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi.teliko_url).toBe('https://thales.cs.unipi.gr/main/portfolio.php');
+    }
+  });
+
+  it('απαντηση με σφάλμα ανάγνωσης σώματος → DIKTYO (L243)', async () => {
+    vi.mocked(CapacitorHttp.request).mockImplementation(async () => {
+      const circular: Record<string, unknown> = {};
+      circular.self = circular;
+      return { status: 200, url: 'https://thales.cs.unipi.gr/main/portfolio.php', headers: {}, data: circular };
+    });
+    const pyli = new CapacitorHttpPyli();
+    const apotelesma = await pyli.aitima(aitima());
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+    }
+  });
+
+  it('TIMEOUT με xronos_orio_ms (L344)', async () => {
+    vi.mocked(CapacitorHttp.request).mockImplementation(async () => {
+      await new Promise<void>((lysi) => {
+        setTimeout(lysi, 100);
+      });
+      throw new Error('πέρασε το όριο');
+    });
+    const pyli = new CapacitorHttpPyli();
+    const apotelesma = await pyli.aitima(aitima({ xronos_orio_ms: 50 }));
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('TIMEOUT');
+    }
+  });
+
+  it('άκυρο URL που ρίχνει σφάλμα στο new URL (L271)', async () => {
+    const pyli = new CapacitorHttpPyli();
+    const apotelesma = await pyli.aitima(aitima({ url: 'http://[invalid' }));
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
   });
 });
