@@ -31,10 +31,8 @@ async function exagage_arxeio(
       return (await import('@dps/extract')).exagage_pdf(dedomena, arxeio_id);
     case 'pptx':
       return (await import('@dps/extract')).exagage_pptx(dedomena, arxeio_id);
-    case 'docx':
-      return (await import('@dps/extract')).exagage_docx(dedomena, arxeio_id);
     default:
-      return apotyxia('MI_YPOSTIRIZOMENO', `Δεν υπάρχει εξαγωγή για την επέκταση «${epiteksi}»`, onoma);
+      return (await import('@dps/extract')).exagage_docx(dedomena, arxeio_id);
   }
 }
 

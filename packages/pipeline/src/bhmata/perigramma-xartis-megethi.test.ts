@@ -604,6 +604,221 @@ describe('megethi', () => {
     if (apotelesma.ok) throw new Error('aπέτυχε');
     expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
   });
+
+  it('σφάλμα ευρετηρίου → σφάλμα (L78)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = arxeio_test(DIADROMI);
+    await grapse_json(apothiki, arxeio_eurethriou(KODIKOS), [arxeio]);
+    await these_xartis(apothiki, arxeio, 1, 1);
+    // Σπάω μόνο το ευρετήριο: ο χάρτης είναι έγκυρος.
+    await apothiki.grapse_keimeno(arxeio_eurethriou(KODIKOS), 'δεν είναι JSON');
+
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    // Ο χάρτης δεν ξαναγράφεται: παραμένει όπως τον έγραψε ο `xartis`.
+    const gram = await apothiki.diavase_keimeno(arxeio_xarti(KODIKOS));
+    if (!gram.ok) throw new Error('aπέτυχε');
+    expect(JSON.parse(gram.timi).enotites[0]?.lepta_ektimisi).toBe(null);
+  });
+
+  it('επέκταση εκτός allowlist → παραλείπεται (L88)', async () => {
+    const apothiki = new MnimiApothiki();
+    const arxeio = arxeio_test('dokimio.txt');
+    await grapse_json(apothiki, arxeio_eurethriou(KODIKOS), [arxeio]);
+    await these_xartis(apothiki, arxeio, 1, 1);
+    const p = ftiaxe_eisodos(apothiki, new LigmaArchiou(), new KatagrafiDiamnemata());
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.timi.enotites[0]?.lepta_ektimisi).toBe(0);
+  });
+
+  it('λείπει το perigramma → παραλείπεται (L94)', async () => {
+    const apothiki = new MnimiApothiki();
+    const arxeio = arxeio_test(DIADROMI);
+    await grapse_json(apothiki, arxeio_eurethriou(KODIKOS), [arxeio]);
+    await these_xartis(apothiki, arxeio, 1, 1);
+    const p = ftiaxe_eisodos(apothiki, new LigmaArchiou(), new KatagrafiDiamnemata());
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.timi.enotites[0]?.lepta_ektimisi).toBe(0);
+  });
+
+  it('αποτυχία εγγραφής → σφάλμα (L115)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_arxeio_keimeno(apothiki, [
+      selida(1, 'μια λίστα είναι μια ακολουθία στοιχείων με πολλές λέξεις εδώ', arxeio_test(DIADROMI).id),
+    ]);
+    const tmimata = [{ titlos: 'Λίστες', selides: { apo: 1, eos: 1 }, typos: 'theoria', ennoies: [], proapaitoumena: [] }];
+    await grapse_json(apothiki, arxeio_perigrammatos(KODIKOS, arxeio.id), {
+      ...PERIGRAMMA_ANTISKEPSI,
+      arxeio_id: arxeio.id,
+      tmimata,
+    });
+    await these_xartis(apothiki, arxeio, 1, 1);
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+    apothiki.grapse_keimeno = async () => apotyxia('DIKTYO', 'Δεν γίνεται εγγραφή');
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+  });
+
+  it('ενότητα χωρίς υλικό → 0 λεπτά (L141)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_arxeio_keimeno(apothiki, [
+      selida(1, 'μια λίστα είναι μια ακολουθία στοιχείων με πολλές λέξεις εδώ', arxeio_test(DIADROMI).id),
+    ]);
+    await these_xartis(apothiki, arxeio, 5, 6);
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.timi.enotites[0]?.lepta_ektimisi).toBe(0);
+  });
+
+  it('συντελεστής λέξεων αρνητικός → σφάλμα (L170)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = arxeio_test(DIADROMI);
+    await grapse_json(apothiki, arxeio_eurethriou(KODIKOS), [arxeio]);
+    const per = await grapse_json(apothiki, arxeio_perigrammatos(KODIKOS, arxeio.id), {
+      ...PERIGRAMMA_ANTISKEPSI,
+      arxeio_id: arxeio.id,
+      tmimata: [{ titlos: 'Λίστες', selides: { apo: 1, eos: 1 }, typos: 'theoria', ennoies: [], proapaitoumena: [] }],
+    });
+    if (!per.ok) throw new Error('aπέτυχε');
+    await apothiki.grapse_keimeno(
+      arxeio_keimenou(KODIKOS, arxeio.id),
+      JSON.stringify([{ arxeio_id: arxeio.id, arithmos: 1, keimeno: 'μια λίστα', lekseis: -1, xoris_keimeno: false }])
+    );
+    await these_xartis(apothiki, arxeio, 1, 1);
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+  });
+
+  it('δεν διαβάζεται το κείμενο → DEN_VRETHIKE (L191)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = arxeio_test(DIADROMI);
+    await grapse_json(apothiki, arxeio_eurethriou(KODIKOS), [arxeio]);
+    await these_xartis(apothiki, arxeio, 1, 1);
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+    apothiki.diavase_keimeno = async () => apotyxia('DEN_VRETHIKE', 'Δεν υπάρχει κείμενο');
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+  });
+
+  it('κείμενο όχι λίστα → MI_EGKYRO_SXIMA (L200)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = arxeio_test(DIADROMI);
+    await grapse_json(apothiki, arxeio_eurethriou(KODIKOS), [arxeio]);
+    const per = await grapse_json(apothiki, arxeio_perigrammatos(KODIKOS, arxeio.id), {
+      ...PERIGRAMMA_ANTISKEPSI,
+      arxeio_id: arxeio.id,
+      tmimata: [{ titlos: 'Λίστες', selides: { apo: 1, eos: 1 }, typos: 'theoria', ennoies: [], proapaitoumena: [] }],
+    });
+    if (!per.ok) throw new Error('aπέτυχε');
+    await these_xartis(apothiki, arxeio, 1, 1);
+    // Το κείμενο δεν είναι λίστα σελίδων: `diavase_keimeno_arxeiou` το πετυχαίνει.
+    await apothiki.grapse_keimeno(arxeio_keimenou(KODIKOS, arxeio.id), JSON.stringify({ not: 'list' }));
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+  });
+
+  it('perigramma εκτός εύρους πηγής → παραλείπεται (L48, L158)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_arxeio_keimeno(apothiki, [
+      selida(1, 'μια λίστα είναι μια ακολουθία στοιχείων με πολλές λέξεις εδώ', arxeio_test(DIADROMI).id),
+    ]);
+    await these_xartis(apothiki, arxeio, 1, 3);
+    await grapse_json(apothiki, arxeio_perigrammatos(KODIKOS, arxeio.id), {
+      ...PERIGRAMMA_ANTISKEPSI,
+      arxeio_id: arxeio.id,
+      tmimata: [{ titlos: 'Λίστες', selides: { apo: 2, eos: 4 }, typos: 'theoria', ennoies: [], proapaitoumena: [] }],
+    });
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.timi.enotites[0]?.lepta_ektimisi).toBe(0);
+  });
+
+  it('perigramma τελείως εκτός εύρους πηγής → L49', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_arxeio_keimeno(apothiki, [
+      selida(1, 'μια λίστα είναι μια ακολουθία στοιχείων με πολλές λέξεις εδώ', arxeio_test(DIADROMI).id),
+    ]);
+    await these_xartis(apothiki, arxeio, 1, 3);
+    await grapse_json(apothiki, arxeio_perigrammatos(KODIKOS, arxeio.id), {
+      ...PERIGRAMMA_ANTISKEPSI,
+      arxeio_id: arxeio.id,
+      tmimata: [{ titlos: 'Λίστες', selides: { apo: 5, eos: 6 }, typos: 'theoria', ennoies: [], proapaitoumena: [] }],
+    });
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.timi.enotites[0]?.lepta_ektimisi).toBe(0);
+  });
+
+  it('δεν διαβάζεται το κείμενο του αρχείου → DEN_VRETHIKE (L191)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = arxeio_test(DIADROMI);
+    await grapse_json(apothiki, arxeio_eurethriou(KODIKOS), [arxeio]);
+    await grapse_json(apothiki, arxeio_perigrammatos(KODIKOS, arxeio.id), {
+      ...PERIGRAMMA_ANTISKEPSI,
+      arxeio_id: arxeio.id,
+      tmimata: [{ titlos: 'Λίστες', selides: { apo: 1, eos: 1 }, typos: 'theoria', ennoies: [], proapaitoumena: [] }],
+    });
+    await these_xartis(apothiki, arxeio, 1, 1);
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    const apotelesma = await megethi(p, KODIKOS);
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+  });
 });
 
 async function gripse_perigramma(apothiki: MnimiApothiki, arxeio: Arxeio): Promise<boolean> {

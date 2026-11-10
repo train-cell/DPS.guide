@@ -154,9 +154,6 @@ async function lepta_enotitas(
         (pige) => tmima.selides.apo >= pige.apo && tmima.selides.eos <= pige.eos
       )
     );
-    if (tmimata_arxeio.length === 0) {
-      continue;
-    }
     const selides = await diavase_keimeno_arxeiou(p, kodikos_mathimatos, arxeio_id);
     if (!selides.ok) {
       return selides;

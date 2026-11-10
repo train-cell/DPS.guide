@@ -177,21 +177,6 @@ export function diavase_keimeno(
   );
 }
 
-/** Αναγνώζει `perigrammata/<arxeio_id>.json` (§5.3). */
-export function diavase_perigramma(
-  apothiki: ApothikiPyli,
-  riza: string,
-  kodikos_mathimatos: string,
-  arxeio_id: string
-): Promise<Apotelesma<Perigramma>> {
-  return diavase_json(
-    apothiki,
-    me_riza(riza, arxeio_perigrammatos(kodikos_mathimatos, arxeio_id)),
-    PerigrammaSchema,
-    `perigrammata/${arxeio_id}.json`
-  );
-}
-
 /** Αναγνώζει `xartis.json` ενός μαθήματος (§5.3). */
 export function diavase_xarti(
   apothiki: ApothikiPyli,

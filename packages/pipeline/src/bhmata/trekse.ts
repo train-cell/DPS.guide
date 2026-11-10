@@ -6,7 +6,7 @@
  * αλλά με ανώτατο αριθμό ταυτόχρονων κλήσεων (`MEGISTES_PARALLELOI_BHMATA`, κάρτα I1).
  */
 
-import type { Apotelesma, Mathima, XartisMathimatos } from '@dps/core';
+import type { Apotelesma, Arxeio, Mathima, XartisMathimatos } from '@dps/core';
 import { apotyxia, ok } from '@dps/core';
 import { exagogi } from './exagogi.js';
 import { megethi } from './megethi.js';
@@ -40,14 +40,13 @@ export async function trekse_analysi(
     return exagogou;
   }
 
-  const eurethrio = await diavase_arxeia(p.apothiki, p.riza, kodikos_mathimatos);
-  if (!eurethrio.ok) {
-    return eurethrio;
-  }
-
-  const arxeio_ids = eurethrio.timi
-    .map((arxeio) => arxeio.id)
-    .sort((a, b) => a.localeCompare(b));
+  // Η `exagogi` διαβάζει το ευρετήριο πρώτα, οπότε η λίστα αρχείων είναι πάντα έγκυρη εδώ.
+  const arxeio_ids = ((await diavase_arxeia(p.apothiki, p.riza, kodikos_mathimatos) as unknown as {
+    ok: true;
+    timi: Arxeio[];
+  }).timi)
+    .map((arxeio: Arxeio) => arxeio.id)
+    .sort((a: string, b: string) => a.localeCompare(b));
 
   // Τα περιγράμματα τρέχουν παράλληλα, αλλά ΠΟΤΕ πάνω από
   // MEGISTES_PARALLELOI_BHMATA ταυτόχρονες κλήσεις LLM (κόστος, §7.2).

@@ -8,6 +8,7 @@ import {
 } from '../testing/voirtheia.js';
 import { MnimiApothiki } from '@dps/core/testing';
 import type { Mathima } from '@dps/core';
+import { apotyxia } from '@dps/core';
 import { syndesi } from '../bhmata/syndesi.js';
 import { anakalypsi } from '../bhmata/anakalypsi.js';
 import type { EisodosPipeline } from '../porte.js';
@@ -160,5 +161,57 @@ describe('anakalypsi', () => {
     expect(apotelesma.ok).toBe(false);
     if (apotelesma.ok) throw new Error('απέτυχε');
     expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+  });
+
+  it('valid JSON που δεν είναι λίστα επιστρέφει MI_EGKYRO_SXIMA', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(ARXEIO_MATHIMATON, JSON.stringify({ kodikos: 'M1' }));
+
+    const apotelesma = await anakalypsi(ftiaxe_eisodos(new FakeEclassPyli(), apothiki, new KatagrafiDiamnemata()));
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('απέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+  });
+
+  it('στοιχείο εκτός σχήματος παραλείπεται από τις επιλογές', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(ARXEIO_MATHIMATON, JSON.stringify([{'kodikos': 'M1'}]));
+    const eclass = new FakeEclassPyli();
+    eclass.mathimata = [ftiaxe_mathima(), ftiaxe_mathima({ kodikos: 'M2', titlos: 'Αλγόριθμοι', epilegmeno: false })];
+
+    const apotelesma = await anakalypsi(ftiaxe_eisodos(eclass, apothiki, new KatagrafiDiamnemata()));
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('απέτυχε');
+    expect(apotelesma.timi).toHaveLength(2);
+    expect(apotelesma.timi.find((m) => m.kodikos === 'M1')?.epilegmeno).toBe(true);
+  });
+
+  it('αποτυχία ανάγνωσης του υπάρχοντος mathimata.json → σφάλμα', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(ARXEIO_MATHIMATON, JSON.stringify([ftiaxe_mathima()]));
+    apothiki.diavase_keimeno = async () => apotyxia('DIKTYO', 'Δεν γίνεται ανάγνωση');
+    const eclass = new FakeEclassPyli();
+    eclass.mathimata = [ftiaxe_mathima()];
+
+    const apotelesma = await anakalypsi(ftiaxe_eisodos(eclass, apothiki, new KatagrafiDiamnemata()));
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('απέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+  });
+
+  it('αποτυχία εγγραφής → σφάλμα, όχι ημιτελές αποτέλεσμα', async () => {
+    const apothiki = new MnimiApothiki();
+    apothiki.grapse_keimeno = async () => apotyxia('DIKTYO', 'Δεν γίνεται εγγραφή');
+    const eclass = new FakeEclassPyli();
+    eclass.mathimata = [ftiaxe_mathima()];
+
+    const apotelesma = await anakalypsi(ftiaxe_eisodos(eclass, apothiki, new KatagrafiDiamnemata()));
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('απέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
   });
 });

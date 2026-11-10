@@ -1,19 +1,45 @@
 import { describe, it, expect } from 'vitest';
 import { MnimiApothiki } from '@dps/core/testing';
 import type { Arxeio, Selida } from '@dps/core';
+import { apotyxia } from '@dps/core';
 import { ArgiosLlm, FakeEclassPyli, FakeKatevasmaPyli, KatagrafiDiamnemata, StatheriRologi } from '../testing/voirtheia.js';
 import { ftiaxe_docx, ftiaxe_pptx } from '../testing/fixtures-arxeia.js';
 import { exagogi } from '../bhmata/exagogi.js';
-import type { EisodosPipeline } from '../porte.js';
+import type { EisodosPipeline, OcrPyli } from '../porte.js';
 import { arxeio_eurethriou, arxeio_keimenou, diadromi_arxeiou } from '../statheroi.js';
 import { ftiaxe_arxeio_id, grapse_json } from '../grammata/apothiki-json.js';
 
-function ftiaxe_eisodos(apothiki: MnimiApothiki, katagrafi: KatagrafiDiamnemata): EisodosPipeline {
+/** Συνθετικό PDF: ένα κείμενο ανά σελίδα, όπως το βγάζει το `@dps/extract`. */
+function ftiaxe_pdf(keimeno: string): Uint8Array {
+  const content = `BT /F1 12 Tf 72 700 Td (${keimeno}) Tj ET\n`;
+  const catalog = `1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n`;
+  const pagesObj = `2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n`;
+  const page = `3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n`;
+  const contentObj = `4 0 obj\n<< /Length ${content.length} >>\nstream\n${content}endstream\nendobj\n`;
+  const font = `5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n`;
+  const xrefPos = catalog.length + pagesObj.length + page.length + contentObj.length + font.length;
+  const xref = `xref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000073 00000 n \n0000000133 00000 n \n0000000243 00000 n \n0000000343 00000 n \n`;
+  return new TextEncoder().encode(
+    `%PDF-1.4\n${catalog}${pagesObj}${page}${contentObj}${font}${xref}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xrefPos}\n%%EOF\n`
+  );
+}
+
+function ftiaxe_pdf_xoris_keimeno(): Uint8Array {
+  // Καμία λέξη: η σελίδα σημαίνεται `xoris_keimeno` και πηγαίνει στο OCR.
+  return ftiaxe_pdf('α');
+}
+
+function ftiaxe_eisodos(
+  apothiki: MnimiApothiki,
+  katagrafi: KatagrafiDiamnemata,
+  ocr?: OcrPyli
+): EisodosPipeline {
   return {
     eclass: new FakeEclassPyli(),
     apothiki,
     katevasma: new FakeKatevasmaPyli(apothiki),
     llm: new ArgiosLlm(),
+    ocr,
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
     rologi: new StatheriRologi(),
     katagrafi,
@@ -219,5 +245,125 @@ describe('exagogi', () => {
     expect(apotelesma.ok).toBe(false);
     if (apotelesma.ok) throw new Error('απέτυχε');
     expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+  });
+
+  it('εξάγει pdf με κείμενο', async () => {
+    const apothiki = new MnimiApothiki();
+    const p = ftiaxe_eisodos(apothiki, new KatagrafiDiamnemata());
+    const arxeio = arxeio_test('dokimio.pdf');
+    await these_arxeia(
+      apothiki,
+      [arxeio],
+      new Map([['dokimio.pdf', ftiaxe_pdf('a list is a sequence of elements')]])
+    );
+
+    const apotelesma = await exagogi(p, 'M1');
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('απέτυχε');
+    expect(apotelesma.timi.megaliteres).toBe(1);
+    const selides = await diavase_keimeno(apothiki, arxeio.id);
+    expect(selides).toHaveLength(1);
+    expect(selides[0]?.keimeno).toBe('a list is a sequence of elements');
+  });
+
+  it('pdf χωρίς κείμενο σελίδας → τοπικό OCR', async () => {
+    const apothiki = new MnimiApothiki();
+    const ocr = {
+      anagnorise_pdf_selida: async () => ({ ok: true, timi: 'κείμενο από OCR' }),
+    } as OcrPyli;
+    const p = ftiaxe_eisodos(apothiki, new KatagrafiDiamnemata(), ocr);
+    const arxeio = arxeio_test('dokimio.pdf');
+    await these_arxeia(apothiki, [arxeio], new Map([['dokimio.pdf', ftiaxe_pdf_xoris_keimeno()]]));
+
+    const apotelesma = await exagogi(p, 'M1');
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('απέτυχε');
+    expect(apotelesma.timi.megaliteres).toBe(1);
+    const selides = await diavase_keimeno(apothiki, arxeio.id);
+    expect(selides).toHaveLength(1);
+    expect(selides[0]?.keimeno).toBe('κείμενο από OCR');
+    expect(selides[0]?.xoris_keimeno).toBe(false);
+  });
+
+  it('σελίδα με κείμενο δεν καλεί το OCR', async () => {
+    const apothiki = new MnimiApothiki();
+    const kliseis: string[] = [];
+    const ocr = {
+      anagnorise_pdf_selida: async () => {
+        kliseis.push('OCR');
+        return { ok: true, timi: 'κενό' };
+      },
+    } as OcrPyli;
+    const p = ftiaxe_eisodos(apothiki, new KatagrafiDiamnemata(), ocr);
+    const arxeio = arxeio_test('dokimio.pdf');
+    await these_arxeia(
+      apothiki,
+      [arxeio],
+      new Map([['dokimio.pdf', ftiaxe_pdf('a list is a sequence of elements')]])
+    );
+
+    const apotelesma = await exagogi(p, 'M1');
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('απέτυχε');
+    expect(apotelesma.timi.megaliteres).toBe(1);
+    expect(kliseis).toHaveLength(0);
+  });
+
+  it('αποτυχία OCR → σφάλμα', async () => {
+    const apothiki = new MnimiApothiki();
+    const ocr = {
+      anagnorise_pdf_selida: async () => ({
+        ok: false,
+        sfalma: { kodikos: 'OCR_APOTYXIA', minima: 'Δεν αναγνωρίστηκε κείμενο' },
+      }),
+    } as OcrPyli;
+    const p = ftiaxe_eisodos(apothiki, new KatagrafiDiamnemata(), ocr);
+    const arxeio = arxeio_test('dokimio.pdf');
+    await these_arxeia(apothiki, [arxeio], new Map([['dokimio.pdf', ftiaxe_pdf_xoris_keimeno()]]));
+
+    const apotelesma = await exagogi(p, 'M1');
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('απέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('OCR_APOTYXIA');
+  });
+
+  it('κενό κείμενο από OCR → xoris_keimeno', async () => {
+    const apothiki = new MnimiApothiki();
+    const ocr = {
+      anagnorise_pdf_selida: async () => ({ ok: true, timi: '  ' }),
+    } as OcrPyli;
+    const p = ftiaxe_eisodos(apothiki, new KatagrafiDiamnemata(), ocr);
+    const arxeio = arxeio_test('dokimio.pdf');
+    await these_arxeia(apothiki, [arxeio], new Map([['dokimio.pdf', ftiaxe_pdf_xoris_keimeno()]]));
+
+    const apotelesma = await exagogi(p, 'M1');
+
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) throw new Error('απέτυχε');
+    const selides = await diavase_keimeno(apothiki, arxeio.id);
+    expect(selides[0]?.xoris_keimeno).toBe(true);
+  });
+
+  it('αποτυχία εγγραφής → σφάλμα, όχι ημιτελές αρχείο', async () => {
+    const apothiki = new MnimiApothiki();
+    const arxeio = arxeio_test('dokimio.pdf');
+    await grapse_json(apothiki, arxeio_eurethriou('M1'), [arxeio]);
+    await apothiki.grapse_dyadiko(
+      diadromi_arxeiou('M1', 'dokimio.pdf'),
+      ftiaxe_pdf('a list is a sequence of elements')
+    );
+    apothiki.grapse_keimeno = async () => apotyxia('DIKTYO', 'Δεν γίνεται εγγραφή');
+    const p = ftiaxe_eisodos(apothiki, new KatagrafiDiamnemata());
+
+    const apotelesma = await exagogi(p, 'M1');
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('απέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+    expect(await apothiki.yparxei(arxeio_keimenou('M1', arxeio.id))).toBe(false);
   });
 });

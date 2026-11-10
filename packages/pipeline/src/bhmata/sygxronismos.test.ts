@@ -246,6 +246,20 @@ describe('sygxronismos — κανόνες §8 και §5.3', () => {
     expect(await apothiki.yparxei(arxeio_eurethriou('M1'))).toBe(false);
   });
 
+  it('αποτυχία εγγραφής των bytes στο ευρετήριο → σφάλμα λήψης (L76)', async () => {
+    const eclass = new FakeEclassPyli();
+    eclass.dendra = { M1: [komvos_arxeio()] };
+    const apothiki = new MnimiApothiki();
+    apothiki.grapse_dyadiko = async () => apotyxia('DIKTYO', 'Δεν γίνεται εγγραφή');
+
+    const apotelesma = await sygxronismos(ftiaxe_eisodos(eclass, apothiki, new KatagrafiDiamnemata()), 'M1');
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('DIKTYO');
+    expect(await apothiki.yparxei(arxeio_eurethriou('M1'))).toBe(false);
+  });
+
   it('αδιατάρτακτος ευρετήριο επιστρέφει MI_EGKYRO_SXIMA και δεν κάνει ψεύτικο sync', async () => {
     const eclass = new FakeEclassPyli();
     eclass.dendra = { M1: [komvos_arxeio()] };

@@ -143,11 +143,6 @@ async function exagage_keimeno_thematos(
     return dedomena;
   }
 
-  const epiteksi = ektekseven_arxeio(diadromi);
-  if (epiteksi !== 'pdf') {
-    return apotyxia('MI_YPOSTIRIZOMENO', `Δεν υπάρχει εξαγωγή κειμένου για «${epiteksi}»`);
-  }
-
   const { exagage_pdf } = await import('@dps/extract');
   const selides = await exagage_pdf(dedomena.timi, onoma_arxeiou);
   if (!selides.ok) {
