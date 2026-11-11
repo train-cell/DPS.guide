@@ -1,13 +1,32 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { ok } from '@dps/core';
+import { ok, apotyxia } from '@dps/core';
+import type { ApothikiPyli, Mathima } from '@dps/core';
 import { dimiourgise_eisodos, DIADROMI_RYTHMISEON } from './eisodos-pipeline.js';
-import { epikyrose_montelo } from './rythmiseis.js';
+import { epikyrose_montelo, epikyrose_base_url, fere_montelo_apo_ryza, fere_base_url_apo_ryza } from './rythmiseis.js';
 import { MiYpostirimenoEclassPyli } from './eclass-eksodon.js';
+import { MiOrismenoMonteloLlmPyli } from './llm-choris-montelou.js';
+import { KonsoladaKatagrafi } from './katagrafi-konsolada.js';
+import { MONTELO_ME_ORISMENO } from './llm-choris-montelou.js';
+import { DIADROMI_MATHIMATON, epilegmena_mathimata, fere_mathimata_apo_ryza } from './mathimata-apo-ryza.js';
 import { DpsEclassPyli } from '@dps/eclass';
 import type { ParastatesEntolhs } from '../entoles/grammatikopoio-entolhs.js';
+
+const MATHIMA_EPILEGMENO: Mathima = {
+  kodikos: 'MATH101',
+  titlos: 'Δομές Δεδομένων',
+  url: 'https://example.invalid/MATH101',
+  epilegmeno: true,
+};
+
+const MATHIMA_MH_EPILEGMENO: Mathima = {
+  kodikos: 'MATH202',
+  titlos: 'Αλγόριθμοι',
+  url: 'https://example.invalid/MATH202',
+  epilegmeno: false,
+};
 
 const MONTELO = 'gemini-ypokpisteio';
 
@@ -65,6 +84,21 @@ describe('dimiourgise_eisodos — όρια privacy του CLI', () => {
       thermokrasia: 0,
     });
     expect(generated.ok).toBe(false);
+  });
+
+  it('η καταγραφή γράφει στο stderr μέσω της ιδιωτικής κλειδωμένης συνάρτησης', async () => {
+    const grapse = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    try {
+      const apotelesma = await dimiourgise_eisodos(parastates('./riza', null, false));
+      expect(apotelesma.ok).toBe(true);
+      if (!apotelesma.ok) {
+        return;
+      }
+      apotelesma.timi.katagrafi.sfalma('μηνυμα καταγραφής');
+      expect(grapse).toHaveBeenCalledWith('[ΣΦΑΛΜΑ] μηνυμα καταγραφής\n');
+    } finally {
+      grapse.mockRestore();
+    }
   });
 });
 
@@ -179,6 +213,193 @@ describe('συμβατότητα αποτελεσμάτων', () => {
   it('το apotelesma επιστρέφει ok(true) όταν στηθεί', () => {
     const apotelesma = ok({ montelo: MONTELO });
     expect(apotelesma.ok).toBe(true);
+  });
+});
+
+describe('epikyrose_base_url — εξαγωγή από ρυθμίσεις', () => {
+  it('διαβάζει το base_url από έγκυρο αντικείμενο', () => {
+    expect(epikyrose_base_url({ base_url: 'https://thales.cs.unipi.gr' })).toBe('https://thales.cs.unipi.gr');
+  });
+
+  it('διαβάζει το base_url ακόμα κι αν υπάρχουν άλλα πεδία (§5.3)', () => {
+    expect(epikyrose_base_url({ montelo: MONTELO, base_url: 'https://thales.cs.unipi.gr' })).toBe(
+      'https://thales.cs.unipi.gr'
+    );
+  });
+
+  it('κενό/λείπον/μη-κείμενο base_url → null', () => {
+    expect(epikyrose_base_url({})).toBeNull();
+    expect(epikyrose_base_url({ base_url: '' })).toBeNull();
+    expect(epikyrose_base_url({ base_url: '   ' })).toBeNull();
+    expect(epikyrose_base_url({ base_url: 42 })).toBeNull();
+    expect(epikyrose_base_url(null)).toBeNull();
+    expect(epikyrose_base_url('μην είναι αντικείμενο')).toBeNull();
+  });
+});
+
+describe('fere_montelo_apo_ryza / fere_base_url_apo_ryza', () => {
+  let riza = '';
+
+  beforeEach(async () => {
+    riza = await mkdtemp(path.join(tmpdir(), 'dps-cli-rythisies-'));
+  });
+
+  afterEach(async () => {
+    await rm(riza, { recursive: true, force: true });
+  });
+
+  function apothiki_grammatos(gram: string): ApothikiPyli {
+    return { diavase_keimeno: async () => ok(gram) } as unknown as ApothikiPyli;
+  }
+
+  it('διαβάζει το montelo και το base_url από έγκυρο rythmiseis.json', async () => {
+    const gram = JSON.stringify({ montelo: MONTELO, base_url: 'https://thales.cs.unipi.gr' });
+    const apotelesma_montelo = await fere_montelo_apo_ryza(apothiki_grammatos(gram));
+    const apotelesma_base = await fere_base_url_apo_ryza(apothiki_grammatos(gram));
+    expect(apotelesma_montelo).toBe(MONTELO);
+    expect(apotelesma_base).toBe('https://thales.cs.unipi.gr');
+  });
+
+  it('ακυρό JSON δίνει null (δεν πετάει)', async () => {
+    const gram = 'αυτό δεν είναι JSON';
+    expect(await fere_montelo_apo_ryza(apothiki_grammatos(gram))).toBeNull();
+    expect(await fere_base_url_apo_ryza(apothiki_grammatos(gram))).toBeNull();
+  });
+
+  it('λείπον αρχείο δίνει null (δεν πετάει)', async () => {
+    const apothiki = {
+      diavase_keimeno: async () => apotyxia('MI_EGKYRO_SXIMA', 'δεν βρέθηκε αρχείο'),
+    } as unknown as ApothikiPyli;
+    expect(await fere_montelo_apo_ryza(apothiki)).toBeNull();
+    expect(await fere_base_url_apo_ryza(apothiki)).toBeNull();
+  });
+});
+
+describe('fere_mathimata_apo_ryza', () => {
+  function apothiki_mathimaton(mathimata: readonly Mathima[]): ApothikiPyli {
+    return { diavase_keimeno: async () => ok(JSON.stringify(mathimata)) } as unknown as ApothikiPyli;
+  }
+
+  it('επικυρώνει κάθε στοιχείο με το MathimaSchema', async () => {
+    const mathimata = [MATHIMA_EPILEGMENO, MATHIMA_MH_EPILEGMENO];
+    const apotelesma = await fere_mathimata_apo_ryza(apothiki_mathimaton(mathimata));
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) return;
+    expect(apotelesma.timi).toEqual(mathimata);
+  });
+
+  it('άθλιο JSON δίνει MI_EGKYRO_SXIMA', async () => {
+    const apotelesma = await fere_mathimata_apo_ryza(
+      { diavase_keimeno: async () => ok('αυτό δεν είναι JSON') } as unknown as ApothikiPyli
+    );
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) return;
+    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+  });
+
+  it('μη πίνακας δίνει MI_EGKYRO_SXIMA', async () => {
+    const apotelesma = await fere_mathimata_apo_ryza(
+      { diavase_keimeno: async () => ok(JSON.stringify({ kodikos: 'MATH101' })) } as unknown as ApothikiPyli
+    );
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) return;
+    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+  });
+
+  it('μη έγκυρο στοιχείο δίνει MI_EGKYRO_SXIMA με τις λεπτομέρειες', async () => {
+    const apotelesma = await fere_mathimata_apo_ryza(
+      apothiki_mathimaton([{ kodikos: 'MATH101' }] as unknown as Mathima[])
+    );
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) return;
+    expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    expect(apotelesma.sfalma.minima).toContain('θέση 0');
+  });
+
+  it('κενή λίστα επιστρέφει κενή λίστα (όχι σφάλμα)', async () => {
+    const apotelesma = await fere_mathimata_apo_ryza(apothiki_mathimaton([]));
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) return;
+    expect(apotelesma.timi).toEqual([]);
+  });
+});
+
+describe('epilegmena_mathimata', () => {
+  it('κρατά μόνο τα επιλεγμένα', () => {
+    expect(epilegmena_mathimata([MATHIMA_EPILEGMENO, MATHIMA_MH_EPILEGMENO])).toEqual([MATHIMA_EPILEGMENO]);
+  });
+
+  it('κενή λίστα δίνει κενή λίστα', () => {
+    expect(epilegmena_mathimata([])).toEqual([]);
+  });
+});
+
+describe('MiYpostirimenoEclassPyli', () => {
+  it('η fere_mathimata δίνει σαφές unsupported error', async () => {
+    const pili = new MiYpostirimenoEclassPyli();
+    const apotelesma = await pili.fere_mathimata();
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) expect(apotelesma.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
+  });
+
+  it('η fere_dentro_arxeion δίνει σαφές unsupported error', async () => {
+    const pili = new MiYpostirimenoEclassPyli();
+    const apotelesma = await pili.fere_dentro_arxeion();
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) expect(apotelesma.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
+  });
+});
+
+describe('MiOrismenoMonteloLlmPyli', () => {
+  it('δείχνει το ρητό κενό μοντέλο', () => {
+    expect(new MiOrismenoMonteloLlmPyli().montelo).toBe(MONTELO_ME_ORISMENO);
+  });
+
+  it('η parage_json δίνει σφάλμα', async () => {
+    const pili = new MiOrismenoMonteloLlmPyli();
+    const apotelesma = await pili.parage_json();
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+  });
+
+  it('η parage_keimeno δίνει σφάλμα', async () => {
+    const pili = new MiOrismenoMonteloLlmPyli();
+    const apotelesma = await pili.parage_keimeno();
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+  });
+});
+
+describe('KonsoladaKatagrafi', () => {
+  it('γράφει pliroforia με δεδομένα', () => {
+    const grammes: string[] = [];
+    const katagrafi = new KonsoladaKatagrafi((grammi) => grammes.push(grammi));
+    katagrafi.pliroforia('msg', { a: 1 });
+    expect(grammes).toEqual(['[ΠΛΗΡΟΦΟΡΙΑ] msg {"a":1}']);
+  });
+
+  it('γράφει pliroforia χωρίς δεδομένα', () => {
+    const grammes: string[] = [];
+    const katagrafi = new KonsoladaKatagrafi((grammi) => grammes.push(grammi));
+    katagrafi.pliroforia('msg');
+    expect(grammes).toEqual(['[ΠΛΗΡΟΦΟΡΙΑ] msg']);
+  });
+
+  it('γράφει proeidopoiisi και sfalma', () => {
+    const grammes: string[] = [];
+    const katagrafi = new KonsoladaKatagrafi((grammi) => grammes.push(grammi));
+    katagrafi.proeidopoiisi('proe');
+    katagrafi.sfalma('sfd', { x: true });
+    expect(grammes).toEqual(['[ΠΡΟΕΙΔΟΠΟΙΗΣΗ] proe', '[ΣΦΑΛΜΑ] sfd {"x":true}']);
+  });
+
+  it('δεν πετάει όταν δεν χωράει τα δεδομένα στο JSON', () => {
+    const grammes: string[] = [];
+    const katagrafi = new KonsoladaKatagrafi((grammi) => grammes.push(grammi));
+    const circular: Record<string, unknown> = {};
+    circular.self = circular;
+    katagrafi.sfalma('sfd', circular);
+    expect(grammes).toEqual(['[ΣΦΑΛΜΑ] sfd [δεν σειριοποιήθηκε]']);
   });
 });
 

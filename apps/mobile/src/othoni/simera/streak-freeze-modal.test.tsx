@@ -1,11 +1,24 @@
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+// @vitest-environment jsdom
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { StreakFreezeModal } from './streak-freeze-modal.js';
 
+/** Το workspace root, ανεξάρτητα από το από πού τρέχει το test. */
+function rootDir(): string {
+  return existsSync(join(process.cwd(), 'apps', 'mobile'))
+    ? process.cwd()
+    : join(process.cwd(), '..', '..');
+}
+
+/** Κενά το DOM μετά από κάθε test DOM. */
+afterEach(cleanup);
+
+/** Ο κώδικας της οθόνης — για τους ελέγχους D11 (zero inline styles, zero raw hex). */
 const PIGI_KODIKA = readFileSync(
-  fileURLToPath(new URL('./streak-freeze-modal.tsx', import.meta.url)),
+  join(rootDir(), 'apps/mobile/src/othoni/simera/streak-freeze-modal.tsx'),
   'utf8'
 );
 
@@ -75,6 +88,37 @@ describe('StreakFreezeModal Component (streak-freeze-modal.tsx)', () => {
       expect(PIGI_KODIKA).toContain('role="dialog"');
       expect(PIGI_KODIKA).toContain('aria-modal="true"');
       expect(PIGI_KODIKA).toContain('aria-labelledby=');
+    });
+  });
+
+  describe('Διεπαφή & συμβάντα DOM', () => {
+    it('σβήνει το click σταματώντας τη διάδοση (stopPropagation)', () => {
+      const onKleisimo = vi.fn();
+      render(<StreakFreezeModal {...proepiloges} onKleisimo={onKleisimo} />);
+
+      const box = screen.getByTestId('streak-freeze-modal');
+      fireEvent.click(box);
+
+      expect(onKleisimo).not.toHaveBeenCalled();
+    });
+
+    it('κλείνει όταν γίνει κλικ στο overlay', () => {
+      const onKleisimo = vi.fn();
+      render(<StreakFreezeModal {...proepiloges} onKleisimo={onKleisimo} />);
+
+      const box = screen.getByTestId('streak-freeze-modal');
+      const overlay = box.parentElement;
+      fireEvent.click(overlay);
+
+      expect(onKleisimo).toHaveBeenCalledTimes(1);
+    });
+
+    it('γράφει "ημέρα" όταν το streak είναι 1', () => {
+      const html = renderToStaticMarkup(
+        <StreakFreezeModal {...proepiloges} trexwnStreak={1} kindynosDiakopis={false} />
+      );
+
+      expect(html).toContain('1 ημέρα');
     });
   });
 });

@@ -9,8 +9,10 @@ const filesystem = vi.hoisted(() => ({
   share: vi.fn(async () => undefined),
 }));
 
+const capacitor = vi.hoisted(() => ({ isNativePlatform: () => true }));
+
 vi.mock('@capacitor/core', () => ({
-  Capacitor: { isNativePlatform: () => true },
+  Capacitor: capacitor,
 }));
 
 vi.mock('@capacitor/filesystem', () => ({
@@ -73,5 +75,46 @@ describe('deliverEncryptedBackup', () => {
 
     expect(filesystem.share).not.toHaveBeenCalled();
     expect(filesystem.deleteFile).toHaveBeenCalledOnce();
+  });
+
+  it('καλύπτει το catch του deleteFile όταν αποτύχει η διαγραφή', async () => {
+    filesystem.deleteFile.mockRejectedValueOnce(new Error('den briskei'));
+    const source = new Uint8Array(CHUNK_BYTES + 1);
+
+    await deliverEncryptedBackup(new Blob([source]));
+
+    expect(filesystem.deleteFile).toHaveBeenCalledOnce();
+  });
+
+  it('γράφει κενό αρχείο όταν το blob είναι άδειο', async () => {
+    await deliverEncryptedBackup(new Blob([]), 'keno.dpsbackup');
+
+    expect(filesystem.writeFile).toHaveBeenCalledTimes(1);
+    expect(filesystem.appendFile).not.toHaveBeenCalled();
+    expect(filesystem.writeFile.mock.calls[0]?.[0].data).toBe('');
+    expect(filesystem.deleteFile).toHaveBeenCalledOnce();
+  });
+
+  it('σε μη native πλατφόρμα κατεβάζει το αρχείο μέσω anchor', async () => {
+    const revokeObjectURL = vi.fn();
+    const createElement = vi.fn(() => ({ click: vi.fn(), href: '', download: '' }));
+    vi.stubGlobal('URL', { ...URL, createObjectURL: vi.fn(() => 'blob:test'), revokeObjectURL });
+    vi.stubGlobal('document', { createElement });
+    vi.stubGlobal('window', {
+      setTimeout: (callback: (...args: never[]) => void) => callback(),
+    });
+    const isNative = capacitor.isNativePlatform;
+    capacitor.isNativePlatform = () => false;
+
+    try {
+      await deliverEncryptedBackup(new Blob([new Uint8Array(64)]), 'onoma.dpsbackup');
+
+      expect(createElement).toHaveBeenCalledWith('a');
+      expect(revokeObjectURL).toHaveBeenCalledTimes(1);
+      expect(filesystem.writeFile).not.toHaveBeenCalled();
+      expect(filesystem.share).not.toHaveBeenCalled();
+    } finally {
+      capacitor.isNativePlatform = isNative;
+    }
   });
 });

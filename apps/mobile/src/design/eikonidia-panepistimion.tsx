@@ -100,7 +100,8 @@ function katigoria_apo_core(id: string, perioxh: string): KatigoriaPanepistimiou
   return 'perifereia';
 }
 
-function lms_apo_core(id: string, typos_lms: string): 'open-eclass' | 'moodle' | 'unsupported' | 'auto' {
+/** Epistrefei ton LMS typo pou antistoixei sto idryma: 'open-eclass', 'moodle', 'auto' i 'unsupported'. */
+export function lms_apo_core(id: string, typos_lms: string): 'open-eclass' | 'moodle' | 'unsupported' | 'auto' {
   if (id === 'ntua_mycourses' || id === 'ntua') {
     return 'unsupported';
   }
@@ -109,6 +110,9 @@ function lms_apo_core(id: string, typos_lms: string): 'open-eclass' | 'moodle' |
   }
   if (typos_lms === 'openeclass') {
     return 'open-eclass';
+  }
+  if (typos_lms === 'custom') {
+    return 'auto';
   }
   return 'unsupported';
 }

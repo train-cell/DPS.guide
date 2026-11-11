@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
+import type { Enotita } from '@dps/core';
 import { MnimiApothiki } from '@dps/core/testing';
 import { DIADROMI_MATHIMATON, fortose_mathimata_apo_apothiki } from './mathimata.js';
+import { lepita_aristeias, pososto_aristeias } from './metrikes-mathimatos.js';
 import { diadromi_synomilias, fortose_synomilia_apo_apothiki } from './synomilia.js';
 import { pseudos_mathimata } from '../../test-fixtures/pseudomata/index.js';
 
@@ -76,4 +78,67 @@ describe('fortose_synomilia_apo_apothiki', () => {
     expect(grammata).toHaveLength(1);
     expect(grammata[0]?.keimeno).toBe('έγκυρο');
   });
+
+  it('μη έγκυρο JSON δίνει MI_EGKYRO_SXIMA', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(DIADROMI_MATHIMATON, '{ oxi: json }');
+    const apokrisis = await fortose_mathimata_apo_apothiki(apothiki);
+    expect(apokrisis.katastasi).toBe('sfalma');
+    if (apokrisis.katastasi === 'sfalma') {
+      expect(apokrisis.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+  });
 });
+
+const DOKIMASTIKES_ENOTITES: Enotita[] = [
+  {
+    id: 'en-1',
+    titlos: 'Εισαγωγή',
+    piges: [],
+    ennoies: ['Έννοια 1'],
+    proapaitoumenes: [],
+    seira: 1,
+    lepta_ektimisi: 30,
+    apodosi_exetasis: 10,
+  },
+  {
+    id: 'en-2',
+    titlos: 'Αλγόριθμοι',
+    piges: [],
+    ennoies: ['Έννοια 2'],
+    proapaitoumenes: [],
+    seira: 2,
+    lepta_ektimisi: 45,
+    apodosi_exetasis: 20,
+  },
+];
+
+describe('metrikes-mathimatos — ακατέργαστα μέτρησης', () => {
+  it('αθροίζει όλα τα εκτιμώμενα λεπτά των ενοτήτων', () => {
+    expect(lepita_aristeias(DOKIMASTIKES_ENOTITES)).toBe(75);
+  });
+
+  it('μετράει 0 όταν λείπει το lepta_ektimisi', () => {
+    const xwrisLepta = DOKIMASTIKES_ENOTITES.map(({ id, titlos }) => ({
+      id,
+      titlos,
+    }));
+    expect(lepita_aristeias(xwrisLepta as Enotita[])).toBe(0);
+  });
+
+  it('επιστρέφει 0 για κενό πίνακα ενοτήτων', () => {
+    expect(lepita_aristeias([])).toBe(0);
+  });
+
+  it('υπολογίζει το ποσοστό ολοκλήρωσης από τα τελικά ids', () => {
+    expect(pososto_aristeias(DOKIMASTIKES_ENOTITES, ['en-1', 'en-2'])).toBe(1);
+    expect(pososto_aristeias(DOKIMASTIKES_ENOTITES, ['en-1'])).toBe(0.5);
+    expect(pososto_aristeias(DOKIMASTIKES_ENOTITES, [])).toBe(0);
+    expect(pososto_aristeias(DOKIMASTIKES_ENOTITES, ['en-3'])).toBe(0);
+  });
+
+  it('υπολογίζει 0 το ποσοστό για κενό πίνακα', () => {
+    expect(pososto_aristeias([], ['en-1'])).toBe(0);
+  });
+});
+

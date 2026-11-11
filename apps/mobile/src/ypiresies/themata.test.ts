@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { MnimiApothiki } from '@dps/core/testing';
+import { apotyxia } from '@dps/core';
 import { pare_tilemetria_arxeio, katharise_tilemetria } from '../tilemetria/tilemetria.js';
 import {
   apothikefse_apodosi,
@@ -9,6 +10,10 @@ import {
   fortose_themata_arxeia,
   ypologise_kai_apothikefse_apodosi,
 } from './themata.js';
+
+beforeEach(() => {
+  katharise_tilemetria();
+});
 
 describe('themata ypiresia — διαδρομές και αρχεία', () => {
   it('επιστρέφει τις σωστές διαδρομές vault', () => {
@@ -65,6 +70,70 @@ describe('themata ypiresia — ανάγνωση και αποθήκευση απ
     const fortomeno = await fortose_apodosi(apothiki, 'PLH101');
     expect(fortomeno).toEqual({ 'en-1': 30 });
   });
+
+  it('fortose_themata_arxeia επιστρέφει κενή λίστα αν αποτύχει η λίστα φακέλου', async () => {
+    const apothiki = new MnimiApothiki();
+    vi.spyOn(apothiki, 'lista').mockResolvedValue(
+      apotyxia<string>('DEN_VRETHIKE', 'Δεν βρέθηκε ο φάκελος.')
+    );
+
+    expect(await fortose_themata_arxeia(apothiki, 'PLH101')).toEqual([]);
+  });
+
+  it('fortose_apodosi επιστρέφει κενό αντικείμενο αν το JSON είναι λίστα', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(diadromi_apodosis('PLH101'), JSON.stringify([1, 2]));
+
+    const apodosi = await fortose_apodosi(apothiki, 'PLH101');
+    expect(apodosi).toEqual({});
+  });
+
+  it('fortose_apodosi επιστρέφει κενό αντικείμενο αν το JSON είναι null ή μη αντικείμενο', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(diadromi_apodosis('PLH101'), 'null');
+    expect(await fortose_apodosi(apothiki, 'PLH101')).toEqual({});
+
+    await apothiki.grapse_keimeno(diadromi_apodosis('PLH101'), '123');
+    expect(await fortose_apodosi(apothiki, 'PLH101')).toEqual({});
+
+    await apothiki.grapse_keimeno(diadromi_apodosis('PLH101'), '"κείμενο"');
+    expect(await fortose_apodosi(apothiki, 'PLH101')).toEqual({});
+  });
+
+  it('fortose_apodosi επιστρέφει κενό αντικείμενο και καταγράφει σφάλμα όταν το JSON είναι χαλασμένο', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(diadromi_apodosis('PLH101'), '{ mh egkyro json');
+
+    const apodosi = await fortose_apodosi(apothiki, 'PLH101');
+    expect(apodosi).toEqual({});
+    expect(pare_tilemetria_arxeio()).toHaveLength(1);
+    expect(pare_tilemetria_arxeio()[0]?.minima).toBe('Apotyxia parsing arxeiou apodosis JSON');
+    expect(pare_tilemetria_arxeio()[0]?.metadedomena).toEqual({
+      kodikos: '[REDACTED]',
+      sfalma: expect.any(String),
+    });
+  });
+
+  it('fortose_apodosi φιλτράρει μόνο τους έγκυρους αριθμούς', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(
+      diadromi_apodosis('PLH101'),
+      JSON.stringify({ 'en-1': 15, 'en-2': '15', 'en-3': Infinity, 'en-4': NaN, 'en-5': 25.5 })
+    );
+
+    const apodosi = await fortose_apodosi(apothiki, 'PLH101');
+    expect(apodosi).toEqual({ 'en-1': 15, 'en-5': 25.5 });
+  });
+
+  it('apothikefse_apodosi αποτυγχάνει όταν δεν γράφει η αποθήκη', async () => {
+    const apothiki = new MnimiApothiki();
+    vi.spyOn(apothiki, 'grapse_keimeno').mockResolvedValue(
+      apotyxia<void>('DEN_VRETHIKE', 'Δεν γράφτηκε.')
+    );
+
+    const apotelesma = await apothikefse_apodosi(apothiki, 'PLH101', { 'en-1': 30 });
+    expect(apotelesma.ok).toBe(false);
+  });
 });
 
 describe('themata ypiresia — υπολογισμός και αποθήκευση (50/50 boundary)', () => {
@@ -97,6 +166,20 @@ describe('themata ypiresia — υπολογισμός και αποθήκευσ�
 
     const yparxei = await apothiki.yparxei(diadromi_apodosis('PLH101'));
     expect(yparxei).toBe(false);
+  });
+
+  it('ypologise_kai_apothikefse_apodosi αποτυγχάνει όταν αποτυγχάνει η αποθήκευση', async () => {
+    const apothiki = new MnimiApothiki();
+    vi.spyOn(apothiki, 'grapse_keimeno').mockResolvedValue(
+      apotyxia<void>('DEN_VRETHIKE', 'Δεν γράφτηκε.')
+    );
+    const antistoixiseis = [{ enotita_id: 'en-1', monades: 10 }];
+
+    const apotelesma = await ypologise_kai_apothikefse_apodosi(apothiki, 'PLH101', antistoixiseis);
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    }
   });
 
   it('ypologise_kai_apothikefse_apodosi καταγράφει τηλεμετρία με me_tilemetria', async () => {

@@ -517,6 +517,16 @@ describe('χρήση CLI', () => {
     expect(p.grammes.join('\n')).toContain('dps-guide');
   });
 
+  it('λάνθει η ανάλυση των ορισμάτων → exit 1, χωρίς βήματα', async () => {
+    const p = parastates();
+    const kodikos = await p.trexe(['--riza']);
+    expect(kodikos).toBe(KODIKOS_SFALMA);
+    expect(p.sfalmes).toHaveLength(1);
+    expect(p.sfalmes[0]?.kodikos).toBe('MI_EGKYRO_SXIMA');
+    expect(p.sfalmes[0]?.minima).toContain('--riza');
+    expect(bima.anakalypsi).not.toHaveBeenCalled();
+  });
+
   it('παράθετο όρισμα σε εντολή χωρίς ορίσματα → exit 1', async () => {
     const p = parastates();
     const kodikos = await p.trexe(['mathimata', 'MATH101']);
@@ -577,6 +587,14 @@ describe('αναφορά σφαλμάτων', () => {
   it('καταρρέει με άγνωστη δομή σφάλματος αλλά δεν πετάει έξω', async () => {
     const p = parastates();
     bima.anakalypsi.mockResolvedValue({ ok: false, sfalma: 'μην είναι αντικείμενο' } as unknown as Apotelesma<Mathima[]>);
+    const kodikos = await p.trexe(['mathimata']);
+    expect(kodikos).toBe(KODIKOS_SFALMA);
+    expect(p.sfalmes[0]?.kodikos).toBe('AGNOSTO');
+  });
+
+  it('σωματίδιο σφάλματος με άκυρο σφάλμα μέσα επιστρέφει AGNOSTO', async () => {
+    const p = parastates();
+    bima.anakalypsi.mockResolvedValue({ ok: false, sfalma: { sfalma: null } } as unknown as Apotelesma<Mathima[]>);
     const kodikos = await p.trexe(['mathimata']);
     expect(kodikos).toBe(KODIKOS_SFALMA);
     expect(p.sfalmes[0]?.kodikos).toBe('AGNOSTO');

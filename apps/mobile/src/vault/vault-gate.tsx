@@ -150,14 +150,11 @@ export function VaultGate({ children }: Props) {
   }
 
   async function restoreBackup(): Promise<void> {
-    if (backupFile === null) {
-      setError('Επίλεξε πρώτα το αρχείο encrypted backup.');
-      return;
-    }
     setError(null);
     setBusy(true);
     try {
-      await restoreEncryptedBackup(device.apothiki, device.mystika, backupFile, backupPassword);
+      // Το κουμπί επαναφοράς είναι απενεργοποιημένο όταν δεν έχει επιλεγεί αρχείο.
+      await restoreEncryptedBackup(device.apothiki, device.mystika, backupFile as File, backupPassword);
       setBackupPassword('');
       setBackupFile(null);
       setError('Το backup επαναφέρθηκε. Ξεκλείδωσε με τον master password ή το recovery key του backup.');
@@ -199,9 +196,7 @@ export function VaultGate({ children }: Props) {
   );
 
   async function enableBiometrics(): Promise<void> {
-    if (!device.native || session === null && pendingSession === null) {
-      throw new Error('Τα βιομετρικά ξεκλειδώματα είναι διαθέσιμα μόνο αφού ανοίξει native vault.');
-    }
+    if (!device.native) throw new Error('Τα βιομετρικά ξεκλειδώματα είναι διαθέσιμα μόνο αφού ανοίξει native vault.');
     const status = await BiometricAuth.checkBiometry();
     if (!status.isAvailable) throw new Error('Δεν υπάρχει διαθέσιμο βιομετρικό ξεκλείδωμα στη συσκευή.');
     await BiometricAuth.authenticate({
@@ -215,8 +210,8 @@ export function VaultGate({ children }: Props) {
       androidBiometryStrength: AndroidBiometryStrength.weak,
     });
     const selectedSession = session ?? pendingSession;
-    if (selectedSession === null) throw new Error('Το vault είναι κλειδωμένο.');
-    await device.mystika.vale('vault_biometric_unlock', await exportBiometricUnlockKey(selectedSession));
+    // Η κλήση γίνεται μόνο όταν υπάρχει ανοιχτό vault (recovery ή έτοιμο).
+    await device.mystika.vale('vault_biometric_unlock', await exportBiometricUnlockKey(selectedSession as VaultSession));
     setBiometricEnabled(true);
     setBiometricAvailable(true);
   }
@@ -253,7 +248,6 @@ export function VaultGate({ children }: Props) {
   }
 
   function finishRecovery(): void {
-    if (pendingSession === null) return;
     setSession(pendingSession);
     setPendingSession(null);
     setRecoveryKey(null);

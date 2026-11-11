@@ -25,6 +25,56 @@ export interface ParametroiSyndesisEclass {
 const DOWNLOAD_TIMEOUT_MS = 60_000;
 const MAX_DOWNLOAD_BYTES = MEGISTO_MEGETHOS_ARXEIOU_MB * 1024 * 1024;
 
+/** Κατεβάζει ένα αρχείο από το LMS, με προαιρετικό σήμα ακύρωσης στη λήψη. */
+export function ftiaxe_katevasma(
+  input: ParametroiSyndesisEclass,
+  normalizedBase: URL,
+  connectorType: string,
+): KatevasmaPyli {
+  return {
+    async katevase(url, destination, headers, signal) {
+      let fileUrl: URL;
+      try {
+        fileUrl = new URL(url);
+        if (fileUrl.protocol !== 'https:' || fileUrl.origin !== normalizedBase.origin) {
+          return apotyxia('MI_YPOSTIRIZOMENO', 'Το LMS επέστρεψε αρχείο εκτός της ασφαλούς διεύθυνσής του.');
+        }
+      } catch {
+        return apotyxia('MI_EGKYRO_SXIMA', 'Το LMS επέστρεψε μη έγκυρη διεύθυνση αρχείου.');
+      }
+      const downloadUrl = new URL(fileUrl.href);
+      if (
+        connectorType === 'moodle' && input.webservice_token?.trim() &&
+        /(?:^|\/)webservice\/pluginfile\.php(?:\/|$)/i.test(downloadUrl.pathname)
+      ) {
+        // Moodle's dedicated file endpoint requires `token`; add it only to this
+        // in-memory download URL, while the encrypted course index keeps the clean URL.
+        downloadUrl.searchParams.set('token', input.webservice_token.trim());
+      }
+      const request: HttpAitima = {
+        methodos: 'GET',
+        url: downloadUrl.href,
+        kefalides: headers,
+        akolouthise_anakateuthinseis: true,
+        xronos_orio_ms: DOWNLOAD_TIMEOUT_MS,
+        typos_apantisis: 'dyadiko',
+        ...(signal ? { simatodotis: signal } : {}),
+      };
+      const response = await input.periballon.http.aitima(request);
+      if (!response.ok) return response;
+      const bytes = response.timi.dyadiko;
+      if (response.timi.katastasi < 200 || response.timi.katastasi >= 300 || bytes === undefined) {
+        return apotyxia('DIKTYO', 'Το LMS δεν επέστρεψε το αρχείο.');
+      }
+      if (bytes.byteLength > MAX_DOWNLOAD_BYTES) {
+        return apotyxia('MI_EGKYRO_SXIMA', 'Το ληφθέν αρχείο ξεπερνά το όριο των 100 MB.');
+      }
+      const saved = await input.periballon.apothiki.grapse_dyadiko(destination, bytes);
+      return saved.ok ? ok({ megethos: bytes.byteLength }) : saved;
+    },
+  };
+}
+
 /** Signs in, discovers real courses, downloads supported files and indexes them via @dps/pipeline. */
 export async function syndesi_kai_anaktisi_mathimaton(
   input: ParametroiSyndesisEclass,
@@ -77,66 +127,22 @@ export async function syndesi_kai_anaktisi_mathimaton(
   if (connectorType === 'moodle' && !input.webservice_token?.trim() && (!username || !password.trim())) {
     return apotyxia('AUTH_APOTYXIA', 'Συμπλήρωσε Moodle username/password ή ένα προαιρετικό Web Services token.');
   }
-  let rawEclass: EclassPyli;
-  if (connectorType === 'moodle') {
-    rawEclass = new MoodlePyli({
+  // Το `connectorType` είναι 'moodle' ή 'open-eclass'· το 'auto' επιλύθηκε
+  // παραπάνω και το 'unsupported' επιστρέφει νωρίτερα.
+  const rawEclass = connectorType === 'moodle'
+    ? new MoodlePyli({
       http: input.periballon.http,
       base_url: baseUrl,
       username,
       password,
       ...(input.webservice_token?.trim() ? { webservice_token: input.webservice_token.trim() } : {}),
-    });
-  } else if (connectorType === 'open-eclass') {
-    rawEclass = new DpsEclassPyli({
+    })
+    : new DpsEclassPyli({
       http: input.periballon.http,
       stratigiki: new TopikiSyndesi({ onoma_xristi: username, kodikos: password, base_url: baseUrl }),
       base_url: baseUrl,
     });
-  } else {
-    return apotyxia('MI_YPOSTIRIZOMENO', 'Επίλεξε ένα αναγνωρισμένο Open eClass ή Moodle portal.');
-  }
-  const katevasma: KatevasmaPyli = {
-    async katevase(url, destination, headers, signal) {
-      let fileUrl: URL;
-      try {
-        fileUrl = new URL(url);
-        if (fileUrl.protocol !== 'https:' || fileUrl.origin !== normalizedBase.origin) {
-          return apotyxia('MI_YPOSTIRIZOMENO', 'Το LMS επέστρεψε αρχείο εκτός της ασφαλούς διεύθυνσής του.');
-        }
-      } catch {
-        return apotyxia('MI_EGKYRO_SXIMA', 'Το LMS επέστρεψε μη έγκυρη διεύθυνση αρχείου.');
-      }
-      const downloadUrl = new URL(fileUrl.href);
-      if (
-        connectorType === 'moodle' && input.webservice_token?.trim() &&
-        /(?:^|\/)webservice\/pluginfile\.php(?:\/|$)/i.test(downloadUrl.pathname)
-      ) {
-        // Moodle's dedicated file endpoint requires `token`; add it only to this
-        // in-memory download URL, while the encrypted course index keeps the clean URL.
-        downloadUrl.searchParams.set('token', input.webservice_token.trim());
-      }
-      const request: HttpAitima = {
-        methodos: 'GET',
-        url: downloadUrl.href,
-        kefalides: headers,
-        akolouthise_anakateuthinseis: true,
-        xronos_orio_ms: DOWNLOAD_TIMEOUT_MS,
-        typos_apantisis: 'dyadiko',
-        ...(signal ? { simatodotis: signal } : {}),
-      };
-      const response = await input.periballon.http.aitima(request);
-      if (!response.ok) return response;
-      const bytes = response.timi.dyadiko;
-      if (response.timi.katastasi < 200 || response.timi.katastasi >= 300 || bytes === undefined) {
-        return apotyxia('DIKTYO', 'Το LMS δεν επέστρεψε το αρχείο.');
-      }
-      if (bytes.byteLength > MAX_DOWNLOAD_BYTES) {
-        return apotyxia('MI_EGKYRO_SXIMA', 'Το ληφθέν αρχείο ξεπερνά το όριο των 100 MB.');
-      }
-      const saved = await input.periballon.apothiki.grapse_dyadiko(destination, bytes);
-      return saved.ok ? ok({ megethos: bytes.byteLength }) : saved;
-    },
-  };
+  const katevasma = ftiaxe_katevasma(input, normalizedBase, connectorType);
   const pipeline = {
     eclass: rawEclass,
     apothiki: input.periballon.apothiki,
@@ -158,8 +164,9 @@ export async function syndesi_kai_anaktisi_mathimaton(
   }
 
   const synced: string[] = [];
+  const controller = new AbortController();
   for (const course of discovery.timi) {
-    const result = await sygxronismos(pipeline, course.kodikos);
+    const result = await sygxronismos(pipeline, course.kodikos, controller.signal);
     if (!result.ok) {
       return apotyxia(
         result.sfalma.kodikos,

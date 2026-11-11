@@ -106,7 +106,8 @@ function originale_arxeia(komvoi: readonly KomvosArxeiou[]): {
  */
 export async function sygxronismos(
   p: EisodosPipeline,
-  kodikos_mathimatos: string
+  kodikos_mathimatos: string,
+  simatodotis?: AbortSignal
 ): Promise<Apotelesma<Metriti>> {
   const dendro = await p.eclass.fere_dentro_arxeion(kodikos_mathimatos);
   if (!dendro.ok) {
@@ -164,6 +165,7 @@ export async function sygxronismos(
         arnitiko.url,
         telikiDiadromi,
         headers,
+        simatodotis,
       );
       if (!download.ok) {
         p.katagrafi.sfalma('sygxronismos: απέτυχε η λήψη αρχείου', {

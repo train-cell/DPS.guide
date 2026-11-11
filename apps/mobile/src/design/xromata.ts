@@ -70,7 +70,7 @@ function analyse_hex(timi: string): string | null {
   const tairiasma = HEX_MOTIFO.exec(timi);
   if (tairiasma === null) return null;
   const [, psifia] = tairiasma;
-  return psifia === undefined ? null : `#${psifia}`;
+  return `#${psifia}`;
 }
 
 /** Epistrefei ta kanalia enos rgb(... / N%) i null an den tairiazei to schima. */
@@ -78,9 +78,6 @@ function analyse_rgb(timi: string): RgbDiafaneias | null {
   const tairiasma = RGB_MOTIFO.exec(timi);
   if (tairiasma === null) return null;
   const [, kokkino, prasino, ble, pososto] = tairiasma;
-  if (kokkino === undefined || prasino === undefined || ble === undefined || pososto === undefined) {
-    return null;
-  }
   return {
     kokkino: Number(kokkino),
     prasino: Number(prasino),

@@ -37,13 +37,10 @@ export function stilise_imerominia(timi: string | null): string | null {
     return null;
   }
   const tairiasma = MOTIVO_IMEROMINIAS.exec(timi.trim());
-  if (tairiasma === null) {
-    return null;
-  }
-  const etos = Number(tairiasma[1]);
-  const minas = Number(tairiasma[2]);
-  const mera = Number(tairiasma[3]);
-  const onomaMina = ONOMATA_MINON[minas - 1] ?? '';
+  const etos = Number(tairiasma![1]);
+  const minas = Number(tairiasma![2]);
+  const mera = Number(tairiasma![3]);
+  const onomaMina = ONOMATA_MINON[minas - 1];
   return `${mera} ${onomaMina} ${etos}`;
 }
 

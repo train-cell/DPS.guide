@@ -91,7 +91,7 @@ function safeCourseSegment(value: string): string {
   return encodeURIComponent(value).replaceAll('%', '_');
 }
 
-function pagesForSection(pages: readonly Selida[], section: Enotita | null): Selida[] {
+export function pagesForSection(pages: readonly Selida[], section: Enotita | null): Selida[] {
   if (section === null || section.piges.length === 0) return [...pages];
   const ranges = new Map(section.piges.map((source) => [source.arxeio_id, source]));
   return pages.filter((page) => {
@@ -100,7 +100,7 @@ function pagesForSection(pages: readonly Selida[], section: Enotita | null): Sel
   });
 }
 
-async function loadCourseContext(
+export async function loadCourseContext(
   periballon: Periballon,
   course: Mathima,
   sectionId: string,

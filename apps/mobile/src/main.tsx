@@ -17,9 +17,9 @@ import './design/themata.css';
 import './navigasi/navigasi.css';
 import './koinima/koinima.css';
 
-if (!Capacitor.isNativePlatform() && import.meta.env.PROD && 'serviceWorker' in navigator) {
+if (!Capacitor.isNativePlatform() && process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    void navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+    void navigator.serviceWorker.register('/sw.js').catch(() => {});
   }, { once: true });
 }
 

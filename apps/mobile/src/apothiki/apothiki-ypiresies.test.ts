@@ -1,13 +1,22 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import { MnimiApothiki } from '@dps/core/testing';
+import * as core from '@dps/core';
 import {
+  allaxe_aristeia,
   fortose_proodho,
   fortose_rytheseis,
+  grapse_proodho,
+  grapse_rytheseis,
   katagrapse_checkin,
   katagrapse_leitner_apantisi,
+  proedapes_proodhou,
   proedapes_rytheseis,
   ypologismos_seri_meletis,
 } from './apothiki-ypiresies.js';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('AI model setting migration', () => {
   it('uses the current Gemini Flash model for fresh settings', () => {
@@ -50,9 +59,91 @@ describe('AI model setting migration', () => {
     const custom = await fortose_rytheseis(storage);
     expect(custom).toMatchObject({ onomaMontelou: 'lab/custom-chat:latest', paroxosLlm: 'ollama' });
   });
+
+  it('falls back to the default when the settings file is not JSON', async () => {
+    const storage = new MnimiApothiki();
+    await storage.grapse_keimeno('rythmiseis.json', 'όχι json');
+
+    const loaded = await fortose_rytheseis(storage);
+
+    expect(loaded.onomaMontelou).toBe('gemini-3.8-flash');
+  });
+
+  it('falls back to the default when the settings file is null', async () => {
+    const storage = new MnimiApothiki();
+    await storage.grapse_keimeno('rythmiseis.json', 'null');
+
+    const loaded = await fortose_rytheseis(storage);
+
+    expect(loaded.onomaMontelou).toBe('gemini-3.8-flash');
+  });
+
+  it('δεν φορτώνει τίποτα όταν λείπει το αρχείο ρυθμίσεων', async () => {
+    const storage = new MnimiApothiki();
+
+    const loaded = await fortose_rytheseis(storage);
+
+    expect(loaded).toEqual(proedapes_rytheseis());
+  });
+
+  it('δεν φορτώνει τίποτα όταν το αρχείο προόδου είναι null', async () => {
+    const storage = new MnimiApothiki();
+    await storage.grapse_keimeno('CS101/proodhos.json', 'null');
+
+    const proodhos = await fortose_proodho(storage, 'CS101');
+
+    expect(proodhos).toEqual(proedapes_proodhou());
+  });
+
+  it('γράφει ρυθμίσεις', async () => {
+    const storage = new MnimiApothiki();
+    const rytheseis = { ...proedapes_rytheseis(), onomaMontelou: 'qwen3.5:9b' };
+    const apotelesma = await grapse_rytheseis(storage, rytheseis);
+
+    expect(apotelesma.ok).toBe(true);
+
+    const loaded = await fortose_rytheseis(storage);
+    expect(loaded.onomaMontelou).toBe('qwen3.5:9b');
+  });
 });
 
 describe('katagrapse_leitner_apantisi', () => {
+  it('επιστρέφει σφάλμα όταν η ημερομηνία είναι μη έγκυρη', async () => {
+    const storage = new MnimiApothiki();
+    const apotelesma = await katagrapse_leitner_apantisi(storage, 'CS101', 'Μεταβλητές', true, 'invalid');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+  });
+
+  it('επιστρέφει σφάλμα όταν αποτυγχάνει η καταγραφή', async () => {
+    const storage = new MnimiApothiki();
+    vi.spyOn(core, 'arxikopoiisi_mathisis').mockReturnValue({
+      ok: true,
+      timi: [],
+    } as unknown as core.Apotelesma<core.KatastasiMathisis[]>);
+
+    const apotelesma = await katagrapse_leitner_apantisi(storage, 'CS101', 'Μεταβλητές', true, '2026-10-26');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    }
+  });
+
+  it('επιστρέφει σφάλμα όταν δεν γράφει η αποθήκη', async () => {
+    const storage = new MnimiApothiki();
+    vi.spyOn(storage, 'grapse_keimeno').mockResolvedValue(
+      core.apotyxia<void>('DEN_VRETHIKE', 'Δεν γράφτηκε.')
+    );
+
+    const apotelesma = await katagrapse_leitner_apantisi(storage, 'CS101', 'Μεταβλητές', true, '2026-10-26');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    }
+  });
+
   it('αρχικοποιεί νέα έννοια και καταγράφει σωστή απάντηση στο κουτί 2', async () => {
     const storage = new MnimiApothiki();
     const apotelesma = await katagrapse_leitner_apantisi(
@@ -198,5 +289,48 @@ describe('ypologismos_seri_meletis', () => {
       { enotita_id: 'en-4', imerominia: '2026-10-26', pragmatika_lepta: 45, oloklirothike: true },
     ];
     expect(ypologismos_seri_meletis(checkins, '2026-10-26')).toBe(2);
+  });
+
+  it('αγνοεί checkins χωρίς ημερομηνία', () => {
+    const checkins = [
+      { enotita_id: 'en-1', pragmatika_lepta: 30, oloklirothike: true },
+    ];
+    expect(ypologismos_seri_meletis(checkins, '2026-10-26')).toBe(0);
+  });
+});
+
+describe('allaxe_aristeia', () => {
+  it('προσθέτει ενότητα όταν λείπει', async () => {
+    const storage = new MnimiApothiki();
+    const proodhos = await allaxe_aristeia(storage, 'CS101', 'en-1', true);
+
+    expect(proodhos.aristeiesEnotiton).toEqual(['en-1']);
+  });
+
+  it('προσθέτει και αφαιρεί με σειρά', async () => {
+    const storage = new MnimiApothiki();
+    const afterAdd = await allaxe_aristeia(storage, 'CS101', 'en-1', true);
+    expect(afterAdd.aristeiesEnotiton).toEqual(['en-1']);
+
+    const afterRemove = await allaxe_aristeia(storage, 'CS101', 'en-1', false);
+    expect(afterRemove.aristeiesEnotiton).toEqual([]);
+  });
+
+  it('διατηρεί τις άλλες ενότητες όταν αφαιρεί', async () => {
+    const storage = new MnimiApothiki();
+    await grapse_proodho(storage, 'CS101', { aristeiesEnotiton: ['en-1', 'en-2'] });
+
+    const proodhos = await allaxe_aristeia(storage, 'CS101', 'en-1', false);
+
+    expect(proodhos.aristeiesEnotiton).toEqual(['en-2']);
+  });
+
+  it('δεν αλλάζει τίποτα όταν η ενότητα υπάρχει και δεν ζητείται αφαίρεση', async () => {
+    const storage = new MnimiApothiki();
+    await grapse_proodho(storage, 'CS101', { aristeiesEnotiton: ['en-1'] });
+
+    const proodhos = await allaxe_aristeia(storage, 'CS101', 'en-1', true);
+
+    expect(proodhos.aristeiesEnotiton).toEqual(['en-1']);
   });
 });

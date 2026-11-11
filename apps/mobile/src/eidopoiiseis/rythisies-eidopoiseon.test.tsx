@@ -6,10 +6,12 @@
  * το `OdomosEnotiton` της οθόνης χάρτη), ενώ το δοχείο ελέγχεται ως συμβόλαιο.
  */
 
-import { describe, expect, it } from 'vitest';
+// @vitest-environment jsdom
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { fireEvent, render, waitFor } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import RythisiesEidopoiseon from './rythisies-eidopoiseon.js';
@@ -310,6 +312,174 @@ describe('RythisiesEidopoiseon — δοχείο και πηγές τιμών', (
     for (const pigi of [ARXIKOS_ORAS, ARXIKOS_DOXEIO]) {
       expect(pigi).not.toMatch(/fetch\(|XMLHttpRequest|axios/);
     }
+  });
+});
+
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
+describe('RythisiesEidopoiseon — δοχείο με πύλα (RTL)', () => {
+  it('φορτώνει άδεια και λίστα όταν υπάρχει πύλα', async () => {
+    const pugi: EidopoiisiYpiresies = {
+      zitise_adia: async () => ({ ok: true, timi: 'granted' }),
+      zitisi_adias: async () => ({ ok: true, timi: 'granted' }),
+      programmatise_dokimi: async () => ({ ok: true, timi: undefined }),
+      akiro_ol: async () => ({ ok: true, timi: undefined }),
+      lista: async () => ({ ok: true, timi: [proedri('en-1', 1)] }),
+    };
+    const { container } = render(
+      <MemoryRouter>
+        <RythisiesEidopoiseon ypiresies={pugi} />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(container.textContent).toContain('Υπενθύμιση: en-1'));
+    expect(container.textContent).toContain('Ενεργές');
+  });
+
+  it('δείχνει σφάλμα όταν η άδεια αποτύχει', async () => {
+    const pugi: EidopoiisiYpiresies = {
+      zitise_adia: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+      zitisi_adias: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+      programmatise_dokimi: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+      akiro_ol: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+      lista: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+    };
+    const { container } = render(
+      <MemoryRouter>
+        <RythisiesEidopoiseon ypiresies={pugi} />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(container.textContent).toContain(MINIMA_SFALMA));
+  });
+
+  it('καλεί τη δοκιμή και την επαναφόρτωση', async () => {
+    const pugi: EidopoiisiYpiresies = {
+      zitise_adia: async () => ({ ok: true, timi: 'granted' }),
+      zitisi_adias: async () => ({ ok: true, timi: 'granted' }),
+      programmatise_dokimi: async () => ({ ok: true, timi: undefined }),
+      akiro_ol: async () => ({ ok: true, timi: undefined }),
+      lista: async () => ({ ok: true, timi: [] }),
+    };
+    const { container } = render(
+      <MemoryRouter>
+        <RythisiesEidopoiseon ypiresies={pugi} />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(container.querySelector('[data-testid="eidopoiseis-dokimi"]')).not.toBeNull());
+    fireEvent.click(container.querySelector('[data-testid="eidopoiseis-dokimi"]')!);
+    await waitFor(() => expect(container.textContent).toContain('σε αναμονή'));
+  });
+
+  it('ακυρώνει όλες τις ειδοποιήσεις', async () => {
+    const pugi: EidopoiisiYpiresies = {
+      zitise_adia: async () => ({ ok: true, timi: 'granted' }),
+      zitisi_adias: async () => ({ ok: true, timi: 'granted' }),
+      programmatise_dokimi: async () => ({ ok: true, timi: undefined }),
+      akiro_ol: async () => ({ ok: true, timi: undefined }),
+      lista: async () => ({ ok: true, timi: [] }),
+    };
+    const { container } = render(
+      <MemoryRouter>
+        <RythisiesEidopoiseon ypiresies={pugi} />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(container.querySelector('[data-testid="eidopoiseis-akiro-oles"]')).not.toBeNull());
+    fireEvent.click(container.querySelector('[data-testid="eidopoiseis-akiro-oles"]')!);
+    await waitFor(() => expect(container.textContent).toContain('Ακυρώθηκαν όλες'));
+  });
+
+  it('επαναφέρει τις ειδοποιήσεις όταν η λίστα αποτύχει', async () => {
+    const pugi: EidopoiisiYpiresies = {
+      zitise_adia: async () => ({ ok: true, timi: 'granted' }),
+      zitisi_adias: async () => ({ ok: true, timi: 'granted' }),
+      programmatise_dokimi: async () => ({ ok: true, timi: undefined }),
+      akiro_ol: async () => ({ ok: true, timi: undefined }),
+      lista: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+    };
+    const { container } = render(
+      <MemoryRouter>
+        <RythisiesEidopoiseon ypiresies={pugi} />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(container.querySelector('[data-testid="katastasi-sfalma"]')).not.toBeNull());
+  });
+
+  it('δεν καλεί τίποτα όταν λείπει η πύλα', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <RythisiesEidopoiseon />
+      </MemoryRouter>
+    );
+    // η δοκιμή είναι απενεργοποιημένη όταν δεν έχει διαβαστεί η άδεια·
+    // η αφαίρεση της κατάστασης απενεργοποίησης είναι μόνο για το τεστ,
+    // ώστε να ελεγχθεί η πρώιμη επιστροφή χωρίς πύλα.
+    const dokimi = container.querySelector('[data-testid="eidopoiseis-dokimi"]');
+    dokimi?.removeAttribute('disabled');
+    fireEvent.click(dokimi!);
+    fireEvent.click(container.querySelector('[data-testid="eidopoiseis-akiro-oles"]')!);
+    fireEvent.click(container.querySelector('[data-testid="eidopoiseis-enaktopoieseis"]')!);
+    await waitFor(() => expect(container.textContent).toContain('Ειδοποιήσεις'));
+  });
+
+  it('ενεργοποιεί τις ειδοποιήσεις μέσω της διακόπτη', async () => {
+    const pugi: EidopoiisiYpiresies = {
+      zitise_adia: async () => ({ ok: true, timi: 'granted' }),
+      zitisi_adias: async () => ({ ok: true, timi: 'granted' }),
+      programmatise_dokimi: async () => ({ ok: true, timi: undefined }),
+      akiro_ol: async () => ({ ok: true, timi: undefined }),
+      lista: async () => ({ ok: true, timi: [] }),
+    };
+    const { container } = render(
+      <MemoryRouter>
+        <RythisiesEidopoiseon ypiresies={pugi} />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(container.querySelector('[data-testid="eidopoiseis-enaktopoieseis"]')).not.toBeNull());
+    fireEvent.click(container.querySelector('[data-testid="eidopoiseis-enaktopoieseis"]')!);
+    await waitFor(() => expect(container.textContent).toContain('Ενεργές'));
+  });
+
+  it('απορρίπτει τη διακόπτη όταν αποτύχει η έλεγχος άδειας', async () => {
+    const pugi: EidopoiisiYpiresies = {
+      zitise_adia: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+      zitisi_adias: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+      programmatise_dokimi: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+      akiro_ol: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+      lista: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+    };
+    const { container } = render(
+      <MemoryRouter>
+        <RythisiesEidopoiseon ypiresies={pugi} />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(container.textContent).toContain(MINIMA_SFALMA));
+    fireEvent.click(container.querySelector('[data-testid="eidopoiseis-enaktopoieseis"]')!);
+    await waitFor(() => expect(container.textContent).toContain(MINIMA_SFALMA));
+  });
+
+  it('δεν στέλνει τίποτα όταν η δοκιμή και η ακύρωση αποτύχουν', async () => {
+    const pugi: EidopoiisiYpiresies = {
+      zitise_adia: async () => ({ ok: true, timi: 'granted' }),
+      zitisi_adias: async () => ({ ok: true, timi: 'granted' }),
+      programmatise_dokimi: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+      akiro_ol: async () => ({ ok: false, sfalma: { kodikos: 'MI_EGKYRO_SXIMA', minima: 'x' } }),
+      lista: async () => ({ ok: true, timi: [] }),
+    };
+    const { container } = render(
+      <MemoryRouter>
+        <RythisiesEidopoiseon ypiresies={pugi} />
+      </MemoryRouter>
+    );
+    await waitFor(() => expect(container.querySelector('[data-testid="eidopoiseis-dokimi"]')).not.toBeNull());
+    fireEvent.click(container.querySelector('[data-testid="eidopoiseis-dokimi"]')!);
+    await waitFor(() => expect(container.textContent).toContain(MINIMA_SFALMA));
+    fireEvent.click(container.querySelector('[data-testid="eidopoiseis-akiro-oles"]')!);
+    await waitFor(() => expect(container.textContent).toContain(MINIMA_SFALMA));
+    const select = container.querySelector('[data-testid="eidopoiseis-lekseis"]') as HTMLSelectElement;
+    select.value = '60';
+    fireEvent.change(select);
+    expect(container.textContent).toContain('1 ώρα πριν');
   });
 });
 

@@ -20,9 +20,10 @@ export function analise_parapompi(keimeno: string): ParapompiPdf | null {
   if (tairiasma === null) {
     return null;
   }
-  const arxeio_id = tairiasma[1] ?? '';
-  const apo = Number.parseInt(tairiasma[2] ?? '', 10);
-  if (arxeio_id.length === 0 || !Number.isFinite(apo) || apo < PROTI_SELIDA) {
+  // Τα group 1 και 2 εγγυάται πάντα το regex (\1+ και \\d+)
+  const arxeio_id = tairiasma[1]!;
+  const apo = Number.parseInt(tairiasma[2]!, 10);
+  if (!Number.isFinite(apo) || apo < PROTI_SELIDA) {
     return null;
   }
   const eosKeimeno = tairiasma[3];

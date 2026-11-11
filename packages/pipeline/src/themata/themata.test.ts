@@ -83,15 +83,15 @@ function ftiaxe_eisodos(apothiki: MnimiApothiki, katagrafi: KatagrafiDiamnemata,
     katevasma: new FakeKatevasmaPyli(apothiki),
     // Η ροή περνάει ΠΑΝΤΑ από το me_cache του `@dps/ai`.
     llm: pyli,
-    ocr,
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
     rologi: new StatheriRologi(),
     katagrafi,
     riza: '',
+    ...(ocr === undefined ? {} : { ocr }),
   };
 }
 
-const ENOTITES = [{ id: ENOTITA_1, titlos: 'Λίστες' }];
+const ENOTITES = [{ id: ENOTITA_1, titlos: 'Λίστες' }] as XartisMathimatos['enotites'];
 const ANTISTOIΧΙΣΕΙΣ = [{ enotita_id: ENOTITA_1, monades: 5 }];
 
 describe('prompt_antistoihisis_thematos', () => {
@@ -344,7 +344,7 @@ describe('ftiaxe_analysi_thematon', () => {
     const llm = new LigmaArchiou();
     await apothiki.grapse_keimeno(
       arxeio_xarti(KODIKOS),
-      JSON.stringify(xartis_test([{ id: '', titlos: '' }, ...ENOTITES]))
+      JSON.stringify(xartis_test([{ id: '', titlos: '' }, ...ENOTITES] as XartisMathimatos['enotites']))
     );
     const diadromi = `M1/themata/subject.pdf`;
     await apothiki.grapse_dyadiko(diadromi, ftiaxe_pdf('μια λίστα'));
@@ -463,7 +463,7 @@ describe('ftiaxe_analysi_thematon', () => {
         ok: false,
         sfalma: { kodikos: 'OCR_APOTYXIA', minima: 'δεν βγήκε κείμενο' },
       }),
-    } as OcrPyli;
+    } as unknown as OcrPyli;
     await these_eieis(apothiki, llm);
     const diadromi = `M1/themata/subject.pdf`;
     await apothiki.grapse_dyadiko(diadromi, ftiaxe_pdf('α'));

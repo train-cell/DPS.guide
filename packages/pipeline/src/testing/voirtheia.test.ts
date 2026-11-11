@@ -40,7 +40,7 @@ describe('voirtheia doubles', () => {
   });
 
   it('apotelesma_ergaleiou_stathero: σταθερό αποτέλεσμα', () => {
-    const res = apotelesma_ergaleiou_stathero('askisi', 'απάντηση');
+    const res = apotelesma_ergaleiou_stathero('askisi' as unknown as ApotelesmaErgaleiou['onoma'], 'απάντηση');
     expect(res.ok).toBe(true);
     if (!res.ok) throw new Error('aπέτυχε');
     expect(res.timi.onoma).toBe('askisi');

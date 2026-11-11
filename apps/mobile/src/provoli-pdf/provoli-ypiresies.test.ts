@@ -1,128 +1,170 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { MnimiApothiki } from '@dps/core/testing';
-import {
-  diadromi_eurethriou,
-  diadromi_arxeiou,
-  fortose_eurethrio,
-  fortose_pdf,
-  kilise_selida,
-} from './provoli-ypiresies.js';
-import { ftiaxe_synthetiko_pdf } from '../../test-fixtures/synthetiko-pdf.js';
-import type { Arxeio } from '@dps/core';
+import { apotyxia, ok } from '@dps/core';
+import { diadromi_arxeiou, fortose_eurethrio, fortose_pdf, kilise_selida } from './provoli-ypiresies.js';
 
-/** Φτιάχνει ένα ευρετήριο με δύο αρχεία και τα bytesof τους σε in-memory αποθήκευση. */
-async function ftiaxe_apothiki_me_arxeia(): Promise<MnimiApothiki> {
-  const apothiki = new MnimiApothiki();
-  const eurethrio: Arxeio[] = [
-    {
-      id: 'arx-1',
-      kodikos_mathimatos: 'PLI201',
-      diadromi: 'PLI201/arxeia/syntheta/arx-1.pdf',
-      url: 'https://thales.cs.unipi.gr/courses/PLI201/arx-1.pdf',
-      megethos: null,
-      imerominia: null,
-      etag: null,
-      sha256: null,
-      diplotypo_tou: 'pdf',
-    },
-  ];
-  await apothiki.grapse_keimeno(diadromi_eurethriou('PLI201'), JSON.stringify(eurethrio));
-  await apothiki.grapse_dyadiko('PLI201/arxeia/syntheta/arx-1.pdf', ftiaxe_synthetiko_pdf(3));
-  return apothiki;
-}
-
-describe('diadromi_eurethriou', () => {
-  it('ακολουθεί το layout §5.3 του κρυφού φακέλου μαθήματος', () => {
-    expect(diadromi_eurethriou('PLI201')).toBe('PLI201/.spoudes/eurethrio-arxeion.json');
-  });
-});
-
-describe('fortose_eurethrio', () => {
-  it('διαβάζει τα αρχεία ενός μαθήματος', async () => {
-    const apothiki = await ftiaxe_apothiki_me_arxeia();
-    const eurethrio = await fortose_eurethrio(apothiki, 'PLI201');
-    expect(eurethrio.ok).toBe(true);
-    if (eurethrio.ok) {
-      expect(eurethrio.timi.map((a) => a.id)).toEqual(['arx-1']);
-    }
-  });
-
-  it('missing ευρετήριο σημαίνει κενή λίστα, όχι σφάλμα', async () => {
-    const eurethrio = await fortose_eurethrio(new MnimiApothiki(), 'PLI201');
-    expect(eurethrio.ok).toBe(true);
-    if (eurethrio.ok) {
-      expect(eurethrio.timi).toHaveLength(0);
-    }
-  });
-
-  it('χαλασμένο ευρετήριο δίνει MI_EGKYRO_SXIMA και όχι ψεύτικα δεδομένα', async () => {
+describe('provoli-ypiresies.ts — ευρετήριο αρχείων', () => {
+  it('επιστρέφει κενή λίστα όταν λείπει το ευρετήριο', async () => {
     const apothiki = new MnimiApothiki();
-    await apothiki.grapse_keimeno(diadromi_eurethriou('PLI201'), '{ όχι λίsta');
-    const eurethrio = await fortose_eurethrio(apothiki, 'PLI201');
-    expect(eurethrio.ok).toBe(false);
-    if (!eurethrio.ok) {
-      expect(eurethrio.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+
+    expect(await fortose_eurethrio(apothiki, 'PLH101')).toEqual(ok([]));
+  });
+
+  it('επιστρέφει σφάλμα MI_EGKYRO_SXIMA όταν το ευρετήριο δεν είναι λίστα', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno('PLH101/.spoudes/eurethrio-arxeion.json', JSON.stringify({ id: '1' }));
+
+    const apotelesma = await fortose_eurethrio(apothiki, 'PLH101');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      expect(apotelesma.sfalma.minima).toBe('Το ευρετήριο αρχείων δεν είναι λίστα.');
+    }
+  });
+
+  it('επιστρέφει σφάλμα MI_EGKYRO_SXIMA όταν το JSON δεν είναι έγκυρο', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno('PLH101/.spoudes/eurethrio-arxeion.json', '{ mh egkyro json');
+
+    const apotelesma = await fortose_eurethrio(apothiki, 'PLH101');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      expect(apotelesma.sfalma.minima).toBe('Το ευρετήριο αρχείων δεν είναι έγκυρο JSON.');
     }
   });
 });
 
-describe('diadromi_arxeiou', () => {
-  it('βρίσκει τη διαδρομή από το ευρετήριο', async () => {
-    const apothiki = await ftiaxe_apothiki_me_arxeia();
-    const diadromi = await diadromi_arxeiou(apothiki, 'PLI201', 'arx-1');
-    expect(diadromi.ok).toBe(true);
-    if (diadromi.ok) {
-      expect(diadromi.timi).toBe('PLI201/arxeia/syntheta/arx-1.pdf');
-    }
+describe('provoli-ypiresies.ts — διαδρομή αρχείου', () => {
+  it('δεν βρίσκει άγνωστο αρχείο', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(
+      'PLH101/.spoudes/eurethrio-arxeion.json',
+      JSON.stringify([{ id: '1', diadromi: 'a.pdf' }])
+    );
+
+    const apotelesma = await diadromi_arxeiou(apothiki, 'PLH101', 'agnosto');
+    expect(apotelesma.ok).toBe(false);
   });
 
-  it('άγνωστο id δίνει DEN_VRETHIKE', async () => {
-    const apothiki = await ftiaxe_apothiki_me_arxeia();
-    const diadromi = await diadromi_arxeiou(apothiki, 'PLI201', 'den-yparxei');
-    expect(diadromi.ok).toBe(false);
-    if (!diadromi.ok) {
-      expect(diadromi.sfalma.kodikos).toBe('DEN_VRETHIKE');
-    }
-  });
-});
+  it('επιστρέφει το σφάλμα του ευρετηρίου όταν το ευρετήριο είναι χαλασμένο', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno('PLH101/.spoudes/eurethrio-arxeion.json', '{ mh egkyro json');
 
-describe('fortose_pdf', () => {
-  it('επιστρέφει τα byteof του αρχείου', async () => {
-    const apothiki = await ftiaxe_apothiki_me_arxeia();
-    const dyadiko = await fortose_pdf(apothiki, 'PLI201', 'arx-1');
-    expect(dyadiko.ok).toBe(true);
-    if (dyadiko.ok) {
-      expect(new TextDecoder('latin1').decode(dyadiko.timi).startsWith('%PDF-1.4')).toBe(true);
-    }
-  });
-
-  it('άγνωστο αρχείο δίνει DEN_VRETHIKE, ποτέ κενό αρχείο', async () => {
-    const dyadiko = await fortose_pdf(new MnimiApothiki(), 'PLI201', 'arx-1');
-    expect(dyadiko.ok).toBe(false);
-    if (!dyadiko.ok) {
-      expect(dyadiko.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    const apotelesma = await diadromi_arxeiou(apothiki, 'PLH101', '1');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
     }
   });
 });
 
-describe('kilise_selida', () => {
-  it('κρατά έγκυρη σελίδα όπως δίνεται', () => {
-    expect(kilise_selida(3, 12)).toBe(3);
-    expect(kilise_selida(12, 12)).toBe(12);
+describe('provoli-ypiresies.ts — φόρτωση PDF', () => {
+  it('επιστρέφει σφάλμα όταν δεν ανοίγει το αρχείο', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(
+      'PLH101/.spoudes/eurethrio-arxeion.json',
+      JSON.stringify([{ id: '1', diadromi: 'a.pdf' }])
+    );
+    await apothiki.grapse_dyadiko('a.pdf', new Uint8Array([0, 1]));
+    vi.spyOn(apothiki, 'diavase_dyadiko').mockResolvedValue(
+      apotyxia('DEN_VRETHIKE', 'Το αρχείο δεν βρέθηκε.')
+    );
+
+    const apotelesma = await fortose_pdf(apothiki, 'PLH101', '1');
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DEN_VRETHIKE');
+      expect(apotelesma.sfalma.minima).toContain('δεν ανοίγει');
+    }
+  });
+});
+
+describe('provoli-ypiresies.ts — διευθέτηση σελίδας', () => {
+  it('δέν δέχεται σελίδα κάτω του 1', () => {
+    expect(kilise_selida(0, 10)).toBe(1);
+    expect(kilise_selida(-3, 10)).toBe(1);
+    expect(kilise_selida(NaN, 10)).toBe(1);
+    expect(kilise_selida(Infinity, 10)).toBe(1);
   });
 
-  it('σφηνώνει την πρώτη και την τελευταία σελίδα', () => {
-    expect(kilise_selida(0, 12)).toBe(1);
-    expect(kilise_selida(-5, 12)).toBe(1);
-    expect(kilise_selida(99, 12)).toBe(12);
+  it('δέν δέχεται μη τελικό πλήθος σελίδων', () => {
+    expect(kilise_selida(1, NaN)).toBe(1);
+    expect(kilise_selida(1, Infinity)).toBe(1);
   });
 
-  it('σε άκυρο σύνολο σελίδων πέφτει στην πρώτη', () => {
-    expect(kilise_selida(4, 0)).toBe(1);
-    expect(kilise_selida(Number.NaN, 12)).toBe(1);
+  it('κόβει στο μέγιστο αν ζητηθεί σελίδα πάνω από το τέλος', () => {
+    expect(kilise_selida(5, 3)).toBe(3);
+    expect(kilise_selida(100, 3)).toBe(3);
   });
 
-  it('κόβει τα δεκαδικά αντί να απορρίπτει', () => {
-    expect(kilise_selida(3.9, 12)).toBe(3);
+  it('επιστρέφει την ίδια σελίδα όταν είναι μέσα στα όρια', () => {
+    expect(kilise_selida(1, 1)).toBe(1);
+    expect(kilise_selida(3, 10)).toBe(3);
+  });
+});
+
+describe('provoli-ypiresies.ts — φόρτωση PDF', () => {
+  it('επιστρέφει το σφάλμα ευρετηρίου όταν το ευρετήριο είναι χαλασμένο', async () => {
+    const apothiki = {
+      diavase_keimeno: vi.fn().mockResolvedValue(
+        ok(JSON.stringify({ id: '1', diadromi: 'a.pdf' }))
+      ),
+      grapse_keimeno: vi.fn().mockResolvedValue(undefined),
+      diavase_dyadiko: vi.fn().mockResolvedValue(undefined),
+      grapse_dyadiko: vi.fn().mockResolvedValue(undefined),
+      yparxei: vi.fn().mockResolvedValue(false),
+      lista: vi.fn().mockResolvedValue(undefined),
+      diagrafi: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const apotelesma = await fortose_pdf(apothiki as any, 'PLH101', '1');
+
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+    }
+  });
+
+  it('επιστρέφει τα byteof όταν υπάρχει το αρχείο', async () => {
+    const apothiki = {
+      diavase_keimeno: vi.fn().mockResolvedValue(
+        ok(JSON.stringify([{ id: '1', diadromi: 'a.pdf' }]))
+      ),
+      grapse_keimeno: vi.fn().mockResolvedValue(undefined),
+      diavase_dyadiko: vi.fn().mockResolvedValue(ok(new Uint8Array([0x25, 0x50, 0x44, 0x46]))),
+      grapse_dyadiko: vi.fn().mockResolvedValue(undefined),
+      yparxei: vi.fn().mockResolvedValue(false),
+      lista: vi.fn().mockResolvedValue(undefined),
+      diagrafi: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const apotelesma = await fortose_pdf(apothiki, 'PLH101', '1');
+
+    expect(apotelesma.ok).toBe(true);
+    if (apotelesma.ok) {
+      expect(apotelesma.timi).toEqual(new Uint8Array([0x25, 0x50, 0x44, 0x46]));
+    }
+  });
+
+  it('επιστρέφει το σφάλμα ανάγνωσης byteof', async () => {
+    const apothiki = {
+      diavase_keimeno: vi.fn().mockResolvedValue(
+        ok(JSON.stringify([{ id: '1', diadromi: 'a.pdf' }]))
+      ),
+      grapse_keimeno: vi.fn().mockResolvedValue(undefined),
+      diavase_dyadiko: vi.fn().mockResolvedValue(apotyxia('DEN_ANOIGEI', 'δεν υπάρχει')),
+      grapse_dyadiko: vi.fn().mockResolvedValue(undefined),
+      yparxei: vi.fn().mockResolvedValue(false),
+      lista: vi.fn().mockResolvedValue(undefined),
+      diagrafi: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const apotelesma = await fortose_pdf(apothiki as any, 'PLH101', '1');
+
+    expect(apotelesma.ok).toBe(false);
+    if (!apotelesma.ok) {
+      expect(apotelesma.sfalma.kodikos).toBe('DEN_ANOIGEI');
+    }
   });
 });

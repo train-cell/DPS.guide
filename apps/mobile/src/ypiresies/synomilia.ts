@@ -52,7 +52,7 @@ export async function fortose_synomilia_apo_apothiki(
       katagrapse_tilemetria('warn', 'Apotyxia parsing grammis istorikou synomilias', {
         kodikos_mathimatos,
         enotita_id,
-        sfalma: sfalma instanceof Error ? sfalma.message : String(sfalma),
+        sfalma: String(sfalma),
       });
       continue;
     }

@@ -1,13 +1,16 @@
-import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+// @vitest-environment jsdom
+import { describe, expect, it, vi, afterEach } from 'vitest';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MemoryRouter } from 'react-router-dom';
+import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import type { ReactElement } from 'react';
 import XartisEnotiton, {
   KEIMENO_STOXOU,
   KEIMENO_TELIOU,
   KartaEnotitas,
+  MINIMA_SFALMATOS_XARTI,
   OdomosEnotiton,
   ProodosDimiourgiasXarti,
   STADIA_DIMIOURGIAS_XARTI,
@@ -16,10 +19,29 @@ import XartisEnotiton, {
   stilise_isxya,
   stilise_lepta,
 } from './xartis.js';
-import { pseudos_xartis } from '../../../test-fixtures/pseudomata/index.js';
+import { pseudos_xartis, pseudos_mathimata } from '../../../test-fixtures/pseudomata/index.js';
 import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
+import { ParoxeApothekisis } from '../../apothiki/aperixirto.js';
+import { MnimiApothiki } from '@dps/core/testing';
+import { ftiaxe_periballon_test } from '../../../test-fixtures/ftiaxe-test-periballon.js';
+import { generateCourseMap } from '../../ypiresies/pipeline-analisis.js';
 
-const MONI_PIGIS = fileURLToPath(new URL('./xartis.tsx', import.meta.url));
+vi.mock('../../ypiresies/pipeline-analisis.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../ypiresies/pipeline-analisis.js')>();
+  return {
+    ...actual,
+    generateCourseMap: vi.fn(),
+  };
+});
+
+/** Το workspace root, ανεξάρτητα από το από πού τρέχει το test. */
+function rootDir(): string {
+  return existsSync(join(process.cwd(), 'apps', 'mobile'))
+    ? process.cwd()
+    : join(process.cwd(), '..', '..');
+}
+
+const MONI_PIGIS = join(rootDir(), 'apps/mobile/src/othoni/xartis/xartis.tsx');
 
 /** Τυλίγει ένα στοιχείο σε MemoryRouter ώστε τα Link να αποδίδουν href. */
 function apoidefsi(stoixeio: ReactElement): string {
@@ -307,6 +329,407 @@ describe('xartis — απόδοση ενοτήτων και badges θεμάτω�
       expect(html3).toContain('100%');
       expect(html3).toContain('Στάδιο 3/3');
     });
+
+    it('αποδίδει το πρώτο στάδιο όταν δεν δίνεται ποσοστό', () => {
+      const html = renderToStaticMarkup(<ProodosDimiourgiasXarti stadio={1} />);
+      expect(html).toContain('data-testid="xartis-proodos-analisis"');
+      expect(html).toContain('33%');
+      expect(html).toContain('Επεξεργασία διαφανειών...');
+    });
+  });
+});
+
+/** Κωδικός μαθήματος για τις δοκιμές της οθόνης. */
+const KODIKOS_XARTI = 'ΠΛΗ201';
+
+/** Γράφει τα αρχεία που χρειάζεται η οθόνη του χάρτη μέσα στην τεστ αποθήκη. */
+async function apoidefsi_xarti_data(apothiki: MnimiApothiki, telies: readonly string[], kodikos: string): Promise<void> {
+  await apothiki.grapse_keimeno(`${kodikos}/.spoudes/xartis.json`, JSON.stringify(pseudos_xartis()));
+  await apothiki.grapse_keimeno('mathimata.json', JSON.stringify(pseudos_mathimata()));
+  await apothiki.grapse_keimeno(`${kodikos}/proodhos.json`, JSON.stringify({ aristeiesEnotiton: telies }));
+}
+
+/** Αποδίδει την οθόνη του χάρτη σε πραγματικό DOM, με δεδομένα μέσα από την αποθήκη. */
+async function apoidefsi_xarti(telies: readonly string[] = []): Promise<ReturnType<typeof render>> {
+  const apothiki = new MnimiApothiki();
+  await apoidefsi_xarti_data(apothiki, telies, KODIKOS_XARTI);
+  const periballon = ftiaxe_periballon_test({ apothiki });
+  const result = render(
+    me_periballon_test(
+      <ParoxeApothekisis periballon={periballon} kodikosMathimatos={KODIKOS_XARTI}>
+        <MemoryRouter initialEntries={['/xartis']}>
+          <Routes>
+            <Route path="/xartis" element={<XartisEnotiton />} />
+            <Route path="/odigos/:enotitaId" element={<div data-testid="alilos-odigos">οδηγός</div>} />
+            <Route path="/mathimata" element={<div data-testid="alilos-mathimata">μαθήματα</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ParoxeApothekisis>,
+      periballon
+    )
+  );
+  await waitFor(() => expect(result.queryAllByTestId('xartis-enotita').length).toBeGreaterThan(0), { timeout: 2000 });
+  return result;
+}
+
+/** Αποδίδει την οθόνη χωρίς χάρτη (κενή κατάσταση) σε πραγματικό DOM. */
+async function apoidefsi_xarti_keno(): Promise<ReturnType<typeof render>> {
+  const apothiki = new MnimiApothiki();
+  await apothiki.grapse_keimeno('mathimata.json', JSON.stringify([]));
+  // δεν γράφει xartis.json → η οθόνη μένει στη κενή κατάσταση, χωρίς επιλεγμένο μάθημα
+  const periballon = ftiaxe_periballon_test({ apothiki });
+  const result = render(
+    me_periballon_test(
+      <ParoxeApothekisis periballon={periballon} kodikosMathimatos="">
+        <MemoryRouter initialEntries={['/xartis']}>
+          <Routes>
+            <Route path="/xartis" element={<XartisEnotiton />} />
+            <Route path="/odigos/:enotitaId" element={<div data-testid="alilos-odigos">οδηγός</div>} />
+            <Route path="/mathimata" element={<div data-testid="alilos-mathimata">μαθήματα</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ParoxeApothekisis>,
+      periballon
+    )
+  );
+  await waitFor(() => expect(result.queryAllByTestId('xartis-dimiourgia').length).toBeGreaterThan(0), { timeout: 2000 });
+  return result;
+}
+
+/** Αποδίδει την οθόνη χωρίς χάρτη, με κωδικό μαθήματος, σε πραγματικό DOM. */
+async function apoidefsi_xarti_keno_kodikou(): Promise<ReturnType<typeof render>> {
+  const apothiki = new MnimiApothiki();
+  await apothiki.grapse_keimeno('mathimata.json', JSON.stringify([]));
+  // δεν γράφει xartis.json → η οθόνη μένει στη κενή κατάσταση
+  const periballon = ftiaxe_periballon_test({ apothiki });
+  const result = render(
+    me_periballon_test(
+      <ParoxeApothekisis periballon={periballon} kodikosMathimatos={KODIKOS_XARTI}>
+        <MemoryRouter initialEntries={['/xartis']}>
+          <Routes>
+            <Route path="/xartis" element={<XartisEnotiton />} />
+            <Route path="/odigos/:enotitaId" element={<div data-testid="alilos-odigos">οδηγός</div>} />
+            <Route path="/mathimata" element={<div data-testid="alilos-mathimata">μαθήματα</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ParoxeApothekisis>,
+      periballon
+    )
+  );
+  await waitFor(() => expect(result.queryAllByTestId('xartis-dimiourgia').length).toBeGreaterThan(0), { timeout: 2000 });
+  return result;
+}
+
+/** Αποδίδει την οθόνη με χαλασμένο χάρτη (κατάσταση σφάλματος) σε πραγματικό DOM. */
+async function apoidefsi_xarti_sfalma(): Promise<ReturnType<typeof render>> {
+  const apothiki = new MnimiApothiki();
+  await apothiki.grapse_keimeno('mathimata.json', JSON.stringify([]));
+  await apothiki.grapse_keimeno(`${KODIKOS_XARTI}/.spoudes/xartis.json`, '{όχι-έγκυρο-json');
+  const periballon = ftiaxe_periballon_test({ apothiki });
+  const result = render(
+    me_periballon_test(
+      <ParoxeApothekisis periballon={periballon} kodikosMathimatos={KODIKOS_XARTI}>
+        <MemoryRouter initialEntries={['/xartis']}>
+          <Routes>
+            <Route path="/xartis" element={<XartisEnotiton />} />
+            <Route path="/odigos/:enotitaId" element={<div data-testid="alilos-odigos">οδηγός</div>} />
+            <Route path="/mathimata" element={<div data-testid="alilos-mathimata">μαθήματα</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ParoxeApothekisis>,
+      periballon
+    )
+  );
+  await waitFor(() => expect(result.queryAllByTestId('xartis-dimiourgia').length).toBeGreaterThan(0), { timeout: 2000 });
+  return result;
+}
+
+describe('xartis — οθόνη σε πραγματικό DOM', () => {
+  afterEach(() => {
+    cleanup();
+    (generateCourseMap as unknown as ReturnType<typeof vi.fn>).mockReset();
+  });
+
+  it('φορτώνει τον χάρτη από την αποθήκη και δείχνει τις ενότητες με προαπαιτούμενες', async () => {
+    const result = await apoidefsi_xarti();
+    expect(result.queryAllByTestId('xartis-enotita').length).toBe(4);
+    expect(result.queryAllByTestId('xartis-dag-syndesi').length).toBeGreaterThan(0);
+    expect(result.queryByTestId('xartis-telos')).not.toBeNull();
+  });
+
+  it('σημειώνει μια ενότητα ως ολοκληρωμένη όταν πατηθεί το κουμπί', async () => {
+    const result = await apoidefsi_xarti();
+    const enotitaId = 'en-1';
+    const koumpi = result.getByTestId(`xartis-aristeia-${enotitaId}`);
+    expect(koumpi.textContent).toBe('Σημείωση ως ολοκληρωμένη');
+    fireEvent.click(koumpi);
+    await waitFor(() => expect(result.getByTestId(`xartis-aristeia-${enotitaId}`).textContent).toBe('Ολοκληρώθηκε'), { timeout: 2000 });
+  });
+
+  it('πηγαίνει στη διαδρομή οδηγού όταν πατηθεί μια συνάρτηση DAG', async () => {
+    const result = await apoidefsi_xarti();
+    const syndesi = result.getAllByTestId('xartis-dag-syndesi')[0];
+    fireEvent.click(syndesi);
+    await waitFor(() => expect(result.queryByTestId('alilos-odigos')).not.toBeNull(), { timeout: 2000 });
+  });
+
+  it('δεν έχει φίλτρα μαθημάτων όταν δεν υπάρχει επιλεγμένο μάθημα', async () => {
+    const result = await apoidefsi_xarti_keno();
+    expect(result.queryByTestId('alilos-mathimata')).toBeNull();
+    expect(result.queryByText('Επίλεξε μάθημα για να δεις την ύλη.')).not.toBeNull();
+  });
+
+  it('επαναφορτώνει τον χάρτη με το κουμπί επανάληψης', async () => {
+    const result = await apoidefsi_xarti_sfalma();
+    expect(result.getByText('Ο χάρτης χρειάζεται ανάλυση')).not.toBeNull();
+    const koumpi = result.getByText('Επανάληψη ανάλυσης');
+    fireEvent.click(koumpi);
+    expect(result.queryByTestId('xartis-enotita')).toBeNull();
+  });
+
+  it('ακινεί τον χάρτη και δείχνει τα στάδια ανάλυσης όσο δημιουργείται', async () => {
+    // Η ανάλυση είναι απομονημένη στο test, με καθυστέρηση ώστε να παρατηρηθεί η κατάσταση φόρτωσης.
+    (generateCourseMap as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      () => new Promise((resolve) => setTimeout(() => resolve({ ok: true, timi: pseudos_xartis() }), 300))
+    );
+    const result = await apoidefsi_xarti_keno_kodikou();
+    const checkbox = result.getByTestId('xartis-gemini-optin');
+    fireEvent.click(checkbox);
+    await waitFor(() => expect(result.getByTestId('xartis-dimiourgia').disabled).toBe(false), { timeout: 2000 });
+    fireEvent.click(result.getByTestId('xartis-dimiourgia'));
+    await waitFor(() => expect(result.queryAllByTestId('xartis-proodos-analisis')).toHaveLength(1), { timeout: 4000 });
+    await waitFor(() => expect(result.queryAllByTestId('katastasi-fortosi')).not.toBeNull(), { timeout: 4000 });
+    await waitFor(() => expect(result.queryAllByTestId('xartis-enotita').length).toBeGreaterThan(0), { timeout: 6000 });
+  });
+
+  it('εναλλάσσει τα φίλτρα μαθημάτων όταν υπάρχουν συγχρονισμένα', async () => {
+    const apothiki = new MnimiApothiki();
+    await apoidefsi_xarti_data(apothiki, [], KODIKOS_XARTI);
+    // Το δεύτερο συγχρονισμένο μάθημα είναι επίσης στα μαθήματα, ώστε να μην επέλθει επαναφορά.
+    await apothiki.grapse_keimeno('mathimata.json', JSON.stringify(pseudos_mathimata().slice(0, 2)));
+    await apothiki.grapse_keimeno('rythmiseis.json', JSON.stringify({ mathimataSynch: ['ΠΛΗ201', 'ΠΛΗ101'] }));
+    const periballon = ftiaxe_periballon_test({ apothiki });
+    const result = render(
+      me_periballon_test(
+        <ParoxeApothekisis periballon={periballon} kodikosMathimatos="ΠΛΗ201">
+          <MemoryRouter initialEntries={['/xartis']}>
+            <Routes>
+              <Route path="/xartis" element={<XartisEnotiton />} />
+              <Route path="/odigos/:enotitaId" element={<div data-testid="alilos-odigos">οδηγός</div>} />
+              <Route path="/mathimata" element={<div data-testid="alilos-mathimata">μαθήματα</div>} />
+            </Routes>
+          </MemoryRouter>
+        </ParoxeApothekisis>,
+        periballon
+      )
+    );
+    await waitFor(() => expect(result.queryAllByTestId('xartis-enotita').length).toBeGreaterThan(0), { timeout: 2000 });
+    expect(result.queryAllByTestId('xartis-dimiourgia')).toHaveLength(0);
+    const koumpiA = result.getByRole('button', { name: 'ΠΛΗ201' });
+    const koumpiB = result.getByRole('button', { name: 'ΠΛΗ101' });
+    expect(koumpiA.getAttribute('aria-pressed')).toBe('true');
+    expect(koumpiB.getAttribute('aria-pressed')).toBe('false');
+
+    // Εναλλαγή στο δεύτερο συγχρονισμένο μάθημα.
+    fireEvent.click(koumpiB);
+    await waitFor(() => expect(result.getByRole('button', { name: 'ΠΛΗ101' }).getAttribute('aria-pressed')).toBe('true'), { timeout: 2000 });
+    expect(result.getByRole('button', { name: 'ΠΛΗ201' }).getAttribute('aria-pressed')).toBe('false');
+
+    // Το δεύτερο μάθημα δεν έχει χάρτη, η οθόνη επαναφορτώνεται.
+    await waitFor(() => expect(result.queryAllByTestId('xartis-enotita').length).toBe(0), { timeout: 3000 });
+    expect(result.queryByText('Δημιουργία χάρτη μαθήματος')).not.toBeNull();
+  });
+
+  it('επιβεβαιώνει το opt-in Gemini και ενεργοποιεί το κουμπί δημιουργίας', async () => {
+    const result = await apoidefsi_xarti_keno_kodikou();
+    const checkbox = result.getByTestId('xartis-gemini-optin');
+    expect(checkbox).not.toBeNull();
+    expect(result.getByTestId('xartis-dimiourgia').disabled).toBe(true);
+    fireEvent.click(checkbox);
+    await waitFor(() => expect(result.getByTestId('xartis-dimiourgia').disabled).toBe(false), { timeout: 2000 });
+  });
+
+  it('αναφέρει σφάλμα όταν αποτύχει η ανάλυση υλικού', async () => {
+    (generateCourseMap as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Αδυναμία ανάλυσης'));
+    const result = await apoidefsi_xarti_keno_kodikou();
+    const checkbox = result.getByTestId('xartis-gemini-optin');
+    fireEvent.click(checkbox);
+    await waitFor(() => expect(result.getByTestId('xartis-dimiourgia').disabled).toBe(false), { timeout: 2000 });
+    fireEvent.click(result.getByTestId('xartis-dimiourgia'));
+    await waitFor(() => expect(result.queryByText('Αδυναμία ανάλυσης')).not.toBeNull(), { timeout: 4000 });
+  });
+
+  it('δεν εκτελεί διπλή δημιουργία όταν ο χάρτης ήδη δημιουργείται', async () => {
+    (generateCourseMap as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      () => new Promise((resolve) => setTimeout(() => resolve({ ok: true, timi: pseudos_xartis() }), 600))
+    );
+    const result = await apoidefsi_xarti_keno_kodikou();
+    const checkbox = result.getByTestId('xartis-gemini-optin');
+    fireEvent.click(checkbox);
+    await waitFor(() => expect(result.getByTestId('xartis-dimiourgia').disabled).toBe(false), { timeout: 2000 });
+    const koumpi = result.getByTestId('xartis-dimiourgia');
+    fireEvent.click(koumpi);
+    await waitFor(() => expect(result.queryAllByTestId('xartis-proodos-analisis')).toHaveLength(1), { timeout: 1000 });
+    // η οθόνη απενεργοποιεί το κουμπί, αλλά η συνάρτηση προστασίας δέχεται κλήση
+    koumpi.removeAttribute('disabled');
+    fireEvent.click(koumpi);
+    expect(result.queryAllByTestId('xartis-proodos-analisis')).toHaveLength(1);
+    expect(result.queryAllByTestId('xartis-enotita')).toHaveLength(0);
+  });
+
+  it('περνάει από όλα τα στάδια ανάλυσης όσο ανεβαίνει το ποσοστό', async () => {
+    (generateCourseMap as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      () => new Promise((resolve) => setTimeout(() => resolve({ ok: true, timi: pseudos_xartis() }), 5000))
+    );
+    const result = await apoidefsi_xarti_keno_kodikou();
+    const checkbox = result.getByTestId('xartis-gemini-optin');
+    fireEvent.click(checkbox);
+    await waitFor(() => expect(result.getByTestId('xartis-dimiourgia').disabled).toBe(false), { timeout: 2000 });
+    fireEvent.click(result.getByTestId('xartis-dimiourgia'));
+    await waitFor(() => expect(result.getByTestId('xartis-proodos-analisis')).not.toBeNull(), { timeout: 1000 });
+    await waitFor(() => expect(result.getByTestId('xartis-proodos-pososto').textContent).toContain('50%'), { timeout: 3000 });
+    await waitFor(() => expect(result.getByTestId('xartis-proodos-pososto').textContent).toContain('80%'), { timeout: 3000 });
+    await waitFor(() => expect(result.getByTestId('xartis-proodos-pososto').textContent).toContain('95%'), { timeout: 3000 });
+    await waitFor(() => expect(result.queryAllByTestId('xartis-enotita').length).toBe(4), { timeout: 6000 });
+  }, 30000);
+
+  it('αναφέρει σφάλμα δικτύου όταν αποτυγχάνει η φόρτωση των δεδομένων', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno('mathimata.json', JSON.stringify(pseudos_mathimata().slice(0, 1)));
+    const diavase_proto = apothiki.diavase_keimeno.bind(apothiki);
+    apothiki.diavase_keimeno = async (diadromi: string) => {
+      if (diadromi === 'ΠΛΗ201/.spoudes/xartis.json' || diadromi === 'ΠΛΗ201/apodosi.json') {
+        throw new Error('Αδυναμία φόρτωσης δεδομένων');
+      }
+      return diavase_proto(diadromi);
+    };
+    const periballon = ftiaxe_periballon_test({ apothiki });
+    const result = render(
+      me_periballon_test(
+        <ParoxeApothekisis periballon={periballon} kodikosMathimatos="ΠΛΗ201">
+          <MemoryRouter initialEntries={['/xartis']}>
+            <Routes>
+              <Route path="/xartis" element={<XartisEnotiton />} />
+              <Route path="/odigos/:enotitaId" element={<div data-testid="alilos-odigos">οδηγός</div>} />
+              <Route path="/mathimata" element={<div data-testid="alilos-mathimata">μαθήματα</div>} />
+            </Routes>
+          </MemoryRouter>
+        </ParoxeApothekisis>,
+        periballon
+      )
+    );
+    await waitFor(() => expect(result.queryByText('Δεν ήταν δυνατή η φόρτωση του χάρτη του μαθήματος.')).not.toBeNull(), { timeout: 4000 });
+    expect(result.getByTestId('xartis-dimiourgia')).not.toBeNull();
+  });
+
+  it('δείχνει το σφάλμα επιβεβαίωσης όταν αποτυγχάνει η αποθήκευση του opt-in', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno('mathimata.json', JSON.stringify(pseudos_mathimata().slice(0, 1)));
+    const grapse_proto = apothiki.grapse_keimeno.bind(apothiki);
+    apothiki.grapse_keimeno = async (diadromi: string, periexomeno: string) => {
+      if (diadromi.includes('rytheseis-ai.json')) {
+        return { ok: false, sfalma: { kodikos: 'DEN_VRETHIKE', minima: 'Δεν αποθηκεύτηκε η επιλογή Gemini.' } };
+      }
+      return grapse_proto(diadromi, periexomeno);
+    };
+    const periballon = ftiaxe_periballon_test({ apothiki });
+    const result = render(
+      me_periballon_test(
+        <ParoxeApothekisis periballon={periballon} kodikosMathimatos="ΠΛΗ201">
+          <MemoryRouter initialEntries={['/xartis']}>
+            <Routes>
+              <Route path="/xartis" element={<XartisEnotiton />} />
+              <Route path="/odigos/:enotitaId" element={<div data-testid="alilos-odigos">οδηγός</div>} />
+              <Route path="/mathimata" element={<div data-testid="alilos-mathimata">μαθήματα</div>} />
+            </Routes>
+          </MemoryRouter>
+        </ParoxeApothekisis>,
+        periballon
+      )
+    );
+    await waitFor(() => expect(result.queryAllByTestId('xartis-dimiourgia').length).toBeGreaterThan(0), { timeout: 2000 });
+    const checkbox = result.getByTestId('xartis-gemini-optin');
+    fireEvent.click(checkbox);
+    await waitFor(() => expect(result.queryByText('Δεν αποθηκεύτηκε η επιλογή Gemini.')).not.toBeNull(), { timeout: 2000 });
+  });
+
+  it('δεν καλεί τη δημιουργία όταν ο κωδικός μαθήματος λείπει', async () => {
+    const result = await apoidefsi_xarti_keno();
+    const koumpi = result.getByTestId('xartis-dimiourgia');
+    expect(koumpi.disabled).toBe(true);
+    koumpi.removeAttribute('disabled');
+    fireEvent.click(koumpi);
+    expect(result.queryAllByTestId('xartis-enotita')).toHaveLength(0);
+  });
+
+  it('αναφέρει σφάλμα όταν η ανάλυση επιστρέφει ok=false', async () => {
+    (generateCourseMap as unknown as ReturnType<typeof vi.fn>).mockImplementation(
+      () =>
+        Promise.resolve({
+          ok: false,
+          sfalma: { kodikos: 'SFALMA_XARTI', minima: 'Αδυναμία ανάλυσης υλικού' },
+        })
+    );
+    const result = await apoidefsi_xarti_keno_kodikou();
+    const checkbox = result.getByTestId('xartis-gemini-optin');
+    fireEvent.click(checkbox);
+    await waitFor(() => expect(result.getByTestId('xartis-dimiourgia').disabled).toBe(false), { timeout: 2000 });
+    fireEvent.click(result.getByTestId('xartis-dimiourgia'));
+    await waitFor(() => expect(result.queryByText('Αδυναμία ανάλυσης υλικού')).not.toBeNull(), { timeout: 4000 });
+  });
+
+  it('αναφέρει το κείμενο που απορρίφθηκε όταν δεν είναι Error', async () => {
+    (generateCourseMap as unknown as ReturnType<typeof vi.fn>).mockRejectedValue('Αδυναμία επικοινωνίας');
+    const result = await apoidefsi_xarti_keno_kodikou();
+    const checkbox = result.getByTestId('xartis-gemini-optin');
+    fireEvent.click(checkbox);
+    await waitFor(() => expect(result.getByTestId('xartis-dimiourgia').disabled).toBe(false), { timeout: 2000 });
+    fireEvent.click(result.getByTestId('xartis-dimiourgia'));
+    await waitFor(() => expect(result.queryByText(MINIMA_SFALMATOS_XARTI)).not.toBeNull(), { timeout: 4000 });
+  });
+
+  it('η σύνδεση DAG με μη έγκυρο id δεν πλοηγείται', async () => {
+    const periballon = ftiaxe_periballon_test();
+    const enotita = {
+      ...pseudos_xartis().enotites[1]!,
+      proapaitoumenes: [{ enotita_id: '\\\\evil.example', isxys: 'isxyri' }],
+    };
+    const result = render(
+      me_periballon_test(
+        <MemoryRouter>
+          <KartaEnotitas
+            enotita={enotita}
+            tetagmeni={false}
+            allaxe_telia={() => Promise.resolve()}
+            telies={[]}
+          />
+        </MemoryRouter>,
+        periballon
+      )
+    );
+    const syn = result.getByTestId('xartis-dag-syndesi');
+    expect(syn.textContent).toContain('⏳');
+    fireEvent.click(syn);
+    await waitFor(() => expect(result.queryAllByTestId('xartis-enotita')).toHaveLength(1), { timeout: 2000 });
+  });
+
+  it('η απόδοση προέρχεται από την ενότητα όταν δεν δίνεται apodosi', async () => {
+    const enotita = { ...pseudos_xartis().enotites[0]!, apodosi_exetasis: null };
+    const result = render(
+      me_periballon_test(
+        <MemoryRouter>
+          <KartaEnotitas
+            enotita={enotita}
+            tetagmeni={false}
+            allaxe_telia={() => Promise.resolve()}
+            telies={[]}
+          />
+        </MemoryRouter>,
+        ftiaxe_periballon_test()
+      )
+    );
+    expect(result.queryByTestId('xartis-apodosi-badge')).toBeNull();
+    expect(result.queryAllByTestId('xartis-enotita')).toHaveLength(1);
   });
 });
 

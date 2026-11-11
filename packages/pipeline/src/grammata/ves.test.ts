@@ -11,7 +11,7 @@ import {
 import type { EisodosPipeline } from '../porte.js';
 
 function katagrafi(): EisodosPipeline['katagrafi'] {
-  return { pliroforia: () => {}, sfalma: () => {} };
+  return { pliroforia: () => {}, proeidopoiisi: () => {}, sfalma: () => {} };
 }
 
 function apotheke(): EisodosPipeline['apothiki'] {

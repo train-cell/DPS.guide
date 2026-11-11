@@ -442,7 +442,13 @@ export default function Proedri({ periballon }: ProedriProps) {
           />
 
           <label className="odoni-xeiris-zeugos" htmlFor="proedri-lms-template">Πρότυπο portal</label>
-          <select id="proedri-lms-template" className="proedri-travla-gramma" value={lms} onChange={(event) => setLms(event.target.value as LmsTemplate)}>
+          <select
+            id="proedri-lms-template"
+            className="proedri-travla-gramma"
+            value={lms}
+            onChange={(event) => setLms(event.target.value as LmsTemplate)}
+            data-testid="proedri-lms-template"
+          >
             <option value="auto">Αυτόματος εντοπισμός Open eClass / Moodle</option>
             <option value="open-eclass">Open eClass</option>
             <option value="moodle">Moodle</option>
@@ -485,7 +491,16 @@ export default function Proedri({ periballon }: ProedriProps) {
           {lms === 'moodle' && (
             <>
               <label className="odoni-xeiris-zeugos" htmlFor="proedri-moodle-token">Προαιρετικό Moodle Web Services token</label>
-              <input id="proedri-moodle-token" className="proedri-travla-gramma" type="password" autoComplete="off" value={webserviceToken} onChange={(event) => setWebserviceToken(event.target.value)} aria-label="Moodle Web Services token" />
+              <input
+              id="proedri-moodle-token"
+              className="proedri-travla-gramma"
+              type="password"
+              autoComplete="off"
+              value={webserviceToken}
+              onChange={(event) => setWebserviceToken(event.target.value)}
+              data-testid="proedri-moodle-token"
+              aria-label="Moodle Web Services token"
+            />
             </>
           )}
 

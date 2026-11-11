@@ -62,18 +62,13 @@ export class BrowserHttpPyli implements HttpPyli {
         simatodotis: request.simatodotis,
       },
       async (outgoing, signal) => {
-        if (!token) {
-          throw new Error('Το localhost bridge δεν είναι έτοιμο. Κάνε επαναφόρτωση της σελίδας.');
-        }
         const envelope: BridgeEnvelope = {
           methodos: outgoing.methodos,
           url: outgoing.url,
           kefalides: outgoing.kefalides,
           soma: typeof outgoing.soma === 'string'
             ? outgoing.soma
-            : outgoing.soma instanceof URLSearchParams
-              ? outgoing.soma.toString()
-              : null,
+            : null,
         };
         const response = await fetch('/__dps_bridge/http', {
           method: 'POST',
@@ -102,9 +97,6 @@ export class BrowserHttpPyli implements HttpPyli {
         };
       },
       this.cookieJar,
-    ).catch(() => apotyxia(
-      request.simatodotis?.aborted ? 'AKYROTHIKE' : 'DIKTYO',
-      'Η σύνδεση μέσω του localhost bridge απέτυχε. Έλεγξε ότι ο υπολογιστής είναι διαθέσιμος.',
-    ));
+    );
   }
 }

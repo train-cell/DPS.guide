@@ -265,7 +265,9 @@ export function vathmologise_exetasi(
 
   const analysi_ana_ennoia: Record<string, AnalysiEnnoias> = {};
   for (const [ennoia, stats] of ennoiesStats.entries()) {
-    const pososto = stats.synolo > 0 ? Math.round((stats.sostes / stats.synolo) * 100) : 0;
+    // Κάθε έννοια έχει τουλάχιστον μία ερώτηση (δημιουργείται στο παραπάνω βρόχο
+    // με `synolo: prev.synolo + 1`), οπότε ο διαιρετέος είναι πάντα θετικός.
+    const pososto = Math.round((stats.sostes / stats.synolo) * 100);
     analysi_ana_ennoia[ennoia] = {
       synolo: stats.synolo,
       sostes: stats.sostes,

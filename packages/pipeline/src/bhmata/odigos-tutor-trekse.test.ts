@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MnimiApothiki } from '@dps/core/testing';
 import type { Arxeio, Selida, XartisMathimatos } from '@dps/core';
 import {
@@ -29,6 +29,26 @@ import {
 import { ftiaxe_arxeio_id, grapse_json } from '../grammata/apothiki-json.js';
 import { me_cache } from '@dps/ai';
 import { ftiaxe_docx } from '../testing/fixtures-arxeia.js';
+
+/** Ψεύτικη υλοποίηση του `@dps/ai` — `prompt_odigou` πετάει οτιδήποτε. */
+const ai = vi.hoisted(() => ({
+  prompt_odigou: vi.fn(),
+  real_prompt_odigou: null as null | typeof import('@dps/ai').prompt_odigou,
+}));
+
+vi.mock('@dps/ai', async (importOriginal) => {
+  const actual: typeof import('@dps/ai') = await importOriginal();
+  ai.real_prompt_odigou = actual.prompt_odigou;
+  // Default: η πραγματική συνάρτηση (χρησιμοποιείται από όλα τα tests)
+  ai.prompt_odigou.mockImplementation(actual.prompt_odigou);
+  return { ...actual, prompt_odigou: ai.prompt_odigou };
+});
+
+afterEach(() => {
+  ai.prompt_odigou.mockReset();
+  // Restore the default (real function) after each test
+  ai.prompt_odigou.mockImplementation(ai.real_prompt_odigou ?? (() => undefined));
+});
 
 const KODIKOS = 'M1';
 const DIADROMI = 'dokimio.docx';
@@ -315,6 +335,26 @@ describe('odigos (lazy, βήμα 8)', () => {
     if (apotelesma.ok) throw new Error('aπέτυχε');
     expect(apotelesma.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
     expect(await apothiki.yparxei(arxeio_odigou(KODIKOS, 'en1'))).toBe(false);
+  });
+
+  it('μη Error στο catch → String(aitia) (L84 false branch)', async () => {
+    const apothiki = new MnimiApothiki();
+    const llm = new LigmaArchiou();
+    const arxeio = await these_yliko(apothiki, [selida(1, 'μια λίστα', arxeio_test(DIADROMI).id)]);
+    await these_perigramma_kai_xartis(apothiki, arxeio);
+    const p = ftiaxe_eisodos(apothiki, llm, new KatagrafiDiamnemata());
+
+    // `prompt_odigou` πετάει STRING (όχι Error) → `false` του instanceof
+    ai.prompt_odigou.mockImplementation(() => {
+      throw 'aυτό δεν είναι Error';
+    });
+
+    const apotelesma = await odigos_mathimatos(p, KODIKOS, 'en1');
+
+    expect(apotelesma.ok).toBe(false);
+    if (apotelesma.ok) throw new Error('aπέτυχε');
+    expect(apotelesma.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
+    expect(apotelesma.sfalma.minima).toBe('aυτό δεν είναι Error');
   });
 
   it('αποτυχία του μοντέλου → σφάλμα (L99, L100, L105)', async () => {

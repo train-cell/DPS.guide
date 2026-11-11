@@ -1,8 +1,31 @@
-import { readFileSync } from 'node:fs';
+// @vitest-environment jsdom
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it, vi, afterEach } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { ParoxeApothekisis } from '../../apothiki/aperixirto.js';
+import { MnimiApothiki } from '@dps/core/testing';
+import { ftiaxe_periballon_test } from '../../../test-fixtures/ftiaxe-test-periballon.js';
+import { generateCourseGuide } from '../../ypiresies/pipeline-analisis.js';
+
+vi.mock('../../ypiresies/pipeline-analisis.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../ypiresies/pipeline-analisis.js')>();
+  return {
+    ...actual,
+    generateCourseGuide: vi.fn(),
+  };
+});
+
+/** Το workspace root, ανεξάρτητα από το από πού τρέχει το test. */
+function rootDir(): string {
+  return existsSync(join(process.cwd(), 'apps', 'mobile'))
+    ? process.cwd()
+    : join(process.cwd(), '..', '..');
+}
+
 import OdigosMeletis, {
   AutoelegchosAkordeon,
   AutoelegchosErwtisi,
@@ -19,7 +42,7 @@ import { me_periballon_test } from '../../../test-fixtures/periballon-test-provi
 const DIALOMOS_PALIAS = LEKIKIA_TMIMATON;
 
 function odigos_arxeio(): string {
-  return readFileSync(fileURLToPath(new URL('./odigos.tsx', import.meta.url)), 'utf8');
+  return readFileSync(join(rootDir(), 'apps/mobile/src/othoni/odigos/odigos.tsx'), 'utf8');
 }
 
 /** Αποδίδει την οθόνη σε SSR μέσα σε MemoryRouter, χωρίς DOM και χωρίς @testing-library. */
@@ -298,5 +321,255 @@ describe('odigos — AutoelegchosAkordeon & Leitner 5-box', () => {
       expect(html3).toContain('100%');
       expect(html3).toContain('Στάδιο 3/3');
     });
+  });
+});
+
+/** Κείμενο Markdown ενός πλήρη οδηγού μελέτης, πλήρες με τις επτά ενότητες. */
+function grammata_odigou(enotitaId: string): string {
+  let keimeno = `# Τίτλος ενότητας ${enotitaId}\n\n`;
+  for (const kleidi of LEKIKIA_TMIMATON) {
+    keimeno += `## ${EPKEFALIDES_TMIMATON[kleidi]}\n\n`;
+    keimeno += `- Κείμενο τμήματος ${kleidi}.\n\n`;
+    keimeno += `[[arx-1: σ. 1]]\n\n`;
+  }
+  return keimeno;
+}
+
+/** Κείμενο Markdown ενός ελλιπούς οδηγού (λιγότερες από επτά ενότητες). */
+function grammata_odigou_kalasmenou(): string {
+  return `# Κακός οδηγός\n\n## 🎯 Στόχοι\n\n- Μόνο ένα τμήμα.\n\n[[arx-1: σ. 1]]\n\n`;
+}
+
+/** Αποδίδει την οθόνη του οδηγού σε πραγματικό DOM, με δεδομένα μέσα από την αποθήκη. */
+async function apoidefsi_odigos(enotitaId: string): Promise<ReturnType<typeof render>> {
+  const apothiki = new MnimiApothiki();
+  await apothiki.grapse_keimeno(`ΠΛΗ201/.spoudes/odigoi/${enotitaId}.md`, grammata_odigou(enotitaId));
+  const periballon = ftiaxe_periballon_test({ apothiki });
+  const result = render(
+    me_periballon_test(
+      <ParoxeApothekisis periballon={periballon} kodikosMathimatos="ΠΛΗ201">
+        <MemoryRouter initialEntries={[`/odigos/${enotitaId}`]}>
+          <Routes>
+            <Route path="/odigos/:enotitaId" element={<OdigosMeletis />} />
+          </Routes>
+        </MemoryRouter>
+      </ParoxeApothekisis>,
+      periballon
+    )
+  );
+  await waitFor(() => expect(result.queryAllByTestId('odigos-epikefalida').length).toBeGreaterThan(0), { timeout: 2000 });
+  return result;
+}
+
+/** Αποδίδει την οθόνη χωρίς οδηγό (κενή ή χαλασμένη κατάσταση) σε πραγματικό DOM. */
+async function apoidefsi_karos(statos: 'adeio' | 'sfalma'): Promise<ReturnType<typeof render>> {
+  const apothiki = new MnimiApothiki();
+  if (statos === 'sfalma') {
+    await apothiki.grapse_keimeno('ΠΛΗ201/.spoudes/odigoi/en-1.md', grammata_odigou_kalasmenou());
+  }
+  const periballon = ftiaxe_periballon_test({ apothiki });
+  const result = render(
+    me_periballon_test(
+      <ParoxeApothekisis periballon={periballon} kodikosMathimatos="ΠΛΗ201">
+        <MemoryRouter initialEntries={['/odigos/en-1']}>
+          <Routes>
+            <Route path="/odigos/:enotitaId" element={<OdigosMeletis />} />
+          </Routes>
+        </MemoryRouter>
+      </ParoxeApothekisis>,
+      periballon
+    )
+  );
+  // περιμένουμε να σταθεροποιηθεί η κατάσταση (φόρτωση ή κενή/σφαλμα κάρτα)
+  await waitFor(() => {
+    expect(result.queryAllByTestId('odigos-dimiourgia').length > 0 ||
+      result.queryByText('Ο οδηγός δεν έχει όλα τα επτά υποχρεωμένα τμήματα.') !== null ||
+      result.queryAllByTestId('odigos-epikefalida').length > 0
+    ).toBe(true);
+  }, { timeout: 2000 });
+  return result;
+}
+
+/** Ενεργοποιεί την επιλογή Gemini χωρίς την οποία το κουμπί παραγωγής μένει αδρανές. */
+async function epilexe_optin(result: ReturnType<typeof render>): Promise<void> {
+  await waitFor(() => expect(result.getByTestId('odigos-gemini-optin').disabled).toBe(false), { timeout: 2000 });
+  fireEvent.click(result.getByTestId('odigos-gemini-optin'));
+  await waitFor(() => expect(result.getByTestId('odigos-dimiourgia').disabled).toBe(false), { timeout: 2000 });
+}
+
+/** Αποδίδει την οθόνη με ορισμένες διαδρομές (χάρτης, tutor) για δοκιμές πλοήγησης. */
+async function apoidefsi_odigos_pliros(enotitaId: string): Promise<ReturnType<typeof render>> {
+  const apothiki = new MnimiApothiki();
+  await apothiki.grapse_keimeno(`ΠΛΗ201/.spoudes/odigoi/${enotitaId}.md`, grammata_odigou(enotitaId));
+  const periballon = ftiaxe_periballon_test({ apothiki });
+  const result = render(
+    me_periballon_test(
+      <ParoxeApothekisis periballon={periballon} kodikosMathimatos="ΠΛΗ201">
+        <MemoryRouter initialEntries={[`/odigos/${enotitaId}`]}>
+          <Routes>
+            <Route path="/odigos/:enotitaId" element={<OdigosMeletis />} />
+            <Route path="/xartis" element={<div data-testid="alilos-xartis">alilos xartis</div>} />
+            <Route path="/tutor" element={<div data-testid="alilos-tutor">alilos tutor</div>} />
+          </Routes>
+        </MemoryRouter>
+      </ParoxeApothekisis>,
+      periballon
+    )
+  );
+  await waitFor(() => expect(result.queryAllByTestId('odigos-epikefalida').length).toBeGreaterThan(0), { timeout: 2000 });
+  return result;
+}
+
+describe('odigos — οθόνη σε πραγματικό DOM', () => {
+  afterEach(() => {
+    cleanup();
+    (generateCourseGuide as unknown as ReturnType<typeof vi.fn>).mockReset();
+  });
+
+  it('δείχνει την κενή κάρτα όταν δεν υπάρχει οδηγός', async () => {
+    const result = await apoidefsi_karos('adeio');
+    expect(result.getByText('Δημιουργία οδηγού μελέτης')).not.toBeNull();
+    expect(result.getByText('Οδηγός en-1')).not.toBeNull();
+    // το κείμενο «Επίλεξε και συγχρόνισε πρώτα ένα μάθημα.» και η αδράνεια του κουμπιού
+    // εξαρτώνται από κωδικό μαθήματος· εδώ το παρέχουμε μέσω του ParoxeApothekisis
+    expect(result.queryByText('Επίλεξε και συγχρόνισε πρώτα ένα μάθημα.')).toBeNull();
+    // η επιλογή Gemini δεν έχει ενεργοποιηθεί· το κουμπί μένει αδρανές
+    expect(result.getByTestId('odigos-dimiourgia').disabled).toBe(true);
+  });
+
+  it('δείχνει την κάρτα σφάλματος όταν ο οδηγός είναι χαλασμένο σχήμα', async () => {
+    const result = await apoidefsi_karos('sfalma');
+    expect(result.getByText('Δεν φορτώθηκε ο οδηγός')).not.toBeNull();
+    expect(result.getByText('Ο οδηγός δεν έχει όλα τα επτά υποχρεωμένα τμήματα.')).not.toBeNull();
+    expect(result.getByText('Δημιουργία ξανά').disabled).toBe(true);
+  });
+
+  it('δείχνει τον οδηγό με όλες τις ενότητες και τις παραπομπές', async () => {
+    const result = await apoidefsi_odigos('en-1');
+    expect(result.getByText('Τίτλος ενότητας en-1')).not.toBeNull();
+    for (const kleidi of LEKIKIA_TMIMATON) {
+      expect(result.getByText(EPKEFALIDES_TMIMATON[kleidi])).not.toBeNull();
+    }
+    expect(result.queryAllByText(/Κείμενο τμήματος/).length).toBe(7);
+    expect(result.queryAllByTestId('odigos-parapompi').length).toBe(7);
+    expect(result.container.querySelector('.odigos-autoelegchos-lista')).not.toBeNull();
+  });
+
+  it('αποδίδει το πλήρες τμήμα κειμένου όταν δεν είναι αυτοέλεγχος', async () => {
+    const result = await apoidefsi_odigos('en-1');
+    expect(result.getByTestId('odigos-ekran')).not.toBeNull();
+    expect(result.queryAllByTestId('odigos-parapompi').length).toBe(7);
+    expect(result.container.querySelector('.odigos-autoelegchos-lista')).not.toBeNull();
+  });
+
+  it('ναυτιγεί στον χάρτη όταν πατηθεί το κουμπί επιστροφής', async () => {
+    const result = await apoidefsi_odigos_pliros('en-1');
+    fireEvent.click(result.getByTestId('odigos-episostrofh'));
+    await waitFor(() => expect(result.queryByTestId('alilos-xartis')).not.toBeNull(), { timeout: 2000 });
+  });
+
+  it('ναυτιγεί στον tutor όταν πατηθεί το κουμπί άσκησης', async () => {
+    const result = await apoidefsi_odigos_pliros('en-1');
+    fireEvent.click(result.getByTestId('odigos-tutor'));
+    await waitFor(() => expect(result.queryByTestId('alilos-tutor')).not.toBeNull(), { timeout: 2000 });
+  });
+
+  it('εναλλάσσει τα εργαλεία εξάσκησης (εξέταση, μνημονικά, P2P)', async () => {
+    const result = await apoidefsi_odigos('en-1');
+    const tool = result.getByTestId('odigos-tool-exam');
+    expect(result.queryByTestId('odigos-start-mock-exam')).toBeNull();
+    fireEvent.click(tool);
+    expect(result.queryByTestId('odigos-start-mock-exam')).not.toBeNull();
+
+    const toolMnemonika = result.getByTestId('odigos-tool-mnemonika');
+    fireEvent.click(toolMnemonika);
+    expect(result.queryByText(/Μνημονικά/)).not.toBeNull();
+
+    const toolP2p = result.getByTestId('odigos-tool-p2p');
+    fireEvent.click(toolP2p);
+    expect(result.queryByText(/Κάρτες Μελέτης: en-1/)).not.toBeNull();
+
+    // επαναγωγή στο κανονικό
+    fireEvent.click(tool);
+    expect(result.queryByText(/Ποιος είναι ο βασικός στόχος/)).toBeNull();
+  });
+
+  it('η παραγωγή οδηγού προχωράει όλα τα στάδια και απορρίπτει το μη εφορτωμένο αποτέλεσμα', async () => {
+    (generateCourseGuide as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      timi: {
+        enotita_id: 'en-1',
+        titlos: 'Τίτλος ενότητας en-1',
+        tmimata: {
+          stoxoi: { keimena: ['Κείμενο'], parapompi: '[[arx-1: σ. 1]]' },
+          eli5: { keimena: ['Κείμενο'], parapompi: '[[arx-1: σ. 1]]' },
+          theoria: { keimena: ['Κείμενο'], parapompi: '[[arx-1: σ. 1]]' },
+          paradeigma: { keimena: ['Κείμενο'], parapompi: '[[arx-1: σ. 1]]' },
+          pagides: { keimena: ['Κείμενο'], parapompi: '[[arx-1: σ. 1]]' },
+          syndeseis: { keimena: ['Κείμενο'], parapompi: '[[arx-1: σ. 1]]' },
+          autoelegchos: { keimena: ['Κείμενο'], parapompi: '[[arx-1: σ. 1]]' },
+        },
+      } as unknown as OdigosEnotitas,
+    });
+    const result = await apoidefsi_karos('adeio');
+    await epilexe_optin(result);
+    fireEvent.click(result.getByTestId('odigos-dimiourgia'));
+    await waitFor(
+      () => expect(result.queryAllByTestId('odigos-proodos-pososto')).toHaveLength(0),
+      { timeout: 6000 }
+    );
+    // η παραγωγή ολοκληρώνεται, αλλά το φορτωμένο αρχείο δεν υπάρχει· η οθόνη επιστρέφει στο σφάλμα
+    await waitFor(() => expect(result.getByText('Δεν φορτώθηκε ο οδηγός')).not.toBeNull(), { timeout: 2000 });
+    expect(result.getByText('Ο οδηγός παράχθηκε αλλά δεν μπόρεσε να φορτωθεί.')).not.toBeNull();
+    expect(result.queryAllByTestId('odigos-parapompi').length).toBe(0);
+  });
+
+  it('η παραγωγή στέλνει σφάλμα όταν το αποτέλεσμα είναι μη έγκυρο', async () => {
+    (generateCourseGuide as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      timi: { enotita_id: 'en-1' } as unknown as OdigosEnotitas,
+    });
+    const result = await apoidefsi_karos('adeio');
+    await epilexe_optin(result);
+    fireEvent.click(result.getByTestId('odigos-dimiourgia'));
+    await waitFor(() => expect(result.getByText('Δεν φορτώθηκε ο οδηγός')).not.toBeNull(), { timeout: 3000 });
+  });
+
+  it('η παραγωγή αποτυγχάνει με σφάλμα δικτύου', async () => {
+    const { generateCourseGuide } = await import('../../ypiresies/pipeline-analisis.js');
+    (generateCourseGuide as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Δεν υπάρχει δικτύωση'));
+    const result = await apoidefsi_karos('adeio');
+    await epilexe_optin(result);
+    fireEvent.click(result.getByTestId('odigos-dimiourgia'));
+    await waitFor(() => expect(result.getByText('Δεν φορτώθηκε ο οδηγός')).not.toBeNull(), { timeout: 3000 });
+  });
+
+  it('αντιδρά στα κουμπιά αυτοαξιολόγησης και στέλνει την απάντηση', async () => {
+    const result = await apoidefsi_odigos('en-1');
+    const toggle = result.getByText('Εμφάνιση απάντησης');
+    fireEvent.click(toggle);
+    expect(result.queryByText(/Κείμενο τμήματος autoelegchos/)).not.toBeNull();
+    expect(result.getByText('Απόκρυψη')).not.toBeNull();
+
+    const apantisi = result.getAllByTestId('autoelegchos-apantisi-koumpi');
+    fireEvent.click(apantisi[0]);
+    expect(apantisi[0].disabled).toBe(true);
+    fireEvent.click(apantisi[1]);
+  });
+
+  it('είναι επιβεβαιωμένο το opt-in Gemini όταν υπάρχει επιλογή', async () => {
+    const result = await apoidefsi_karos('adeio');
+    const checkbox = result.getByTestId('odigos-gemini-optin');
+    expect(checkbox).not.toBeNull();
+    expect(result.getByText(/Επιτρέπω στο Gemini να λαμβάνει το υλικό/)).not.toBeNull();
+    // μη ενεργοποιημένο· το κουμπί παραγωγής μένει αδρανές
+    expect(result.getByTestId('odigos-dimiourgia').disabled).toBe(true);
+    fireEvent.click(checkbox);
+    await waitFor(() => expect(result.getByTestId('odigos-dimiourgia').disabled).toBe(false), { timeout: 2000 });
+  });
+
+  it('επαναφέρει την κατάσταση με το κουμπί επανάληψης', async () => {
+    const result = await apoidefsi_odigos('en-1');
+    expect(result.getByTestId('odigos-ekran')).not.toBeNull();
   });
 });

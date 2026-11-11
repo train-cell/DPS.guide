@@ -3,10 +3,11 @@
  * Both adapters are wrapped by the encrypted vault before course data is stored.
  */
 
-import type { Checkin, Exetasi, KatastasiMathisis } from '@dps/core';
+import type { Checkin, Exetasi, KatastasiMathisis, TroposExetasis } from '@dps/core';
 export type { Checkin } from '@dps/core';
 import type { OverrideLepton, TemplateLepton } from '../programma/programma-typoi.js';
 import type { ThemaId } from '../design/themata.js';
+import type { YfosExigisis } from '@dps/ai';
 
 /** Οι ρυθμίσεις της εφαρμογής, όπως τις βλέπει η οθόνη ρυθμίσεων. */
 export interface Rytheseis {
@@ -36,6 +37,10 @@ export interface Rytheseis {
   readonly templateLepton: TemplateLepton;
   /** Εξαιρέσεις λεπτών ανά ημερομηνία (κάρτα P1). */
   readonly overridesLepton: readonly OverrideLepton[];
+  /** Τρόπος εξέτασης του μαθήματος· προαιρετικός, για συμβατότητα με παλιότερα vaults. */
+  readonly tropos?: TroposExetasis;
+  /** Υψος απαιτήσεων ύφους στις εξετάσεις (T4). */
+  readonly yfos_exigisis: YfosExigisis;
 }
 
 /** Η πρόοδος του χρήστη ανά μάθημα. */

@@ -125,7 +125,7 @@ export default function RythisiesEidopoiseon({
     return (
       <div className="odoni-lista" data-testid="eidopoiseis-ekran">
         <OraEidopoiseon
-          katastasi={fortosi()}
+          katastasi={katastasi}
           adia={null}
           rytheseis={proedapes}
           allaze_lepta={allaze_lepta}

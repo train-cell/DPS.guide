@@ -141,12 +141,22 @@ export function FwnitikiKarta({
           aria-live="polite"
         >
           <p className="fwnitiki-katastasi-keimeno">{katastasiMinima}</p>
-          {sfalma && <p className="fwnitiki-sfalma-keimeno">{sfalma}</p>}
+          {sfalma && (
+            <p
+              className="fwnitiki-sfalma-keimeno"
+              data-testid="fwnitiki-sfalma-keimeno"
+            >
+              {sfalma}
+            </p>
+          )}
         </div>
       </div>
 
       {apantisi && (
-        <div className="fwnitiki-apantisi-proepiskopisi">
+        <div
+          className="fwnitiki-apantisi-proepiskopisi"
+          data-testid="fwnitiki-apantisi-proepiskopisi"
+        >
           <span className="fwnitiki-apantisi-etiketa">Καταγεγραμμένη Απάντηση:</span>
           <p className="fwnitiki-apantisi-keimeno">{apantisi}</p>
         </div>
@@ -173,7 +183,10 @@ export function FwnitikiKarta({
           )}
 
           {apotelesma.vretheisanLexeis.length > 0 && (
-            <div className="fwnitiki-lexeis-kleidia">
+            <div
+              className="fwnitiki-lexeis-kleidia"
+              data-testid="fwnitiki-lexeis-kleidia"
+            >
               <span className="fwnitiki-lexeis-titlos">Λέξεις-κλειδιά που εντοπίστηκαν:</span>
               <div className="fwnitiki-lexeis-list">
                 {apotelesma.vretheisanLexeis.map((lexi) => (

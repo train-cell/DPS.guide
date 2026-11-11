@@ -103,6 +103,82 @@ describe('Mock Exam Simulator - Ypiresies (exetasi-simulator.ts)', () => {
       const exetasi5 = ftiaxe_dokimastiki_exetasi('CS-201', deigmaErwtiseon, undefined, 5);
       expect(exetasi5.xronos_lepta).toBe(10); // 5 * 2
     });
+
+    it('δίνει τις υπάρχουσες επιλογές όταν περιέχουν τη σωστή απάντηση', () => {
+      const erwtiseis = [
+        {
+          erwtisi: '2 + 2 = ?',
+          apantisi: '4',
+          ennoia: 'Μαθηματικά',
+          epiloges: ['4', '5', '6'],
+        },
+      ];
+      const exetasi = ftiaxe_dokimastiki_exetasi('MATH-101', erwtiseis, undefined, 1);
+      expect(exetasi.erwtiseis[0]?.epiloges).toEqual(['4', '5', '6']);
+    });
+
+    it('συμπληρώνει επιλογές με άλλες απαντήσεις και τυπικούς distractors', () => {
+      const erwtiseis = [
+        { erwtisi: '2 + 2 = ?', apantisi: '4', ennoia: 'Μαθηματικά', epiloges: ['3', '5'] },
+        { erwtisi: '2 + 3 = ?', apantisi: '5', ennoia: 'Μαθηματικά' },
+      ];
+      const exetasi = ftiaxe_dokimastiki_exetasi('MATH-101', erwtiseis, undefined, 1);
+      const epiloges = exetasi.erwtiseis[0]?.epiloges;
+
+      expect(epiloges).toContain('4');
+      expect(epiloges).toContain('3');
+      expect(epiloges).toContain('5');
+    });
+
+    it('παραλείπει τον τυπικό distractor που ταιριάζει με τη σωστή απάντηση', () => {
+      const erwtiseis = [
+        { erwtisi: 'Τι ισχύει;', apantisi: 'Όλα τα παραπάνω', ennoia: 'Γενικά', epiloges: ['1'] },
+        { erwtisi: 'Τι ισχύει;', apantisi: 'Κανένα από τα παραπάνω', ennoia: 'Γενικά', epiloges: ['2'] },
+      ];
+      const exetasi = ftiaxe_dokimastiki_exetasi('MATH-101', erwtiseis, undefined, 1);
+      const epiloges = exetasi.erwtiseis[0]?.epiloges;
+
+      expect(epiloges).toContain('Όλα τα παραπάνω');
+    });
+
+    it('χρησιμοποιεί το ennoia αν λείπει το enotita_id', () => {
+      const exetasi = ftiaxe_dokimastiki_exetasi('CS-201', [
+        { erwtisi: 'Τι είναι ο γράφος;', apantisi: 'Σύνολο κομβίων', ennoia: 'Γράφοι' },
+      ], { 'Γράφοι': 90 }, 1);
+
+      expect(exetasi.erwtiseis[0]?.apodosi_score).toBe(90);
+    });
+
+    it('δίνει το προεπιλεγμένο σκορ όταν δεν υπάρχει απόδοση για το ennoia', () => {
+      const exetasi = ftiaxe_dokimastiki_exetasi('CS-201', [
+        { erwtisi: 'Τι είναι ο γράφος;', apantisi: 'Σύνολο κομβίων', ennoia: 'Γράφοι' },
+      ], { 'Άλλο': 90 }, 1);
+
+      expect(exetasi.erwtiseis[0]?.apodosi_score).toBe(0);
+    });
+
+    it('δίνει προεπιλεγμένο σκορ όταν λείπει η ενότητα από το apodosi', () => {
+      const apodosi = { 'Αλγόριθμοι': 90, 'grafos-1': null } as unknown as Record<string, number>;
+      const exetasi = ftiaxe_dokimastiki_exetasi('CS-201', [
+        {
+          erwtisi: 'Τι είναι ο γράφος;',
+          apantisi: 'Σύνολο κομβίων',
+          ennoia: 'Γράφοι',
+          enotita_id: 'grafos-1',
+        },
+      ], apodosi, 1);
+
+      expect(exetasi.erwtiseis[0]?.apodosi_score).toBe(0);
+    });
+
+    it('δίνει το 0 όταν η απόδοση είναι null', () => {
+      const apodosi = { 'Γράφοι': null } as unknown as Record<string, number>;
+      const exetasi = ftiaxe_dokimastiki_exetasi('CS-201', [
+        { erwtisi: 'Τι είναι ο γράφος;', apantisi: 'Σύνολο κομβίων', ennoia: 'Γράφοι' },
+      ], apodosi, 1);
+
+      expect(exetasi.erwtiseis[0]?.apodosi_score).toBe(0);
+    });
   });
 
   describe('vathmologise_exetasi', () => {
@@ -225,6 +301,14 @@ describe('Mock Exam Simulator - Ypiresies (exetasi-simulator.ts)', () => {
       const apotelesma = vathmologise_exetasi(adeiaExetasi, {});
       expect(apotelesma.teliko_skor).toBe(0);
       expect(apotelesma.synolo_erwtiseon).toBe(0);
+    });
+
+    it('χρησιμοποιεί κενή απάντηση όταν λείπει η απάντηση του χρήστη', () => {
+      const apantiseis = { 1: 'Σωστό Α', 3: 'Σωστό Γ' };
+      const apotelesma = vathmologise_exetasi(exetasi, apantiseis);
+
+      expect(apotelesma.analytikes_apantiseis[1]?.apantisi_xristi).toBe('');
+      expect(apotelesma.analytikes_apantiseis[2]?.apantisi_xristi).toBe('Σωστό Γ');
     });
   });
 });

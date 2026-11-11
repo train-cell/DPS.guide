@@ -20,7 +20,7 @@ export const STOIXEIA_KAPSOULIS: readonly StoicheioKapsoulis[] = [
 ] as const;
 
 /** Διανυσματικό εικονίδιο SVG για κάθε καρτέλα πλοήγησης. */
-function EikonidioKapsoulis({
+export function EikonidioKapsoulis({
   kleidi,
   fallbackGlyph,
 }: {

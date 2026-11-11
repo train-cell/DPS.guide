@@ -5,6 +5,7 @@ import { DIALOMI_RYTHMISEON, dialomos_proodhou } from './apothiki-typoi.js';
 import { PROEDAFO_TEMPLATE } from '../programma/programma-vohthia.js';
 import { migrateGeminiModel, PROEPILOGI_GEMINI_MONTELO } from '../ypiresies/ai-models.js';
 import { entopise_paroxo_montelou } from '../ypiresies/ai-providers.js';
+import { YFOS_EXIGISIS_PROEPILOGI } from '@dps/ai';
 
 /** Προσωρινές προεπιλογές όσο δεν υπάρχει αποθηκευμένο αρχείο — τιμές παραδείγματος, όχι hardcoded μέσα στην οθόνη. */
 export function proedapes_rytheseis(): Rytheseis {
@@ -21,6 +22,8 @@ export function proedapes_rytheseis(): Rytheseis {
     arxiExetastikis: null,
     templateLepton: PROEDAFO_TEMPLATE,
     overridesLepton: [],
+    tropos: 'kleista_vivlia',
+    yfos_exigisis: YFOS_EXIGISIS_PROEPILOGI,
   };
 }
 

@@ -3,7 +3,9 @@ import { ok } from '@dps/core';
 import { MnimiApothiki } from '@dps/core/testing';
 import type { LlmAitimaJson, LlmAitimaKeimenou, LlmPyli } from '@dps/core';
 import { me_cache } from '@dps/ai';
-import { createAuthorizedCourseLlm } from './pipeline-analisis.js';
+import { createAuthorizedCourseLlm, createCourseAnalysisPipeline } from './pipeline-analisis.js';
+import { ftiaxe_periballon_test as ftiaxe_periballon } from '../../test-fixtures/ftiaxe-test-periballon.js';
+import { generateCourseGuide, generateCourseMap } from './pipeline-analisis.js';
 
 function fakeProvider(): { readonly provider: LlmPyli; readonly calls: ReturnType<typeof vi.fn> } {
   const calls = vi.fn();
@@ -105,5 +107,57 @@ describe('per-course generation approval', () => {
     await cached.parage_keimeno({ ...first, minimata: [{ rolos: 'xristis', keimeno: 'page two' }] });
     expect(authorize).toHaveBeenCalledTimes(2);
     expect(calls).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('course analysis pipeline', () => {
+  it('απορρίπτει τη σύνδεση LMS χωρίς συγχρονισμό', async () => {
+    const periballon = ftiaxe_periballon();
+    const llm = createAuthorizedCourseLlm(periballon.llm, 'gemini-2.5-flash', 'χάρτης', async () => false);
+
+    const result = await llm.parage_json({
+      systima: 'Use the course notes.',
+      xristis: 'Summarize chapter 4.',
+      sxima: { safeParse: (value: unknown) => ({ success: typeof value === 'string', data: value }) } as LlmAitimaJson<string>['sxima'],
+      ekdosi_prompt: 'test-v1',
+      thermokrasia: 0,
+    });
+
+    expect(result).toMatchObject({ ok: false, sfalma: { kodikos: 'AKYROTHIKE' } });
+  });
+
+  it('δεν ανακτά αρχεία χωρίς συγχρονισμό', async () => {
+    const periballon = ftiaxe_periballon();
+    const pipeline = createCourseAnalysisPipeline(periballon, 'CS101', 'gemini-2.5-flash', async () => true);
+
+    const map = await generateCourseMap(periballon, 'CS101', 'gemini-2.5-flash', async () => true);
+    expect(map.ok).toBe(false);
+    if (!map.ok) {
+      expect(map.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    }
+
+    const guide = await generateCourseGuide(periballon, 'CS101', 'section-1', 'gemini-2.5-flash', async () => true);
+    expect(guide.ok).toBe(false);
+    if (!guide.ok) {
+      expect(guide.sfalma.kodikos).toBe('DEN_VRETHIKE');
+    }
+
+    // Η ανάλυση δεν αγγίζει ποτέ το LMS όταν το μάθημα δεν συγχρονίστηκε.
+    await expect(pipeline.eclass.syndesi()).resolves.toEqual({
+      ok: false,
+      sfalma: { kodikos: 'MI_YPOSTIRIZOMENO', minima: 'Η ανάλυση δεν συνδέεται στο LMS. Συγχρόνισε πρώτα το μάθημα.' },
+    });
+    await expect(pipeline.eclass.fere_mathimata()).resolves.toEqual({
+      ok: false,
+      sfalma: { kodikos: 'MI_YPOSTIRIZOMENO', minima: 'Η ανάλυση δεν ανακτά μαθήματα από το LMS.' },
+    });
+    await expect(pipeline.eclass.fere_dentro_arxeion()).resolves.toEqual({
+      ok: false,
+      sfalma: { kodikos: 'MI_YPOSTIRIZOMENO', minima: 'Η ανάλυση δεν ανακτά αρχεία από το LMS.' },
+    });
+    await expect(pipeline.katevasma.katevase('https://example.org')).resolves.toEqual({
+      ok: false,
+      sfalma: { kodikos: 'MI_YPOSTIRIZOMENO', minima: 'Η ανάλυση δεν κατεβάζει αρχεία. Συγχρόνισε πρώτα το μάθημα.' },
+    });
   });
 });

@@ -39,11 +39,11 @@ function ftiaxe_eisodos(
     apothiki,
     katevasma: new FakeKatevasmaPyli(apothiki),
     llm: new ArgiosLlm(),
-    ocr,
     mystika: { pare: async () => null, vale: async () => undefined, svise: async () => undefined },
     rologi: new StatheriRologi(),
     katagrafi,
     riza: '',
+    ...(ocr === undefined ? {} : { ocr }),
   };
 }
 
@@ -319,7 +319,7 @@ describe('exagogi', () => {
         ok: false,
         sfalma: { kodikos: 'OCR_APOTYXIA', minima: 'Δεν αναγνωρίστηκε κείμενο' },
       }),
-    } as OcrPyli;
+    } as unknown as OcrPyli;
     const p = ftiaxe_eisodos(apothiki, new KatagrafiDiamnemata(), ocr);
     const arxeio = arxeio_test('dokimio.pdf');
     await these_arxeia(apothiki, [arxeio], new Map([['dokimio.pdf', ftiaxe_pdf_xoris_keimeno()]]));

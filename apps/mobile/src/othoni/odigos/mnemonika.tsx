@@ -53,10 +53,8 @@ export function Mnemonika({
   });
 
   const xeirismosYpovolis = useCallback(
-    (e?: React.FormEvent) => {
-      if (e) {
-        e.preventDefault();
-      }
+    (e: React.FormEvent) => {
+      e.preventDefault();
 
       const oroi = keimenoOron
         .split(/[\n,]+/)

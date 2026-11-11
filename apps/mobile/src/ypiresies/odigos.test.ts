@@ -98,4 +98,15 @@ describe('diadromi_odigou', () => {
   it('ακολουθεί το layout §5.3 του κρυφού φακέλου μαθήματος', () => {
     expect(diadromi_odigou('ΠΛΗ201', 'en-1')).toBe('ΠΛΗ201/.spoudes/odigoi/en-1.md');
   });
+
+  it('αγνοεί τις επικεφαλίδες που δεν αντιστοιχούν σε τμήμα', () => {
+    const md = (pseudos_odigos_md('en-3') ?? '') + '\n## Μία ξένη επικεφαλίδα';
+    const odigos = analise_odigo_md('en-3', md);
+    expect(odigos).not.toBeNull();
+    if (odigos !== null) {
+      expect(odigos.tmimata.theoria).not.toBeUndefined();
+      expect(Object.keys(odigos.tmimata)).toHaveLength(LEKIKIA_TMIMATON.length);
+    }
+  });
 });
+

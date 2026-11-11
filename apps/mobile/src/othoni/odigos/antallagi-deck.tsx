@@ -165,16 +165,6 @@ export function AntallagiDeck({
             />
           </div>
 
-          <button
-            type="button"
-            className="pilegma pilegma-entono antallagi-koumpi"
-            data-testid="antallagi-export-btn"
-            disabled={seExagwgi}
-            onClick={ekteleiExagwgi}
-          >
-            {seExagwgi ? 'Κρυπτογράφηση...' : 'Κρυπτογράφηση & Εξαγωγή'}
-          </button>
-
           {eksagomenoPayload && (
             <div className="antallagi-apotelesma-omada">
               <label htmlFor="antallagi-exported-code" className="antallagi-etiketa">
@@ -193,6 +183,19 @@ export function AntallagiDeck({
           )}
         </div>
       )}
+
+      {/* Κουμπί εξαγωγής πέρα από την ενότητα: η διεργασία ελέγχει αν υπάρχει επιλεγμένο πακέτο */}
+      <div className="antallagi-koumpi-omada">
+        <button
+          type="button"
+          className="pilegma pilegma-entono antallagi-koumpi"
+          data-testid="antallagi-export-btn"
+          disabled={seExagwgi}
+          onClick={ekteleiExagwgi}
+        >
+          {seExagwgi ? 'Κρυπτογράφηση...' : 'Κρυπτογράφηση & Εξαγωγή'}
+        </button>
+      </div>
 
       {/* Ενότητα Εισαγωγής */}
       <div className="antallagi-kouti antallagi-import-kouti">

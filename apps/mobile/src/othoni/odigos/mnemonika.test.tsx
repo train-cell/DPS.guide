@@ -1,13 +1,14 @@
+// @vitest-environment jsdom
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { Mnemonika } from './mnemonika.js';
 
-const PIGI_KODIKA = readFileSync(
-  fileURLToPath(new URL('./mnemonika.tsx', import.meta.url)),
-  'utf8'
-);
+const ORISTO = dirname(fileURLToPath(import.meta.url));
+const PIGI_KODIKA = readFileSync(join(ORISTO, 'mnemonika.tsx'), 'utf8');
 
 describe('Mnemonika Component (mnemonika.tsx)', () => {
   const deigmaOron = ['Δυαδική Αναζήτηση', 'Πολυπλοκότητα', 'Στοίβα'];
@@ -53,6 +54,55 @@ describe('Mnemonika Component (mnemonika.tsx)', () => {
 
       expect(html).toContain('data-testid="mnemoniko-eidos-badge"');
       expect(html).toContain('peg_system');
+    });
+  });
+
+  describe('Διαδραστική λειτουργία (render + submit)', () => {
+    afterEach(() => {
+      cleanup();
+    });
+
+    it('υποβάλει τη φόρμα και υπολογίζει το ακρωνύμιο', async () => {
+      const onDimiourgia = vi.fn();
+      const result = render(
+        <Mnemonika
+          arxikoiOroi={['Δυαδική Αναζήτηση', 'Πολυπλοκότητα']}
+          arxikoEidos="akronymio"
+          onDimiourgia={onDimiourgia}
+        />
+      );
+      const textarea = result.getByTestId('mnemonika-input-oroi');
+      fireEvent.change(textarea, { target: { value: 'Δομές Δεδομένων' } });
+      fireEvent.submit(result.getByTestId('mnemonika-form'));
+      await waitFor(() => expect(onDimiourgia).toHaveBeenCalled(), { timeout: 1000 });
+      expect(result.queryByTestId('mnemoniko-akronymio')).not.toBeNull();
+    });
+
+    it('στέλνει το thema στο κέντρο όταν δίνεται', async () => {
+      const onDimiourgia = vi.fn();
+      const result = render(
+        <Mnemonika arxikoiOroi={['A', 'B']} thema='Δομές Δεδομένων' onDimiourgia={onDimiourgia} />
+      );
+      const textarea = result.getByTestId('mnemonika-input-oroi');
+      fireEvent.change(textarea, { target: { value: 'Δομές Δεδομένων' } });
+      fireEvent.change(result.getByTestId('mnemonika-input-thema'), { target: { value: 'Δομές Δεδομένων' } });
+      fireEvent.submit(result.getByTestId('mnemonika-form'));
+      await waitFor(() => expect(onDimiourgia).toHaveBeenCalled(), { timeout: 1000 });
+      expect(result.queryByTestId('mnemoniko-akronymio')).not.toBeNull();
+    });
+
+    it('αλλάζει είδος και θέμα μέσω των πεδίων (onChange)', async () => {
+      const result = render(<Mnemonika arxikoiOroi={['A', 'B']} />);
+      fireEvent.change(result.getByTestId('mnemonika-select-eidos'), { target: { value: 'peg_system' } });
+      expect(result.queryByTestId('mnemoniko-eidos-badge')).not.toBeNull();
+      fireEvent.change(result.getByTestId('mnemonika-input-thema'), { target: { value: 'Οι όροι' } });
+      expect(result.queryByTestId('mnemoniko-akronymio')).not.toBeNull();
+    });
+
+    it('δεν στέλνει thema όταν δεν δίνεται', async () => {
+      const result = render(<Mnemonika arxikoiOroi={['A', 'B']} />);
+      const html = result.baseElement.innerHTML;
+      expect(html).toContain('mnemonika-form');
     });
   });
 

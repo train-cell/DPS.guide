@@ -6,9 +6,11 @@ import {
   EikonidioPanepistimiou,
   EikonidioAsfaleias,
   kanonikopoiise_panepistimio_id,
+  lms_apo_core,
   pare_panepistimio_dedomena,
   PANEPISTIMIA_LISTA,
   PROEPILEGMENTO_MEGETHOS_EIKONIDIOU,
+  type PanepistimioId,
 } from './eikonidia-panepistimion.js';
 
 const PIGI_KODIKA = readFileSync(
@@ -118,6 +120,57 @@ describe('kanonikopoiise_panepistimio_id & pare_panepistimio_dedomena', () => {
     expect(kanonikopoiise_panepistimio_id('oti_na_nai')).toBe('geniko');
   });
 
+  it('kanonikopoiei swsta ola ta aliases ton panepistimion (olos o kosmos)', () => {
+    const aliases: Array<[string, PanepistimioId]> = [
+      ['tuc', 'tuc_ece'],
+      ['tuc_ece', 'tuc_ece'],
+      ['uoi', 'uoi_cs'],
+      ['uoi_cs', 'uoi_cs'],
+      ['uth', 'uth_inf'],
+      ['uth_inf', 'uth_inf'],
+      ['hua', 'hua_dit'],
+      ['hua_dit', 'hua_dit'],
+      ['panteion', 'panteion'],
+      ['aegean', 'aegean_icsd'],
+      ['aegean_icsd', 'aegean_icsd'],
+      ['ionio', 'ionio_di'],
+      ['ionio_di', 'ionio_di'],
+      ['uowm', 'uowm_ece'],
+      ['uowm_ece', 'uowm_ece'],
+      ['uop_dit', 'uop_dit'],
+      ['uniwa', 'uniwa_ice'],
+      ['uniwa_ice', 'uniwa_ice'],
+      ['pada', 'uniwa_ice'],
+      ['hmu', 'hmu_cs'],
+      ['hmu_cs', 'hmu_cs'],
+      ['elmepa', 'hmu_cs'],
+      ['ihu', 'ihu_iee'],
+      ['ihu_iee', 'ihu_iee'],
+      ['dipae', 'ihu_iee'],
+      ['aua', 'aua'],
+      ['gpa', 'aua'],
+      ['asfa', 'asfa'],
+      ['askt', 'asfa'],
+      ['aspete', 'aspete'],
+      ['aspaite', 'aspete'],
+      ['eap', 'eap'],
+      ['uom', 'uom_dai'],
+      ['uom_dai', 'uom_dai'],
+      ['pamak', 'uom_dai'],
+      ['unipi', 'unipi'],
+      ['uoa_dit', 'uoa'],
+      ['ntua_mycourses', 'ntua'],
+      ['aueb_cs', 'aueb'],
+      ['auth_cs', 'auth'],
+      ['upatras_ceid', 'upatras'],
+      ['uoc_csd', 'uoc'],
+      ['duth_ee', 'duth'],
+    ];
+    for (const [id, expected] of aliases) {
+      expect(kanonikopoiise_panepistimio_id(id), `Apotyxia sto id: ${id}`).toBe(expected);
+    }
+  });
+
   it('pare_panepistimio_dedomena anaktisei ta dedomena gia egkyra panepistimia', () => {
     const unipi = pare_panepistimio_dedomena('papei');
     expect(unipi).toBeDefined();
@@ -181,5 +234,16 @@ describe('Kanonas D11 & Tokens sto eikonidia-panepistimion.tsx', () => {
       expect(hexMatch, `To emvlima ${item.id} periexei hex xroma`).toEqual([]);
       expect(html).toContain('var(--xroma-');
     }
+  });
+});
+
+describe('lms_apo_core', () => {
+  it('αντιστοιχεί κάθε τύπο LMS στο αντίστοιχο αποτέλεσμα', () => {
+    expect(lms_apo_core('ntua_mycourses', 'moodle')).toBe('unsupported');
+    expect(lms_apo_core('ntua', 'x')).toBe('unsupported');
+    expect(lms_apo_core('x', 'moodle')).toBe('moodle');
+    expect(lms_apo_core('x', 'openeclass')).toBe('open-eclass');
+    expect(lms_apo_core('x', 'custom')).toBe('auto');
+    expect(lms_apo_core('x', 'x')).toBe('unsupported');
   });
 });

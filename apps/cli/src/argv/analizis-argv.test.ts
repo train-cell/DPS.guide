@@ -156,4 +156,14 @@ describe('analizise_argv — σφάλματα εισόδου', () => {
     expect(apotelesma.timi.entoli).toBe('');
     expect(apotelesma.timi.riza).toBe('./x');
   });
+
+  it('το κενό στοιχείο στη λίστα σταματά την επανάληψη', () => {
+    const apotelesma = analizise_argv(['--help', undefined] as unknown as readonly string[]);
+    expect(apotelesma.ok).toBe(true);
+    if (!apotelesma.ok) {
+      return;
+    }
+    expect(apotelesma.timi.voitheia).toBe(true);
+    expect(apotelesma.timi.entoli).toBe('');
+  });
 });

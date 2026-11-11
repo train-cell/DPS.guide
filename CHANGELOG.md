@@ -40,6 +40,8 @@ First public release of DPS.guide (iOS via Sideloadly, CLI for Windows/macOS).
 **Documentation**
 
 - Greek README (installation, operation, supported capabilities)
+- `README.en.md` — English README (all sections translated)
+- `docs/install.md` — iOS installation guide via Sideloadly
 - `docs/PLAN.md` — project plan (historical)
 - `docs/eclass-protocol.md` — eClass protocol verification log
 - `docs/README.md` — documentation index

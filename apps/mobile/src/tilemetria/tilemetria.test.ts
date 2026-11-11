@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   katagrapse_tilemetria,
   xronometrise,
@@ -13,8 +13,9 @@ import {
 } from './tilemetria.js';
 
 describe('tilemetria — Structured Logging & Observability Engine', () => {
-  beforeEach(() => {
+  afterEach(() => {
     katharise_tilemetria();
+    vi.unstubAllGlobals();
   });
 
   it('καταγράφει συμβάντα με timestamp, επίπεδο και μήνυμα', () => {
@@ -101,6 +102,87 @@ describe('tilemetria — Structured Logging & Observability Engine', () => {
     apegrafi();
     katagrapse_tilemetria('error', 'Συμβάν 3');
     expect(elifti).toEqual(['Συμβάν 1', 'Συμβάν 2']);
+  });
+
+  describe('tilemetria — scrubbing οριακών τιμών', () => {
+    it('δέχεται non-object τιμές (null, string, number, undefined) και τις επιστρέφει αμετάβλητες', () => {
+      expect(scrub_eyaisthita_dedomena(null)).toBeNull();
+      expect(scrub_eyaisthita_dedomena(undefined)).toBeUndefined();
+      expect(scrub_eyaisthita_dedomena('κωδικός')).toBe('κωδικός');
+      expect(scrub_eyaisthita_dedomena(123)).toBe(123);
+      expect(scrub_eyaisthita_dedomena(true)).toBe(true);
+    });
+
+    it('scrubs τα ευαίσθητα πεδία μέσα σε πίνακες', () => {
+      const pinakes = [
+        { kodikos: 'superSecret123!' },
+        'μη-αντικείμενο',
+        { token: 'bearer-xyz', onoma: 'foititis' },
+      ];
+      const katharo = scrub_eyaisthita_dedomena(pinakes) as unknown[];
+      expect(katharo).toHaveLength(3);
+      expect((katharo[0] as Record<string, unknown>).kodikos).toBe('[REDACTED]');
+      expect(katharo[1]).toBe('μη-αντικείμενο');
+      expect((katharo[2] as Record<string, unknown>).token).toBe('[REDACTED]');
+      expect((katharo[2] as Record<string, unknown>).onoma).toBe('foititis');
+    });
+
+    it('καταγράφει τα κενά μεταδεδομένα ως undefined', () => {
+      const eggrafi = katagrapse_tilemetria('info', 'Μήνυμα χωρίς μεταδεδομένα');
+      expect(eggrafi.metadedomena).toBeUndefined();
+    });
+  });
+
+  describe('xronometrise — σφάλματα', () => {
+    it('καταγράφει το FAIL συμβάν με το μήνυμα και το stack του σφάλματος και το πετάει', async () => {
+      const sfalmaDokiMis = new Error('Αποτυχία δικτύου xronometrise');
+      await expect(xronometrise('syndesi', async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        throw sfalmaDokiMis;
+      })).rejects.toThrow('Αποτυχία δικτύου xronometrise');
+
+      const arxeio = pare_tilemetria_arxeio();
+      expect(arxeio).toHaveLength(1);
+      const failLog = arxeio[0];
+      expect(failLog?.minima).toContain('Αποτυχία δικτύου xronometrise');
+      expect(failLog?.epipedo).toBe('error');
+      expect(failLog?.metadedomena?.['sfalma']).toBe(sfalmaDokiMis.stack);
+      expect(failLog?.diarkeiaMs).toBeGreaterThanOrEqual(5);
+    });
+
+    it('δένει sync σφάλματα με το ίδιο pattern', async () => {
+      await expect(
+        xronometrise('sync', () => {
+          throw new Error('άμεσο σφάλμα');
+        })
+      ).rejects.toThrow('άμεσο σφάλμα');
+    });
+
+    it('καταγράφει τιμές που δεν είναι Error σε xronometrise', async () => {
+      await expect(xronometrise('string-error', () => { throw 'μια συμβολοσειρά'; })).rejects.toBe(
+        'μια συμβολοσειρά'
+      );
+
+      const arxeio = pare_tilemetria_arxeio();
+      expect(arxeio).toHaveLength(1);
+      expect(arxeio[0]?.minima).toContain('μια συμβολοσειρά');
+      expect(arxeio[0]?.epipedo).toBe('error');
+      expect(arxeio[0]?.metadedomena?.['sfalma']).toBe('μια συμβολοσειρά');
+      expect(arxeio[0]?.metadedomena?.['sfalmaStack']).toBeUndefined();
+    });
+  });
+
+  describe('me_tilemetria — σφάλματα', () => {
+    it('καταγράφει τιμές που δεν είναι Error σε me_tilemetria', async () => {
+      await expect(me_tilemetria('string-error', () => { throw 42; })).rejects.toBe(42);
+
+      const arxeio = pare_tilemetria_arxeio();
+      expect(arxeio).toHaveLength(2);
+      const failLog = arxeio[1];
+      expect(failLog?.minima).toBe('[FAIL] string-error');
+      expect(failLog?.metadedomena?.['sfalma']).toBe('42');
+      expect(failLog?.metadedomena?.['sfalmaStack']).toBeUndefined();
+    });
   });
 
   describe('me_tilemetria — Universal Observability Wrapper', () => {
@@ -192,6 +274,21 @@ describe('tilemetria — Structured Logging & Observability Engine', () => {
         expect(log.metadedomena?.['token']).toBe('[REDACTED]');
         expect(log.metadedomena?.['apiKey']).toBe('[REDACTED]');
       }
+    });
+  });
+
+  describe('paragogi_span_id — fallback χωρίς crypto', () => {
+    it('παράγει span-id με το τοπικό fallback όταν δεν υπάρχει crypto', () => {
+      vi.stubGlobal('crypto', undefined);
+      const id = paragogi_span_id();
+      expect(typeof id).toBe('string');
+      expect(id).toMatch(/^span-/);
+      expect(id.length).toBeGreaterThan(5);
+    });
+
+    it('παράγει span-id από το crypto όταν υπάρχει', () => {
+      expect(typeof paragogi_span_id()).toBe('string');
+      expect(paragogi_span_id().length).toBeGreaterThan(5);
     });
   });
 });

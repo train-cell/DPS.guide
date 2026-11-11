@@ -1,0 +1,412 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for src/navigasi/odoi.tsx</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/navigasi</a> odoi.tsx</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">38.46% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>15/39</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">16.66% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>2/12</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">16.66% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>3/18</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">58.33% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>14/24</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { lazy, Suspense, useEffect, useState } from 'react';
+import { Route, Routes } from 'react-router-dom';
+import { IonRouterOutlet } from '@ionic/react';
+import { PlisiOmonimas } from './plisi.js';
+import type { ReactNode } from 'react';
+import type { EidopoiisiYpiresies } from '../eidopoiiseis/eidopoiiseis-typoi.js';
+import { xrisiPeriballontos } from '../periballon/provolos.js';
+&nbsp;
+const Simera = <span class="fstat-no" title="function not covered" >lazy(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>mport('../othoni/simera/simera.js'));</span>
+const Mathimata = <span class="fstat-no" title="function not covered" >lazy(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>mport('../othoni/mathimata/mathimata.js'));</span>
+const XartisEnotiton = <span class="fstat-no" title="function not covered" >lazy(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>mport('../othoni/xartis/xartis.js'));</span>
+const OdigosMeletis = <span class="fstat-no" title="function not covered" >lazy(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>mport('../othoni/odigos/odigos.js'));</span>
+const TutorChat = <span class="fstat-no" title="function not covered" >lazy(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>mport('../othoni/tutor/tutor.js'));</span>
+const Rythisies = <span class="fstat-no" title="function not covered" >lazy(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>mport('../othoni/rythisies/rythisies.js'));</span>
+const RythisiesAi = <span class="fstat-no" title="function not covered" >lazy(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>mport('../othoni/rythisies/rythisies-ai.js'));</span>
+const Proedri = <span class="fstat-no" title="function not covered" >lazy(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>mport('../othoni/proedri/proedri.js'));</span>
+const ProvoliPdf = <span class="fstat-no" title="function not covered" >lazy(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>mport('../provoli-pdf/provoli-pdf.js'));</span>
+const RythmiseisProgrammatos = <span class="fstat-no" title="function not covered" >lazy(() =&gt; <span class="cstat-no" title="statement not covered" >i</span>mport('../programma/programma.js'));</span>
+const EidopoiiseisRoute = lazy(() =&gt; import('../eidopoiiseis/route.js'));
+&nbsp;
+/** Οι διαδρομές της εφαρμογής, μία ανά οθόνη. */
+export const ODOI: readonly { readonly diadromi: string; readonly onoma: string }[] = [
+  { diadromi: '/simera', onoma: 'Σήμερα' },
+  { diadromi: '/mathimata', onoma: 'Μαθήματα' },
+  { diadromi: '/xartis', onoma: 'Χάρτης Ενοτήτων' },
+  { diadromi: '/odigos/:enotitaId', onoma: 'Οδηγός Μελέτης' },
+  { diadromi: '/tutor', onoma: 'Tutor Chat' },
+  { diadromi: '/rythisies', onoma: 'Ρυθμίσεις' },
+  { diadromi: '/rythisies/ai', onoma: 'Ρυθμίσεις AI &amp; Vault' },
+  { diadromi: '/proedri', onoma: 'Onboarding' },
+  { diadromi: '/provoli/:arxeioId/:selida', onoma: 'Προβολή PDF' },
+  { diadromi: '/programma', onoma: 'Πρόγραμμα' },
+  { diadromi: '/eidopoiiseis', onoma: 'Ειδοποιήσεις' },
+  { diadromi: '/eidopoiseis', onoma: 'Ειδοποιήσεις' },
+] as const;
+&nbsp;
+/** Περιτύλιγμα σελίδας με capsule navigation. */
+function meNav(children: ReactNode, xronos = true) {
+  return (
+    &lt;PlisiOmonimas meNav={xronos}&gt;
+      &lt;Suspense fallback={&lt;p role="status"&gt;Φόρτωση οθόνης…&lt;/p&gt;}&gt;
+        {children}
+      &lt;/Suspense&gt;
+    &lt;/PlisiOmonimas&gt;
+  );
+}
+&nbsp;
+/** Έξυπνη αρχική δρομολόγηση: Onboarding για νέους χρήστες, Σήμερα για συνδεδεμένους. */
+function <span class="fstat-no" title="function not covered" >ArxikiDromologisi() {</span>
+  const periballon = <span class="cstat-no" title="statement not covered" >xrisiPeriballontos()</span>;
+  const [exeiSindesi, setExeiSindesi] = <span class="cstat-no" title="statement not covered" >useState&lt;boolean | null&gt;(null);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >  useEffect(() =&gt; {</span></span>
+    let active = <span class="cstat-no" title="statement not covered" >true;</span>
+<span class="cstat-no" title="statement not covered" >    void Promise.all([</span>
+      periballon.mystika.pare('eclass_onoma_xristi'),
+      periballon.mystika.pare('eclass_base_url'),
+    ]).<span class="fstat-no" title="function not covered" >then(([</span>username, baseUrl]) =&gt; {
+<span class="cstat-no" title="statement not covered" >      if (active) <span class="cstat-no" title="statement not covered" >setExeiSindesi(Boolean(username &amp;&amp; baseUrl));</span></span>
+    }).<span class="fstat-no" title="function not covered" >catch(() =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      if (active) <span class="cstat-no" title="statement not covered" >setExeiSindesi(false);</span></span>
+    });
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >    return () =&gt; {</span> <span class="cstat-no" title="statement not covered" >active = false; }</span>;</span>
+  }, [periballon.mystika]);
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  if (exeiSindesi === null) <span class="cstat-no" title="statement not covered" >return meNav(&lt;p role="status"&gt;Φόρτωση τοπικού προφίλ…&lt;/p&gt;, false);</span></span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  return exeiSindesi ? meNav(&lt;Simera /&gt;) : meNav(&lt;Proedri /&gt;, false);</span>
+}
+&nbsp;
+export interface OdoiNavigisisProps {
+  readonly ypiresiesEidopoiseon?: EidopoiisiYpiresies;
+}
+&nbsp;
+/**
+ * Ο χάρτης διαδρομών. Το &lt;Routes&gt; πρέπει να είναι ΑΜΕΣΟ child του &lt;IonRouterOutlet&gt;:
+ * το Ionic διαβάζει τα children του outlet για να δημιουργήσει το page stack, και ένα
+ * wrapper component αφήνει το outlet κενό.
+ */
+export function OdoiNavigisis({
+  ypiresiesEidopoiseon,
+}: OdoiNavigisisProps = {}) {
+  return (
+    &lt;IonRouterOutlet&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/" element={&lt;ArxikiDromologisi /&gt;} /&gt;
+        &lt;Route path="/simera" element={meNav(&lt;Simera /&gt;)} /&gt;
+        &lt;Route path="/mathimata" element={meNav(&lt;Mathimata /&gt;)} /&gt;
+        &lt;Route path="/xartis" element={meNav(&lt;XartisEnotiton /&gt;)} /&gt;
+        &lt;Route path="/odigos/:enotitaId" element={meNav(&lt;OdigosMeletis /&gt;)} /&gt;
+        &lt;Route path="/provoli/:arxeioId/:selida" element={meNav(&lt;ProvoliPdf /&gt;)} /&gt;
+        &lt;Route path="/programma" element={meNav(&lt;RythmiseisProgrammatos /&gt;)} /&gt;
+        &lt;Route path="/tutor" element={meNav(&lt;TutorChat /&gt;)} /&gt;
+        &lt;Route path="/rythisies" element={meNav(&lt;Rythisies /&gt;)} /&gt;
+        &lt;Route path="/rythisies/ai" element={meNav(&lt;RythisiesAi /&gt;)} /&gt;
+        &lt;Route
+          path="/eidopoiiseis"
+          element={meNav(&lt;EidopoiiseisRoute ypiresiesEidopoiseon={ypiresiesEidopoiseon} /&gt;)}
+        /&gt;
+        &lt;Route
+          path="/eidopoiseis"
+          element={meNav(&lt;EidopoiiseisRoute ypiresiesEidopoiseon={ypiresiesEidopoiseon} /&gt;)}
+        /&gt;
+        &lt;Route path="/proedri" element={meNav(&lt;Proedri /&gt;, false)} /&gt;
+        &lt;Route path="*" element={meNav(&lt;Proedri /&gt;, false)} /&gt;
+      &lt;/Routes&gt;
+    &lt;/IonRouterOutlet&gt;
+  );
+}
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-11-10T16:32:36.632Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
+</html>
+    

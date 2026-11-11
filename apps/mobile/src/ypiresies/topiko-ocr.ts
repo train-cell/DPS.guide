@@ -65,7 +65,7 @@ async function recognizePdfPage(bytes: Uint8Array, pageNumber: number): Promise<
       canvas.width = 0;
       canvas.height = 0;
     }
-    await closeDocument?.().catch(() => undefined);
+    await closeDocument?.()?.catch(() => undefined);
   }
 }
 

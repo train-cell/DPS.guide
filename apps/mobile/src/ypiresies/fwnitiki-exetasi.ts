@@ -69,7 +69,7 @@ export function ypostirizetaiFwnitikiAnagnorisi(): boolean {
  * Υπηρεσία διαχείρισης φωνητικής απάντησης.
  */
 export class FwnitikiExetasiYpiresia {
-  private epiloges: FwnitikiEpilogi;
+  private epiloges: Required<FwnitikiEpilogi>;
   private recognitionInstance: SpeechRecognitionInstance | null = null;
   private akroasiEnergi = false;
 
@@ -114,9 +114,9 @@ export class FwnitikiExetasiYpiresia {
       this.stamata();
 
       const instance = new RecognitionCls();
-      instance.lang = this.epiloges.glwssa ?? 'el-GR';
-      instance.continuous = this.epiloges.synexisKatagrafi ?? false;
-      instance.interimResults = this.epiloges.prosorinaApotelesmata ?? true;
+      instance.lang = this.epiloges.glwssa;
+      instance.continuous = this.epiloges.synexisKatagrafi;
+      instance.interimResults = this.epiloges.prosorinaApotelesmata;
 
       instance.onresult = (event: SpeechRecognitionEventLike) => {
         let telikoKeimeno = '';

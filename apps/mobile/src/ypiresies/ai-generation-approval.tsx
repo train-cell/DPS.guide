@@ -29,6 +29,7 @@ export interface CourseAiPrivacy {
   readonly error: string | null;
   readonly setOptIn: (enabled: boolean) => Promise<void>;
   readonly authorizeGeneration: (request: GeminiGenerationRequest) => Promise<boolean>;
+  readonly decide: (approved: boolean) => void;
   readonly dialog: ReactNode;
 }
 
@@ -55,7 +56,6 @@ export function useCourseAiPrivacy(
     setLoadedCourseCode(null);
     setLoading(Boolean(courseCode));
     setError(null);
-    setPending([]);
     if (!courseCode) {
       setLoadedCourseCode('');
       setLoading(false);
@@ -78,7 +78,6 @@ export function useCourseAiPrivacy(
     return () => {
       active = false;
       for (const resolve of resolvers.current.values()) resolve(false);
-      resolvers.current.clear();
     };
   }, [storage, courseCode]);
 
@@ -159,6 +158,7 @@ export function useCourseAiPrivacy(
     error,
     setOptIn,
     authorizeGeneration,
+    decide,
     dialog,
   };
 }

@@ -42,7 +42,7 @@ describe('grapse_json', () => {
 describe('diavase_json', () => {
   it('επιτυχία', async () => {
     await apothiki.grapse_keimeno('a.json', JSON.stringify({ a: 1 }));
-    const res = await diavase_json(apothiki, 'a.json', { safeParse: (v) => ({ success: true, data: v }) } as any, 'a.json');
+    const res = await diavase_json(apothiki, 'a.json', { safeParse: (v: unknown) => ({ success: true, data: v }) } as any, 'a.json');
     expect(res.ok).toBe(true);
     if (res.ok) expect(res.timi).toEqual({ a: 1 });
   });
@@ -65,7 +65,7 @@ describe('diavase_json', () => {
 describe('diavase_json_lista', () => {
   it('επιτυχία', async () => {
     await apothiki.grapse_keimeno('d.json', JSON.stringify([{ a: 1 }, { a: 2 }]));
-    const res = await diavase_json_lista(apothiki, 'd.json', { safeParse: (v) => ({ success: true, data: v }) } as any, 'd.json');
+    const res = await diavase_json_lista(apothiki, 'd.json', { safeParse: (v: unknown) => ({ success: true, data: v }) } as any, 'd.json');
     expect(res.ok).toBe(true);
     if (res.ok) expect(res.timi.length).toBe(2);
   });

@@ -67,6 +67,10 @@ describe('pare_oli_parapompes', () => {
       { arxeio_id: 'arx-1', apo: 4, eos: 4 },
     ]);
   });
+
+  it('αγνοεί αγκύλια που ταιριάζουν αλλά είναι ανέγκυρα (π.χ. σελ. 0)', () => {
+    expect(pare_oli_parapompes('[[arx-1: σ. 0]] και [[arx-1: σ. 8–3]]')).toEqual([]);
+  });
 });
 
 describe('stilise_parapompi', () => {

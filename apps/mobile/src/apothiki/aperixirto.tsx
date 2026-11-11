@@ -142,12 +142,25 @@ export function ParoxeApothekisis({ children, periballon, kodikosMathimatos: arx
 /** Πρόσβαση στην κατάσταση αποθήκευσης· επιστρέφει αρχικές τιμές αν δεν υπάρχει Provider. */
 export function xrisiApothekisis(): ApothikiSyntheseon {
   const timi = useContext(ApothikiSunexo);
-  return timi ?? {
+  if (timi) {
+    return timi;
+  }
+  async function noOpTelia() {
+    return undefined;
+  }
+  async function noOpRytheseis() {
+    return undefined;
+  }
+  function noOpKodiko() {
+    return undefined;
+  }
+  const defaultTimi: ApothikiSyntheseon = {
     rytheseis: proedapes_rytheseis(),
     proodhos: proedapes_proodhou(),
     kodikosMathimatos: '',
-    allaxe_telia: async () => undefined,
-    allaxe_rytheseis: async () => undefined,
-    allaxe_kodiko_mathimatos: () => undefined,
+    allaxe_telia: noOpTelia,
+    allaxe_rytheseis: noOpRytheseis,
+    allaxe_kodiko_mathimatos: noOpKodiko,
   };
+  return defaultTimi;
 }

@@ -197,6 +197,20 @@ describe('Themata - λειτουργίες ενεργοποίησης και α�
     expect(() => thete_thema('agnoosto' as unknown as ThemaId)).toThrow();
   });
 
+  it('η thete_thema δεν αλλάζει τίποτα όταν δεν υπάρχει document', () => {
+    const arxiko = (globalThis as any).document;
+    // @ts-expect-error - intentional test of the missing-document branch
+    (globalThis as any).document = undefined;
+    try {
+      expect(() => thete_thema('light')).not.toThrow();
+    } finally {
+      if (arxiko !== undefined) {
+        // @ts-expect-error - επαναφορά όπως πριν
+        (globalThis as any).document = arxiko;
+      }
+    }
+  });
+
   it('η arxikopoiisi_thematos χρησιμοποιεί την ασφαλή προεπιλογή μέχρι να φορτωθούν οι κρυπτογραφημένες ρυθμίσεις', () => {
     localStorage.setItem(APOTHEKE_KLEIDI_THEMATOS, 'emerald');
     const apotelesma = arxikopoiisi_thematos();
@@ -263,4 +277,19 @@ describe('navigasi.css - Responsive Mobile Frame για desktop', () => {
     expect(NAVIGASI_CSS).toContain('ion-app::before');
     expect(NAVIGASI_CSS).toContain('border-radius: 20px');
   });
+
+  it('η thete_thema δεν αλλάζει τίποτα όταν δεν υπάρχει document', () => {
+    const arxiko = (globalThis as any).document;
+    // @ts-expect-error - intentional test of the missing-document branch
+    (globalThis as any).document = undefined;
+    try {
+      expect(() => thete_thema('light')).not.toThrow();
+    } finally {
+      if (arxiko !== undefined) {
+        // @ts-expect-error - επαναφορά όπως πριν
+        (globalThis as any).document = arxiko;
+      }
+    }
+  });
 });
+

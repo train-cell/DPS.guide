@@ -1,9 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { FakeHttp, MnimiApothiki } from '@dps/core/testing';
-import type { HttpAitima, HttpApantisi, Mathima } from '@dps/core';
+import type { Apotelesma, HttpAitima, HttpApantisi, Mathima } from '@dps/core';
+import { apotyxia, ok } from '@dps/core';
 import { ftiaxe_periballon_test as ftiaxe_periballon } from '../../test-fixtures/ftiaxe-test-periballon.js';
 import {
   epanasygxronise_mathimata_apo_apothiki,
+  ftiaxe_katevasma,
   syndesi_kai_anaktisi_mathimaton,
 } from './syndesi-eclass.js';
 import { DIADROMI_MATHIMATON } from './mathimata.js';
@@ -353,4 +355,732 @@ describe('syndesi_kai_anaktisi_mathimaton', () => {
     expect(await apothiki.yparxei('MYY105/.spoudes/xartis.json')).toBe(false);
     expect(await apothiki.lista('MYY105/.spoudes/odigoi')).toMatchObject({ ok: true, timi: [] });
   });
+
+  it('αρνείται μη HTTPS διεύθυνση LMS', async () => {
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon: ftiaxe_periballon(),
+      base_url: 'http://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      expect(res.sfalma.minima).toContain('HTTPS');
+    }
+  });
+
+  it('ανιχνεύει Moodle login index.php', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<{ ok: true; timi: HttpApantisi }> => {
+        if (request.url.includes('login_form.php')) {
+          return {
+            ok: true,
+            timi: {
+              katastasi: 200,
+              teliko_url: request.url,
+              kefalides: {},
+              keimeno: '<form action="login.php"><input name="usrname"/></form>',
+            },
+          };
+        }
+        if (request.url.includes('login/index.php')) {
+          return {
+            ok: true,
+            timi: {
+              katastasi: 200,
+              teliko_url: request.url,
+              kefalides: {},
+              keimeno: '<html><body><div id="page-login">Moodle</div><input name="username"/></body></html>',
+            },
+          };
+        }
+        return {
+          ok: true,
+          timi: { katastasi: 404, teliko_url: request.url, kefalides: {}, keimeno: '' },
+        };
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://moodle.example.edu/lms',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'moodle',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
+      expect(res.sfalma.minima).toContain('τυπική φόρμα');
+    }
+  });
+
+  it('απαιτεί μόνο κωδικό πρόσβασης για Moodle (όχι token)', async () => {
+    const periballon = ftiaxe_periballon();
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://moodle.example.edu/lms',
+      onoma_xristi: 'student',
+      kodikos: '',
+      panepistimio_id: 'moodle',
+      lms: 'moodle',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+      expect(res.sfalma.minima).toContain('Moodle username/password');
+    }
+  });
+
+  it('αρνείται μη αναγνωρισμένο portal', async () => {
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon: ftiaxe_periballon(),
+      base_url: 'https://portal.example.edu',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'custom',
+      lms: 'unsupported',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
+      expect(res.sfalma.minima).toContain('connector');
+    }
+  });
+
+  it('απαιτεί username/password για open-eclass', async () => {
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon: ftiaxe_periballon(),
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: '',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+      expect(res.sfalma.minima).toContain('όνομα χρήστη');
+    }
+  });
+
+  it('απαιτεί username/password για Moodle', async () => {
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon: ftiaxe_periballon(),
+      base_url: 'https://moodle.example.edu/lms',
+      onoma_xristi: '',
+      kodikos: '',
+      panepistimio_id: 'moodle',
+      lms: 'moodle',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+      expect(res.sfalma.minima).toContain('Συμπλήρωσε');
+    }
+  });
+
+  it('απορρίπτει το sync όταν το LMS επιστρέψει αρχείο εκτός HTTPS', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/courses/CS101/document/')) {
+          // Μη HTTPS αρχείο από το LMS → `fileUrl.protocol !== 'https:'` (L103-L104)
+          return ok({
+            katastasi: 200,
+            teliko_url: request.url,
+            kefalides: {},
+            keimeno: '<table><tr><td><a href="http://malicious.example.org/file.pdf">File.pdf</a></td><td>1.2 MB</td><td>2024-01-01</td></tr></table>',
+          });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_YPOSTIRIZOMENO');
+      expect(res.sfalma.minima).toContain('εκτός της ασφαλούς διεύθυνσής του');
+    }
+  });
+
+  it('απορρίπτει το sync όταν το LMS επιστρέψει μη έγκυρη διεύθυνση αρχείου', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/courses/CS101/document/')) {
+          // Μη έγκυρη διεύθυνση αρχείου → `new URL(url)` πετάει (L106-L107)
+          return ok({
+            katastasi: 200,
+            teliko_url: request.url,
+            kefalides: {},
+            keimeno: '<table><tr><td><a href="http://">File.pdf</a></td><td>1.2 MB</td><td>2024-01-01</td></tr></table>',
+          });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      expect(res.sfalma.minima).toContain('μη έγκυρη διεύθυνση αρχείου');
+    }
+  });
+
+  it('απορρίπτει το αρχείο όταν η απάντηση δεν είναι επιτυχής', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<{ ok: true; timi: HttpApantisi }> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return {
+            ok: true,
+            timi: {
+              katastasi: 200,
+              teliko_url: request.url,
+              kefalides: {},
+              keimeno: '<form action="login_form.php"><input name="uname"/></form>',
+            },
+          };
+        }
+        if (request.methodos === 'POST') {
+          return {
+            ok: true,
+            timi: {
+              katastasi: 200,
+              teliko_url: 'https://eclass.unipi.gr/main/portfolio.php',
+              kefalides: {},
+              keimeno: 'Καλώς ήρθατε στο eClass!',
+            },
+          };
+        }
+        if (request.methodos === 'GET' && /\/courses\/CS101\/document/.test(request.url)) {
+          // 500 στο δομο φύλλο του μαθήματος → DIKTYO από την `fere_dentro_arxeion`
+          return {
+            ok: true,
+            timi: { katastasi: 500, teliko_url: request.url, kefalides: {}, keimeno: '' },
+          };
+        }
+        if (request.methodos === 'GET' && request.url.startsWith('https://eclass.unipi.gr/courses/')) {
+          return {
+            ok: true,
+            timi: { katastasi: 404, teliko_url: request.url, kefalides: {}, keimeno: '' },
+          };
+        }
+        return {
+          ok: true,
+          timi: {
+            katastasi: 200,
+            teliko_url: request.url,
+            kefalides: {},
+            keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>',
+          },
+        };
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DIKTYO');
+      expect(res.sfalma.minima).toContain('Αποτυχία ανάκτησης εγγράφων');
+    }
+  });
+
+  it('απορρίπτει τη λήψη αρχείου με μη επιτυχή απάντηση HTTP', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>' });
+        }
+        if (request.url.endsWith('/document/notes.pdf')) {
+          // Λήψη: η απάντηση δεν είναι επιτυχής → `!response.ok` (L128)
+          return apotyxia('DIKTYO', 'Αποτυχία λήψης αρχείου');
+        }
+        if (request.url.endsWith('/document/')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/document/notes.pdf">Σημειώσεις</a>' });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DIKTYO');
+      expect(res.sfalma.minima).toContain('Δεν ήταν δυνατή η λήψη');
+    }
+  });
+
+  it('απορρίπτει το αρχείο όταν λείπουν τα bytes', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>' });
+        }
+        if (request.url.endsWith('/document/notes.pdf')) {
+          // 200 αλλά χωρίς bytes → `bytes === undefined` (L131)
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, dyadiko: undefined });
+        }
+        if (request.url.endsWith('/document/')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/document/notes.pdf">Σημειώσεις</a>' });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DIKTYO');
+      expect(res.sfalma.minima).toContain('Το LMS δεν επέστρεψε το αρχείο');
+    }
+  });
+
+  it('απορρίπτει το αρχείο όταν ξεπερνά το όριο 100 MB', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>' });
+        }
+        if (request.url.endsWith('/document/notes.pdf')) {
+          // 200 με 101 MB → `bytes.byteLength > MAX_DOWNLOAD_BYTES` (L134)
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, dyadiko: new Uint8Array(101 * 1024 * 1024) });
+        }
+        if (request.url.endsWith('/document/')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/document/notes.pdf">Σημειώσεις</a>' });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      expect(res.sfalma.minima).toContain('100 MB');
+    }
+  });
+
+  it('απορρίπτει το sync όταν αποτύχει το discovery', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          // 500 στο portfolio → αποτυχία discovery
+          return ok({ katastasi: 500, teliko_url: request.url, kefalides: {}, keimeno: '' });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DIKTYO');
+      expect(res.sfalma.minima).toContain('Αποτυχία ανάκτησης μαθημάτων');
+    }
+  });
+
+  it('απορρίπτει το sync όταν αποτύχει η εξαγωγή κειμένου', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>' });
+        }
+        if (request.url.endsWith('/document/notes.pdf')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, dyadiko: new TextEncoder().encode('κείμενο') });
+        }
+        if (request.url.endsWith('/document/')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/document/notes.pdf">Σημειώσεις</a>' });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+    // Το ευρετήριο αρχείων είναι κατεστραμμένο → αποτυχία `exagogi`
+    const origDiavaseKeimeno = apothiki.diavase_keimeno;
+    apothiki.diavase_keimeno = vi.fn(async (diadromi) => {
+      if (diadromi.includes('eurethrio-arxeion')) {
+        return apotyxia('MI_EGKYRO_SXIMA', 'Το ευρετήριο είναι κατεστραμμένο');
+      }
+      return origDiavaseKeimeno.call(apothiki, diadromi);
+    });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('MI_EGKYRO_SXIMA');
+      expect(res.sfalma.minima).toContain('αποθηκεύτηκαν, αλλά η εξαγωγή κειμένου απέτυχε');
+    }
+  });
+
+  it('απορρίπτει το sync όταν το LMS επιστρέψει κενό ευρετήριο μαθημάτων', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          // Κενό portfolio → κενό discovery (L153-L154)
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DEN_VRETHIKE');
+      expect(res.sfalma.minima).toContain('Δεν βρέθηκαν εγγεγραμμένα μαθήματα στο LMS.');
+    }
+  });
+
+  it('δεν στέλνει σήμα ακύρωσης όταν δεν δίνεται', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+    const katevasma = ftiaxe_katevasma(
+      {
+        periballon,
+        base_url: 'https://eclass.unipi.gr',
+        onoma_xristi: 'student',
+        kodikos: 'secret',
+        panepistimio_id: 'unipi',
+        lms: 'open-eclass',
+      },
+      new URL('https://eclass.unipi.gr'),
+      'open-eclass',
+    );
+
+    const result = await katevasma.katevase(
+      'https://eclass.unipi.gr/courses/CS101/document/notes.pdf',
+      'CS101/.spoudes/arxeia/notes.pdf',
+      {},
+      undefined,
+    );
+
+    // τα bytes λείπουν → DIKTYO, αλλά το σήμα ακύρωσης δεν περνάει ποτέ στο αίτημα
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.sfalma.kodikos).toBe('DIKTYO');
+    const request = mockHttp.aitima.mock.calls[0][0];
+    expect(request.simatodotis).toBeUndefined();
+  });
+
+  it('απορρίπτει το sync όταν αποτύχει η εγγραφή των ρυθμίσεων', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>' });
+        }
+        if (request.url.endsWith('/document/notes.txt')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, dyadiko: new TextEncoder().encode('κείμενο') });
+        }
+        if (request.url.endsWith('/document/')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/document/notes.txt">Σημειώσεις</a>' });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+    // Η εγγραφή των ρυθμίσεων αποτυγχάνει
+    const origGrapseKeimeno = apothiki.grapse_keimeno;
+    apothiki.grapse_keimeno = vi.fn(async (diadromi, periexomeno) => {
+      if (diadromi.includes('rythmiseis')) {
+        return apotyxia('DIKTYO', 'Δεν γράφονται οι ρυθμίσεις');
+      }
+      return origGrapseKeimeno.call(apothiki, diadromi, periexomeno);
+    });
+
+    const res = await syndesi_kai_anaktisi_mathimaton({
+      periballon,
+      base_url: 'https://eclass.unipi.gr',
+      onoma_xristi: 'student',
+      kodikos: 'secret',
+      panepistimio_id: 'unipi',
+      lms: 'open-eclass',
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('DIKTYO');
+      expect(res.sfalma.minima).toContain('ρυθμίσεις');
+    }
+  });
+
+  it('δεν δέχεται αποθηκευμένα στοιχεία χωρίς διαπιστευτήρια', async () => {
+    const apothiki = new MnimiApothiki();
+    const periballon = ftiaxe_periballon({ apothiki }, { deigma: false });
+    await periballon.mystika.vale('eclass_base_url', 'https://eclass.unipi.gr');
+
+    const result = await epanasygxronise_mathimata_apo_apothiki(periballon);
+
+    expect(result).toMatchObject({ ok: false, sfalma: { kodikos: 'AUTH_APOTYXIA' } });
+    if (!result.ok) {
+      expect(result.sfalma.minima).toContain('αποθηκευμένα στοιχεία');
+    }
+  });
+
+  it('χρησιμοποιεί το "custom" όταν λείπουν τα πανεπιστημιακά ID', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>' });
+        }
+        if (request.url.endsWith('/document/notes.txt')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, dyadiko: new TextEncoder().encode('κείμενο') });
+        }
+        if (request.url.endsWith('/document/')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/document/notes.txt">Σημειώσεις</a>' });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+    await periballon.mystika.vale('eclass_onoma_xristi', 'student');
+    await periballon.mystika.vale('eclass_kodikos', 'secret');
+    await periballon.mystika.vale('eclass_base_url', 'https://eclass.unipi.gr');
+
+    const result = await epanasygxronise_mathimata_apo_apothiki(periballon);
+
+    expect(result.ok).toBe(true);
+    const settings = await fortose_rytheseis(apothiki);
+    expect(settings.panepistimioId).toBe('custom');
+  });
+  it('στέλνει το token χωρίς διαπιστευτήρια LMS', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<{ ok: true; timi: HttpApantisi }> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>' });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+    await periballon.mystika.vale('eclass_base_url', 'https://eclass.unipi.gr');
+    await periballon.mystika.vale('moodle_webservice_token', 'moodle-file-download-secret');
+
+    // username/password: null → `?? ''`, webservice_token: μη κενό → το `{ webservice_token }`
+    const result = await epanasygxronise_mathimata_apo_apothiki(periballon);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+    }
+  });
+
+  it('απορρίπτει το sync όταν αποτύχει η εγγραφή των bytes στο αρχείο', async () => {
+    const apothiki = new MnimiApothiki();
+    const mockHttp = {
+      aitima: vi.fn(async (request: HttpAitima): Promise<Apotelesma<HttpApantisi>> => {
+        if (request.methodos === 'GET' && request.url.includes('login_form.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<form action="login_form.php"><input name="uname"/><input type="password" name="pass"/></form>' });
+        }
+        if (request.methodos === 'POST') {
+          return ok({ katastasi: 200, teliko_url: 'https://eclass.unipi.gr/main/portfolio.php', kefalides: {}, keimeno: 'Καλώς ήρθατε στο eClass!' });
+        }
+        if (request.methodos === 'GET' && request.url.includes('/main/portfolio.php')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/">Εισαγωγή</a>' });
+        }
+        if (request.url.endsWith('/document/notes.txt')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, dyadiko: new TextEncoder().encode('κείμενο') });
+        }
+        if (request.url.endsWith('/document/')) {
+          return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '<a href="/courses/CS101/document/notes.txt">Σημειώσεις</a>' });
+        }
+        return ok({ katastasi: 200, teliko_url: request.url, kefalides: {}, keimeno: '' });
+      }),
+    };
+    const periballon = ftiaxe_periballon({ apothiki, http: mockHttp }, { deigma: false });
+    await periballon.mystika.vale('eclass_onoma_xristi', 'student');
+    await periballon.mystika.vale('eclass_kodikos', 'secret');
+    await periballon.mystika.vale('eclass_base_url', 'https://eclass.unipi.gr');
+    await periballon.mystika.vale('eclass_panepistimio_id', 'unipi');
+
+    const origGrapseDyadiko = apothiki.grapse_dyadiko;
+    apothiki.grapse_dyadiko = vi.fn(async () => apotyxia('DIKTYO', 'Δεν γράφονται τα bytes'));
+
+    const result = await epanasygxronise_mathimata_apo_apothiki(periballon);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.sfalma.kodikos).toBe('DIKTYO');
+    }
+  });
+
 });

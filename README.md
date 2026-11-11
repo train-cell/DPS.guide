@@ -86,7 +86,7 @@ pnpm mobile:android
 pnpm mobile:ios
 ```
 
-Παράγεται unsigned IPA στο `apps/mobile/native-artifacts/DPS.guide-unsigned.ipa`, για τοπική υπογραφή και sideload με εργαλείο όπως το Sideloadly. Τα signing keys και τα Apple credentials πρέπει να μένουν εκτός repository.
+Παράγεται unsigned IPA στο `apps/mobile/native-artifacts/DPS.guide-unsigned.ipa`, για τοπική υπογραφή και sideload με εργαλείο όπως το Sideloadly. [Οι αναλυτικές οδηγίες εγκατάστασης](docs/install.md) καλύπτουν το build, το sideload και το αυτόματο refresh. Τα signing keys και τα Apple credentials πρέπει να μένουν εκτός repository.
 
 ## Ανάπτυξη και έλεγχοι
 

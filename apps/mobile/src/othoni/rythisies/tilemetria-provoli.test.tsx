@@ -1,6 +1,9 @@
+// @vitest-environment jsdom
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import {
   TilemetriaProvoli,
@@ -13,7 +16,7 @@ import {
 } from '../../tilemetria/tilemetria.js';
 
 const PIGI_KODIKA = readFileSync(
-  fileURLToPath(new URL('./tilemetria-provoli.tsx', import.meta.url)),
+  join(dirname(fileURLToPath(import.meta.url)), 'tilemetria-provoli.tsx'),
   'utf8'
 );
 
@@ -101,6 +104,195 @@ describe('TilemetriaProvoli Component (tilemetria-provoli.tsx)', () => {
       expect(PIGI_KODIKA).toContain('role="log"');
       expect(PIGI_KODIKA).toContain('aria-live="polite"');
       expect(PIGI_KODIKA).toContain('htmlFor={anazitisiInputId}');
+    });
+  });
+
+  /**
+   * Οι δοκιμές εδώ φορτώνουν το component σε jsdom, ώστε να καλυφθούν οι
+   * κλάδοι αλληλεπδράσεων (effects, event handlers, state transitions).
+   */
+  describe('jsdom αλληλεπιδράσεις & κατάσταση', () => {
+    beforeEach(() => {
+      katharise_tilemetria();
+    });
+
+    afterEach(() => {
+      cleanup();
+      // Επαναφορά της clipboard API όπως ήταν πριν τις δοκιμές.
+      Object.defineProperty(navigator, 'clipboard', {
+        configurable: true,
+        value: undefined,
+      });
+    });
+
+    it('εγγράφει τον ακροατή και ανανεώνει τις εγγραφές όταν μπαίνει νέο μήνυμα', async () => {
+      render(<TilemetriaProvoli />);
+      expect(screen.getByTestId('tilemetria-log-list')).toBeTruthy();
+
+      const eggrafi = katagrapse_tilemetria('info', 'Ζωντανό μήνυμα', { module: 'test' }, 12.5);
+      await waitFor(() => {
+        expect(screen.queryByTestId(`tilemetria-row-${eggrafi.id}`)).not.toBeNull();
+      });
+    });
+
+    it('καθαρίζει τις εγγραφές και δείχνει το μήνυμα καθαρισμού', () => {
+      katagrapse_tilemetria('info', 'Παλιό μήνυμα');
+      render(<TilemetriaProvoli />);
+
+      fireEvent.click(screen.getByTestId('tilemetria-clear-btn'));
+      expect(
+        screen.getByTestId('tilemetria-status-msg').textContent
+      ).toContain('Τα logs καθαρίστηκαν.');
+      expect(screen.queryByTestId('tilemetria-keno')).not.toBeNull();
+    });
+
+    it('αντιγράφει στο πρόχειρο όταν η clipboard API είναι διαθέσιμη', async () => {
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: vi.fn().mockResolvedValue(undefined) },
+        configurable: true,
+      });
+      render(<TilemetriaProvoli />);
+
+      fireEvent.click(screen.getByTestId('tilemetria-copy-btn'));
+      await waitFor(() => {
+        expect(screen.getByTestId('tilemetria-status-msg').textContent).toContain(
+          'Τα logs αντιγράφηκαν στο πρόχειρο!'
+        );
+      });
+    });
+
+    it('δεν αντιγράφει όταν δεν υπάρχει clipboard API', async () => {
+      render(<TilemetriaProvoli />);
+
+      fireEvent.click(screen.getByTestId('tilemetria-copy-btn'));
+      await waitFor(() => {
+        expect(screen.getByTestId('tilemetria-status-msg').textContent).toContain(
+          'Το JSON εξήχθη.'
+        );
+      });
+      expect(navigator.clipboard).toBeUndefined();
+    });
+
+    it('περνά στο fallback όταν η clipboard API υπάρχει αλλά αποτυγχάνει', async () => {
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: vi.fn().mockRejectedValue(new Error('αποτυχία')) },
+        configurable: true,
+      });
+      render(<TilemetriaProvoli />);
+
+      fireEvent.click(screen.getByTestId('tilemetria-copy-btn'));
+      await waitFor(() => {
+        expect(screen.getByTestId('tilemetria-status-msg').textContent).toContain(
+          'Το JSON εξήχθη.'
+        );
+      });
+    });
+
+    it('καλεί το onEksagwgi με το JSON όταν πατιέται το κουμπί εξαγωγής', async () => {
+      const onEksagwgi = vi.fn();
+      render(<TilemetriaProvoli onEksagwgi={onEksagwgi} />);
+
+      fireEvent.click(screen.getByTestId('tilemetria-export-btn'));
+      await waitFor(() => {
+        expect(onEksagwgi).toHaveBeenCalledWith(expect.any(String));
+      });
+      expect(screen.getByTestId('tilemetria-status-msg').textContent).toContain(
+        'Εξαγωγή αρχείου logs έτοιμη.'
+      );
+    });
+
+    it('εναλλάσσει τα φίλτρα επιπέδου', async () => {
+      const e1 = katagrapse_tilemetria('info', 'Μήνυμα Info');
+      const e2 = katagrapse_tilemetria('error', 'Μήνυμα Error');
+
+      render(<TilemetriaProvoli />);
+
+      fireEvent.click(screen.getByTestId('tilemetria-filtro-error'));
+      await waitFor(() => {
+        expect(screen.queryByTestId(`tilemetria-row-${e1.id}`)).toBeNull();
+        expect(screen.queryByTestId(`tilemetria-row-${e2.id}`)).not.toBeNull();
+      });
+
+      fireEvent.click(screen.getByTestId('tilemetria-filtro-ola'));
+      await waitFor(() => {
+        expect(screen.queryByTestId(`tilemetria-row-${e1.id}`)).not.toBeNull();
+        expect(screen.queryByTestId(`tilemetria-row-${e2.id}`)).not.toBeNull();
+      });
+    });
+
+    it('φιλτράρει τις εγγραφές με κείμενο αναζήτησης', () => {
+      const e1 = katagrapse_tilemetria('info', 'Αντικείμενο Α');
+      const e2 = katagrapse_tilemetria('info', 'Αντικείμενο Β');
+      const e3 = katagrapse_tilemetria('warn', 'Άλλο μήνυμα', { kleidi: 'timh-A' });
+
+      render(<TilemetriaProvoli />);
+
+      fireEvent.change(screen.getByTestId('tilemetria-search-input'), {
+        target: { value: 'Αντικείμενο' },
+      });
+      expect(screen.queryByTestId(`tilemetria-row-${e1.id}`)).not.toBeNull();
+      expect(screen.queryByTestId(`tilemetria-row-${e2.id}`)).not.toBeNull();
+
+      fireEvent.change(screen.getByTestId('tilemetria-search-input'), {
+        target: { value: 'kleidi' },
+      });
+      expect(screen.queryByTestId(`tilemetria-row-${e3.id}`)).not.toBeNull();
+      expect(screen.queryByTestId(`tilemetria-row-${e1.id}`)).toBeNull();
+
+      fireEvent.change(screen.getByTestId('tilemetria-search-input'), {
+        target: { value: 'δεν-υπάρχει' },
+      });
+      expect(screen.queryByTestId('tilemetria-keno')).not.toBeNull();
+    });
+
+    it('επιλέγει και αποεπιλέγει μια εγγραφή με κλικ και με πληκτρολόγιο', async () => {
+      const e1 = katagrapse_tilemetria('info', 'Επιλεγμένο', { meta: 2 });
+      const e2 = katagrapse_tilemetria('warn', 'Με metadata', { meta: 1 });
+
+      render(<TilemetriaProvoli />);
+
+      // Χωρίς επιλογή: δεν υπάρχει pre metadata
+      expect(screen.queryByTestId(`tilemetria-meta-${e2.id}`)).toBeNull();
+
+      fireEvent.click(screen.getByTestId(`tilemetria-row-${e2.id}`));
+      await waitFor(() => {
+        expect(screen.queryByTestId(`tilemetria-meta-${e2.id}`)).not.toBeNull();
+      });
+
+      // Επιλογή με κλειδί
+      fireEvent.keyDown(screen.getByTestId(`tilemetria-row-${e1.id}`), { key: 'Enter' });
+      expect(screen.queryByTestId(`tilemetria-meta-${e1.id}`)).not.toBeNull();
+
+      // Άλλο κλειδί: δεν επιλέγει τίποτα
+      fireEvent.keyDown(screen.getByTestId(`tilemetria-row-${e1.id}`), { key: 'Escape' });
+      expect(screen.queryByTestId(`tilemetria-meta-${e1.id}`)).not.toBeNull();
+
+      // Αποεπιλογή με κλειδί Space
+      fireEvent.keyDown(screen.getByTestId(`tilemetria-row-${e1.id}`), { key: ' ' });
+      expect(screen.queryByTestId(`tilemetria-meta-${e1.id}`)).toBeNull();
+    });
+
+    it('αποεπιλέγει με κλικ μια επιλεγμένη εγγραφή', async () => {
+      const e1 = katagrapse_tilemetria('info', 'Κλικ', { meta: 3 });
+
+      render(<TilemetriaProvoli />);
+
+      fireEvent.click(screen.getByTestId(`tilemetria-row-${e1.id}`));
+      await waitFor(() => {
+        expect(screen.queryByTestId(`tilemetria-meta-${e1.id}`)).not.toBeNull();
+      });
+
+      // Δεύτερο κλικ: αποεπιλογή
+      fireEvent.click(screen.getByTestId(`tilemetria-row-${e1.id}`));
+      await waitFor(() => {
+        expect(screen.queryByTestId(`tilemetria-meta-${e1.id}`)).toBeNull();
+      });
+    });
+
+    it('δείχνει το μήνυμα κατάστασης μόνο όταν υπάρχει', () => {
+      render(<TilemetriaProvoli />);
+
+      expect(screen.queryByTestId('tilemetria-status-msg')).toBeNull();
     });
   });
 });

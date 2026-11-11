@@ -145,4 +145,19 @@ describe('Frouros epitrepomenon xromaton', () => {
     expect(einai_epitrepomeno_xroma('#fff')).toBe(false);
     expect(einai_epitrepomeno_xroma('#000')).toBe(false);
   });
+
+  it('η συνάρτηση φωτοβολίας ακολουθεί το WCAG κατώφλι 0.03928 για σκούρα κανάλια', () => {
+    expect(ypologise_antithesi('#000000', XROMA_FONTO)).toBeGreaterThan(1);
+    expect(ypologise_antithesi('#000000', '#FFFFFF')).toBe(21);
+    // 10/255 = 0.039215 ≤ 0.03928, οπότε μπαίνει στο γραμμικό κλάδος
+    expect(ypologise_antithesi('#0A0A0A', XROMA_FONTO)).toBeGreaterThan(1);
+  });
+
+  it('apokodikopoiise_hex_kanalia PETEI RangeError se mi egkyro hex', () => {
+    expect(() => ypologise_antithesi('#zzz', XROMA_FONTO)).toThrow(RangeError);
+    expect(() => ypologise_antithesi('0B0B0', XROMA_FONTO)).toThrow(RangeError);
+    expect(() => ypologise_antithesi('#0B0B0C', '#fff')).toThrow();
+  });
 });
+
+

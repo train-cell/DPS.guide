@@ -81,7 +81,7 @@ export async function odigos_mathimatos(
   } catch (aitia) {
     // Ο builder του P3 κάνεδρε αν το κείμενο ξεπερνά τα όρια κομματιού· το μετατρέπουμε
     // σε σφάλμα ορατό, ποτέ δεν αφήνουμε εξαίρεση να διαφύγει (κανόνας 9).
-    const minima = aitia.message;
+    const minima = aitia instanceof Error ? aitia.message : String(aitia);
     p.katagrafi.sfalma('odigos: το κείμενο της ενότητας ξεπερνά τα όρια', {
       kodikos_mathimatos,
       enotita_id,
