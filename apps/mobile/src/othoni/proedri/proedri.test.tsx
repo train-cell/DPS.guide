@@ -248,6 +248,15 @@ describe('Proedri — onboarding wizard με render', () => {
     expect(screen.getByTestId('proedri-forma'));
   });
 
+  it('το κουμπί Αλλαγή επιστρέφει στο βήμα 2', () => {
+    render(apotelesma_ergazias(<Proedri periballon={ftiaxe_periballon()} />));
+    fireEvent.click(screen.getByTestId('onboarding-epomeno-koumpi'));
+    fireEvent.click(screen.getByTestId('onboarding-epomeno-koumpi'));
+    expect(screen.getByText('Βήμα 3 από 4 • Σύνδεση & Διαπιστευτήρια'));
+    fireEvent.click(screen.getByText('Αλλαγή'));
+    expect(screen.getByText('Βήμα 2 από 4 • Επιλογή Ιδρύματος'));
+  });
+
   it('οι κάρτες πανεπιστημίου αλλάζουν το επιλεγμένο και το base url', () => {
     render(apotelesma_ergazias(<Proedri periballon={ftiaxe_periballon()} />));
     fireEvent.click(screen.getByTestId('karta-panepistimiou-unipi'));
@@ -256,6 +265,27 @@ describe('Proedri — onboarding wizard με render', () => {
     expect(base.getAttribute('value')).toBe('https://thales.cs.unipi.gr');
     fireEvent.click(screen.getByTestId('onboarding-epomeno-koumpi'));
     expect(screen.getByTestId('karta-panepistimiou-unipi').textContent).toContain('ΠΑΠΕΙ — Πανεπιστήμιο Πειραιώς');
+  });
+
+  it('το Enter και το Space επιλέγουν την κάρτα με το πληκτρολόγιο', () => {
+    render(apotelesma_ergazias(<Proedri periballon={ftiaxe_periballon()} />));
+    // Επίλεξη άλλης κάρτας, ώστε η «unipi» να απεπιλεγεί και να ελεγχθεί η πίεση.
+    fireEvent.click(screen.getByTestId('karta-panepistimiou-custom-2'));
+    expect(screen.getByTestId('karta-panepistimiou-unipi').getAttribute('aria-pressed')).toBe('false');
+    fireEvent.keyDown(screen.getByTestId('karta-panepistimiou-unipi'), { key: ' ' });
+    expect(screen.getByTestId('karta-panepistimiou-unipi').getAttribute('aria-pressed')).toBe('true');
+    fireEvent.keyDown(screen.getByTestId('karta-panepistimiou-unipi'), { key: 'Enter' });
+    expect(screen.getByTestId('karta-panepistimiou-unipi').getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('δεν επιλέγει την κάρτα με άλλο πλήκτρο (ο κλάδος false)', () => {
+    render(apotelesma_ergazias(<Proedri periballon={ftiaxe_periballon()} />));
+    fireEvent.click(screen.getByTestId('karta-panepistimiou-custom-2'));
+    expect(screen.getByTestId('karta-panepistimiou-unipi').getAttribute('aria-pressed')).toBe('false');
+    fireEvent.keyDown(screen.getByTestId('karta-panepistimiou-unipi'), { key: 'Escape' });
+    expect(screen.getByTestId('karta-panepistimiou-unipi').getAttribute('aria-pressed')).toBe('false');
+    fireEvent.keyDown(screen.getByTestId('karta-panepistimiou-unipi'), { key: 'a' });
+    expect(screen.getByTestId('karta-panepistimiou-unipi').getAttribute('aria-pressed')).toBe('false');
   });
 
   it('επιλογή custom ιδρύματος κλείνει με το κενό αποτέλεσμα', async () => {

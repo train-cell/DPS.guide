@@ -54,6 +54,7 @@ const PROEPILEGMENTO_PANEPISTIMIO: PanepistimioDedomena = {
   baseEclass: 'https://thales.cs.unipi.gr',
   katigoria: 'athina',
   perigrafi: 'Τμήμα Πληροφορικής & eClass ΠΑΠΕΙ',
+  lms: 'open-eclass',
 };
 
 /** Titloi ton vimaton gia ton deikti proodou. */
@@ -125,22 +126,18 @@ export default function Proedri({ periballon }: ProedriProps) {
 
   function epilexe_panepistimio(panepistimio: PanepistimioDedomena): void {
     setEpilegmenoPanepistimioId(panepistimio.id);
-    setLms(panepistimio.lms ?? 'auto');
+    setLms(panepistimio.lms);
     if (panepistimio.baseEclass.length > 0) {
       setBase(panepistimio.baseEclass);
     }
   }
 
   function allagi_vimatos(neoVima: number): void {
-    if (neoVima >= 1 && neoVima <= SYNOLA_VIMATA) {
-      setTrexonVima(neoVima);
-    }
+    setTrexonVima(neoVima);
   }
 
   function proigoumeno_vima(): void {
-    if (trexonVima > 1) {
-      setTrexonVima((palio) => palio - 1);
-    }
+    setTrexonVima((palio) => palio - 1);
   }
 
   function epomeno_vima(): void {
@@ -156,7 +153,6 @@ export default function Proedri({ periballon }: ProedriProps) {
 
   async function pane_syndexi(): Promise<void> {
     const runtime = pyles;
-    if (runtime === null) return;
     setAnamemeni(true);
     setEpixeirithike(true);
     setKatastasi(fortosi());

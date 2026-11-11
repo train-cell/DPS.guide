@@ -60,7 +60,7 @@ export interface PanepistimioDedomena {
   readonly baseEclass: string;
   readonly katigoria: KatigoriaPanepistimiou;
   readonly perigrafi: string;
-  readonly lms?: 'open-eclass' | 'moodle' | 'unsupported' | 'auto';
+  readonly lms: 'open-eclass' | 'moodle' | 'unsupported' | 'auto';
 }
 
 /** Proepilegmeno megethos tou eikonidiou se px. */
