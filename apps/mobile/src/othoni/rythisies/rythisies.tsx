@@ -347,7 +347,7 @@ export default function Rythisies() {
                 type="button"
                 className="pilegma pilegma-entono"
                 data-testid="rythisies-backup-restore"
-                disabled={backupSeEkseliksi || backupArxeio === null}
+                disabled={backupSeEkseliksi}
                 onClick={() => void epanastasi_backup()}
                 aria-label="Επαναφορά Αντιγράφου Ασφαλείας"
               >
