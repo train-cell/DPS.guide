@@ -62,10 +62,8 @@ export function ProodosDimiourgiasXarti({
   pososto,
 }: ProodosDimiourgiasXartiProps) {
   const trexonStadio = Math.max(1, Math.min(STADIA_DIMIOURGIAS_XARTI.length, stadio));
-  const telikoPososto = pososto !== undefined
-    ? Math.max(0, Math.min(100, Math.round(pososto)))
-    : Math.round((trexonStadio / STADIA_DIMIOURGIAS_XARTI.length) * 100);
-  const trexonKeimeno = STADIA_DIMIOURGIAS_XARTI[trexonStadio - 1] ?? STADIA_DIMIOURGIAS_XARTI[0];
+  const telikoPososto = pososto ?? Math.round((trexonStadio / STADIA_DIMIOURGIAS_XARTI.length) * 100);
+  const trexonKeimeno = STADIA_DIMIOURGIAS_XARTI[trexonStadio - 1];
 
   return (
     <div
@@ -348,7 +346,7 @@ export default function XartisEnotiton() {
     apothiki.kodikosMathimatos,
     apothiki.kodikosMathimatos,
   );
-  const selectedModel = apothiki.rytheseis.onomaMontelou || PROEPILOGI_GEMINI_MONTELO;
+  const selectedModel = apothiki.rytheseis.onomaMontelou;
   const selectedProvider = entopise_paroxo_montelou(selectedModel, apothiki.rytheseis.paroxosLlm);
   const geminiSelected = selectedProvider === 'gemini';
 
@@ -389,16 +387,10 @@ export default function XartisEnotiton() {
     };
   }, [periballon.apothiki, apothiki.kodikosMathimatos, prospatheies]);
 
-  const epanalipsi = useCallback(() => {
-    setKatastasi(fortosi<XartisMathimatos>());
-    setProspatheies((prospathia) => prospathia + 1);
-  }, []);
-
   const sygxronismena = apothiki.rytheseis.mathimataSynch;
 
   const dimiourgia_xarti = useCallback(async (): Promise<void> => {
     const courseCode = apothiki.kodikosMathimatos;
-    if (!courseCode || dimiourgeitai) return;
     setDimiourgeitai(true);
     setStadioAnalisis(1);
     setPosostoAnalisis(20);
@@ -484,9 +476,7 @@ export default function XartisEnotiton() {
           apodosi={apodosi}
         />
       ) : katastasi.katastasi === 'fortosi' ? (
-        <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_XARTI} epanalipsi={epanalipsi}>
-          {() => null}
-        </OloniKatastasis>
+        <OloniKatastasis katastasi={katastasi} adeioMinima={MINIMA_KENOY_XARTI} />
       ) : (
         <Karta
           titlos={katastasi.katastasi === 'adeio' ? 'Δημιουργία χάρτη μαθήματος' : 'Ο χάρτης χρειάζεται ανάλυση'}
@@ -515,7 +505,7 @@ export default function XartisEnotiton() {
                 onClick={() => void dimiourgia_xarti()}
                 data-testid="xartis-dimiourgia"
               >
-                {dimiourgeitai ? 'Ανάλυση υλικού…' : katastasi.katastasi === 'adeio' ? 'Δημιουργία χάρτη' : 'Επανάληψη ανάλυσης'}
+                {katastasi.katastasi === 'adeio' ? 'Δημιουργία χάρτη' : 'Επανάληψη ανάλυσης'}
               </button>
               {!apothiki.kodikosMathimatos && <Link to="/mathimata">Επίλεξε συγχρονισμένο μάθημα →</Link>}
             </div>

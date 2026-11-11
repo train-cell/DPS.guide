@@ -8,7 +8,7 @@ export interface OloniKatastasisProps<T> {
   /** Η τρέχουσα κατάσταση, όπως την παρέδωσε ο loader. */
   readonly katastasi: Katastasi<T>;
   /** Περιεχόμενο όταν η κατάσταση είναι etimo. */
-  readonly children: (dedomena: T) => ReactNode;
+  readonly children?: (dedomena: T) => ReactNode;
   /** Μήνυμα όταν η λίστα είναι κενή. */
   readonly adeioMinima?: string;
   /** Προαιρετική ενέργεια (π.χ. CTA κουμπί) όταν η κατάσταση είναι adeio. */
@@ -83,5 +83,5 @@ export function OloniKatastasis<T>({
     );
   }
 
-  return <>{children(katastasi.dedomena)}</>;
+  return <>{children?.(katastasi.dedomena)}</>;
 }
