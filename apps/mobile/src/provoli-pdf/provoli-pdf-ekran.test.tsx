@@ -76,7 +76,10 @@ async function ftiaxe_apothiki_dyadikon() {
 
 /** Αποθήκη που καθυστερεί κάθε ανάγνωση, για να προλάβει η οθόνη να απομακρυνθεί κατά τη φόρτωση. */
 class ThrystoApotiki implements ApothikiPyli {
-  private base = new MnimiApothiki();
+  private base: ApothikiPyli;
+  constructor(base: ApothikiPyli = new MnimiApothiki()) {
+    this.base = base;
+  }
   private async katestera() {
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
@@ -209,6 +212,73 @@ describe('ProvoliPdf — διαδρομές σελίδας', () => {
     const form = document.querySelector('[data-testid="provoli-metavasi-selidas"]')!.closest('form');
     fireEvent.submit(form!);
     await waitFor(() => expect(document.querySelector('[data-testid="provoli-selida"]')?.textContent).toContain('Σελίδα 1'));
+  });
+
+  async function ftiaxe_apotiki_arghi(): Promise<ThrystoApotiki> {
+    const base = new MnimiApothiki();
+    await base.grapse_keimeno(
+      'PLI201/.spoudes/eurethrio-arxeion.json',
+      JSON.stringify([{ id: 'arx-1', diadromi: 'a.pdf' }])
+    );
+    await base.grapse_dyadiko('a.pdf', PDF_BYTES);
+    return new ThrystoApotiki(base);
+  }
+
+  it('δεν ενημερώνει κατάσταση αν απομακρυνθεί πριν την ολοκλήρωση', async () => {
+    const periballon = ftiaxe_periballon_test({ apothiki: await ftiaxe_apotiki_arghi() });
+    const { unmount } = render(
+      me_periballon_test(
+        <ParoxeApothekisis kodikosMathimatos="PLI201">
+          <MemoryRouter initialEntries={['/provoli/arx-1/1']}>
+            <Routes>
+              <Route path="/provoli/:arxeioId/:selida" element={<ProvoliPdf />} />
+            </Routes>
+          </MemoryRouter>
+        </ParoxeApothekisis>,
+        periballon
+      )
+    );
+    // η θύρα αποθήκευσης είναι αργή· η οθόνη απομακρύνεται πριν προλάβει η
+    // `fortose_pdf` και η μέτρηση σελίδων να ολοκληρωθούν (η `zontas` είναι false)
+    theti_mock_pdfjs_arxo();
+    // η φόρτωση του παραδόχου αποθήκης διαρκεί ~100ms· μετά φορτώνει η οθόνη
+    await new Promise((resolve) => {
+      setTimeout(resolve, 120);
+    });
+    unmount();
+    // η μέτρηση σελίδων αργεί 500ms· περιμένω να ολοκληρωθεί η εκκρεμής promise
+    await new Promise((resolve) => {
+      setTimeout(resolve, 600);
+    });
+    expect(document.body).not.toBeNull();
+  });
+
+  it('δεν ενημερώνει κατάσταση αν απομακρυνθεί μετά την έναρξη της μέτρησης', async () => {
+    const periballon = ftiaxe_periballon_test({ apothiki: await ftiaxe_apotiki_arghi() });
+    const { unmount } = render(
+      me_periballon_test(
+        <ParoxeApothekisis kodikosMathimatos="PLI201">
+          <MemoryRouter initialEntries={['/provoli/arx-1/1']}>
+            <Routes>
+              <Route path="/provoli/:arxeioId/:selida" element={<ProvoliPdf />} />
+            </Routes>
+          </MemoryRouter>
+        </ParoxeApothekisis>,
+        periballon
+      )
+    );
+    // η `fortose_pdf` ολοκληρώνεται σε ~210ms· απομακρύνουμε την οθόνη αφού έχει
+    // ολοκληρωθεί, πριν ολοκληρωθεί η μέτρηση σελίδων (500ms)
+    theti_mock_pdfjs_arxo();
+    await new Promise((resolve) => {
+      setTimeout(resolve, 260);
+    });
+    unmount();
+    // η μέτρηση σελίδων αργεί 500ms· περιμένω να ολοκληρωθεί η εκκρεμής promise
+    await new Promise((resolve) => {
+      setTimeout(resolve, 600);
+    });
+    expect(document.body).not.toBeNull();
   });
 
   it('δεν κάνει σφαλματα όταν απομακρύνεται από τη σελίδα', async () => {

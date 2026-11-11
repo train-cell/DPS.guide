@@ -117,20 +117,17 @@ export default function ProvoliPdf() {
   }, []);
 
   const metavasi_se_selida = useCallback(
-    (timiKeimenou: string) => {
-      if (metallo === null) {
-        return;
-      }
+    (timiKeimenou: string, synolo: number) => {
       const arithmos = Number.parseInt(timiKeimenou, 10);
       if (Number.isFinite(arithmos)) {
-        const neaSelida = kilise_selida(arithmos, metallo.synolo);
+        const neaSelida = kilise_selida(arithmos, synolo);
         setTrexousa(neaSelida);
         setEisagomeniSelida(String(neaSelida));
       } else {
-        setEisagomeniSelida(String(metallo.trexon));
+        setEisagomeniSelida(String(trexousa));
       }
     },
-    [metallo]
+    [trexousa]
   );
 
   const onomaArxeiou = arxeioId.length > 0 ? arxeioId : 'Άγνωστο αρχείο';
@@ -213,7 +210,7 @@ export default function ProvoliPdf() {
         epanalipsiMinima="Ξανάφόρτωση"
         epanalipsi={epanalipsi}
       >
-        {() => (
+        {(egrafo) => (
           <>
             <div className="provoli-periohos">
               <div className="provoli-vivlio-plaisio">
@@ -230,7 +227,7 @@ export default function ProvoliPdf() {
               <IonButton
                 size="small"
                 fill="outline"
-                disabled={metallo === null || metallo.trexon <= PROTI_SELIDA}
+                disabled={trexousa <= PROTI_SELIDA}
                 onClick={() => {
                   setTrexousa((trexon) => Math.max(PROTI_SELIDA, trexon - 1));
                 }}
@@ -243,31 +240,29 @@ export default function ProvoliPdf() {
                 className="provoli-metavasi-forma"
                 onSubmit={(e) => {
                   e.preventDefault();
-                  metavasi_se_selida(eisagomeniSelida);
+                  metavasi_se_selida(eisagomeniSelida, egrafo.selides);
                 }}
               >
                 <span className="provoli-metavasi-etiketa">Σελ.</span>
                 <input
                   type="number"
                   min={PROTI_SELIDA}
-                  max={metallo?.synolo ?? PROTI_SELIDA}
+                  max={egrafo.selides}
                   value={eisagomeniSelida}
                   onChange={(e) => setEisagomeniSelida(e.target.value)}
-                  onBlur={() => metavasi_se_selida(eisagomeniSelida)}
+                  onBlur={() => metavasi_se_selida(eisagomeniSelida, egrafo.selides)}
                   className="provoli-metavasi-eisodos"
                   data-testid="provoli-metavasi-selidas"
                   aria-label="Μετάβαση σε σελίδα"
                 />
-                <span className="provoli-metavasi-synolo">/ {metallo?.synolo ?? '—'}</span>
+                <span className="provoli-metavasi-synolo">/ {egrafo.selides}</span>
               </form>
 
               <IonButton
                 size="small"
-                disabled={metallo === null || metallo.trexon >= metallo.synolo}
+                disabled={trexousa >= egrafo.selides}
                 onClick={() => {
-                  setTrexousa((trexon) =>
-                    metallo === null ? trexon : Math.min(metallo.synolo, trexon + 1)
-                  );
+                  setTrexousa((trexon) => Math.min(egrafo.selides, trexon + 1));
                 }}
                 data-testid="provoli-epomeno"
               >
