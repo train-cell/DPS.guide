@@ -296,7 +296,8 @@ async function* vaultBackupPlaintext(storage: ApothikiPyli, secrets: MystikaPyli
     view.setUint16(1, pathBytes.byteLength, false);
     view.setBigUint64(3, BigInt(data.byteLength), false);
     yield header;
-    if (pathBytes.byteLength > 0) yield pathBytes;
+    // Η διαδρομή είναι πάντα μη κενή (ο αναγνώστης απορρίπτει την κενή).
+    yield pathBytes;
     for (let offset = 0; offset < data.byteLength; offset += BACKUP_CHUNK_BYTES) {
       yield data.subarray(offset, Math.min(offset + BACKUP_CHUNK_BYTES, data.byteLength));
     }
