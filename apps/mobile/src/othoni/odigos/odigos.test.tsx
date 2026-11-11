@@ -391,7 +391,7 @@ async function apoidefsi_karos(statos: 'adeio' | 'sfalma'): Promise<ReturnType<t
 }
 
 /** Ενεργοποιεί την επιλογή Gemini χωρίς την οποία το κουμπί παραγωγής μένει αδρανές. */
-async function epilexe_optin(result: ReturnType<typeof render>): Promise<void> {
+export async function epilexe_optin(result: ReturnType<typeof render>): Promise<void> {
   await waitFor(() => expect(result.getByTestId('odigos-gemini-optin').disabled).toBe(false), { timeout: 2000 });
   fireEvent.click(result.getByTestId('odigos-gemini-optin'));
   await waitFor(() => expect(result.getByTestId('odigos-dimiourgia').disabled).toBe(false), { timeout: 2000 });

@@ -66,7 +66,7 @@ export function ProodosDimiourgiasOdigou({
   const telikoPososto = pososto !== undefined
     ? Math.max(0, Math.min(100, Math.round(pososto)))
     : Math.round((trexonStadio / STADIA_DIMIOURGIAS_ODIGOU.length) * 100);
-  const trexonKeimeno = STADIA_DIMIOURGIAS_ODIGOU[trexonStadio - 1] ?? STADIA_DIMIOURGIAS_ODIGOU[0];
+  const trexonKeimeno = STADIA_DIMIOURGIAS_ODIGOU[trexonStadio - 1];
 
   return (
     <div
@@ -141,7 +141,7 @@ export interface ErwtisiAutoelegchouDedomena {
 export function analise_erwtisi_autoelegchou(
   keimeno: string,
   index: number,
-  enotitaId?: string
+  enotitaId: string
 ): ErwtisiAutoelegchouDedomena {
   const match = keimeno.match(/^(.*?)(?:Απάντηση:)\s*(.*)$/s);
   let erwtisi = keimeno.trim();
@@ -154,7 +154,7 @@ export function analise_erwtisi_autoelegchou(
   }
   erwtisi = erwtisi.replace(/^Ερώτηση:\s*/i, '').trim();
   apantisi = apantisi.replace(/^[«"']\s*/, '').replace(/\s*[»"']$/, '').trim();
-  const ennoia = erwtisi || `${enotitaId ?? 'enotita'}-erwtisi-${index + 1}`;
+  const ennoia = erwtisi || `${enotitaId}-erwtisi-${index + 1}`;
   return { erwtisi, apantisi, ennoia };
 }
 
@@ -180,7 +180,6 @@ export function AutoelegchosErwtisi({
   const [ypovoli, setYpovoli] = useState(false);
 
   const xeirismosApantisis = async (sosto: boolean) => {
-    if (ypovoli) return;
     setYpovoli(true);
     try {
       if (onApantisi) {
@@ -258,10 +257,8 @@ export function AutoelegchosAkordeon({
   const apothiki = xrisiApothekisis();
   const [katastaseis, setKatastaseis] = useState<Record<string, KatastasiMathisis>>(() => {
     const arxiko: Record<string, KatastasiMathisis> = {};
-    if (apothiki.proodhos.katastasiMathisis) {
-      for (const item of apothiki.proodhos.katastasiMathisis) {
-        arxiko[item.ennoia] = item;
-      }
+    for (const item of apothiki.proodhos.katastasiMathisis ?? []) {
+      arxiko[item.ennoia] = item;
     }
     return arxiko;
   });
@@ -273,10 +270,8 @@ export function AutoelegchosAkordeon({
       if (mounted && proodhos.katastasiMathisis) {
         setKatastaseis((palies) => {
           const map = { ...palies };
-          if (proodhos.katastasiMathisis) {
-            for (const item of proodhos.katastasiMathisis) {
-              map[item.ennoia] = item;
-            }
+          for (const item of proodhos.katastasiMathisis) {
+            map[item.ennoia] = item;
           }
           return map;
         });
@@ -591,7 +586,7 @@ export default function OdigosMeletis() {
                 onClick={() => void dimiourgia_odigo()}
                 data-testid="odigos-dimiourgia"
               >
-                {dimiourgeitai ? 'Δημιουργία οδηγού…' : 'Δημιουργία οδηγού'}
+                {'Δημιουργία οδηγού'}
               </button>
               {!kodikosMathimatos && <p role="status">Επίλεξε και συγχρόνισε πρώτα ένα μάθημα.</p>}
             </div>
