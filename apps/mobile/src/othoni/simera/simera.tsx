@@ -265,7 +265,6 @@ export function Simera() {
   );
 
   const xeirismosCheckin = useCallback(async () => {
-    if (checkinEktelountai) return;
     setCheckinEktelountai(true);
     setCheckinMinima(null);
     try {
