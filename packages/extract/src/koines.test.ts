@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Selida } from '@dps/core';
 import { ELAXISTES_LEKSEIS_SELIDAS } from '@dps/core';
 import { MAGIKA_ZIP } from './koines.js';
-import { arxizei_me, ftiaxe_selida, katharise_keimeno, metisese_lekseis, magika_zip } from './koines.js';
+import { arxizei_me, ftiaxe_selida, katharise_keimeno, metisese_lekseis } from './koines.js';
 
 describe('katharise_keimeno', () => {
   it('κανονικοποιεί σε NFC και συμπιέζει τα κενά', () => {

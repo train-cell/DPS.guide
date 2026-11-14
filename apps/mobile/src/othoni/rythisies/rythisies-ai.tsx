@@ -149,7 +149,7 @@ export default function RythisiesAi() {
       return;
     }
 
-    if (paroxosTrexon.apaitisiKleidiou && kleidiApi.trim().length === 0) {
+    if (paroxosTrexon.apaitisiKleidiou && kleidiApi.trim().length === 0 && !exeiVaultKleidi) {
       setDokimiApotelesma({
         epitixia: false,
         minima: 'Απαιτείται API Key για τον επιλεγμένο πάροχο.',
@@ -174,7 +174,7 @@ export default function RythisiesAi() {
   }
 
   async function ektelese_dokimi_syndesis(model: string, providerId: IdParoxou): Promise<void> {
-    if (providerId === 'gemini' && kleidiApi.trim().length === 0) {
+    if (providerId === 'gemini' && kleidiApi.trim().length === 0 && !exeiVaultKleidi) {
       setDokimiApotelesma({ epitixia: false, minima: 'Απαιτείται API Key για τον επιλεγμένο πάροχο.' });
       return;
     }
@@ -495,6 +495,7 @@ export default function RythisiesAi() {
             <label className="odoni-xeiris-zeugos" htmlFor="vault-backup-export-password">Κωδικός backup</label>
             <input
               id="vault-backup-export-password"
+              data-testid="vault-backup-export-password"
               className="proedri-travla-gramma"
               type="password"
               autoComplete="new-password"

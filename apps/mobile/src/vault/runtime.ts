@@ -16,6 +16,7 @@ import {
 import type { Periballon } from '../periballon/periballon.js';
 import { ftiaxe_periballon } from '../periballon/periballon.js';
 import { KatagrafiMnimis } from '../periballon/katagrafi-mnimis.js';
+import { katagrapse_tilemetria } from '../tilemetria/tilemetria.js';
 import { IndexedDbApothiki } from './indexeddb-apothiki.js';
 import { BrowserHttpPyli } from './browser-http.js';
 import { ApothikiMystikaPyli, EncryptedMystikaPyli } from './vault.js';
@@ -62,6 +63,23 @@ export function createDeviceStorage(): DeviceStorage {
   return { apothiki, mystika: new ApothikiMystikaPyli(apothiki), native: false };
 }
 
+class ProductionKatagrafi extends KatagrafiMnimis {
+  override pliroforia(minima: string, dedomena?: Record<string, unknown>): void {
+    super.pliroforia(minima, dedomena);
+    katagrapse_tilemetria('info', minima, dedomena);
+  }
+
+  override proeidopoiisi(minima: string, dedomena?: Record<string, unknown>): void {
+    super.proeidopoiisi(minima, dedomena);
+    katagrapse_tilemetria('warn', minima, dedomena);
+  }
+
+  override sfalma(minima: string, dedomena?: Record<string, unknown>): void {
+    super.sfalma(minima, dedomena);
+    katagrapse_tilemetria('error', minima, dedomena);
+  }
+}
+
 /** Composes only real device adapters after the user unlocks the encrypted vault. */
 export function createProductionPeriballon(
   device: DeviceStorage,
@@ -71,7 +89,7 @@ export function createProductionPeriballon(
   const mystika = new EncryptedMystikaPyli(device.mystika, session.dataKey);
   const http: HttpPyli = device.native ? new CapacitorHttpPyli() : new BrowserHttpPyli();
   const rologi = { tora: () => new Date() };
-  const katagrafi = new KatagrafiMnimis();
+  const katagrafi = new ProductionKatagrafi();
   let activeModel = GEMINI_MODEL;
   const llm: LlmPyli = {
     get montelo() { return activeModel; },

@@ -39,12 +39,27 @@ async function writeBlobToPrivateCache(blob: Blob, path: string): Promise<void> 
 export async function deliverEncryptedBackup(blob: Blob, onomaArxeiou?: string): Promise<void> {
   const filename = onomaArxeiou ?? backupName();
   if (!Capacitor.isNativePlatform()) {
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+    let url = '';
+    try {
+      url = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(blob) : '';
+    } catch {
+      url = '';
+    }
+    if (typeof document !== 'undefined') {
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = filename;
+      anchor.click();
+      if (url) {
+        window.setTimeout(() => {
+          try {
+            URL.revokeObjectURL(url);
+          } catch {
+            // ignore
+          }
+        }, 30_000);
+      }
+    }
     return;
   }
 

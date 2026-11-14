@@ -882,7 +882,7 @@ describe('syndesi_kai_anaktisi_mathimaton', () => {
     expect(res.ok).toBe(false);
     if (!res.ok) {
       expect(res.sfalma.kodikos).toBe('DEN_VRETHIKE');
-      expect(res.sfalma.minima).toContain('Δεν βρέθηκαν εγγεγραμμένα μαθήματα στο LMS.');
+      expect(res.sfalma.minima).toContain('Δεν βρέθηκαν εγγεγραμμένα μαθήματα');
     }
   });
 

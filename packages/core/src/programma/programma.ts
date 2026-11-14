@@ -256,7 +256,9 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
       continue;
     }
     const vasi = parse_meri(katastasi.teleutaia_meleti);
-    vale_epanalipseis(katastasi, vasi);
+    if (vasi !== null) {
+      vale_epanalipseis(katastasi, vasi);
+    }
   }
 
   const megisto_deadline = grammes.map((g) => g.deadline).sort().at(-1) as string;
@@ -330,36 +332,44 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
     if (ypoloipo_meras > 0) {
       // Ο γράφος έχει τουλάχιστον μία ομάδα με deadline >= imera (η μέγιστη),
       // οπότε η find() είναι πάντα επιτυχής.
-      const epomeni = grammes.find((g) => imera <= g.deadline) as MathimaProgrammatos;
+      const epomeni = grammes.find((g) => imera <= g.deadline);
       // Επανάληψη μόνο για ενότητες με υλικό που έχουν ήδη μελετηθεί πρώτη φορά
       // και έχουν εκκρεμές υπόλοιπο· η εργασία χρεώνεται στο υπόλοιπο, όχι ως
       // φανταστική επανάληψη άμελετης ενότητας.
-      const me_yliko = epomeni.lista.filter(
-        (k) => k.ektimisi > 0 && k.ypoloipo > 0 && k.teleutaia_meleti !== null
-      );
-      if (me_yliko.length > 0) {
-        const me_apodosi = [...me_yliko].sort((a, b) => {
-          const aa = a.enotita.apodosi_exetasis ?? -1;
-          const bb = b.enotita.apodosi_exetasis ?? -1;
-          return bb === aa ? a.enotita.id.localeCompare(b.enotita.id) : bb - aa;
-        });
-        const prota = me_apodosi[0] as KatastasiEnotitas;
-        const topothetisi = Math.min(prota.ypoloipo, ypoloipo_meras);
-        ergasies.push({
-          eidos: 'epanalipsi',
-          kodikos_mathimatos: epomeni.kodikos_mathimatos,
-          enotita_id: prota.enotita.id,
-          titlos: prota.enotita.titlos,
-          lepta: topothetisi,
-        });
-        prota.ypoloipo -= topothetisi;
+      if (epomeni !== undefined) {
+        const me_yliko = epomeni.lista.filter(
+          (k) => k.ektimisi > 0 && k.ypoloipo > 0 && k.teleutaia_meleti !== null
+        );
+        if (me_yliko.length > 0) {
+          const me_apodosi = [...me_yliko].sort((a, b) => {
+            const aa = a.enotita.apodosi_exetasis ?? -1;
+            const bb = b.enotita.apodosi_exetasis ?? -1;
+            return bb === aa ? a.enotita.id.localeCompare(b.enotita.id) : bb - aa;
+          });
+          const prota = me_apodosi[0];
+          if (prota !== undefined) {
+            const topothetisi = Math.min(prota.ypoloipo, ypoloipo_meras);
+            ergasies.push({
+              eidos: 'epanalipsi',
+              kodikos_mathimatos: epomeni.kodikos_mathimatos,
+              enotita_id: prota.enotita.id,
+              titlos: prota.enotita.titlos,
+              lepta: topothetisi,
+            });
+            prota.ypoloipo -= topothetisi;
+          }
+        }
       }
     }
 
     if (ergasies.length > 0) {
       meres.push({ imerominia: imera, ergasies });
     }
-    meri = parse_meri(add_imeres(meri, 1));
+    const epomenoMeri = parse_meri(add_imeres(meri, 1));
+    if (!epomenoMeri) {
+      break;
+    }
+    meri = epomenoMeri;
     imera = iso_apo_meri(meri);
   }
 
@@ -371,7 +381,11 @@ export function ftiaxe_programma(eisodos: EisodosProgrammatos): Apotelesma<Progr
     let iter = eisodos.simera;
     while (iter <= grammi.deadline) {
       diathesima += xorikotita(meri_iter);
-      meri_iter = parse_meri(add_imeres(meri_iter, 1));
+      const epomenoIter = parse_meri(add_imeres(meri_iter, 1));
+      if (!epomenoIter) {
+        break;
+      }
+      meri_iter = epomenoIter;
       iter = iso_apo_meri(meri_iter);
     }
     let apaitoumena = 0;

@@ -271,6 +271,9 @@ export function anazitise_keimeno(
 
   for (const [eggrafoId, dedomena] of pinakasVathmon.entries()) {
     const eggrafo = eurethrio.eggrafa.get(eggrafoId);
+    if (!eggrafo) {
+      continue;
+    }
 
     apotelesmata.push({
       eggrafoId,

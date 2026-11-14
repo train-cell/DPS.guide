@@ -169,7 +169,9 @@ export async function exagage_pptx(
   const selides: Selida[] = [];
   for (let i = 0; i < slides.timi.length; i += 1) {
     const onoma = slides.timi[i];
+    if (onoma === undefined) continue;
     const arxeio = fortosi.timi.file(onoma);
+    if (!arxeio) continue;
     const keimena: string[] = [];
     synekdose_keimenon(analutis.parse(await arxeio.async('string')), 'a:t', keimena);
     selides.push(ftiaxe_selida(arxeio_id, i + 1, keimena.join('\n')));

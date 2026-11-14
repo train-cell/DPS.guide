@@ -268,9 +268,10 @@ export function AutoelegchosAkordeon({
     if (!kodikosMathimatos) return;
     void fortose_proodho(periballon.apothiki, kodikosMathimatos).then((proodhos) => {
       if (mounted && proodhos.katastasiMathisis) {
+        const mathisi = proodhos.katastasiMathisis;
         setKatastaseis((palies) => {
           const map = { ...palies };
-          for (const item of proodhos.katastasiMathisis) {
+          for (const item of mathisi) {
             map[item.ennoia] = item;
           }
           return map;
@@ -475,7 +476,7 @@ export default function OdigosMeletis() {
     <div className="odigos-kyrio" data-testid="odigos-ekran">
       <ProskelesioOmonimas
         titlos={
-          katastasi.katastasi === 'etimo' ? katastasi.dedomena.titlos : `Οδηγός ${enotitaId}`
+          katastasi.katastasi === 'etimo' ? (katastasi.dedomena?.titlos ?? `Οδηγός ${enotitaId}`) : `Οδηγός ${enotitaId}`
         }
         ypokeimeno="Οδός μελέτης με παραπομπές στο υλικό."
         akseis={kseis}
@@ -620,34 +621,38 @@ export default function OdigosMeletis() {
         <>
           {privacy.error !== null && <p role="alert" className="karta-ypokeimeno">{privacy.error}</p>}
           <OloniKatastasis katastasi={katastasi}>
-            {(odigos) => (
-          <>
-            {LEKIKIA_TMIMATON.map((kleidi) => {
-              const tmima = odigos.tmimata[kleidi];
+            {(odigos) => {
+              if (!odigos || !odigos.tmimata) return null;
               return (
-                <section key={kleidi}>
-                  <h2 className="odigos-epikefalida" data-testid="odigos-epikefalida">
-                    {EPKEFALIDES_TMIMATON[kleidi]}
-                  </h2>
-                  {kleidi === 'autoelegchos' ? (
-                    <AutoelegchosAkordeon
-                      keimena={tmima.keimena}
-                      kodikosMathimatos={kodikosMathimatos}
-                      enotitaId={enotitaId}
-                    />
-                  ) : (
-                    <div className="odigos-paragrafos">
-                      {tmima.keimena.map((keimeno) => (
-                        <p key={keimeno}>{keimeno}</p>
-                      ))}
-                    </div>
-                  )}
-                  <ParapompiTmimatos parapompi={tmima.parapompi} />
-                </section>
+                <>
+                  {LEKIKIA_TMIMATON.map((kleidi) => {
+                    const tmima = odigos.tmimata[kleidi];
+                    if (!tmima) return null;
+                    return (
+                      <section key={kleidi}>
+                        <h2 className="odigos-epikefalida" data-testid="odigos-epikefalida">
+                          {EPKEFALIDES_TMIMATON[kleidi]}
+                        </h2>
+                        {kleidi === 'autoelegchos' ? (
+                          <AutoelegchosAkordeon
+                            keimena={tmima.keimena}
+                            kodikosMathimatos={kodikosMathimatos}
+                            enotitaId={enotitaId}
+                          />
+                        ) : (
+                          <div className="odigos-paragrafos">
+                            {tmima.keimena.map((keimeno) => (
+                              <p key={keimeno}>{keimeno}</p>
+                            ))}
+                          </div>
+                        )}
+                        <ParapompiTmimatos parapompi={tmima.parapompi} />
+                      </section>
+                    );
+                  })}
+                </>
               );
-            })}
-          </>
-        )}
+            }}
           </OloniKatastasis>
         </>
       )}

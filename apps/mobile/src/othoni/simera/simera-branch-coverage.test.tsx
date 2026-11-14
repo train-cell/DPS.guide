@@ -387,8 +387,9 @@ describe('simera — εξέταση, μάθημα και φιλτραρίσμα�
   });
 
   it('δείχνει την επόμενη εξέταση με τις ημέρες που απομένουν', async () => {
+    const mellontikiImerominia = new Date(Date.now() + 9 * 86_400_000).toISOString().slice(0, 10);
     const exetaseis: Exetasi[] = [
-      { kodikos_mathimatos: 'ΠΛΗ201', imerominia: '2026-11-20', tropos: 'kleista_vivlia' },
+      { kodikos_mathimatos: 'ΠΛΗ201', imerominia: mellontikiImerominia, tropos: 'kleista_vivlia' },
     ];
     const result = await apodosi_simeras({ exetaseis });
     await periimeno_fortosi(result);

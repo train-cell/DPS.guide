@@ -46,8 +46,11 @@ function links(html: string): Link[] {
   const result: Link[] = [];
   const anchor = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi;
   for (let match = anchor.exec(html); match !== null; match = anchor.exec(html)) {
-    const href = attribute(match[1], 'href');
-    if (href !== null) result.push({ href: decodeHtml(href), label: plainText(match[2]) });
+    const rawTag = match[1];
+    const rawLabel = match[2];
+    if (!rawTag || rawLabel === undefined) continue;
+    const href = attribute(rawTag, 'href');
+    if (href !== null) result.push({ href: decodeHtml(href), label: plainText(rawLabel) });
   }
   return result;
 }
@@ -68,7 +71,7 @@ function allFileReferences(html: string): string[] {
 }
 
 function extension(path: string): string {
-  const name = path.split('/').at(-1)!.split('?')[0];
+  const name = (path.split('/').at(-1) ?? '').split('?')[0] ?? '';
   const dot = name.lastIndexOf('.');
   return dot < 0 ? '' : name.slice(dot + 1).toLowerCase();
 }
@@ -130,9 +133,11 @@ export class MoodlePyli implements EclassPyli {
     const form = /<form\b([^>]*)>([\s\S]*?)<\/form>/gi;
     let loginForm: { attributes: string; html: string } | null = null;
     for (let match = form.exec(html); match !== null; match = form.exec(html)) {
+      const attrs = match[1];
       const body = match[2];
+      if (!attrs || !body) continue;
       if (/name\s*=\s*["']username["']/i.test(body) && /name\s*=\s*["']password["']/i.test(body)) {
-        loginForm = { attributes: match[1], html: body };
+        loginForm = { attributes: attrs, html: body };
         break;
       }
     }
@@ -152,6 +157,7 @@ export class MoodlePyli implements EclassPyli {
     const hidden = /<input\b([^>]*)>/gi;
     for (let match = hidden.exec(loginForm.html); match !== null; match = hidden.exec(loginForm.html)) {
       const tag = match[1];
+      if (!tag) continue;
       const type = (attribute(tag, 'type') ?? '').toLowerCase();
       const name = attribute(tag, 'name');
       if (name !== null && (type === 'hidden' || type === 'submit')) {
@@ -161,6 +167,7 @@ export class MoodlePyli implements EclassPyli {
     const buttons = /<button\b([^>]*)>[\s\S]*?<\/button>/gi;
     for (let match = buttons.exec(loginForm.html); match !== null; match = buttons.exec(loginForm.html)) {
       const tag = match[1];
+      if (!tag) continue;
       const type = (attribute(tag, 'type') ?? 'submit').toLowerCase();
       const name = attribute(tag, 'name');
       if (type === 'submit' && name !== null) fields[name] = decodeHtml(attribute(tag, 'value') ?? '');

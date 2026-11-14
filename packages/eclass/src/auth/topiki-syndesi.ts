@@ -154,6 +154,7 @@ export class TopikiSyndesi implements SyndesiStratigiki {
 
     while ((match = protypos_input.exec(html)) !== null) {
       const tag = match[1];
+      if (!tag) continue;
       const typos = (this.pare_idiotita(tag, 'type') ?? 'text').toLowerCase();
       const onoma = this.pare_idiotita(tag, 'name');
       const timi = this.pare_idiotita(tag, 'value') ?? '';
@@ -174,6 +175,7 @@ export class TopikiSyndesi implements SyndesiStratigiki {
     const protypos_button = /<button\b([^>]*)>[\s\S]*?<\/button>/gi;
     for (let button = protypos_button.exec(html); button !== null; button = protypos_button.exec(html)) {
       const tag = button[1];
+      if (!tag) continue;
       const typos = (this.pare_idiotita(tag, 'type') ?? 'submit').toLowerCase();
       const onoma = this.pare_idiotita(tag, 'name');
       if (typos === 'submit' && onoma) {

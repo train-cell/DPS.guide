@@ -91,7 +91,7 @@ export function parage_akronymio_kai_leikseis(oroi: readonly string[]): Kataskev
   const grammataAkronymio: string[] = [];
 
   for (const oros of katharoiOroi) {
-    const protoXaraktiras = oros[0];
+    const protoXaraktiras = oros[0] ?? '';
     const protoGramma = kanonikopoiisi_xaraktira(protoXaraktiras);
     grammataAkronymio.push(protoGramma);
 

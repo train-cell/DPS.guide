@@ -60,7 +60,11 @@ export function pare_keimeno_apantisis(periexomeno: string | undefined): string 
   if (!checked.success) {
     return null;
   }
-  const meros = checked.data.candidates[0].content.parts;
+  const proto = checked.data.candidates[0];
+  if (!proto) {
+    return null;
+  }
+  const meros = proto.content.parts;
   return meros.map((m) => m.text).join('');
 }
 

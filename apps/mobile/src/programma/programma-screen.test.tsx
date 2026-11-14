@@ -33,7 +33,7 @@ async function eggrafe_apotheiki(apothiki: MnimiApothiki, diadromi: string, keim
   await apothiki.grapse_keimeno(diadromi, keimeno);
 }
 
-/** Πλήρεις ρυθμίσεις με εξετάσεις (ένα κενή ημερομηνία για το branch του `??`). */
+/** Πλήρεις ρυθμίσεις με εξετάσεις. */
 function rytheseis_με_εξετάσεις(overrides: Partial<Rytheseis> = {}): Rytheseis {
   return {
     baseUrl: '',
@@ -45,7 +45,7 @@ function rytheseis_με_εξετάσεις(overrides: Partial<Rytheseis> = {}): 
     exeiKleidiLlm: false,
     einaiEidopoieseis: true,
     exetaseis: [
-      { kodikos_mathimatos: 'ΠΛΗ201', imerominia: null, tropos: 'kleista_vivlia' },
+      { kodikos_mathimatos: 'ΠΛΗ201', imerominia: '2027-01-18', tropos: 'kleista_vivlia' },
       { kodikos_mathimatos: 'ΠΛΗ201', imerominia: '2027-01-20', tropos: 'kleista_vivlia' },
     ] as unknown as Exetasi[],
     arxiExetastikis: '2027-01-15',
@@ -108,7 +108,20 @@ async function skenario_pilou(): Promise<{ apothiki: MnimiApothiki; periballon: 
 
 describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη', () => {
   it('φορτώνει αποθηκευμένες ρυθμίσεις με εξετάσεις και εξαιρέσεις (draft_apo_rytheseis)', async () => {
-    const { apothiki, periballon } = skenario_pilou();
+    const apothiki = new MnimiApothiki();
+    const rytheseis_ = rytheseis_με_εξετάσεις({
+      mathimataSynch: ['ΠΛΗ201'],
+      exetaseis: [
+        { kodikos_mathimatos: 'ΠΛΗ201', imerominia: null, tropos: 'kleista_vivlia' },
+        { kodikos_mathimatos: 'ΠΛΗ201', imerominia: '2027-01-20', tropos: 'kleista_vivlia' },
+      ] as unknown as Exetasi[],
+    });
+    await ekgrafe_rytheseis(apothiki, rytheseis_);
+    await ekgrafe_mathimata(apothiki, mathimata_εφαρμογής());
+    await ekgrafe_xarti(apothiki, 'ΠΛΗ201', pseudos_xartis());
+    await ekgrafe_proodho(apothiki, 'ΠΛΗ201', { aristeiesEnotiton: [], checkins: [] });
+    await ekgrafe_apodosi(apothiki, 'ΠΛΗ201', { 'en-1': 30 });
+    const periballon = ftiaxe_periballon_test({ apothiki });
     render(
       me_periballon_test(
         <MemoryRouter>
@@ -127,7 +140,7 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
     expect(document.querySelector('[data-testid="programma-arxi"]')!.getAttribute('value')).toBe('2027-01-15');
 
     // Σύνοψη εβδομάδας.
-    expect(document.querySelector('[data-testid="programma-ekran"]')!.innerHTML).toContain('540 λεπτά');
+    expect(document.querySelector('[data-testid="programma-ekran"]')!.innerHTML).toContain('660 λεπτά');
 
     // Επαναφορά δεδομένων μέσω φόρτωσης.
     await waitFor(() => expect(document.querySelector('[data-testid="programma-xronodiagramma"]')).not.toBeNull());
@@ -147,12 +160,19 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
     );
     await waitFor(() => expect(document.querySelectorAll('[data-testid="programma-exetasi"]').length).toBe(2));
     // Χωρίς μαθήματα, κανένα χρονοδιάγραμμα.
-    expect(document.querySelector('[data-testid="programma-xronodiagramma"]')).toBeNull();
+    expect(document.querySelector('[data-testid="programma-mera"]')).toBeNull();
   });
 
   it('μαθήματα χωρίς συγχρονισμό (L134 p1, L179 p0, L198 p0, L199 p0)', async () => {
     const apothiki = new MnimiApothiki();
-    await ekgrafe_rytheseis(apothiki, rytheseis_με_εξετάσεις({ mathimataSynch: [] }));
+    await ekgrafe_rytheseis(
+      apothiki,
+      rytheseis_με_εξετάσεις({
+        mathimataSynch: [],
+        arxiExetastikis: '',
+        exetaseis: [{ kodikos_mathimatos: 'ΠΛΗ201', imerominia: null, tropos: 'kleista_vivlia' } as unknown as Exetasi],
+      })
+    );
     await ekgrafe_mathimata(apothiki, [
       { ...pseudos_mathimata()[0]!, katastasi_sygxronismou: 'Εκκρεμεί', epilegmeno: false },
     ] as unknown as readonly Mathima[]);
@@ -167,9 +187,9 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
         periballon
       )
     );
-    await waitFor(() => expect(document.querySelectorAll('[data-testid="programma-exetasi"]').length).toBe(2));
+    await waitFor(() => expect(document.querySelectorAll('[data-testid="programma-exetasi"]').length).toBe(1));
     // Κανένα έγκυρο μάθημα χωρίς εξέταση, οπότε το πρόγραμμα είναι null.
-    expect(document.querySelector('[data-testid="programma-xronodiagramma"]')).toBeNull();
+    expect(document.querySelector('[data-testid="programma-mera"]')).toBeNull();
   });
 
   it('δεν έχει draft (arxikoDraft null)', async () => {
@@ -183,11 +203,11 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
         periballon
       )
     );
-    expect(document.querySelector('[data-testid="programma-exetaseis"]')).toBeNull();
+    expect(document.querySelectorAll('[data-testid="programma-exetasi"]').length).toBe(0);
   });
 
   it('αποθηκεύει έγκυρο πρόγραμμα (L258-L272)', async () => {
-    const { apothiki, periballon } = skenario_pilou();
+    const { apothiki, periballon } = await skenario_pilou();
     render(
       me_periballon_test(
         <MemoryRouter>
@@ -199,9 +219,9 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
     await waitFor(() => expect(document.querySelectorAll('[data-testid="programma-exetasi"]').length).toBe(2));
 
     fireEvent.click(document.querySelector('[data-testid="programma-apothikefsi"]')!);
-    await vi.advanceTimersByTime(50);
-
-    expect(document.querySelector('[data-testid="programma-ekran"]')!.innerHTML).toContain('Αποθηκεύτηκε');
+    await waitFor(() =>
+      expect(document.querySelector('[data-testid="programma-ekran"]')!.innerHTML).toContain('Αποθηκεύτηκε')
+    );
     // Έναρξη εξεταστικής.
     expect(document.querySelector('[data-testid="programma-ekran"]')!.innerHTML).toContain('15 Ιαν 2027');
     // Έξοδος ICS.
@@ -209,7 +229,7 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
   });
 
   it('δείχνει σφάλμα άκυρης εξέτασης (L241-L243)', async () => {
-    const { apothiki, periballon } = skenario_pilou();
+    const { apothiki, periballon } = await skenario_pilou();
     render(
       me_periballon_test(
         <MemoryRouter>
@@ -230,7 +250,7 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
   });
 
   it('δείχνει σφάλμα άκυρης έναρξης (L245-L248)', async () => {
-    const { apothiki, periballon } = skenario_pilou();
+    const { apothiki, periballon } = await skenario_pilou();
     render(
       me_periballon_test(
         <MemoryRouter>
@@ -241,17 +261,18 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
     );
     await waitFor(() => expect(document.querySelectorAll('[data-testid="programma-exetasi"]').length).toBe(2));
 
-    const arxi = document.querySelector('[data-testid="programma-arxi"]')!;
+    const arxi = document.querySelector('[data-testid="programma-arxi"]') as HTMLInputElement;
+    arxi.type = 'text';
     fireEvent.change(arxi, { target: { value: '2027-13-01' } });
 
     fireEvent.click(document.querySelector('[data-testid="programma-apothikefsi"]')!);
-    await vi.advanceTimersByTime(50);
-
-    expect(document.querySelector('[data-testid="programma-ekran"]')!.innerHTML).toContain('ημερομηνία έναρξης');
+    await waitFor(() =>
+      expect(document.querySelector('[data-testid="programma-ekran"]')!.innerHTML).toContain('ημερομηνία έναρξης')
+    );
   });
 
   it('δείχνει σφάλμα άκυρης εξαίρεσης (L250-L256)', async () => {
-    const { apothiki, periballon } = skenario_pilou();
+    const { apothiki, periballon } = await skenario_pilou();
     render(
       me_periballon_test(
         <MemoryRouter>
@@ -273,7 +294,7 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
   });
 
   it('προσθέτει και αλλάζει εξετάσεις', async () => {
-    const { apothiki, periballon } = skenario_pilou();
+    const { apothiki, periballon } = await skenario_pilou();
     render(
       me_periballon_test(
         <MemoryRouter>
@@ -306,7 +327,7 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
   });
 
   it('αλλάζει το εβδομαδιαίο template και την έναρξη', async () => {
-    const { apothiki, periballon } = skenario_pilou();
+    const { apothiki, periballon } = await skenario_pilou();
     render(
       me_periballon_test(
         <MemoryRouter>
@@ -327,7 +348,7 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
   });
 
   it('αλλάζει εξαίρεση (ημερομηνία και λεπτά)', async () => {
-    const { apothiki, periballon } = skenario_pilou();
+    const { apothiki, periballon } = await skenario_pilou();
     render(
       me_periballon_test(
         <MemoryRouter>
@@ -350,7 +371,7 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
   });
 
   it('εξαγωγή ημερολογίου ics', async () => {
-    const { apothiki, periballon } = skenario_pilou();
+    const { apothiki, periballon } = await skenario_pilou();
     render(
       me_periballon_test(
         <MemoryRouter>
@@ -404,7 +425,7 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
     expect(html).toContain('data-testid="programma-protasi-epiviosis"');
     expect(html).toContain('data-testid="programma-systasi-proteraiotitas"');
     expect(html).toContain('data-testid="programma-proteraiotita-enotita"');
-    expect(html).toContain('⭐ Βασικές αρχές και ιστορικό (+25 μονάδες)');
+    expect(html).toContain('⭐ Βασικές αρχές (+25 μονάδες)');
   });
 
   it('απόδοση XronodiagrammaMeletis με σύσταση προτεραιότητας', () => {
@@ -429,6 +450,6 @@ describe('RythmiseisProgrammatos — οθόνη jsdom, πλήρης κάλυψη
       />
     );
     expect(html).toContain('data-testid="programma-systasi-proteraiotitas"');
-    expect(html).toContain('⭐ Βασικές αρχές και ιστορικό (+30 μονάδες)');
+    expect(html).toContain('⭐ Βασικές αρχές (+30 μονάδες)');
   });
 });

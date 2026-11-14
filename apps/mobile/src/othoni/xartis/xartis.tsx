@@ -20,7 +20,7 @@ import { generateCourseMap } from '../../ypiresies/pipeline-analisis.js';
 import { PROEPILOGI_GEMINI_MONTELO } from '../../ypiresies/ai-models.js';
 import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
 import { diadromi_odigou } from '../../navigasi/dromoi.js';
-import { me_tilemetria } from '../../tilemetria/tilemetria.js';
+import { katagrapse_tilemetria, me_tilemetria } from '../../tilemetria/tilemetria.js';
 
 /** Λεπτά ανά ώρα, για τη μορφοποίηση του χρόνου εκτίμησης. */
 export const LEPTA_PER_ORA = 60;
@@ -358,7 +358,11 @@ export default function XartisEnotiton() {
           setKatastasi(apothike);
         }
       })
-      .catch(() => {
+      .catch((sfalmaLoad) => {
+        katagrapse_tilemetria('error', 'Apotyxia fortosis xarti mathimatos', {
+          sfalma: sfalmaLoad instanceof Error ? sfalmaLoad.message : String(sfalmaLoad),
+          kodikosMathimatos: apothiki.kodikosMathimatos,
+        });
         if (zontas) {
           setKatastasi(
             sfalma({ kodikos: KODIKOS_SFALMATOS_DIKTYOU, minima: MINIMA_SFALMATOS_XARTI })
@@ -373,7 +377,11 @@ export default function XartisEnotiton() {
             setApodosi(dedomenaApodosis);
           }
         })
-        .catch(() => {
+        .catch((sfalmaApodosis) => {
+          katagrapse_tilemetria('warn', 'Apotyxia fortosis apodosis mathimatos', {
+            sfalma: sfalmaApodosis instanceof Error ? sfalmaApodosis.message : String(sfalmaApodosis),
+            kodikosMathimatos: apothiki.kodikosMathimatos,
+          });
           if (zontas) {
             setApodosi({});
           }
@@ -491,7 +499,13 @@ export default function XartisEnotiton() {
                     type="checkbox"
                     checked={privacy.optIn}
                     disabled={privacy.loading || privacy.saving || !apothiki.kodikosMathimatos}
-                    onChange={(event) => void privacy.setOptIn(event.target.checked).catch(() => undefined)}
+                    onChange={(event) =>
+                      void privacy.setOptIn(event.target.checked).catch((sfalmaOptIn) => {
+                        katagrapse_tilemetria('warn', 'Apotyxia allagis opt-in privacy', {
+                          sfalma: sfalmaOptIn instanceof Error ? sfalmaOptIn.message : String(sfalmaOptIn),
+                        });
+                      })
+                    }
                     data-testid="xartis-gemini-optin"
                   />
                   Επιτρέπω στο Gemini να λαμβάνει το υλικό αυτού του μαθήματος. Θα επιβεβαιώνω κάθε αποστολή ξεχωριστά.

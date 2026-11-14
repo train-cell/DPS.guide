@@ -35,7 +35,10 @@ function uint8ArrayToBase64(bytes: Uint8Array): string {
   let binary = '';
   const len = bytes.byteLength;
   for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
+    const b = bytes[i];
+    if (b !== undefined) {
+      binary += String.fromCharCode(b);
+    }
   }
   return btoa(binary);
 }
@@ -54,7 +57,9 @@ function bufferToHex(buffer: ArrayBuffer): string {
   let hex = '';
   for (let i = 0; i < byteArray.length; i++) {
     const b = byteArray[i];
-    hex += b.toString(16).padStart(2, '0');
+    if (b !== undefined) {
+      hex += b.toString(16).padStart(2, '0');
+    }
   }
   return hex;
 }

@@ -64,25 +64,31 @@ export function ParoxeApothekisis({ children, periballon, kodikosMathimatos: arx
   useEffect(() => {
     let zalive = true;
     void (async () => {
-      const [fortesRytheseis, mathimataKatastasi] = await Promise.all([
-        fortose_rytheseis(pyles.apothiki),
-        fortose_mathimata_apo_apothiki(pyles.apothiki),
-      ]);
+      try {
+        const [fortesRytheseis, mathimataKatastasi] = await Promise.all([
+          fortose_rytheseis(pyles.apothiki),
+          fortose_mathimata_apo_apothiki(pyles.apothiki),
+        ]);
 
-      let trexonKodikos = kodikosMathimatos;
-      if (mathimataKatastasi.katastasi === 'etimo' && mathimataKatastasi.dedomena.length > 0) {
-        const yparxei = mathimataKatastasi.dedomena.some((m) => m.kodikos === trexonKodikos);
-        if (!yparxei) {
-          trexonKodikos = mathimataKatastasi.dedomena[0]?.kodikos ?? trexonKodikos;
-          setKodikosMathimatos(trexonKodikos);
+        let trexonKodikos = kodikosMathimatos;
+        if (mathimataKatastasi.katastasi === 'etimo' && mathimataKatastasi.dedomena.length > 0) {
+          const yparxei = mathimataKatastasi.dedomena.some((m) => m.kodikos === trexonKodikos);
+          if (!yparxei) {
+            trexonKodikos = mathimataKatastasi.dedomena[0]?.kodikos ?? trexonKodikos;
+            setKodikosMathimatos(trexonKodikos);
+          }
         }
-      }
 
-      const fortesProodhos = await fortose_proodho(pyles.apothiki, trexonKodikos);
-      if (zalive) {
-        setRytheseis(fortesRytheseis);
-        setProodhos(fortesProodhos);
-        setFortizomeni(false);
+        const fortesProodhos = await fortose_proodho(pyles.apothiki, trexonKodikos);
+        if (zalive) {
+          setRytheseis(fortesRytheseis);
+          setProodhos(fortesProodhos);
+          setFortizomeni(false);
+        }
+      } catch {
+        if (zalive) {
+          setFortizomeni(false);
+        }
       }
     })();
     return () => {

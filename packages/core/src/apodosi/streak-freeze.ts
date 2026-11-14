@@ -104,7 +104,8 @@ export function ypologise_streak_me_pagwma(
   }
 
   const olesOiImeres = Array.from(new Set([...hmerominiesMeletis, ...pagwmata])).sort();
-  const elaxisthImeraMillis = iso_se_utc_millis(olesOiImeres[0]);
+  const prothImera = olesOiImeres[0];
+  const elaxisthImeraMillis = prothImera ? iso_se_utc_millis(prothImera) : 0;
 
   let trexwnStreak = 0;
 

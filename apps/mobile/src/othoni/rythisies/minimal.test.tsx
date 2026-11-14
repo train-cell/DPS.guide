@@ -2,9 +2,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Capacitor } from '@capacitor/core';
 
-vi.mock('@capacitor/core', () => ({
-  Capacitor: { ...Capacitor, isNativePlatform: vi.fn() },
-}));
+vi.mock('@capacitor/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@capacitor/core')>();
+  return {
+    ...actual,
+    Capacitor: { ...actual.Capacitor, isNativePlatform: vi.fn() },
+  };
+});
 
 const isNative = vi.mocked(Capacitor.isNativePlatform);
 

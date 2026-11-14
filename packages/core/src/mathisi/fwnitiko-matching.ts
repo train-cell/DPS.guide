@@ -72,9 +72,9 @@ export function ypologise_levenshtein(a: string, b: string): number {
     curr[0] = i;
     const charA = a[i - 1];
     for (let j = 1; j <= n; j++) {
-      const pJ = prev[j];
-      const cJ1 = curr[j - 1];
-      const pJ1 = prev[j - 1];
+      const pJ = prev[j] ?? 0;
+      const cJ1 = curr[j - 1] ?? 0;
+      const pJ1 = prev[j - 1] ?? 0;
       const kostos = charA === b[j - 1] ? 0 : 1;
       curr[j] = Math.min(
         pJ + 1,        // διαγραφή
@@ -87,7 +87,7 @@ export function ypologise_levenshtein(a: string, b: string): number {
     curr = temp;
   }
 
-  return prev[n];
+  return prev[n] ?? 0;
 }
 
 /**

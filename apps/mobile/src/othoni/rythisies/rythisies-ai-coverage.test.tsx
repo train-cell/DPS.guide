@@ -11,7 +11,7 @@ import type { Periballon } from '../../periballon/periballon.js';
 import { ParoxeApothekisis } from '../../apothiki/aperixirto.js';
 import { ftiaxe_periballon_test } from '../../../test-fixtures/ftiaxe-test-periballon.js';
 import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
-import { proedapes_rytheseis } from '../../apothiki/apothiki-typoi.js';
+import { proedapes_rytheseis } from '../../apothiki/apothiki-ypiresies.js';
 import { entopise_paroxo_montelou } from '../../ypiresies/ai-providers.js';
 import type { ApothikiSyntheseon } from '../../apothiki/aperixirto.js';
 import type { VaultSecurityControls } from '../../vault/vault-gate.js';
@@ -23,7 +23,12 @@ import { xrisiApothekisis } from '../../apothiki/index.js';
 /** Οι παρόχοι αλλάζουν ανάλογα με το δοκιμολόγιο. */
 vi.mock('./rythisies-ai.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./rythisies-ai.js')>();
-  return { ...actual, PAROXOI_LLM: paroxoi.list };
+  return {
+    ...actual,
+    get PAROXOI_LLM() {
+      return paroxoi.list;
+    },
+  };
 });
 
 /** Το Gate επιστρέφει null όταν λείπει· ελέγχονται και οι δύο πλευρές. */
@@ -59,7 +64,15 @@ vi.mock('@dps/ai', async (importOriginal) => {
 /** Η isNativePlatform αλλάζει ανάλογα με την πλατφόρμα. */
 vi.mock('@capacitor/core', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@capacitor/core')>();
-  return { ...actual, isNativePlatform: vi.fn() };
+  const isNative = vi.fn();
+  return {
+    ...actual,
+    isNativePlatform: isNative,
+    Capacitor: {
+      ...actual.Capacitor,
+      isNativePlatform: isNative,
+    },
+  };
 });
 
 const paroxoi = vi.hoisted(() => ({ list: [] as readonly PliroforiaParoxou[] }));
@@ -77,21 +90,22 @@ function ergaleio_vault(overrides: Partial<VaultSecurityControls> = {}): VaultSe
   return {
     biometricEnabled: false,
     biometricAvailable: false,
-    enableBiometrics: vi.fn(),
-    disableBiometrics: vi.fn(),
+    enableBiometrics: vi.fn().mockResolvedValue(undefined),
+    disableBiometrics: vi.fn().mockResolvedValue(undefined),
     createEncryptedBackup: vi.fn().mockResolvedValue(new Blob(['test'])),
     restoreBackupFromFile: vi.fn().mockResolvedValue(undefined),
-    lockVault: vi.fn(),
+    lockVault: vi.fn().mockResolvedValue(undefined),
     ...overrides,
   };
 }
 
 let geminiApotelesma: Apotelesma<string> = ok('ping');
 
-function kanonikes_timies(rytheseis: Record<string, unknown> = {}, onomaParoxou = 'gemini'): void {
+function kanonikes_timies(rytheseis: Record<string, unknown> = {}, onomaParoxou?: string): void {
+  const provider = onomaParoxou ?? (rytheseis.paroxosLlm as string) ?? 'gemini';
   vaultSecurityMock.mockReturnValue(null);
   isNativeMock.mockReturnValue(false);
-  entopiseMock.mockReturnValue(onomaParoxou);
+  entopiseMock.mockReturnValue(provider);
   paroxoi.list = [
     {
       id: 'gemini',
@@ -134,19 +148,20 @@ function fakeLlm(): LlmPyli {
   };
 }
 
-function apostrophe_rythisies(periballon: Periballon = ftiaxe_periballon_test()): { unmount: () => void } {
+function apostrophe_rythisies(periballon: Periballon = ftiaxe_periballon_test()) {
   return render(
     me_periballon_test(
       <MemoryRouter>
         <ParoxeApothekisis periballon={periballon}>
           <RythisiesAi />
         </ParoxeApothekisis>
-      </MemoryRouter>
+      </MemoryRouter>,
+      periballon
     )
   );
 }
 
-async function perimene_apotelesma(result: { unmount: () => void }): Promise<void> {
+async function perimene_apotelesma(result: ReturnType<typeof render>): Promise<void> {
   await waitFor(
     () => expect(result.getByTestId('rythisies-ai-ekran')).not.toBeNull(),
     { timeout: 1000 }
@@ -182,8 +197,8 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
   });
 
   it('απορρίπτει το Ollama όταν δεν είναι διαθέσιμο', async () => {
-    isNativeMock.mockReturnValue(true);
     kanonikes_timies({ onomaMontelou: 'llama3.2', paroxosLlm: 'ollama' });
+    isNativeMock.mockReturnValue(true);
     const result = apostrophe_rythisies();
     await perimene_apotelesma(result);
     expect(result.getByTestId('paroxos-gemini').getAttribute('aria-pressed')).toBe('true');
@@ -192,8 +207,7 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
   });
 
   it('εντοπίζει άγνωστο πάροχο από τις ρυθμίσεις', async () => {
-    entopiseMock.mockReturnValue('agnosto');
-    kanonikes_timies();
+    kanonikes_timies({}, 'agnosto');
     const result = apostrophe_rythisies();
     await perimene_apotelesma(result);
     expect(result.getByTestId('paroxos-gemini').getAttribute('aria-pressed')).toBe('false');
@@ -230,11 +244,16 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
     const mystika = new (await import('@dps/core/testing')).FakeMystika();
     await mystika.vale('llm_api_key', 'test-kleidi');
     kanonikes_timies({ exeiKleidiLlm: true });
-    const result = apostrophe_rythisies({ mystika });
+    const result = apostrophe_rythisies(ftiaxe_periballon_test({ mystika }));
     await perimene_apotelesma(result);
-    expect(result.getByTestId('ai-diagrafi-kleidiou')).not.toBeNull();
+    await waitFor(() => expect(result.getByTestId('ai-diagrafi-kleidiou')).not.toBeNull(), { timeout: 1000 });
     geminiApotelesma = ok('ping ok');
     fireEvent.click(result.getByTestId('ai-dokimi-syndesis'));
+    await waitFor(
+      () => expect(result.getByText('Επιβεβαίωση δοκιμής Gemini')).not.toBeNull(),
+      { timeout: 1000 }
+    );
+    fireEvent.click(result.getByText('Επιβεβαίωση και αποστολή ping'));
     await waitFor(
       () => expect(result.getByText('Επιτυχής σύνδεση με Google Gemini (gemini-3.8-flash)!')).not.toBeNull(),
       { timeout: 1000 }
@@ -246,10 +265,16 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
     const mystika = new (await import('@dps/core/testing')).FakeMystika();
     await mystika.vale('llm_api_key', 'test-kleidi');
     kanonikes_timies({ exeiKleidiLlm: true });
-    const result = apostrophe_rythisies({ mystika });
+    const result = apostrophe_rythisies(ftiaxe_periballon_test({ mystika }));
     await perimene_apotelesma(result);
+    await waitFor(() => expect(result.getByTestId('ai-diagrafi-kleidiou')).not.toBeNull(), { timeout: 1000 });
     geminiApotelesma = apotyxia('AUTH_APOTYXIA', 'Δεν βρέθηκε κλειδί');
     fireEvent.click(result.getByTestId('ai-dokimi-syndesis'));
+    await waitFor(
+      () => expect(result.getByText('Επιβεβαίωση δοκιμής Gemini')).not.toBeNull(),
+      { timeout: 1000 }
+    );
+    fireEvent.click(result.getByText('Επιβεβαίωση και αποστολή ping'));
     await waitFor(
       () => expect(result.getByText('Αποτυχία σύνδεσης: Δεν βρέθηκε κλειδί')).not.toBeNull(),
       { timeout: 1000 }
@@ -261,8 +286,9 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
     const mystika = new (await import('@dps/core/testing')).FakeMystika();
     await mystika.vale('llm_api_key', 'test-kleidi');
     kanonikes_timies({ exeiKleidiLlm: true });
-    const result = apostrophe_rythisies({ mystika });
+    const result = apostrophe_rythisies(ftiaxe_periballon_test({ mystika }));
     await perimene_apotelesma(result);
+    await waitFor(() => expect(result.getByTestId('ai-diagrafi-kleidiou')).not.toBeNull(), { timeout: 1000 });
     ftiaxeGeminiMock.mockImplementation(() => ({
       montelo: 'gemini-3.8-flash',
       async parage_keimeno(): Promise<Apotelesma<string>> {
@@ -271,6 +297,11 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
     }));
     geminiApotelesma = ok('ping');
     fireEvent.click(result.getByTestId('ai-dokimi-syndesis'));
+    await waitFor(
+      () => expect(result.getByText('Επιβεβαίωση δοκιμής Gemini')).not.toBeNull(),
+      { timeout: 1000 }
+    );
+    fireEvent.click(result.getByText('Επιβεβαίωση και αποστολή ping'));
     await waitFor(
       () => expect(result.getByText('Σφάλμα επικοινωνίας κατά τον έλεγχο σύνδεσης.')).not.toBeNull(),
       { timeout: 1000 }
@@ -301,6 +332,7 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
     kanonikes_timies({ onomaMontelou: 'llama3.2', paroxosLlm: 'ollama' });
     const result = apostrophe_rythisies();
     await perimene_apotelesma(result);
+    fireEvent.change(result.getByTestId('ai-ollama-model-id'), { target: { value: '' } });
     geminiApotelesma = ok('ping');
     fireEvent.click(result.getByTestId('ai-dokimi-syndesis'));
     await waitFor(
@@ -337,7 +369,7 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
   });
 
   it('εμφανίζει τον διάλογο επιβεβαίωσης Gemini', async () => {
-    kanonikes_timies();
+    kanonikes_timies({ exeiKleidiLlm: true });
     const result = apostrophe_rythisies();
     await perimene_apotelesma(result);
     const model = result.getByTestId('ai-montelo-select');
@@ -355,10 +387,11 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
   });
 
   it('η επιβεβαίωση στέλνει το ping μέσω Gemini', async () => {
-    kanonikes_timies();
+    kanonikes_timies({ exeiKleidiLlm: true });
     const result = apostrophe_rythisies();
     await perimene_apotelesma(result);
     geminiApotelesma = ok('ping ok');
+    fireEvent.change(result.getByTestId('ai-api-key'), { target: { value: 'test-key' } });
     const model = result.getByTestId('ai-montelo-select');
     fireEvent.change(model, { target: { value: 'gemini-3.8-flash' } });
     fireEvent.click(result.getByTestId('ai-dokimi-syndesis'));
@@ -400,7 +433,7 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
     const mystika = new (await import('@dps/core/testing')).FakeMystika();
     await mystika.vale('llm_api_key', 'test-kleidi');
     kanonikes_timies({ exeiKleidiLlm: true });
-    const result = apostrophe_rythisies({ mystika });
+    const result = apostrophe_rythisies(ftiaxe_periballon_test({ mystika }));
     await perimene_apotelesma(result);
     expect(result.getByTestId('ai-diagrafi-kleidiou')).not.toBeNull();
     fireEvent.click(result.getByTestId('ai-diagrafi-kleidiou'));
@@ -433,15 +466,17 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
     const input = result.getByTestId('vault-backup-export-password');
     fireEvent.change(input, { target: { value: KLEIDI_BACKUP } });
     fireEvent.click(result.getByText('Εξαγωγή encrypted backup'));
-    await waitFor(() => expect(result.getByText('Το encrypted backup δημιουργήθηκε.')).not.toBeNull(), { timeout: 1000 });
+    await waitFor(() => expect(result.getByText(/Το encrypted backup δημιουργήθηκε/)).not.toBeNull(), { timeout: 1000 });
     expect(deliverMock).toHaveBeenCalled();
     // σφάλμα Error και μη Error
     const fake = ergaleio_vault();
     fake.createEncryptedBackup.mockRejectedValue(new Error('Δεν γίνεται κρυπτογράφηση'));
     vaultSecurityMock.mockReturnValue(fake);
+    fireEvent.change(input, { target: { value: KLEIDI_BACKUP } });
     fireEvent.click(result.getByText('Εξαγωγή encrypted backup'));
     await waitFor(() => expect(result.getByText('Δεν γίνεται κρυπτογράφηση')).not.toBeNull(), { timeout: 1000 });
     fake.createEncryptedBackup.mockRejectedValue('Όχι Error');
+    fireEvent.change(input, { target: { value: KLEIDI_BACKUP } });
     fireEvent.click(result.getByText('Εξαγωγή encrypted backup'));
     await waitFor(
       () => expect(result.getByText('Δεν δημιουργήθηκε encrypted backup.')).not.toBeNull(),
@@ -459,14 +494,19 @@ describe('RythisiesAi — κάλυψη κλάδων', () => {
     expect(result.getByText('Ενεργοποίηση βιομετρικών')).not.toBeNull();
     fireEvent.click(result.getByText('Ενεργοποίηση βιομετρικών'));
     await waitFor(() => expect(result.getByText('Τα βιομετρικά ενεργοποιήθηκαν.')).not.toBeNull(), { timeout: 1000 });
-    const fake2 = ergaleio_vault({ biometricEnabled: true, biometricAvailable: false });
+    result.unmount();
+
+    const fake2 = ergaleio_vault({ biometricEnabled: true, biometricAvailable: true });
     vaultSecurityMock.mockReturnValue(fake2);
-    fireEvent.click(result.getByText('Απενεργοποίηση βιομετρικών'));
+    const result2 = apostrophe_rythisies();
+    await perimene_apotelesma(result2);
+    expect(result2.getByText('Απενεργοποίηση βιομετρικών')).not.toBeNull();
+    fireEvent.click(result2.getByText('Απενεργοποίηση βιομετρικών'));
     await waitFor(
-      () => expect(result.getByText('Το βιομετρικό ξεκλείδωμα απενεργοποιήθηκε.')).not.toBeNull(),
+      () => expect(result2.getByText('Το βιομετρικό ξεκλείδωμα απενεργοποιήθηκε.')).not.toBeNull(),
       { timeout: 1000 }
     );
-    result.unmount();
+    result2.unmount();
   });
 
   it('αποδίδει την οθόνη χωρίς vault και με ενεργοποιημένα βιομετρικά', async () => {

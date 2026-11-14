@@ -90,7 +90,7 @@ export function parse_set_cookies(raw: readonly string[], vasi: URL): Cookie[] {
   const apotelesmata: Cookie[] = [];
   for (const aksia of raw) {
     const tmimata = aksia.split(';');
-    const zeugari = tmimata[0].trim();
+    const zeugari = (tmimata[0] ?? '').trim();
     if (zeugari === '') {
       continue;
     }
@@ -104,7 +104,7 @@ export function parse_set_cookies(raw: readonly string[], vasi: URL): Cookie[] {
     }
     const xaraktiristika = new Map<string, string>();
     for (let theseis = 1; theseis < tmimata.length; theseis += 1) {
-      const tmima = tmimata[theseis].trim();
+      const tmima = (tmimata[theseis] ?? '').trim();
       if (tmima === '') {
         continue;
       }

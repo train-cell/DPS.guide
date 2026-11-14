@@ -235,6 +235,7 @@ export default function RythmiseisProgrammatos({
 
   async function apothikefse(): Promise<void> {
     setApothikefthike(false);
+    if (!draft || !rytheseis) return;
     if (!draft.exetaseis.every(einai_egkyri_exetasi)) {
       setMinimaSfalmatos(MINIMA_AKYRIS_EXETASIS);
       return;

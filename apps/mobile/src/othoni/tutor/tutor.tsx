@@ -123,7 +123,8 @@ export async function loadCourseContext(
         for (const page of parsed) {
           if (typeof page === 'object' && page !== null && 'keimeno' in page &&
               'arithmos' in page && 'arxeio_id' in page && typeof page.keimeno === 'string' &&
-              typeof page.arithmos === 'number' && typeof page.arxeio_id === 'string') {
+              typeof page.arithmos === 'number' && typeof page.arxeio_id === 'string' &&
+              page.keimeno.trim().length > 0) {
             pages.push(page as Selida);
           }
         }

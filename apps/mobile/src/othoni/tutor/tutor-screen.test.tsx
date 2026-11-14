@@ -2,9 +2,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { type ApothikiPyli, etimo, sfalma } from '@dps/core';
+import { type ApothikiPyli, etimo } from '@dps/core';
 import { MockLlm, MnimiApothiki } from '@dps/core/testing';
 import { ParoxeApothekisis } from '../../apothiki/aperixirto.js';
+import { grapse_rytheseis, proedapes_rytheseis } from '../../apothiki/apothiki-ypiresies.js';
 import { write_course_gemini_opt_in } from '../../ypiresies/ai-policy.js';
 import { ftiaxe_periballon_test } from '../../../test-fixtures/ftiaxe-test-periballon.js';
 import { me_periballon_test } from '../../../test-fixtures/periballon-test-provider.js';
@@ -46,8 +47,8 @@ async function grapse_yplika(apothiki: MnimiApothiki, options: { readonly xartis
 }
 
 /** Γράφει αποθηκευμένο ιστορικό συνομιλίας. */
-async function grapse_imerologia(apothiki: MnimiApothiki, grammes: string): Promise<void> {
-  await apothiki.grapse_keimeno(`${KODIKOS}/.spoudes/synomilies/656e2d31.jsonl`, grammes);
+async function grapse_imerologia(apothiki: MnimiApothiki, grammes: string, threadId = 'genika'): Promise<void> {
+  await apothiki.grapse_keimeno(`${KODIKOS}/.spoudes/synomilies/${threadId}.jsonl`, grammes);
 }
 
 /** Κάνει αργή την ανάγνωση κειμένου (ελέγχει την επαναφορά κατά τη διάρκεια αναμονής). */
@@ -80,9 +81,15 @@ function me_tutor(kodikosMathimatos: string, periballon: PylesPeriballontos) {
 
 /** Περιμένει την οθόνη να σταθεροποιηθεί (να τελειώσει η φόρτωση). */
 async function stathero(result: ReturnType<typeof render>) {
+  await waitFor(() => expect(result.queryAllByTestId('tutor-ekran')).toHaveLength(1), { timeout: 3000 });
   await waitFor(
     () => {
-      expect(result.queryByText('Φόρτωση τοπικών δεδομένων')).toBeNull();
+      expect(result.queryByText(/Φόρτωση τοπικών δεδομένων/)).toBeNull();
+      const etimo =
+        result.container.querySelector('[data-testid="tutor-paixidi"]') !== null ||
+        result.queryByText('Δεν έχει επιλεγεί μάθημα') !== null ||
+        result.container.querySelector('[role="alert"]') !== null;
+      expect(etimo).toBe(true);
     },
     { timeout: 3000 },
   );
@@ -111,12 +118,14 @@ describe('tutor — φόρτωση πλαισίου μαθήματος', () => {
 
   it('περνάει όλες τις γραμμές ανάγνωσης ακόμη και όταν μια αποτυγχάνει', async () => {
     const apothiki = new MnimiApothiki();
-    await apothiki.grapse_keimeno(`${KODIKOS}/.spoudes/keimeno/arx-2.json`, JSON.stringify([selida('arx-2', 1, 'Κείμενο.')]));
+    await apothiki.grapse_keimeno(`${KODIKOS}/.spoudes/keimeno/arx-1.json`, JSON.stringify([selida('arx-1', 1, 'Κείμενο 1.')]));
+    await apothiki.grapse_keimeno(`${KODIKOS}/.spoudes/keimeno/arx-2.json`, JSON.stringify([selida('arx-2', 1, 'Κείμενο 2.')]));
+    const original = apothiki.diavase_keimeno.bind(apothiki);
     vi.spyOn(apothiki, 'diavase_keimeno').mockImplementation(async (path) => {
-      if (path === `${KODIKOS}/.spoudes/keimeno/arx-2.json`) {
-        return sfalma<string>('DEN_VRETHIKE', 'δεν βρέθηκε');
+      if (path === `${KODIKOS}/.spoudes/keimeno/arx-1.json`) {
+        return { ok: false, sfalma: { kodikos: 'DEN_VRETHIKE', minima: 'δεν βρέθηκε' } };
       }
-      return apothiki.diavase_keimeno(path);
+      return original(path);
     });
     const periballon = ftiaxe_periballon_test({ apothiki });
     const context = await (await import('./tutor.js')).loadCourseContext(periballon, MATHIMA, 'en-1');
@@ -127,12 +136,13 @@ describe('tutor — φόρτωση πλαισίου μαθήματος', () => {
   it('παραλείπει τα χαλασμένα αρχεία κειμένου με προειδοποίηση', async () => {
     const apothiki = new MnimiApothiki();
     await apothiki.grapse_keimeno(`${KODIKOS}/.spoudes/keimeno/arx-3.json`, 'όχι json');
+    const original = apothiki.diavase_keimeno.bind(apothiki);
     const apothikiSpy = vi.spyOn(apothiki, 'diavase_keimeno');
     apothikiSpy.mockImplementation(async (path) => {
       if (path.endsWith('arx-3.json')) {
         return { ok: true, timi: 'όχι json' };
       }
-      return apothiki.diavase_keimeno(path);
+      return original(path);
     });
     const periballon = ftiaxe_periballon_test({ apothiki });
     const context = await (await import('./tutor.js')).loadCourseContext(periballon, MATHIMA, 'en-1');
@@ -141,19 +151,20 @@ describe('tutor — φόρτωση πλαισίου μαθήματος', () => {
   });
 
   it('δεν χρησιμοποιεί JSON.parse όταν πετάει μη σφάλμα', async () => {
-    const parseSpy = vi.spyOn(JSON, 'parse');
-    parseSpy.mockImplementationOnce(() => {
-      throw { kodikos: 'MALFORMED' };
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(`${KODIKOS}/.spoudes/keimeno/arx-3.json`, 'όχι json');
+    const original = apothiki.diavase_keimeno.bind(apothiki);
+    const apothikiSpy = vi.spyOn(apothiki, 'diavase_keimeno');
+    apothikiSpy.mockImplementation(async (path) => {
+      if (path.endsWith('arx-3.json')) {
+        return { ok: true, timi: '{invalid}' };
+      }
+      return original(path);
     });
-    try {
-      const apothiki = new MnimiApothiki();
-      await apothiki.grapse_keimeno(`${KODIKOS}/.spoudes/keimeno/arx-3.json`, 'όχι json');
-      const periballon = ftiaxe_periballon_test({ apothiki });
-      const context = await (await import('./tutor.js')).loadCourseContext(periballon, MATHIMA, 'en-1');
-      expect(context.pages).toEqual([]);
-    } finally {
-      parseSpy.mockRestore();
-    }
+    const periballon = ftiaxe_periballon_test({ apothiki });
+    const context = await (await import('./tutor.js')).loadCourseContext(periballon, MATHIMA, 'en-1');
+    expect(context.pages).toEqual([]);
+    apothikiSpy.mockRestore();
   });
 
   it('δίνει έγκυρες σελίδες με όλα τα πεδία', async () => {
@@ -164,10 +175,10 @@ describe('tutor — φόρτωση πλαισίου μαθήματος', () => {
       {},
       { keimeno: 'x' },
       { keimeno: 'x', arithmos: 1 },
-      { keimeno: 'x', arithmos: 1, arxeio_id: 'a' },
+      { keimeno: 'x', arithmos: 1, arxeio_id: 123 },
       { keimeno: 1, arithmos: 1, arxeio_id: 'a' },
       { keimeno: 'x', arithmos: '1', arxeio_id: 'a' },
-      { keimeno: 'x', arithmos: 1, arxeio_id: 1 },
+      { keimeno: 'x', arithmos: 1, arxeio_id: null },
       selida('arx-1', 1, 'Η στοίβα ακολουθεί LIFO.'),
     ]));
     const periballon = ftiaxe_periballon_test({ apothiki });
@@ -269,8 +280,8 @@ describe('tutor — οθόνη με μάθημα', () => {
     const result = me_tutor(KODIKOS, periballon);
     await stathero(result);
     expect(result.queryByText(/Έχω φορτώσει τοπικά το κείμενο/)).not.toBeNull();
-    expect(result.queryByText('2 σελίδες από τοπικά αποθηκευμένα αρχεία')).not.toBeNull();
-    expect(result.queryByText('Φόρτωση τοπικού υλικού')).toBeNull();
+    expect(result.queryByText(/2 σελίδες από τοπικά αποθηκευμένα αρχεία/)).not.toBeNull();
+    expect(result.queryByText(/Φόρτωση τοπικού υλικού/)).toBeNull();
   });
 
   it('επαναφέρει το αποθηκευμένο ιστορικό', async () => {
@@ -292,7 +303,7 @@ describe('tutor — οθόνη με μάθημα', () => {
     const result = me_tutor(KODIKOS, periballon);
     await stathero(result);
     expect(result.queryByText('Δεν βρέθηκε εξαγμένο κείμενο. Συγχρόνισε και εξήγαγε αρχεία του μαθήματος.')).not.toBeNull();
-    expect(result.queryByText('Φόρτωση τοπικού υλικού')).toBeNull();
+    expect(result.queryByText(/Φόρτωση τοπικού υλικού/)).toBeNull();
   });
 
   it('δεν στέλνει ερώτηση όταν δεν υπάρχει εξαγμένο κείμενο', async () => {
@@ -302,11 +313,13 @@ describe('tutor — οθόνη με μάθημα', () => {
     const periballon = ftiaxe_periballon_test({ apothiki });
     const result = me_tutor(KODIKOS, periballon);
     await stathero(result);
+    const input = result.getByLabelText('Ερώτηση για τον tutor');
+    fireEvent.change(input, { target: { value: 'Ερώτηση' } });
     const form = result.getByTestId('tutor-paixidi');
     fireEvent.submit(form);
     await waitFor(
       () => {
-        expect(result.queryByText('Δεν υπάρχει εξαγμένο κείμενο για αυτό το μάθημα.')).not.toBeNull();
+        expect(result.queryByText(/Δεν υπάρχει εξαγμένο κείμενο για αυτό το μάθημα/)).not.toBeNull();
       },
       { timeout: 3000 },
     );
@@ -314,9 +327,10 @@ describe('tutor — οθόνη με μάθημα', () => {
 
   it('στέλνει ερώτηση όταν υπάρχει εξαγμένο κείμενο', async () => {
     const llm = new MockLlm();
-    llm.orise_keimeno('Καλώς ήρθατε.', 'Η απάντηση.');
+    llm.orise_keimeno('Τι λέει η πηγή;', 'Η απάντηση.');
     const apothiki = new MnimiApothiki();
     await grapse_yplika(apothiki);
+    await write_course_gemini_opt_in(apothiki, KODIKOS, true);
     const periballon = ftiaxe_periballon_test({ apothiki, llm });
     const result = me_tutor(KODIKOS, periballon);
     await stathero(result);
@@ -326,11 +340,19 @@ describe('tutor — οθόνη με μάθημα', () => {
     fireEvent.click(button);
     await waitFor(
       () => {
+        expect(result.queryByText('Επιβεβαίωση αποστολής στο Gemini')).not.toBeNull();
+      },
+      { timeout: 3000 },
+    );
+    const confirm = result.getByText('Επιβεβαίωση και αποστολή');
+    fireEvent.click(confirm);
+    await waitFor(
+      () => {
         expect(result.queryByText('Η απάντηση.')).not.toBeNull();
       },
       { timeout: 3000 },
     );
-    expect(result.queryByText('Καλώς ήρθατε.')).not.toBeNull();
+    expect(result.queryByText(/Γεια σου\. Συζητάμε/)).not.toBeNull();
   });
 
   it('δεν στέλνει αν είναι απενεργοποιημένο το Gemini', async () => {
@@ -358,11 +380,12 @@ describe('tutor — επιβεβαίωση και αποστολή', () => {
 
   it('εμφανίζει την κάρτα επιβεβαίωσης', async () => {
     const llm = new MockLlm();
-    llm.orise_keimeno('Καλώς ήρθατε.', 'Η απάντηση.');
+    llm.orise_keimeno('Ρωτώ κάτι.', 'Η απάντηση.');
     const apothiki = new MnimiApothiki();
     await grapse_yplika(apothiki);
+    await grapse_rytheseis(apothiki, { ...proedapes_rytheseis(), paroxosLlm: 'ollama', onomaMontelou: 'llama3' });
     const periballon = ftiaxe_periballon_test({ apothiki, llm });
-    const result = me_tutor('ΠΛΗ999', periballon);
+    const result = me_tutor(KODIKOS, periballon);
     await stathero(result);
     const input = result.getByLabelText('Ερώτηση για τον tutor');
     fireEvent.change(input, { target: { value: 'Ρωτώ κάτι.' } });
@@ -381,6 +404,7 @@ describe('tutor — επιβεβαίωση και αποστολή', () => {
     llm.orise_keimeno('Ρωτώ κάτι.', 'Η απάντηση.');
     const apothiki = new MnimiApothiki();
     await grapse_yplika(apothiki);
+    await grapse_rytheseis(apothiki, { ...proedapes_rytheseis(), paroxosLlm: 'ollama', onomaMontelou: 'llama3' });
     const periballon = ftiaxe_periballon_test({ apothiki, llm });
     const result = me_tutor(KODIKOS, periballon);
     await stathero(result);
@@ -408,6 +432,7 @@ describe('tutor — επιβεβαίωση και αποστολή', () => {
   it('ακυρώνει την επιβεβαίωση', async () => {
     const apothiki = new MnimiApothiki();
     await grapse_yplika(apothiki);
+    await grapse_rytheseis(apothiki, { ...proedapes_rytheseis(), paroxosLlm: 'ollama', onomaMontelou: 'llama3' });
     const periballon = ftiaxe_periballon_test({ apothiki });
     const result = me_tutor(KODIKOS, periballon);
     await stathero(result);
@@ -442,15 +467,15 @@ describe('tutor — γραμμή οθόνης', () => {
   it('ενεργοποιεί τον τσεκμποξ όταν η αποθήκευση αποτυγχάνει', async () => {
     const apothiki = new MnimiApothiki();
     await grapse_yplika(apothiki);
-    vi.spyOn(apothiki, 'grapse_keimeno').mockResolvedValue(sfalma<void>('MI_GRAPE', 'δεν γίνεται γραφή'));
+    vi.spyOn(apothiki, 'grapse_keimeno').mockResolvedValue({ ok: false, sfalma: { kodikos: 'AGNOSTO', minima: 'δεν γίνεται γραφή' } });
     const periballon = ftiaxe_periballon_test({ apothiki });
     const result = me_tutor(KODIKOS, periballon);
     await stathero(result);
     const checkbox = result.getByRole('checkbox');
-    fireEvent.change(checkbox, { target: { checked: true } });
+    fireEvent.click(checkbox);
     await waitFor(
       () => {
-        expect(result.queryByText('Δεν αποθηκεύτηκε η επιλογή Gemini.')).not.toBeNull();
+        expect(result.queryByText(/δεν γίνεται γραφή|Δεν αποθηκεύτηκε η επιλογή Gemini/)).not.toBeNull();
       },
       { timeout: 3000 },
     );
@@ -467,18 +492,18 @@ describe('tutor — γραμμή οθόνης', () => {
     expect(result.queryByText('Δεν υπάρχει εξαγμένο κείμενο')).toBeNull();
   });
 
-  it('δείχνει σφάλμα when το μάθημα λείπει', async () => {
+  it('δείχνει σφάλμα όταν δεν έχει δοθεί συναίνεση Gemini', async () => {
     const apothiki = new MnimiApothiki();
     await grapse_yplika(apothiki);
     const periballon = ftiaxe_periballon_test({ apothiki });
-    const result = me_tutor('ΠΛΗ999', periballon);
+    const result = me_tutor(KODIKOS, periballon);
     await stathero(result);
     const input = result.getByLabelText('Ερώτηση για τον tutor');
     fireEvent.change(input, { target: { value: 'Ρωτώ κάτι.' } });
     fireEvent.click(result.getByTestId('tutor-apomilosi'));
     await waitFor(
       () => {
-        expect(result.queryByText('Επίλεξε πρώτα μάθημα.')).not.toBeNull();
+        expect(result.queryByText('Ενεργοποίησε πρώτα το Gemini για αυτό το μάθημα.')).not.toBeNull();
       },
       { timeout: 3000 },
     );

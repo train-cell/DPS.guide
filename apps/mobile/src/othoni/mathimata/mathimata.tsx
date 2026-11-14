@@ -10,7 +10,7 @@ import { xrisiApothekisis } from '../../apothiki/index.js';
 import { fortose_mathimata_apo_apothiki } from '../../ypiresies/index.js';
 import { epanasygxronise_mathimata_apo_apothiki } from '../../ypiresies/syndesi-eclass.js';
 import { fortose_eurethrio } from '../../provoli-pdf/provoli-ypiresies.js';
-import { me_tilemetria } from '../../tilemetria/tilemetria.js';
+import { katagrapse_tilemetria, me_tilemetria } from '../../tilemetria/tilemetria.js';
 import { FwnitikiKarta } from './fwnitiki-karta.js';
 
 /** Μετατρέπει μέγεθος byte σε ευανάγνωστη μορφή KB/MB. */
@@ -241,7 +241,10 @@ export default function Mathimata() {
           setKatastasi(apothike);
         }
       })
-      .catch(() => {
+      .catch((sfalmaLoad) => {
+        katagrapse_tilemetria('error', 'Apotyxia fortosis mathimaton apo apothiki', {
+          sfalma: sfalmaLoad instanceof Error ? sfalmaLoad.message : String(sfalmaLoad),
+        });
         if (zontas) {
           setKatastasi(sfalma({ kodikos: KODIKOS_SFALMATOS_DIKTYOU, minima: MINIMA_SFALMATOS_LISTAS }));
         }

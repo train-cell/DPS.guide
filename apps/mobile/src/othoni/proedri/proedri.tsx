@@ -18,6 +18,7 @@ import {
 } from '../../design/eikonidia-panepistimion.js';
 import { pare_tip_imeras } from './foititika-tips.js';
 import { BridgePairingCard } from '../../vault/bridge-pairing.js';
+import { katagrapse_tilemetria } from '../../tilemetria/tilemetria.js';
 import './proedri.css';
 
 /** Η προεπιλεγμένη διεύθυνση του eClass στο Πανεπιστήμιο Πειραιώς. */
@@ -153,6 +154,10 @@ export default function Proedri({ periballon }: ProedriProps) {
 
   async function pane_syndexi(): Promise<void> {
     const runtime = pyles;
+    if (!runtime) {
+      setKatastasi(sfalma({ kodikos: 'AGNOSTO', minima: 'Το περιβάλλον δεν είναι έτοιμο.' }));
+      return;
+    }
     setAnamemeni(true);
     setEpixeirithike(true);
     setKatastasi(fortosi());
@@ -182,7 +187,10 @@ export default function Proedri({ periballon }: ProedriProps) {
           minima: apotelesmaScraping.sfalma.minima,
         }));
       }
-    } catch {
+    } catch (sfalmaDiakopis) {
+      katagrapse_tilemetria('error', 'Aprosmeni diakopi syndesis proedri', {
+        sfalma: sfalmaDiakopis instanceof Error ? sfalmaDiakopis.message : String(sfalmaDiakopis),
+      });
       setKatastasi(
         sfalma({
           kodikos: 'AGNOSTO',

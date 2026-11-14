@@ -72,6 +72,7 @@ export function analysi_portfolio_html(
   while ((match = protypos_link.exec(katharo)) !== null) {
     const href = match[1];
     const periexomeno = match[2];
+    if (!href || periexomeno === undefined) continue;
 
     // Έλεγχος αν ο σύνδεσμος αφορά μάθημα
     const kodikos_match = /\/courses\/([A-Za-z0-9_-]+)(?:\/|$)/i.exec(href);
@@ -168,9 +169,10 @@ export function analysi_fakelou_html(
 
   while ((tr_match = protypos_tr.exec(katharo)) !== null) {
     const grammi = tr_match[1];
+    if (!grammi) continue;
     const protypos_a = /<a\b[^>]*\bhref\s*=\s*["']([^"']+)["'][^>]*>(.*?)<\/a>/gis;
     const a_match = protypos_a.exec(grammi);
-    if (!a_match) continue;
+    if (!a_match || !a_match[1] || a_match[2] === undefined) continue;
 
     const href = a_match[1];
     const keimeno_link = a_match[2].replace(/<[^>]+>/g, '').trim();
@@ -178,7 +180,7 @@ export function analysi_fakelou_html(
 
     // Εξαγωγή κελιών td
     const td_matches = [...grammi.matchAll(/<td\b[^>]*>(.*?)<\/td>/gis)].map((m) =>
-      m[1].replace(/<[^>]+>/g, '').trim()
+      (m[1] ?? '').replace(/<[^>]+>/g, '').trim()
     );
 
     const full_url = επιλυση_url(href, trexousa_url);
@@ -244,7 +246,9 @@ export function analysi_fakelou_html(
 
     while ((match = protypos_a.exec(katharo)) !== null) {
       const href = match[1];
-      const keimeno_link = match[2].replace(/<[^>]+>/g, '').trim();
+      const periex = match[2];
+      if (!href || periex === undefined) continue;
+      const keimeno_link = periex.replace(/<[^>]+>/g, '').trim();
       if (!keimeno_link || href.startsWith('#') || href.startsWith('javascript:')) continue;
       if (keimeno_link === '..' || href.includes('parentDir')) continue;
 
