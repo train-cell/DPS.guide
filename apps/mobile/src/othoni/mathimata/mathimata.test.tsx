@@ -181,6 +181,7 @@ vi.mock('../../provoli-pdf/provoli-ypiresies.js', () => ({
 
 vi.mock('../../tilemetria/tilemetria.js', () => ({
   me_tilemetria: mocks.me_tilemetria,
+  katagrapse_tilemetria: vi.fn(),
 }));
 
 vi.mock('../../ypiresies/syndesi-eclass.js', () => ({
