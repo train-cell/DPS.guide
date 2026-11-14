@@ -233,13 +233,13 @@ export function Simera() {
   const simeraImerominia = new Date().toISOString().slice(0, 10);
   const mellontikesExetaseis = [...exetaseis]
     .filter((e) => (e.imerominia ?? '') >= simeraImerominia)
-    .sort((a, b) => (a.imerominia ?? '').localeCompare(b.imerominia ?? ''));
+    .sort((a, b) => (a.imerominia as string).localeCompare(b.imerominia as string));
   const epomeniEksetasi = mellontikesExetaseis[0];
   const imeresGiaEksetasi = epomeniEksetasi
     ? Math.max(
         0,
         Math.ceil(
-          (new Date(epomeniEksetasi.imerominia ?? '').getTime() -
+          (new Date(epomeniEksetasi.imerominia as string).getTime() -
             new Date(simeraImerominia).getTime()) /
             (1000 * 60 * 60 * 24)
         )

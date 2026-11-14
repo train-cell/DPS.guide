@@ -64,7 +64,8 @@ async function apodosi_simeras(
         ...proedapes_rytheseis(),
         baseUrl: '',
         panepistimioId: epidoseis.panepistimioId,
-        exetaseis: epidoseis.exetaseis ?? [],
+        /** το null γράφεται έτσι ώστε η `?? []` του κώδικα να πάρει το δεξί κλαδί */
+        exetaseis: epidoseis.exetaseis !== undefined ? epidoseis.exetaseis : [],
       })
     );
   }
@@ -262,6 +263,43 @@ describe('simera — σειρά μελέτης και check-in', () => {
       },
       { timeout: 3000 }
     );
+    result.unmount();
+  });
+
+  it('καλεί τα onKleisimo, onXrisiToken, onEnarxiBlitz από τα κουμπιά του modal', async () => {
+    const result = await apodosi_simeras();
+    await periimeno_fortosi(result);
+    const anoikse = () => {
+      fireEvent.click(result.getByTestId('simera-streak-freeze-btn'));
+      return waitFor(
+        () => {
+          expect(result.getByTestId('streak-freeze-modal')).not.toBeNull();
+        },
+        { timeout: 3000 }
+      );
+    };
+    // κάθε κουμπί κλείνει το modal· το ανοίγουν ξανά πριν το επόμενο κλικ
+    await anoikse();
+    fireEvent.click(result.getByTestId('streak-freeze-close'));
+    await anoikse();
+    fireEvent.click(result.getByTestId('streak-freeze-use-token'));
+    await anoikse();
+    fireEvent.click(result.getByTestId('streak-freeze-start-blitz'));
+    await waitFor(
+      () => {
+        expect(result.queryByTestId('streak-freeze-modal')).toBeNull();
+      },
+      { timeout: 3000 }
+    );
+    result.unmount();
+  });
+
+  it('διαχειρίζεται ρυθμίσεις χωρίς εξετάσεις', async () => {
+    /** Η ρύθμιση `exetaseis` είναι null: η `?? []` παίρνει το δεξί κλαδί του `??`. */
+    const exetaseis = null as unknown as readonly Exetasi[];
+    const result = await apodosi_simeras({ exetaseis });
+    await periimeno_fortosi(result);
+    expect(result.queryByText('Επόμενη εξέταση:')).toBeNull();
     result.unmount();
   });
 

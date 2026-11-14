@@ -7,6 +7,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ParoxeApothekisis } from '../../apothiki/aperixirto.js';
+import type { Proodhos } from '../../apothiki/apothiki-typoi.js';
 import { MnimiApothiki } from '@dps/core/testing';
 import { ftiaxe_periballon_test } from '../../../test-fixtures/ftiaxe-test-periballon.js';
 import { generateCourseGuide } from '../../ypiresies/pipeline-analisis.js';
@@ -410,6 +411,10 @@ async function apoidefsi_odigos_pliros(enotitaId: string): Promise<ReturnType<ty
             <Route path="/odigos/:enotitaId" element={<OdigosMeletis />} />
             <Route path="/xartis" element={<div data-testid="alilos-xartis">alilos xartis</div>} />
             <Route path="/tutor" element={<div data-testid="alilos-tutor">alilos tutor</div>} />
+            <Route
+              path="/provoli/:arxeioId/:selida"
+              element={<div data-testid="alilos-provoli">alilos provoli</div>}
+            />
           </Routes>
         </MemoryRouter>
       </ParoxeApothekisis>,
@@ -571,5 +576,112 @@ describe('odigos — οθόνη σε πραγματικό DOM', () => {
   it('επαναφέρει την κατάσταση με το κουμπί επανάληψης', async () => {
     const result = await apoidefsi_odigos('en-1');
     expect(result.getByTestId('odigos-ekran')).not.toBeNull();
+  });
+
+  it('πλοηγείται στη προβολή PDF όταν πατηθεί μία παραπομπή', async () => {
+    const result = await apoidefsi_odigos_pliros('en-1');
+    const parapompi = result.getAllByTestId('odigos-parapompi')[0];
+    fireEvent.click(parapompi);
+    await waitFor(
+      () => expect(result.queryByTestId('alilos-provoli')).not.toBeNull(),
+      { timeout: 2000 }
+    );
+  });
+
+  it('φορτώνει δεδομένα Leitner στην αρχική κατάσταση του AutoelegchosAkordeon', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(
+      'ΠΛΗ201/proodhos.json',
+      JSON.stringify({
+        aristeiesEnotiton: [],
+        katastasiMathisis: [
+          {
+            /** Η `analise_erwtisi_autoelegchou` αφαιρεί το `Ερώτηση:` και δίνει `Τι είναι αναδρομή;` */
+            ennoia: 'Τι είναι αναδρομή;',
+            kouti: 2,
+            epomeni_epanalipsi: '2026-11-20',
+            sosta_seiri: 1,
+          },
+        ],
+      } as unknown as Proodhos)
+    );
+    const periballon = ftiaxe_periballon_test({ apothiki });
+    const result = render(
+      me_periballon_test(
+        <ParoxeApothekisis periballon={periballon} kodikosMathimatos="ΠΛΗ201">
+          <MemoryRouter>
+            <AutoelegchosAkordeon
+              keimena={['Ερώτηση: Τι είναι αναδρομή; Απάντηση: Συνάρτηση.']}
+              kodikosMathimatos="ΠΛΗ201"
+              enotitaId="en-1"
+            />
+          </MemoryRouter>
+        </ParoxeApothekisis>,
+        periballon
+      )
+    );
+    await waitFor(() => expect(result.container.querySelector('.odigos-autoelegchos-lista')).not.toBeNull(), {
+      timeout: 2000,
+    });
+    expect(result.getByText('Κουτί 2')).not.toBeNull();
+    result.unmount();
+  });
+
+  it('καταγράφει απάντηση Leitner και ενημερώνει τον πίνακα καταστάσεων', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(
+      'ΠΛΗ201/proodhos.json',
+      JSON.stringify({
+        aristeiesEnotiton: [],
+        katastasiMathisis: [
+          {
+            /** Η `analise_erwtisi_autoelegchou` αφαιρεί το `Ερώτηση:` και δίνει `Τι είναι αναδρομή;` */
+            ennoia: 'Τι είναι αναδρομή;',
+            kouti: 2,
+            epomeni_epanalipsi: '2026-11-20',
+            sosta_seiri: 1,
+          },
+        ],
+      } as unknown as Proodhos)
+    );
+    const periballon = ftiaxe_periballon_test({ apothiki });
+    const result = render(
+      me_periballon_test(
+        <ParoxeApothekisis periballon={periballon} kodikosMathimatos="ΠΛΗ201">
+          <MemoryRouter>
+            <AutoelegchosAkordeon
+              keimena={['Ερώτηση: Τι είναι αναδρομή; Απάντηση: Συνάρτηση.']}
+              kodikosMathimatos="ΠΛΗ201"
+              enotitaId="en-1"
+            />
+          </MemoryRouter>
+        </ParoxeApothekisis>,
+        periballon
+      )
+    );
+    await waitFor(() => expect(result.container.querySelector('.odigos-autoelegchos-lista')).not.toBeNull(), {
+      timeout: 2000,
+    });
+    const koumpi = result.getAllByTestId('autoelegchos-apantisi-koumpi')[0];
+    fireEvent.click(koumpi);
+    await waitFor(() => expect(koumpi.disabled).toBe(true), { timeout: 2000 });
+    /** σωστή απάντηση: το κουτί ανεβαίνει 2 → 3 */
+    expect(result.getByText('Κουτί 3')).not.toBeNull();
+    result.unmount();
+  });
+
+  it('η παραγωγή ξανά στην κατάσταση σφάλματος είναι ενεργή μετά το opt-in', async () => {
+    const result = await apoidefsi_karos('sfalma');
+    expect(result.getByText('Δεν φορτώθηκε ο οδηγός')).not.toBeNull();
+    // μη ενεργοποιημένο· το κουμπί παραγωγής μένει αδρανές
+    expect(result.getByText('Δημιουργία ξανά').disabled).toBe(true);
+    await waitFor(() => expect(result.getByTestId('odigos-gemini-optin').disabled).toBe(false), { timeout: 2000 });
+    fireEvent.click(result.getByTestId('odigos-gemini-optin'));
+    await waitFor(() => expect(result.getByText('Δημιουργία ξανά').disabled).toBe(false), { timeout: 2000 });
+    fireEvent.click(result.getByText('Δημιουργία ξανά'));
+    // η οθόνη περνά στη φόρτωση και επιστρέφει στο σφάλμα όταν δεν παράγεται οδηγός
+    await waitFor(() => expect(result.queryByText('Δεν φορτώθηκε ο οδηγός')).not.toBeNull(), {
+      timeout: 2000,
+    });
   });
 });

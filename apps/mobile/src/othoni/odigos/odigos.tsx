@@ -356,7 +356,6 @@ export default function OdigosMeletis() {
   const apothiki = xrisiApothekisis();
   const { kodikosMathimatos } = apothiki;
   const [katastasi, setKatastasi] = useState<Katastasi<OdigosEnotitas>>(fortosi<OdigosEnotitas>());
-  const [proseis, setProseis] = useState(0);
   const [dimiourgeitai, setDimiourgeitai] = useState(false);
   const [stadioAnalisis, setStadioAnalisis] = useState(1);
   const [posostoAnalisis, setPosostoAnalisis] = useState(20);
@@ -380,11 +379,7 @@ export default function OdigosMeletis() {
     return () => {
       mounted = false;
     };
-  }, [periballon.apothiki, kodikosMathimatos, enotitaId, proseis]);
-
-  const epanalipsi = useCallback(() => {
-    setProseis((palies) => palies + 1);
-  }, []);
+  }, [periballon.apothiki, kodikosMathimatos, enotitaId]);
 
   const dimiourgia_odigo = useCallback(async (): Promise<void> => {
     if (!kodikosMathimatos || !enotitaId || dimiourgeitai) return;
@@ -593,7 +588,7 @@ export default function OdigosMeletis() {
           }
         />
       ) : katastasi.katastasi === 'fortosi' ? (
-        <OloniKatastasis katastasi={katastasi} epanalipsi={epanalipsi}>{() => null}</OloniKatastasis>
+        <OloniKatastasis katastasi={katastasi} />
       ) : katastasi.katastasi === 'sfalma' ? (
         <Karta
           titlos="Δεν φορτώθηκε ο οδηγός"
@@ -624,7 +619,7 @@ export default function OdigosMeletis() {
       ) : (
         <>
           {privacy.error !== null && <p role="alert" className="karta-ypokeimeno">{privacy.error}</p>}
-          <OloniKatastasis katastasi={katastasi} epanalipsi={epanalipsi}>
+          <OloniKatastasis katastasi={katastasi}>
             {(odigos) => (
           <>
             {LEKIKIA_TMIMATON.map((kleidi) => {

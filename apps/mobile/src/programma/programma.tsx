@@ -199,14 +199,14 @@ export default function RythmiseisProgrammatos({
       return null;
     }
 
-    const templateLepton = draft.templateLepton ?? PROEDAFO_TEMPLATE;
+    const templateLepton = draft.templateLepton;
     const ana_imera_evdomadas = [1, 2, 3, 4, 5, 6, 7].map((imeraNum) => {
       const grammi = templateLepton.find((g) => g.imera === imeraNum);
       return grammi ? kilise_lepta(grammi.lepta) : 0;
     });
 
     const overrides: Record<string, number> = {};
-    for (const o of draft.overrides ?? []) {
+    for (const o of draft.overrides) {
       if (o.imerominia.trim().length > 0 && stilise_imerominia(o.imerominia.trim()) !== null) {
         overrides[o.imerominia.trim()] = kilise_lepta(Number(o.lepta));
       }
@@ -234,9 +234,6 @@ export default function RythmiseisProgrammatos({
   }, [fortose]);
 
   async function apothikefse(): Promise<void> {
-    if (draft === null || rytheseis === null) {
-      return;
-    }
     setApothikefthike(false);
     if (!draft.exetaseis.every(einai_egkyri_exetasi)) {
       setMinimaSfalmatos(MINIMA_AKYRIS_EXETASIS);
