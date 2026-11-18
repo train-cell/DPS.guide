@@ -95,6 +95,21 @@ async function ypologise_sha256(keimeno: string): Promise<string> {
 }
 
 /**
+ * Υπολογίζει την κανονική μορφή Additional Authenticated Data (AAD) από το manifest.
+ */
+export function ypologise_kanoniko_aad(manifest: DpsSyncManifest): Uint8Array {
+  const kanoniko = JSON.stringify({
+    schemaEkdosi: manifest.schemaEkdosi,
+    ekdosiPaketou: manifest.ekdosiPaketou,
+    xronosSimioIso: manifest.xronosSimioIso,
+    hashDedomenon: manifest.hashDedomenon,
+    systimaDeviceId: manifest.systimaDeviceId,
+    ...(manifest.megethosBytes !== undefined ? { megethosBytes: manifest.megethosBytes } : {}),
+  });
+  return new TextEncoder().encode(`dps.sync.v1/manifest:${kanoniko}`);
+}
+
+/**
  * Δημιουργεί ένα Zero-Knowledge κρυπτογραφημένο πακέτο συγχρονισμού.
  *
  * @param dedomenaVault Το σειριοποιημένο JSON κείμενο του vault.
@@ -115,13 +130,8 @@ export async function dimiourgia_sync_paketou(
   const enc = new TextEncoder();
   const clearBytes = enc.encode(dedomenaVault);
 
-  const encryptedBuffer = await globalThis.crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: iv as unknown as BufferSource },
-    aesKey,
-    clearBytes
-  );
-
   const hashDedomenon = await ypologise_sha256(dedomenaVault);
+  const megethosBytes = clearBytes.byteLength + 16;
 
   const manifest: DpsSyncManifest = {
     schemaEkdosi: 1,
@@ -129,8 +139,20 @@ export async function dimiourgia_sync_paketou(
     xronosSimioIso: xronosToraIso,
     hashDedomenon,
     systimaDeviceId: 'dps-core-client',
-    megethosBytes: encryptedBuffer.byteLength,
+    megethosBytes,
   };
+
+  const aad = ypologise_kanoniko_aad(manifest);
+
+  const encryptedBuffer = await globalThis.crypto.subtle.encrypt(
+    {
+      name: 'AES-GCM',
+      iv: iv as unknown as BufferSource,
+      additionalData: aad as unknown as BufferSource,
+    },
+    aesKey,
+    clearBytes
+  );
 
   return {
     manifest,
@@ -153,12 +175,22 @@ export async function apokryptografisi_sync_paketou(
   const encryptedBytes = base64ToUint8Array(paketo.encryptedPayload);
 
   const aesKey = await deriveAesKey(kleidi, salt);
+  const aad = ypologise_kanoniko_aad(paketo.manifest);
 
-  const decryptedBuffer = await globalThis.crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv: iv as unknown as BufferSource },
-    aesKey,
-    encryptedBytes as unknown as BufferSource
-  );
+  let decryptedBuffer: ArrayBuffer;
+  try {
+    decryptedBuffer = await globalThis.crypto.subtle.decrypt(
+      {
+        name: 'AES-GCM',
+        iv: iv as unknown as BufferSource,
+        additionalData: aad as unknown as BufferSource,
+      },
+      aesKey,
+      encryptedBytes as unknown as BufferSource
+    );
+  } catch {
+    throw new Error('Αποτυχία επαλήθευσης ακεραιότητας ή αυθεντικοποίησης: Το πακέτο έχει αλλοιωθεί ή το κλειδί είναι εσφαλμένο.');
+  }
 
   const dec = new TextDecoder();
   const dedomena = dec.decode(decryptedBuffer);

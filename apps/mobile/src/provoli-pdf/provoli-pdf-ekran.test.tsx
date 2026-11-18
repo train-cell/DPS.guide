@@ -70,7 +70,7 @@ async function ftiaxe_apothiki_dyadikon() {
     'PLI201/.spoudes/eurethrio-arxeion.json',
     JSON.stringify([{ id: 'arx-1', diadromi: 'a.pdf' }])
   );
-  await apothiki.grapse_dyadiko('a.pdf', PDF_BYTES);
+  await apothiki.grapse_dyadiko('PLI201/arxeia/a.pdf', PDF_BYTES);
   return apothiki;
 }
 
@@ -220,7 +220,7 @@ describe('ProvoliPdf — διαδρομές σελίδας', () => {
       'PLI201/.spoudes/eurethrio-arxeion.json',
       JSON.stringify([{ id: 'arx-1', diadromi: 'a.pdf' }])
     );
-    await base.grapse_dyadiko('a.pdf', PDF_BYTES);
+    await base.grapse_dyadiko('PLI201/arxeia/a.pdf', PDF_BYTES);
     return new ThrystoApotiki(base);
   }
 

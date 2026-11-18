@@ -42,6 +42,21 @@ describe('Zero-Knowledge Cloud Backup Sync (cloud-sync.ts)', () => {
         apokryptografisi_sync_paketou(paketo, 'lathos-kodikos-xyz')
       ).rejects.toThrow();
     });
+
+    it('απορρίπτει την αποκρυπτογράφηση όταν παραποιηθεί το manifest μέσω AAD binding', async () => {
+      const paketo = await dimiourgia_sync_paketou(dokimastikaDedomena, kleidi, 1);
+      const tamperedManifest = {
+        ...paketo,
+        manifest: {
+          ...paketo.manifest,
+          ekdosiPaketou: 999, // Τροποποίηση έκδοσης στο manifest
+        },
+      };
+
+      await expect(
+        apokryptografisi_sync_paketou(tamperedManifest, kleidi)
+      ).rejects.toThrow(/ακεραιότητας/);
+    });
   });
 
   describe('epalithefsi_kai_epilysi_sygkrouseon', () => {

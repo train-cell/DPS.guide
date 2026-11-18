@@ -22,7 +22,9 @@ a {
 .proskelesio {
   display: flex;
   flex-direction: column;
-  padding-top: var(--diastima-2);
+  padding-top: calc(var(--diastima-2) + env(safe-area-inset-top, 0px));
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
 .proskelesio-titlos {
@@ -158,7 +160,17 @@ a {
   line-height: var(--grammatoseira-grammi-mikri);
 }
 
-/* Οταν το pilegma χρησιμοποιείται ως κουμπί, δεν πρέπει να κληρονομεί το light buttonface. */
+/* Οταν το pilegma χρησιμοποιείται ως κουμπί ή σύνδεσμος, διασφαλίζεται touch target >= 44x44pt (Apple HIG & WCAG). */
+button.pilegma,
+a.pilegma {
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 button.pilegma {
   background-color: var(--xroma-fonto);
   color: var(--xroma-apoxromatismeno);
@@ -431,16 +443,30 @@ button.pilegma:disabled {
 }
 
 /* Tutor chat */
+.tutor-ekran-periektis {
+  height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .imerologia {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
   gap: var(--diastima-3);
   padding: var(--diastima-4);
-  padding-bottom: 96px;
+  padding-bottom: var(--diastima-4);
 }
 
 .imerologia-gramma {
   max-width: 82%;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: var(--grammatoseira-grammi-kanoniki);
 }
 
 .imerologia-bolakia {
@@ -463,9 +489,13 @@ button.pilegma:disabled {
 }
 
 .tutor-parapompi {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  box-sizing: border-box;
   margin: 0 var(--diastima-1);
-  padding: 2px var(--diastima-2);
+  padding: var(--diastima-1) var(--diastima-3);
   border-radius: var(--aktina-kapsoula);
   background-color: var(--xroma-fonto);
   color: var(--xroma-entono);
@@ -483,9 +513,13 @@ button.pilegma:disabled {
 }
 
 .imerologia-paixidi {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
   display: flex;
   gap: var(--diastima-2);
   padding: var(--diastima-3) var(--diastima-4);
+  padding-bottom: calc(var(--diastima-3) + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid var(--xroma-synorio);
   background-color: var(--xroma-karta);
 }
@@ -726,6 +760,9 @@ button.pilegma:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
   padding: var(--diastima-2) var(--diastima-3);
   border-radius: var(--aktina-kapsoula);
   border: 1px solid var(--xroma-synorio);
@@ -856,6 +893,12 @@ button.pilegma:disabled {
 }
 
 .tutor-drasis-koumpi {
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   background-color: var(--xroma-epifaneia-ypsomeni);
   color: var(--xroma-keimeno-prwtarxiko);
@@ -1043,6 +1086,12 @@ button.pilegma:disabled {
 }
 
 .simera-checkin-koumpi {
+  min-height: 44px;
+  min-width: 44px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   border: 1px solid var(--xroma-synorio);
   background-color: var(--xroma-epifaneia-ypsomeni);
@@ -1050,6 +1099,8 @@ button.pilegma:disabled {
 }
 
 .simera-checkin-lepta {
+  min-height: 44px;
+  box-sizing: border-box;
   width: 72px;
   border: 1px solid var(--xroma-synorio);
   border-radius: var(--aktina-mikro);
@@ -1732,3 +1783,677 @@ button.pilegma:disabled {
   color: var(--xroma-keimeno-defteron);
 }
 
+/* ==========================================================================
+   Touch Ergonomics: Delete & Action Buttons
+   ========================================================================== */
+[data-testid$="-afairesi"],
+[data-testid*="diagrafi"] {
+  min-width: 44px;
+  min-height: 44px;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ==========================================================================
+   Navigation: Xartis Link Containers
+   ========================================================================== */
+.passphrase-modal-pedio {
+  position: relative;
+  display: flex;
+  gap: var(--diastima-2);
+  align-items: center;
+}
+
+.xartis-kartela-plaisio {
+  display: block;
+}
+
+.karta-titlos-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.karta-titlos-link:hover {
+  text-decoration: underline;
+  color: var(--xroma-entono);
+}
+
+.antallagi-apotelesma-omada {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+/* ==========================================================================
+   Streak Freeze Modal (Stream C / Rule D11)
+   ========================================================================== */
+.streak-freeze-epikalipsi {
+  position: fixed;
+  inset: 0;
+  background-color: var(--xroma-epifaneia-patimeni);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--diastima-4);
+  z-index: 1000;
+  animation: fadeIn var(--diarkeia-grigori) ease-out;
+}
+
+.streak-freeze-kouti {
+  width: min(100%, 420px);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  padding: var(--diastima-4);
+  box-shadow: 0 16px 40px var(--xroma-epifaneia-patimeni);
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.streak-freeze-kefali {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--diastima-2);
+}
+
+.streak-freeze-emvlima {
+  font-size: 40px;
+  line-height: 1;
+}
+
+.streak-freeze-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-titlos);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.streak-freeze-perigrafi {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-defteron);
+  line-height: var(--grammatoseira-grammi-kanoniki);
+}
+
+.streak-freeze-metriseis {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--diastima-2);
+  margin: var(--diastima-2) 0;
+}
+
+.streak-freeze-karta-metrisis {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--diastima-3);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  gap: var(--diastima-1);
+}
+
+.streak-freeze-metrisi-etiketa {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.streak-freeze-metrisi-timi {
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.streak-freeze-energeies {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.streak-freeze-koumpi {
+  min-height: 44px;
+  padding: var(--diastima-2) var(--diastima-3);
+  border-radius: var(--aktina-meso);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-meso);
+  font-weight: var(--grammatoseira-baros-entono);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform var(--diarkeia-grigori) ease-out, opacity var(--diarkeia-grigori) ease-out;
+  border: 1px solid var(--xroma-synorio);
+}
+
+.streak-freeze-koumpi:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.streak-freeze-koumpi:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.streak-freeze-koumpi-blitz {
+  background-color: var(--xroma-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  border-color: var(--xroma-entono);
+}
+
+.streak-freeze-koumpi-token {
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.streak-freeze-koumpi-kleisimo {
+  background-color: transparent;
+  color: var(--xroma-apoxromatismeno);
+  border-color: transparent;
+}
+
+
+/* ==========================================================================
+   Fwnitiki Karta - Voice Flashcard (Rule D11)
+   ========================================================================== */
+.fwnitiki-karta-plaisio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  box-shadow: 0 1px 0 var(--xroma-epifaneia-ypsomeni), 0 var(--diastima-1) var(--diastima-3) var(--xroma-epifaneia-patimeni);
+}
+
+.fwnitiki-karta-kefali {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.fwnitiki-karta-erwtisi {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.fwnitiki-karta-xeirismos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+}
+
+.fwnitiki-mic-koumpi {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--diastima-2);
+  padding: var(--diastima-2) var(--diastima-4);
+  border-radius: var(--aktina-kapsoula);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-size: var(--grammatoseira-meso);
+  font-weight: var(--grammatoseira-baros-entono);
+  cursor: pointer;
+  transition: all var(--diarkeia-grigori) ease-out;
+}
+
+.fwnitiki-mic-koumpi.fwnitiki-mic-energopoihmeno {
+  background-color: var(--xroma-entono);
+  border-color: var(--xroma-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  animation: pulse 1.5s infinite;
+}
+
+.fwnitiki-mic-eikonidio {
+  font-size: 18px;
+}
+
+.fwnitiki-katastasi-plaisio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.fwnitiki-katastasi-keimeno {
+  margin: 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.fwnitiki-sfalma-keimeno {
+  margin: 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-entono);
+}
+
+.fwnitiki-apantisi-proepiskopisi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+  padding: var(--diastima-3);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.fwnitiki-apantisi-etiketa {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.fwnitiki-apantisi-keimeno {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.fwnitiki-apotelesmata-plaisio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  margin-top: var(--diastima-2);
+}
+
+.fwnitiki-badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  padding: var(--diastima-1) var(--diastima-3);
+  border-radius: var(--aktina-kapsoula);
+  font-size: var(--grammatoseira-mikro);
+  font-weight: var(--grammatoseira-baros-entono);
+}
+
+.fwnitiki-badge-epityxia {
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.fwnitiki-badge-apotyxia {
+  background-color: var(--xroma-epifaneia-patimeni);
+  border: 1px solid var(--xroma-synorio);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.fwnitiki-lexeis-kleidia {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.fwnitiki-lexeis-titlos {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.fwnitiki-lexeis-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--diastima-1);
+}
+
+
+/* ==========================================================================
+   Antallagi Deck - Encrypted P2P Flashcard Decks (Rule D11)
+   ========================================================================== */
+.antallagi-deck-plaisio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-4);
+  padding: var(--diastima-4);
+}
+
+.antallagi-deck-kefali {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.antallagi-deck-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-titlos);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.antallagi-deck-perigrafi {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.antallagi-status-plaisio {
+  padding: var(--diastima-2) var(--diastima-3);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border-radius: var(--aktina-meso);
+  border: 1px solid var(--xroma-synorio);
+}
+
+.antallagi-status-keimeno {
+  margin: 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.antallagi-sfalma-keimeno {
+  margin: var(--diastima-1) 0 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-entono);
+}
+
+.antallagi-kouti {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.antallagi-kouti-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-megalo);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.antallagi-pedio-omada {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.antallagi-etiketa {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.antallagi-input {
+  min-height: 44px;
+  padding: var(--diastima-2) var(--diastima-3);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-meso);
+}
+
+.antallagi-textarea {
+  min-height: 88px;
+  padding: var(--diastima-2) var(--diastima-3);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: monospace;
+  font-size: var(--grammatoseira-mikro);
+  resize: vertical;
+}
+
+.antallagi-koumpi-omada {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.antallagi-koumpi {
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.antallagi-eisagmeno-kouti {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+  padding: var(--diastima-3);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.antallagi-eisagmeno-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.antallagi-eisagmeno-metrika {
+  margin: 0;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+
+/* ==========================================================================
+   Mnemonika - Automated Mnemonics Engine UI (Rule D11)
+   ========================================================================== */
+.mnemonika-periektis {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-4);
+  padding: var(--diastima-4);
+}
+
+.mnemonika-kefali {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.mnemonika-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-titlos);
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.mnemonika-ypotitlos {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.mnemonika-forma {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.mnemonika-pedio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+  flex: 1;
+}
+
+.mnemonika-etiketa {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.mnemonika-keimeno {
+  min-height: 88px;
+  padding: var(--diastima-2) var(--diastima-3);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-meso);
+  resize: vertical;
+}
+
+.mnemonika-pedio-diadromi {
+  display: flex;
+  gap: var(--diastima-3);
+  flex-wrap: wrap;
+}
+
+.mnemonika-epilogi {
+  min-height: 44px;
+  padding: var(--diastima-2) var(--diastima-3);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-meso);
+}
+
+.mnemonika-eisodos {
+  min-height: 44px;
+  padding: var(--diastima-2) var(--diastima-3);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+  font-family: var(--grammatoseira-oikogeneia);
+  font-size: var(--grammatoseira-meso);
+}
+
+.mnemonika-koumpi-ypovolis {
+  min-height: 44px;
+  padding: var(--diastima-2) var(--diastima-4);
+  background-color: var(--xroma-entono);
+  color: var(--xroma-keimeno-prwtarxiko);
+  border: none;
+  border-radius: var(--aktina-meso);
+  font-size: var(--grammatoseira-meso);
+  font-weight: var(--grammatoseira-baros-entono);
+  cursor: pointer;
+  align-self: flex-start;
+  transition: opacity var(--diarkeia-grigori) ease-out;
+}
+
+.mnemonika-koumpi-ypovolis:active {
+  opacity: 0.85;
+}
+
+.mnemonika-apotelesmata {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-3);
+}
+
+.mnemonika-akronymio-karta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.mnemonika-akronymio-etiketa {
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-apoxromatismeno);
+}
+
+.mnemonika-akronymio-keimeno {
+  font-size: 24px;
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-entono);
+  letter-spacing: 0.05em;
+}
+
+.mnemonika-eidos-badge {
+  font-size: var(--grammatoseira-mikro);
+  padding: var(--diastima-1) var(--diastima-2);
+  background-color: var(--xroma-epifaneia-ypsomeni);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-kapsoula);
+  color: var(--xroma-keimeno-defteron);
+}
+
+.mnemonika-katanomi-kouti {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.mnemonika-katanomi-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.mnemonika-katanomi-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-1);
+}
+
+.mnemonika-katanomi-grammi {
+  display: flex;
+  gap: var(--diastima-2);
+  font-size: var(--grammatoseira-meso);
+}
+
+.mnemonika-katanomi-gramma {
+  font-weight: var(--grammatoseira-baros-entono);
+  color: var(--xroma-entono);
+  width: 24px;
+}
+
+.mnemonika-katanomi-oroi {
+  color: var(--xroma-keimeno-defteron);
+}
+
+.mnemonika-prompt-kouti {
+  display: flex;
+  flex-direction: column;
+  gap: var(--diastima-2);
+  padding: var(--diastima-4);
+  background-color: var(--xroma-karta);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+}
+
+.mnemonika-prompt-titlos {
+  margin: 0;
+  font-size: var(--grammatoseira-meso);
+  color: var(--xroma-keimeno-prwtarxiko);
+}
+
+.mnemonika-prompt-proepiskopisi {
+  margin: 0;
+  padding: var(--diastima-3);
+  background-color: var(--xroma-fonto);
+  border: 1px solid var(--xroma-synorio);
+  border-radius: var(--aktina-meso);
+  font-family: monospace;
+  font-size: var(--grammatoseira-mikro);
+  color: var(--xroma-keimeno-defteron);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 240px;
+  overflow-y: auto;
+}

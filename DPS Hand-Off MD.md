@@ -1,4 +1,43 @@
-# Handoff — 100% Statement + Branch Coverage (DPS.guide mobile/src)
+# Handoff — 18/11/2026: Adversarial Red Team Hardening & Durability Blueprint
+
+**Date:** 18 November 2026, Europe/Athens  
+**Target:** Monorepo (`apps/mobile`, `packages/adapters-capacitor`, `packages/core`, `packages/eclass`, `packages/pipeline`)  
+**Authorship:** `John Akrivos <293213536+train-cell@users.noreply.github.com>`  
+
+Following an adversarial Red Team audit that probed physical mobile UX and deep backend edge cases:
+
+### 1. Frontend & Mobile UI (iOS Safe Areas & Touch Ergonomics)
+- **Dynamic Island & Notch Protection:** In `apps/mobile/src/koinima/koinima.css`, updated `.proskelesio` to include `padding-top: calc(var(--diastima-2) + env(safe-area-inset-top, 0px))` and safe area insets on left/right. App headers on iOS Retina / Dynamic Island no longer collide with hardware cutouts.
+- **Ghost Components Full Styling:** Implemented complete CSS design systems adhering strictly to D11 tokens for previously unstyled components:
+  - `StreakFreezeModal` (`.streak-freeze-epikalipsi`, `.streak-freeze-kouti`, `.streak-freeze-koumpi`)
+  - `FwnitikiKarta` (`.fwnitiki-karta-plaisio`, `.fwnitiki-mic-koumpi`, `.fwnitiki-mic-energopoihmeno`)
+  - `AntallagiDeck` (`.antallagi-deck-plaisio`, `.antallagi-kouti`, `.antallagi-input`)
+  - `Mnemonika` (`.mnemonika-periektis`, `.mnemonika-forma`, `.mnemonika-akronymio-keimeno`)
+- **Apple HIG Touch Target Compliance (>= 44x44pt):** Added `min-height: 44px; min-width: 44px;` across buttons, filters, check-ins, and study actions.
+- **Tutor Chat Auto-Scroll & Formatting:** Added smooth auto-scroll to the latest assistant message via `messagesEndRef`, sticky bottom action bar with `env(safe-area-inset-bottom)`, and `white-space: pre-wrap; word-break: break-word;` for formulas and multi-line explanations.
+- **Secure Masked Modal for Backups:** Replaced plaintext `window.prompt` in `rythisies.tsx` with a styled masked modal dialog (`type="password"` with show/hide toggle), enforcing >= 12 character passphrase security.
+- **Microphone & Speech Privacy Manifests:** In `apps/mobile/ios/App/App/Info.plist`, added `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`.
+- **Valid HTML DOM Structure:** In `xartis.tsx`, replaced nested `<button>` inside `<Link>` with sibling elements and header routing.
+
+### 2. Backend, Vault & Cryptographic Durability
+- **Transactional Atomic Storage Swap:** In `packages/adapters-capacitor/src/storage/apothiki.ts`, replaced premature `.unlink()` before write with safe temporary file staging and transactional rename with automatic rollback.
+- **Vault Index Fail-Closed Guard:** In `apps/mobile/src/vault/vault.ts`, `loadIndex()` now strictly fails closed if the encrypted catalog (`index.enc`) is missing or corrupted, preventing silent catalog wipeouts. Ensured initial index initialization during `createVaultUnlocked`.
+- **AES-256-GCM Cloud Sync Manifest AAD:** In `packages/core/src/kryptografia/cloud-sync.ts`, bound cloud sync manifests as canonical Authenticated Additional Data (`dps.cloud-sync.v1/manifest`) preventing ciphertext substitution attacks.
+- **LMS Crawler Content-Type & HTML Rejection:** In `packages/eclass/src/crawl/sygxronise-mathima.ts`, added content-type validation and login session expiry detection (`einai_lixi_session`), preventing accidental download of HTML error/login forms as binary course documents.
+- **CAS University Multi-Factor Authentication (MFA/2FA) Detection:** In `packages/eclass/src/auth/cas-syndesi.ts`, added pattern matching (`periexei_proklisi_mfa`) to detect OTP/SMS/Duo challenges and return clean actionable error responses rather than false-positive login success loops.
+- **PDF Viewer Storage Prefix Resolution:** In `apps/mobile/src/provoli-pdf/provoli-ypiresies.ts`, added dynamic resolution with fallback for `${kodikos_mathimatos}/arxeia/` course paths.
+- **Safe Pipeline JSON Parsing:** In `packages/pipeline/src/bhmata/xartis.ts`, `megethi.ts`, and `themata.ts`, wrapped raw `JSON.parse` with `analysise_json` to prevent pipeline panics on corrupt cache files.
+
+### 3. Verification & Build Parity
+- **Full Vitest Suite:** 3,172 tests passed (0 failed across all packages).
+- **Master Smoke Runner:** 36/36 tests passed (100%).
+- **Mobile Vitest Suite:** 97/97 test files passed (1,417 passed, 0 failed).
+- **Xcode iOS Simulator Build:** `xcodebuild -project apps/mobile/ios/App/App.xcodeproj -scheme App -configuration Debug` -> BUILD SUCCEEDED.
+- **TypeScript:** 0 compilation errors (`strict: true`).
+
+---
+
+# Historical Handoff — 100% Statement + Branch Coverage (DPS.guide mobile/src)
 
 **Session**: 100% coverage push (statements + branches on every `.ts`/`.tsx` under `apps/mobile/src/` and `packages/*/src/`)
 **Last commit**: `bd725d8` (vault lock/backup tests) — nothing pushed.

@@ -54,7 +54,18 @@ export async function fortose_pdf(
   if (!diadromi.ok) {
     return diadromi;
   }
-  const dyadiko = await apothiki.diavase_dyadiko(diadromi.timi);
+  const kathari = diadromi.timi.replace(/^\/+/, '');
+  const prothema = `${kodikos_mathimatos}/arxeia/`;
+  const diadromi_apothikis = kathari.startsWith(prothema)
+    ? kathari
+    : `${prothema}${kathari.startsWith('arxeia/') ? kathari.slice('arxeia/'.length) : kathari}`;
+  let dyadiko = await apothiki.diavase_dyadiko(diadromi_apothikis);
+  if (!dyadiko.ok) {
+    const fallback = await apothiki.diavase_dyadiko(diadromi.timi);
+    if (fallback.ok) {
+      dyadiko = fallback;
+    }
+  }
   if (!dyadiko.ok) {
     return apotyxia(
       dyadiko.sfalma.kodikos,

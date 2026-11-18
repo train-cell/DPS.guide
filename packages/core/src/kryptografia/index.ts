@@ -2,6 +2,7 @@ export {
   dimiourgia_sync_paketou,
   apokryptografisi_sync_paketou,
   epalithefsi_kai_epilysi_sygkrouseon,
+  ypologise_kanoniko_aad,
 } from './cloud-sync.js';
 
 export type {

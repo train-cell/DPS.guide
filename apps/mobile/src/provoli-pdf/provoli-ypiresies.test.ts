@@ -78,6 +78,22 @@ describe('provoli-ypiresies.ts — φόρτωση PDF', () => {
       expect(apotelesma.sfalma.minima).toContain('δεν ανοίγει');
     }
   });
+
+  it('φορτώνει αρχείο από τη διαδρομή ${kodikos_mathimatos}/arxeia/diadromi', async () => {
+    const apothiki = new MnimiApothiki();
+    await apothiki.grapse_keimeno(
+      'PLH101/.spoudes/eurethrio-arxeion.json',
+      JSON.stringify([{ id: 'pdf-1', diadromi: 'dialexeis/theoria.pdf' }])
+    );
+    const pdfBytes = new Uint8Array([0x25, 0x50, 0x44, 0x46]);
+    await apothiki.grapse_dyadiko('PLH101/arxeia/dialexeis/theoria.pdf', pdfBytes);
+
+    const res = await fortose_pdf(apothiki, 'PLH101', 'pdf-1');
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi).toEqual(pdfBytes);
+    }
+  });
 });
 
 describe('provoli-ypiresies.ts — διευθέτηση σελίδας', () => {

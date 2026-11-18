@@ -3,11 +3,9 @@
  *  MIRROR του `NodeFsApothiki` — ίδια δημόσια API, ίδια μηνύματα, ίδιοι κωδικοί
  *  σφαλμάτων. Όλες οι διαδρομές περνούν από `karnikopoise_diadromi` (§5.3).
  *
- *  ΑΤΟΜΙΚΟΤΗΤΑ: `writeFile` σε `<proorismos>.tmp-<id>` → `rename` στον τελικό.
- *  Το iOS `rename` ΔΕΝ κάνει overwrite (verified: `service.renameItem` →
- *  FileManager.moveItem αποτυγχάνει αν ο προορισμός υπάρχει), οπότε ΣΒΗΝΕΤΑΙ
- *  πρώτα ο προορισμός (best-effort) πριν το rename — αλλιώς το atomic rename
- *  θα απέτυχε σε κάθε επανεγγραφή.
+ *  ΑΤΟΜΙΚΟΤΗΤΑ: `writeFile` σε `<proorismos>.tmp-<id>` → ασφαλής εναλλαγή με
+ *  αντίγραφο ασφαλείας `<proorismos>.bak-<id>` → `rename` στον τελικό και διαγραφή
+ *  του αντιγράφου. Σε περίπτωση αποτυχίας του rename, επαναφορά (rollback) από το αντίγραφο.
  *
  *  ΚΩΔΙΚΟΙ ΣΦΑΛΜΑΤΩΝ PLUGIN (verified native, `FilesystemError.swift`):
  *  - `OS-PLUG-FILE-0008` = fileNotFound
@@ -203,6 +201,7 @@ export class CapacitorApothiki implements ApothikiPyli {
     }
     const pliri = topikes.timi;
     const prosorino = `${pliri}.tmp-${tixaio_id()}`;
+    let antigrafo: string | undefined;
     try {
       await ensurePrivateDataDirectory(this.riza);
       // Το mkdir αφορά μόνο τον γονικό φάκελο. Αν περάσει το πλήρες όνομα
@@ -222,17 +221,51 @@ export class CapacitorApothiki implements ApothikiPyli {
         data: encoding === undefined ? se_base64(dedomena) : new TextDecoder().decode(dedomena),
         ...(encoding !== undefined ? { encoding } : {}),
       });
-      await svise_an_yparxei(pliri);
-      await Filesystem.rename({
-        from: prosorino,
-        to: pliri,
-        directory: PRIVATE_DATA_DIRECTORY,
-      });
+
+      const yparxei_proigoumeno = await yparxei_arxeio(pliri);
+      if (yparxei_proigoumeno) {
+        antigrafo = `${pliri}.bak-${tixaio_id()}`;
+        await Filesystem.rename({
+          from: pliri,
+          to: antigrafo,
+          directory: PRIVATE_DATA_DIRECTORY,
+        });
+      }
+
+      try {
+        await Filesystem.rename({
+          from: prosorino,
+          to: pliri,
+          directory: PRIVATE_DATA_DIRECTORY,
+        });
+      } catch (sfalmaRename) {
+        if (antigrafo !== undefined) {
+          try {
+            await Filesystem.rename({
+              from: antigrafo,
+              to: pliri,
+              directory: PRIVATE_DATA_DIRECTORY,
+            });
+            antigrafo = undefined;
+          } catch {
+            // best-effort rollback
+          }
+        }
+        throw sfalmaRename;
+      }
+
+      if (antigrafo !== undefined) {
+        await svise_an_yparxei(antigrafo);
+        antigrafo = undefined;
+      }
       return ok(undefined);
     } catch (sfalma) {
       return apotyxia('AGNOSTO', `Απέτυχε η εγγραφή: ${pliri}`, kodikos_plugin(sfalma));
     } finally {
       await svise_an_yparxei(prosorino);
+      if (antigrafo !== undefined) {
+        await svise_an_yparxei(antigrafo);
+      }
     }
   }
 

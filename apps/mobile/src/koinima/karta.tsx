@@ -3,7 +3,7 @@ import './koinima.css';
 
 /** Ιδιότητες αναγλυφής κάρτας. */
 export interface KartaProps {
-  readonly titlos?: string;
+  readonly titlos?: ReactNode;
   readonly ypokeimeno?: string;
   readonly akseis?: ReactNode;
   readonly stoixeia?: ReactNode;

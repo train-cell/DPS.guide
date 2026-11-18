@@ -8,8 +8,10 @@ import {
 } from '../statheres.js';
 import {
   periexei_forma_sindesis,
+  periexei_proklisi_mfa,
   periexei_sfalma_syndesis,
 } from './anixneusi-session.js';
+export { periexei_proklisi_mfa };
 import type { AuthPerivallon, StoixeiaCasSyndesis, SyndesiStratigiki } from './typoi.js';
 
 interface CasFormasPedia {
@@ -108,6 +110,13 @@ export class CasSyndesi implements SyndesiStratigiki {
     // Έλεγχος αποτυχίας CAS
     if (katastasi === 401 || katastasi === 403) {
       return apotyxia('AUTH_APOTYXIA', `Αποτυχία CAS πιστοποίησης: HTTP ${katastasi}`);
+    }
+
+    if (periexei_proklisi_mfa(soma_apantisis)) {
+      return apotyxia(
+        'AUTH_APOTYXIA',
+        'Απαιτείται ταυτοποίηση δύο παραγόντων (2FA/MFA) στον διακομιστή CAS του ιδρύματος.'
+      );
     }
 
     if (periexei_sfalma_syndesis(soma_apantisis) || periexei_forma_sindesis(soma_apantisis)) {

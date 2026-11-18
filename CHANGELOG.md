@@ -10,6 +10,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.1.0
 > public-readiness review of 2026-11-03. Unreleased work belongs in
 > `docs/requests/` or in a new issue, not here.
 
+## [0.1.1] — 2026-11-18
+
+Adversarial Red Team Hardening, iOS Safe Area Protection & Cryptographic Durability.
+
+### Added
+- Dynamic Island and hardware notch protection: safe area insets applied to `.proskelesio` headers in `apps/mobile/src/koinima/koinima.css`.
+- Complete CSS design system and D11 token styles for previously unstyled components (`StreakFreezeModal`, `FwnitikiKarta`, `AntallagiDeck`, `Mnemonika`).
+- Apple HIG minimum 44x44pt touch targets on all interactive capsule buttons, links, and study check-ins.
+- Auto-scroll and sticky action bar in Tutor chat with `messagesEndRef` and safe area bottom insets.
+- Masked password modal dialog with show/hide toggle for local encrypted vault backup export and restore.
+- iOS `Info.plist` permission strings for `NSMicrophoneUsageDescription` and `NSSpeechRecognitionUsageDescription`.
+- MFA / 2FA challenge detection (`periexei_proklisi_mfa`) in university CAS authentication flow.
+- Authenticated Additional Data (`dps.cloud-sync.v1/manifest`) binding in AES-256-GCM zero-knowledge cloud sync.
+- Dynamic path resolution for course documents in PDF viewer (`${kodikos_mathimatos}/arxeia/`).
+
+### Fixed
+- Replaced premature `.unlink()` in Capacitor atomic filesystem storage with safe transactional staging and rollback.
+- Eliminated silent vault catalog wipeouts by enforcing fail-closed guards in `loadIndex()` when `index.enc` is corrupt or absent.
+- Guarded LMS crawler against downloading HTML login pages or expired session redirects as binary documents.
+- Wrapped raw `JSON.parse` with safe `analysise_json` in study map, size calculation, and exam question pipelines.
+- Resolved nested `<button>` inside `<Link>` elements in unit map card headers.
+
 ## [0.1.0] — 2026-11-03
 
 First public release of DPS.guide (iOS via Sideloadly, CLI for Windows/macOS).

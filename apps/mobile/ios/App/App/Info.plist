@@ -4,6 +4,10 @@
 <dict>
   <key>NSFaceIDUsageDescription</key>
   <string>Η εφαρμογή χρησιμοποιεί Face ID μόνο όταν επιλέξεις βιομετρικό ξεκλείδωμα του τοπικού vault.</string>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Η εφαρμογή χρησιμοποιεί το μικρόφωνο για τη φωνητική εξέταση καρτών μελέτης.</string>
+  <key>NSSpeechRecognitionUsageDescription</key>
+  <string>Η εφαρμογή χρησιμοποιεί την αναγνώριση ομιλίας για την αυτόματη αξιολόγηση των φωνητικών απαντήσεων.</string>
   <key>UIFileSharingEnabled</key>
   <false/>
   <key>LSSupportsOpeningDocumentsInPlace</key>

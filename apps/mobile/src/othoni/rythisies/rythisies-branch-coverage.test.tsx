@@ -636,4 +636,93 @@ describe('Rythisies — κάλυψη κλάδων', () => {
     );
     result.unmount();
   });
+
+  describe('Passphrase Modal (αντικατάσταση window.prompt)', () => {
+    it('εμφανίζει masked modal, toggles visibility, ελέγχει >= 12 χαρακτήρες και εξάγει backup', async () => {
+      // Σε κανονικό περιβάλλον χωρίς mock prompt
+      const originalPrompt = window.prompt;
+      // @ts-expect-error test native unmocked prompt
+      window.prompt = function nativePrompt() {};
+      vaultSecurity.mockReturnValue(ergaleio_vault());
+
+      const result = apostrophe_rythisies();
+      await waitFor(() => expect(result.getByTestId('rythisies-ekran')).not.toBeNull(), { timeout: 1000 });
+
+      // Κλικ εξαγωγής
+      fireEvent.click(result.getByTestId('rythisies-backup-export'));
+      await waitFor(() => expect(result.getByTestId('backup-passphrase-input')).not.toBeNull(), { timeout: 1000 });
+
+      const input = result.getByTestId('backup-passphrase-input') as HTMLInputElement;
+      expect(input.type).toBe('password');
+
+      // Toggle εμφάνισης/απόκρυψης
+      const toggleBtn = result.getByLabelText('Εμφάνιση κωδικού');
+      fireEvent.click(toggleBtn);
+      expect(input.type).toBe('text');
+
+      const hideBtn = result.getByLabelText('Απόκρυψη κωδικού');
+      fireEvent.click(hideBtn);
+      expect(input.type).toBe('password');
+
+      // Εισαγωγή κωδικού < 12 χαρακτήρων
+      fireEvent.change(input, { target: { value: 'short-pass' } });
+      fireEvent.click(result.getByTestId('backup-passphrase-submit'));
+      await waitFor(
+        () => expect(result.getByText('Ο κωδικός backup πρέπει να έχει τουλάχιστον 12 χαρακτήρες.')).not.toBeNull(),
+        { timeout: 1000 }
+      );
+
+      // Εισαγωγή έγκυρου κωδικού >= 12 χαρακτήρων
+      fireEvent.change(input, { target: { value: KLEIDI_BACKUP } });
+      fireEvent.click(result.getByTestId('backup-passphrase-submit'));
+
+      await waitFor(() => expect(result.queryByTestId('backup-passphrase-input')).toBeNull(), { timeout: 1000 });
+      await waitFor(() => expect(result.getByText('Το αντίγραφο ασφαλείας εξήχθη επιτυχώς.')).not.toBeNull(), {
+        timeout: 1000,
+      });
+      expect(deliver).toHaveBeenCalledWith(expect.any(Blob), expect.stringContaining('DPS.guide'));
+
+      window.prompt = originalPrompt;
+      result.unmount();
+    });
+
+    it('ακυρώνει το modal και υποστηρίζει modal επαναφοράς', async () => {
+      const originalPrompt = window.prompt;
+      // @ts-expect-error test native unmocked prompt
+      window.prompt = function nativePrompt() {};
+      const fake = ergaleio_vault();
+      vaultSecurity.mockReturnValue(fake);
+
+      const result = apostrophe_rythisies();
+      await waitFor(() => expect(result.getByTestId('rythisies-ekran')).not.toBeNull(), { timeout: 1000 });
+
+      // Άνοιγμα modal και ακύρωση
+      fireEvent.click(result.getByTestId('rythisies-backup-export'));
+      await waitFor(() => expect(result.getByTestId('backup-passphrase-input')).not.toBeNull(), { timeout: 1000 });
+      fireEvent.click(result.getByText('Ακύρωση'));
+      await waitFor(() => expect(result.queryByTestId('backup-passphrase-input')).toBeNull(), { timeout: 1000 });
+
+      // Επαναφορά μέσω modal
+      const fileInput = result.getByTestId('rythisies-backup-file');
+      fireEvent.change(fileInput, { target: { files: [ARXIO_BACKUP] } });
+      await waitFor(() => expect(result.getByTestId('rythisies-backup-restore').disabled).toBe(false), {
+        timeout: 1000,
+      });
+
+      fireEvent.click(result.getByTestId('rythisies-backup-restore'));
+      await waitFor(() => expect(result.getByTestId('backup-passphrase-input')).not.toBeNull(), { timeout: 1000 });
+
+      const passInput = result.getByTestId('backup-passphrase-input');
+      fireEvent.change(passInput, { target: { value: KLEIDI_BACKUP } });
+      fireEvent.click(result.getByTestId('backup-passphrase-submit'));
+
+      await waitFor(() => expect(result.queryByTestId('backup-passphrase-input')).toBeNull(), { timeout: 1000 });
+      await waitFor(() => expect(result.getByText('Το αντίγραφο επαναφέρθηκε επιτυχώς.')).not.toBeNull(), {
+        timeout: 1000,
+      });
+
+      window.prompt = originalPrompt;
+      result.unmount();
+    });
+  });
 });

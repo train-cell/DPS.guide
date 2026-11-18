@@ -558,7 +558,7 @@ describe('vault — EncryptedApothiki σφάλματα', () => {
     );
     expect(await vault.yparxei('x')).toBe(false);
     expect(await vault.lista('.')).toEqual(
-      apotyxia('MI_EGKYRO_SXIMA', 'Δεν ήταν δυνατή η ανάγνωση του κρυπτογραφημένου καταλόγου.'),
+      apotyxia('MI_EGKYRO_SXIMA', 'Ο κρυπτογραφημένος κατάλογος του vault δεν βρέθηκε ή δεν μπορεί να αναγνωσθεί.'),
     );
     const result = await vault.diagrafi('x');
     expect(result.ok).toBe(false);

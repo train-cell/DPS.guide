@@ -13,7 +13,7 @@ import { apotyxia, ektimisi_lepton, ok } from '@dps/core';
 
 import type { EisodosPipeline } from '../porte.js';
 import { arxeio_keimenou, arxeio_xarti, me_riza } from '../statheroi.js';
-import { diavase_arxeia, diavase_xarti, grapse_json } from '../grammata/apothiki-json.js';
+import { analysise_json, diavase_arxeia, diavase_xarti, grapse_json } from '../grammata/apothiki-json.js';
 import { ektekseven_arxeio } from '../grammata/diadromes.js';
 
 /** Κομμάτι σελίδων μιας ενότητας, με τον τύπο του αντίστοιχου τμήματος. */
@@ -94,7 +94,14 @@ export async function megethi(
     if (!gram.ok) {
       continue;
     }
-    perigrammata.set(arxeio.id, JSON.parse(gram.timi) as Perigramma);
+    const analysi = analysise_json(
+      gram.timi,
+      `${kodikos_mathimatos}/.spoudes/perigrammata/${arxeio.id}.json`
+    );
+    if (!analysi.ok) {
+      continue;
+    }
+    perigrammata.set(arxeio.id, analysi.timi as Perigramma);
   }
 
   const enotimes = [];
@@ -182,8 +189,9 @@ async function diavase_keimeno_arxeiou(
   kodikos_mathimatos: string,
   arxeio_id: string
 ): Promise<Apotelesma<Selida[]>> {
+  const diadromi_keimenou = arxeio_keimenou(kodikos_mathimatos, arxeio_id);
   const gram = await p.apothiki.diavase_keimeno(
-    me_riza(p.riza, arxeio_keimenou(kodikos_mathimatos, arxeio_id))
+    me_riza(p.riza, diadromi_keimenou)
   );
   if (!gram.ok) {
     p.katagrafi.sfalma('megethi: το εξαγόμενο κείμενο δεν διαβάστηκε', {
@@ -193,7 +201,15 @@ async function diavase_keimeno_arxeiou(
     });
     return apotyxia('DEN_VRETHIKE', `Λείπει το κείμενο του αρχείου ${arxeio_id}`);
   }
-  const tsti: unknown = JSON.parse(gram.timi);
+  const analysi = analysise_json(gram.timi, diadromi_keimenou);
+  if (!analysi.ok) {
+    p.katagrafi.sfalma('megethi: το εξαγόμενο κείμενο δεν είναι έγκυρο JSON', {
+      kodikos_mathimatos,
+      arxeio_id,
+    });
+    return analysi as Apotelesma<Selida[]>;
+  }
+  const tsti: unknown = analysi.timi;
   if (!Array.isArray(tsti)) {
     return apotyxia('MI_EGKYRO_SXIMA', `Το κείμενο του αρχείου ${arxeio_id} δεν είναι λίστα σελίδων`);
   }

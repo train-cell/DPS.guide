@@ -15,6 +15,7 @@ import {
   pare_epiktasi,
   ypervainei_orio_megethous,
 } from './kanonikopoiisi.js';
+import { einai_lixi_session } from '../auth/anixneusi-session.js';
 import type { ApologismosSygxronismou, ParametroiSygxronismou } from './typoi.js';
 
 function perimene(ms: number): Promise<void> {
@@ -215,6 +216,33 @@ export async function sygxronise_mathima(
     }
 
     const dedomena = lipsi.timi.dyadiko ?? new Uint8Array(0);
+
+    // Έλεγχος content-type και σελίδας login (λήξη session ή ανακατεύθυνση)
+    const contentType = (lipsi.timi.kefalides['content-type'] ?? '').toLowerCase();
+    const telikoUrl = lipsi.timi.teliko_url ?? komvos.url;
+    let somaKeimeno = '';
+    if (dedomena.byteLength > 0 && dedomena.byteLength < 500_000) {
+      try {
+        somaKeimeno = new TextDecoder('utf-8', { fatal: false }).decode(dedomena.subarray(0, 8192));
+      } catch {
+        // δυαδικό περιεχόμενο
+      }
+    }
+    const elegxosSession = einai_lixi_session(katastasi, telikoUrl, somaKeimeno || undefined);
+    const einaiHtmlContentType = contentType.includes('text/html') || contentType.includes('application/xhtml+xml');
+    const periexeiHtml = somaKeimeno.length > 0 && (/^\s*<!DOCTYPE\s+html/i.test(somaKeimeno) || /<html\b/i.test(somaKeimeno));
+    const akyroHtmlGiaMhHtml = (epiktasi !== 'html' && epiktasi !== 'htm') && (einaiHtmlContentType || periexeiHtml);
+
+    if (elegxosSession.lixi || akyroHtmlGiaMhHtml) {
+      const aitia = elegxosSession.lixi
+        ? elegxosSession.aitia
+        : `Επιστράφηκε HTML περιεχόμενο (${contentType || 'text/html'}) αντί για αρχείο τύπου «${epiktasi}»`;
+      katagrafi?.proeidopoiisi(
+        `Απορρίφθηκε η λήψη του αρχείου «${kanoniki_diadromi}» (πιθανή λήξη συνεδρίας ή σελίδα σύνδεσης): ${aitia}`,
+        { kodikos_mathimatos }
+      );
+      continue;
+    }
 
     // Αποθήκευση δυαδικού αρχείου
     const grapsimo = await apothiki.grapse_dyadiko(topiki_diadromi, dedomena);

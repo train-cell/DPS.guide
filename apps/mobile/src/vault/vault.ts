@@ -226,6 +226,12 @@ async function createVaultUnlocked(
   };
   const saved = await storage.grapse_keimeno(HEADER_PATH, JSON.stringify(header));
   if (!saved.ok) throw new VaultError('Δεν ήταν δυνατή η αποθήκευση της ρύθμισης του vault.');
+
+  const initialIndex: VaultIndex = { version: 1, files: {} };
+  const initialCipher = await encrypt(dataKey, new TextEncoder().encode(JSON.stringify(initialIndex)), 'dps.vault.v1/index');
+  const indexSaved = await storage.grapse_dyadiko(INDEX_PATH, new TextEncoder().encode(JSON.stringify(initialCipher)));
+  if (!indexSaved.ok) throw new VaultError('Δεν ήταν δυνατή η αποθήκευση της ρύθμισης του vault.');
+
   return { session: { storage: new EncryptedApothiki(storage, dataKey), dataKey }, recoveryKey };
 }
 
@@ -572,6 +578,8 @@ async function restoreEncryptedBackupUnlocked(
   const reader = new BackupStreamReader(backup.stream().getReader());
   const writtenPaths = new Set<string>();
   const writtenSecrets = new Set<(typeof BACKUP_SECRET_KEYS)[number]>();
+  const stagedFiles = new Map<string, Uint8Array>();
+  const stagedSecrets = new Map<(typeof BACKUP_SECRET_KEYS)[number], string>();
   try {
     const prefix = await reader.readExact(24);
     if (prefix === null) {
@@ -597,29 +605,29 @@ async function restoreEncryptedBackupUnlocked(
     }
     const wrappingKey = await deriveWrappingKey(backupPassword, prefix.subarray(8, 24), kdfIterations);
     const backupAadPrefix = `dps.backup.v${backupVersion}`;
-    const files = new Set<string>();
     let hasHeader = false;
     const importedSecretKeys = new Set<string>();
     const parser = new BackupPlaintextReader(async (record) => {
       if (record.kind === 0) {
-        if (!validateBackupPath(record.path) || files.has(record.path)) throw new VaultError('Το backup περιέχει άκυρη ή διπλή διαδρομή.');
-        const saved = await storage.grapse_dyadiko(record.path, record.data);
-        if (!saved.ok) throw new VaultError('Δεν ήταν δυνατή η εγγραφή των δεδομένων στο vault.');
-        files.add(record.path);
-        writtenPaths.add(record.path);
+        if (!validateBackupPath(record.path) || stagedFiles.has(record.path)) {
+          throw new VaultError('Το backup περιέχει άκυρη ή διπλή διαδρομή.');
+        }
+        stagedFiles.set(record.path, record.data);
         if (record.path === HEADER_PATH) hasHeader = true;
         return;
       }
 
       const keyName = record.path.startsWith('secret:') ? record.path.slice('secret:'.length) : '';
-      if (!(BACKUP_SECRET_KEYS as readonly string[]).includes(keyName) || importedSecretKeys.has(keyName) ||
-          !validSecretEnvelope(new TextDecoder().decode(record.data))) {
+      if (
+        !(BACKUP_SECRET_KEYS as readonly string[]).includes(keyName) ||
+        importedSecretKeys.has(keyName) ||
+        !validSecretEnvelope(new TextDecoder().decode(record.data))
+      ) {
         throw new VaultError('Το backup περιέχει μη έγκυρο κρυπτογραφημένο μυστικό.');
       }
       const key = keyName as (typeof BACKUP_SECRET_KEYS)[number];
       const value = new TextDecoder().decode(record.data);
-      await secrets.vale(key, value);
-      writtenSecrets.add(key);
+      stagedSecrets.set(key, value);
       importedSecretKeys.add(keyName);
     });
 
@@ -656,7 +664,20 @@ async function restoreEncryptedBackupUnlocked(
       }
     }
     if (await reader.hasTrailingBytes()) throw new VaultError('Το backup περιέχει δεδομένα μετά την τελική υπογραφή.');
-    if (!hasHeader || !(await vaultExists(storage))) throw new VaultError('Το backup δεν περιέχει πλήρες vault.');
+    if (!hasHeader) throw new VaultError('Το backup δεν περιέχει πλήρες vault.');
+
+    // Commit staged data only after full stream & MAC verification
+    for (const [path, data] of stagedFiles) {
+      const saved = await storage.grapse_dyadiko(path, data);
+      if (!saved.ok) throw new VaultError('Δεν ήταν δυνατή η εγγραφή των δεδομένων στο vault.');
+      writtenPaths.add(path);
+    }
+    for (const [key, value] of stagedSecrets) {
+      await secrets.vale(key, value);
+      writtenSecrets.add(key);
+    }
+
+    if (!(await vaultExists(storage))) throw new VaultError('Το backup δεν περιέχει πλήρες vault.');
     await readHeader(storage);
   } catch (reason) {
     for (const path of writtenPaths) await storage.diagrafi(path);
@@ -674,8 +695,7 @@ export class EncryptedApothiki implements ApothikiPyli {
   private async loadIndex(): Promise<VaultIndex> {
     const stored = await this.storage.diavase_dyadiko(INDEX_PATH);
     if (!stored.ok) {
-      if (stored.sfalma.kodikos === 'DEN_VRETHIKE') return { version: 1, files: {} };
-      throw new VaultError('Δεν ήταν δυνατή η ανάγνωση του κρυπτογραφημένου καταλόγου.');
+      throw new VaultError('Ο κρυπτογραφημένος κατάλογος του vault δεν βρέθηκε ή δεν μπορεί να αναγνωσθεί.');
     }
     try {
       const clear = await decrypt(this.dataKey, this.decodeCipher(stored.timi), 'dps.vault.v1/index');
@@ -726,7 +746,10 @@ export class EncryptedApothiki implements ApothikiPyli {
         if (!stored.ok) return apotyxia('DEN_VRETHIKE', 'Το κρυπτογραφημένο αρχείο δεν βρέθηκε.');
         const clear = await decrypt(this.dataKey, this.decodeCipher(stored.timi), `dps.vault.v1/file/${id}`);
         return ok(clear);
-      } catch {
+      } catch (reason) {
+        if (reason instanceof VaultError) {
+          return apotyxia('MI_EGKYRO_SXIMA', reason.message);
+        }
         return apotyxia('MI_EGKYRO_SXIMA', 'Δεν ήταν δυνατή η αποκρυπτογράφηση του αρχείου.');
       }
     });
@@ -751,7 +774,10 @@ export class EncryptedApothiki implements ApothikiPyli {
         }
         if (previousId !== undefined) await this.storage.diagrafi(`${OBJECTS_PATH}/${previousId}.enc`);
         return ok(undefined);
-      } catch {
+      } catch (reason) {
+        if (reason instanceof VaultError) {
+          return apotyxia('MI_EGKYRO_SXIMA', reason.message);
+        }
         return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η κρυπτογράφηση και αποθήκευση του αρχείου.');
       }
     });
@@ -772,7 +798,10 @@ export class EncryptedApothiki implements ApothikiPyli {
       try {
         const files = Object.keys((await this.loadIndex()).files);
         return ok(files.filter((path) => prefix === '' || path.startsWith(`${prefix}/`)).sort());
-      } catch {
+      } catch (reason) {
+        if (reason instanceof VaultError) {
+          return apotyxia('MI_EGKYRO_SXIMA', reason.message);
+        }
         return apotyxia('MI_EGKYRO_SXIMA', 'Δεν ήταν δυνατή η ανάγνωση του κρυπτογραφημένου καταλόγου.');
       }
     });
@@ -790,8 +819,8 @@ export class EncryptedApothiki implements ApothikiPyli {
         if (!(await this.saveIndex(index))) return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η ενημέρωση του vault.');
         await this.storage.diagrafi(`${OBJECTS_PATH}/${id}.enc`);
         return ok(undefined);
-      } catch {
-        return apotyxia('AGNOSTO', 'Δεν ήταν δυνατή η διαγραφή του αρχείου από το vault.');
+      } catch (reason) {
+        return apotyxia('AGNOSTO', reason instanceof VaultError ? reason.message : 'Δεν ήταν δυνατή η διαγραφή του αρχείου από το vault.');
       }
     });
   }

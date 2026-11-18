@@ -65,16 +65,51 @@ function encryptedBackupRecord(kind: 0 | 1, iv: Uint8Array, ciphertext: Uint8Arr
   return record;
 }
 
+async function writeInitialIndex(storage: ApothikiPyli, dataKey: Uint8Array): Promise<void> {
+  const importedKey = await crypto.subtle.importKey('raw', Uint8Array.from(dataKey).buffer, { name: 'AES-GCM' }, true, ['encrypt']);
+  const initialIndex = { version: 1, files: {} };
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: Uint8Array.from(iv).buffer, additionalData: encoder.encode('dps.vault.v1/index') },
+    importedKey,
+    Uint8Array.from(encoder.encode(JSON.stringify(initialIndex))).buffer,
+  ));
+  const ciphertext = { iv: encodeBase64(iv), data: encodeBase64(encrypted) };
+  await storage.grapse_dyadiko('.dps-vault/index.enc', encoder.encode(JSON.stringify(ciphertext)));
+}
+
 async function createLegacyBackup(): Promise<Blob> {
   const dataKey = crypto.getRandomValues(new Uint8Array(32));
   const envelope = await makeLegacyEnvelope(dataKey, MASTER_PASSWORD, 'dps.vault.v1/master');
   const vaultHeader = encoder.encode(JSON.stringify({ version: 1, master: envelope, recovery: envelope }));
-  const path = encoder.encode('.dps-vault/header.json');
-  const recordHeader = new Uint8Array(11);
-  recordHeader[0] = 0;
-  new DataView(recordHeader.buffer).setUint16(1, path.byteLength, false);
-  new DataView(recordHeader.buffer).setBigUint64(3, BigInt(vaultHeader.byteLength), false);
-  const plaintext = concatenate(recordHeader, path, vaultHeader, new Uint8Array([255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]));
+
+  const importedKey = await crypto.subtle.importKey('raw', Uint8Array.from(dataKey).buffer, { name: 'AES-GCM' }, true, ['encrypt']);
+  const initialIndex = { version: 1, files: {} };
+  const indexIv = crypto.getRandomValues(new Uint8Array(12));
+  const encryptedIndex = new Uint8Array(await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: Uint8Array.from(indexIv).buffer, additionalData: encoder.encode('dps.vault.v1/index') },
+    importedKey,
+    Uint8Array.from(encoder.encode(JSON.stringify(initialIndex))).buffer,
+  ));
+  const indexCiphertext = encoder.encode(JSON.stringify({ iv: encodeBase64(indexIv), data: encodeBase64(encryptedIndex) }));
+
+  const path1 = encoder.encode('.dps-vault/header.json');
+  const recordHeader1 = new Uint8Array(11);
+  recordHeader1[0] = 0;
+  new DataView(recordHeader1.buffer).setUint16(1, path1.byteLength, false);
+  new DataView(recordHeader1.buffer).setBigUint64(3, BigInt(vaultHeader.byteLength), false);
+
+  const path2 = encoder.encode('.dps-vault/index.enc');
+  const recordHeader2 = new Uint8Array(11);
+  recordHeader2[0] = 0;
+  new DataView(recordHeader2.buffer).setUint16(1, path2.byteLength, false);
+  new DataView(recordHeader2.buffer).setBigUint64(3, BigInt(indexCiphertext.byteLength), false);
+
+  const plaintext = concatenate(
+    recordHeader1, path1, vaultHeader,
+    recordHeader2, path2, indexCiphertext,
+    new Uint8Array([255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+  );
 
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const wrappingKey = await legacyWrappingKey(BACKUP_PASSWORD, salt);
@@ -170,11 +205,23 @@ describe('encrypted vault backup/restore', () => {
     const dataKey = crypto.getRandomValues(new Uint8Array(32));
     const envelope = await makeLegacyEnvelope(dataKey, MASTER_PASSWORD, 'dps.vault.v1/master');
     await storage.grapse_keimeno('.dps-vault/header.json', JSON.stringify({ version: 1, master: envelope, recovery: envelope }));
+    await writeInitialIndex(storage, dataKey);
 
     const session = await unlockVault(storage, MASTER_PASSWORD);
     await session.storage.grapse_keimeno('legacy-vault-check.txt', 'legacy data is readable');
     const check = await session.storage.diavase_keimeno('legacy-vault-check.txt');
     expect(check.ok && check.timi).toBe('legacy data is readable');
+  });
+
+  it('απορρίπτει λειτουργίες αν λείπει ο κρυπτογραφημένος κατάλογος (index.enc)', async () => {
+    const storage = new MnimiApothiki();
+    const created = await createVault(storage, MASTER_PASSWORD);
+    await storage.diagrafi('.dps-vault/index.enc');
+    const res = await created.session.storage.diavase_keimeno('test.txt');
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.minima).toContain('Ο κρυπτογραφημένος κατάλογος του vault δεν βρέθηκε ή δεν μπορεί να αναγνωσθεί.');
+    }
   });
 
   it('κάνει restore παλιό v1 backup με 310.000 iterations', async () => {

@@ -198,6 +198,75 @@ describe('sygxronise_mathima (L15)', () => {
     }
   });
 
+  it('απορρίπτει λήψη αρχείου όταν επιστρέφεται text/html content-type για δυαδικό αρχείο', async () => {
+    eclass.dentro_apotelesma = [
+      {
+        typos: 'arxeio',
+        onoma: 'ekthesi.pdf',
+        diadromi: 'ekthesi.pdf',
+        url: 'https://thales.cs.unipi.gr/courses/PLI101/document/ekthesi.pdf',
+        megethos: 100,
+        imerominia: '2026-10-01',
+      },
+    ];
+
+    http.orise_apantisi('ekthesi.pdf', (): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: 'https://thales.cs.unipi.gr/courses/PLI101/document/ekthesi.pdf',
+      kefalides: { 'content-type': 'text/html; charset=UTF-8' },
+      dyadiko: new TextEncoder().encode('<html><body>Fake HTML instead of PDF</body></html>'),
+    }));
+
+    const res = await sygxronise_mathima({
+      kodikos_mathimatos: KODIKOS,
+      eclass,
+      http,
+      apothiki,
+      katagrafi,
+    });
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi.nea_arxeia).toBe(0);
+    }
+    // Δεν αποθηκεύτηκε ως pdf
+    expect(await apothiki.yparxei(`${KODIKOS}/arxeia/ekthesi.pdf`)).toBe(false);
+  });
+
+  it('απορρίπτει λήψη αρχείου όταν εντοπίζεται φόρμα σύνδεσης ή ανακατεύθυνση login', async () => {
+    eclass.dentro_apotelesma = [
+      {
+        typos: 'arxeio',
+        onoma: 'ergasia.docx',
+        diadromi: 'ergasia.docx',
+        url: 'https://thales.cs.unipi.gr/courses/PLI101/document/ergasia.docx',
+        megethos: 200,
+        imerominia: '2026-10-01',
+      },
+    ];
+
+    http.orise_apantisi('ergasia.docx', (): HttpApantisi => ({
+      katastasi: 200,
+      teliko_url: 'https://thales.cs.unipi.gr/main/login_form.php',
+      kefalides: {},
+      dyadiko: new TextEncoder().encode('<html><form action="login"><input type="password"></form></html>'),
+    }));
+
+    const res = await sygxronise_mathima({
+      kodikos_mathimatos: KODIKOS,
+      eclass,
+      http,
+      apothiki,
+      katagrafi,
+    });
+
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.timi.nea_arxeia).toBe(0);
+    }
+    expect(await apothiki.yparxei(`${KODIKOS}/arxeia/ergasia.docx`)).toBe(false);
+  });
+
   it('αμετάβλητο αρχείο -> καμία νέα λήψη (0 network downloads)', async () => {
     const dedomena = new TextEncoder().encode('Σταθερό περιεχόμενο');
     const kanoniki_diadromi = 'theoria.pdf';

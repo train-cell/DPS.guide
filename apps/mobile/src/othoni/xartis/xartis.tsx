@@ -187,9 +187,18 @@ export function KartaEnotitas({
     [allaxe_telia, enotita.id]
   );
 
+  const titlosStoixeio =
+    dromos !== null ? (
+      <Link to={dromos} className="karta-titlos-link">
+        {enotita.titlos} →
+      </Link>
+    ) : (
+      enotita.titlos
+    );
+
   const karta = (
     <Karta
-        titlos={enotita.titlos}
+        titlos={titlosStoixeio}
         ypokeimeno={`Σειρά ${enotita.seira} · ${stilise_lepta(enotita.lepta_ektimisi)}`}
         akseis={
           <div className="karta-mathimatos-akseis">
@@ -276,12 +285,10 @@ export function KartaEnotitas({
     />
   );
 
-  return dromos === null ? (
-    <div data-testid="xartis-enotita">{karta}</div>
-  ) : (
-    <Link to={dromos} data-testid="xartis-enotita">
+  return (
+    <div className="xartis-kartela-plaisio" data-testid="xartis-enotita">
       {karta}
-    </Link>
+    </div>
   );
 }
 

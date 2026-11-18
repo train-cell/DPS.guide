@@ -126,6 +126,55 @@ describe('CasSyndesi (L14)', () => {
     expect(post_metritis).toBe(1);
   });
 
+  it('εντοπίζει πρόκληση MFA/2FA στον CAS διακομιστή και επιστρέφει σαφές μήνυμα', async () => {
+    http.orise_apantisi('/modules/auth/cas.php', (): HttpApantisi => {
+      return {
+        katastasi: 200,
+        teliko_url: 'https://sso.unipi.gr/login',
+        kefalides: {},
+        keimeno: `
+          <form action="https://sso.unipi.gr/login" method="post">
+            <input type="text" name="username">
+            <input type="password" name="password">
+            <input type="hidden" name="lt" value="LT-1">
+          </form>
+        `,
+      };
+    });
+
+    http.orise_apantisi('sso.unipi.gr/login', (): HttpApantisi => {
+      return {
+        katastasi: 200,
+        teliko_url: 'https://sso.unipi.gr/login/mfa',
+        kefalides: {},
+        keimeno: `
+          <div>Απαιτείται ταυτοποίηση δύο παραγόντων (2FA). Παρακαλώ εισάγετε τον κωδικό OTP / SMS.</div>
+          <form action="https://sso.unipi.gr/login/mfa" method="post">
+            <input type="text" name="otp" placeholder="123456">
+            <input type="submit" value="Επαλήθευση">
+          </form>
+        `,
+      };
+    });
+
+    const stratigiki = new CasSyndesi({
+      onoma_xristi: 'sso_user',
+      kodikos: 'correct_pass',
+    });
+
+    const res = await stratigiki.syndesi({
+      http,
+      base_url: VASIKO_URL_ECLASS,
+      cookie_diaxeiristis,
+    });
+
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.sfalma.kodikos).toBe('AUTH_APOTYXIA');
+      expect(res.sfalma.minima).toBe('Απαιτείται ταυτοποίηση δύο παραγόντων (2FA/MFA) στον διακομιστή CAS του ιδρύματος.');
+    }
+  });
+
   it('κενά CAS διαπιστευτήρια -> AUTH_APOTYXIA χωρίς αποστολή αιτημάτων', async () => {
     const stratigiki = new CasSyndesi({
       onoma_xristi: '',

@@ -6,6 +6,17 @@ const PROTYPOS_LOGIN_URL = /\/(?:main\/login_form\.php|modules\/auth\/|cas\/logi
 const PROTYPOS_SFALMA_LOGIN =
   /(?:alert-danger|alert\s+alert-danger|εσφαλμέν(?:ο|α)|λάθος\s+(?:όνομα|κωδικός)|invalid\s+credentials|authentication\s+failed|login_fail|wrong\s+password)/i;
 
+const PROTYPOS_MFA =
+  /(?:2fa|mfa|two[- ]factor|multi[- ]factor|totp|otp|one[- ]time\s+password|authenticator|duo|sms\s*code|verification\s*code|ταυτοποίηση(?:ς)?\s+δύο\s+παραγόντων|δεύτερος\s+παράγοντας|κωδικ(?:ός|ό)\s+(?:επαλήθευσης|μιας\s+χρήσης|επιβεβαίωσης)|name=["']?(?:token|otp|code|passcode|mfa|twoFactorPin)["']?)/i;
+
+/**
+ * Ελέγχει αν το HTML περιέχει πρόκληση ταυτοποίησης δύο παραγόντων (MFA / 2FA / OTP).
+ */
+export function periexei_proklisi_mfa(html: string): boolean {
+  if (!html) return false;
+  return PROTYPOS_MFA.test(html);
+}
+
 /**
  * Ελέγχει αν το HTML περιέχει φόρμα σύνδεσης (username/password).
  */

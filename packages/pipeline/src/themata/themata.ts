@@ -26,7 +26,7 @@ import { enotita_se_keimeno, perivale_dedomena } from '@dps/ai';
 import type { EisodosPipeline } from '../porte.js';
 import { arxeio_apodosis, diadromi_thematon, me_riza, THERMOKRASIA_ODIGOU } from '../statheroi.js';
 import { ektekseven_arxeio } from '../grammata/diadromes.js';
-import { diavase_xarti, grapse_json } from '../grammata/apothiki-json.js';
+import { analysise_json, diavase_xarti, grapse_json } from '../grammata/apothiki-json.js';
 
 /** Έκδοση του prompt P5 (αντιστοίχιση θεμάτων, αυξάνει σε κάθε αλλαγή κειμένου). */
 export const EKDOSI_PROMPT_P5 = 'p5@1';
@@ -193,7 +193,20 @@ export async function ftiaxe_analysi_thematon(
       });
       return keimeno;
     }
-    const anagnos = keimeno.timi.trim() === '' ? null : JSON.parse(keimeno.timi);
+    if (keimeno.timi.trim() === '') {
+      p.katagrafi.sfalma('analysi_thematon: το υπάρχον apodosi.json δεν είναι έγκυρο JSON', {
+        kodikos_mathimatos,
+      });
+      return apotyxia('MI_EGKYRO_SXIMA', 'Το υπάρχον apodosi.json δεν είναι έγκυρο JSON.');
+    }
+    const analysi = analysise_json(keimeno.timi, diadromi_apodosis);
+    if (!analysi.ok) {
+      p.katagrafi.sfalma('analysi_thematon: το υπάρχον apodosi.json δεν είναι έγκυρο JSON', {
+        kodikos_mathimatos,
+      });
+      return apotyxia('MI_EGKYRO_SXIMA', 'Το υπάρχον apodosi.json δεν είναι έγκυρο JSON.');
+    }
+    const anagnos = analysi.timi;
     if (anagnos === null || typeof anagnos !== 'object' || Array.isArray(anagnos)) {
       p.katagrafi.sfalma('analysi_thematon: το υπάρχον apodosi.json δεν είναι έγκυρο JSON', {
         kodikos_mathimatos,

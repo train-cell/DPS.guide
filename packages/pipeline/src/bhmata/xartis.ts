@@ -12,7 +12,7 @@ import { prompt_xarti } from '@dps/ai';
 import { apotyxia, epikyrose_xarti, ok, vres_kyklous } from '@dps/core';
 import type { EisodosPipeline } from '../porte.js';
 import { THERMOKRASIA_XARTI, arxeio_xarti, me_riza } from '../statheroi.js';
-import { diavase_arxeia, grapse_json } from '../grammata/apothiki-json.js';
+import { analysise_json, diavase_arxeia, grapse_json } from '../grammata/apothiki-json.js';
 import type { IparastypotisProodou } from '../grammata/proodos.js';
 import { proodos } from '../grammata/proodos.js';
 
@@ -39,7 +39,18 @@ export async function xartis(
     if (!gram.ok) {
       continue;
     }
-    perigrammata.push(JSON.parse(gram.timi) as Perigramma);
+    const analysi = analysise_json(
+      gram.timi,
+      `${kodikos_mathimatos}/.spoudes/perigrammata/${arxeio.id}.json`
+    );
+    if (!analysi.ok) {
+      p.katagrafi.proeidopoiisi('xartis: περίγραμμα με άκυρη μορφή JSON', {
+        kodikos_mathimatos,
+        arxeio_id: arxeio.id,
+      });
+      continue;
+    }
+    perigrammata.push(analysi.timi as Perigramma);
   }
 
   if (perigrammata.length === 0) {

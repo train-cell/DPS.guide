@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { IonButton, IonSpinner } from '@ionic/react';
@@ -218,6 +218,11 @@ export default function TutorChat() {
   );
   const activeSection = courseContext?.section ?? null;
   const allMessages = useMemo(() => [...history, ...extraMessages], [history, extraMessages]);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
+  }, [allMessages, sending]);
 
   useEffect(() => {
     let active = true;
@@ -338,7 +343,7 @@ export default function TutorChat() {
   const sectionLabel = activeSection?.titlos ?? (sectionId || 'όλο το μάθημα');
 
   return (
-    <div className="episkefsi" data-testid="tutor-ekran">
+    <div className="episkefsi tutor-ekran-periektis" data-testid="tutor-ekran">
       <ProskelesioOmonimas
         titlos="Tutor"
         ypokeimeno={course ? `${course.kodikos} · ${course.titlos}` : 'Επίλεξε μάθημα για να ξεκινήσεις'}
@@ -384,6 +389,7 @@ export default function TutorChat() {
                   : message.keimeno}
               </div>
             ))}
+            <div ref={messagesEndRef} aria-hidden="true" />
           </div>
           {sending && <div className="katastasi-periohos"><IonSpinner name="crescent" /><p className="katastasi-ypokeimeno">Δημιουργία απάντησης…</p></div>}
           <div className="tutor-draseis-mpara" role="toolbar" aria-label="Ενέργειες tutor">

@@ -200,22 +200,62 @@ describe('CapacitorApothiki', () => {
     expect(h.kliseis.filter((k) => k.startsWith('mkdir:'))).toEqual([]);
   });
 
-  it('γράφει ατομικά: temp → delete προορισμού → rename', async () => {
+  it('γράφει ατομικά: temp → backup υπάρχοντος → rename → διαγραφή backup', async () => {
     const apothiki = new CapacitorApothiki('');
     diabase('mathimata.json', 'παλιό');
     await apothiki.grapse_keimeno('mathimata.json', 'νέο');
 
     const reumat = h.kliseis.filter((k) => k.startsWith('writeFile:mathimata.json.tmp-'));
-    const diagrafes = h.kliseis.filter((k) => k === 'deleteFile:mathimata.json');
+    const antigrafa = h.kliseis.filter((k) => /^rename:mathimata\.json>mathimata\.json\.bak-.*$/.test(k));
     const metonomasies = h.kliseis.filter((k) => /^rename:mathimata\.json\.tmp-.*>mathimata\.json$/.test(k));
+    const diagrafesBackup = h.kliseis.filter((k) => /^deleteFile:mathimata\.json\.bak-.*$/.test(k));
+    const diagrafesProorismou = h.kliseis.filter((k) => k === 'deleteFile:mathimata.json');
 
     expect(reumat).toHaveLength(1);
-    expect(diagrafes).toHaveLength(1);
+    expect(antigrafa).toHaveLength(1);
     expect(metonomasies).toHaveLength(1);
-    const prosorina = [...h.arxeia.keys()].filter((k) => k.startsWith('mathimata.json.tmp-'));
+    expect(diagrafesBackup).toHaveLength(1);
+    expect(diagrafesProorismou).toHaveLength(0); // Δεν σβήνεται ποτέ πρόωρα ο προορισμός
+    const prosorina = [...h.arxeia.keys()].filter(
+      (k) => k.startsWith('mathimata.json.tmp-') || k.startsWith('mathimata.json.bak-')
+    );
     expect(prosorina).toHaveLength(0);
     const teliko = await apothiki.diavase_keimeno('mathimata.json');
     expect(teliko.ok && teliko.timi).toBe('νέο');
+  });
+
+  it('κάνει rollback από το αντίγραφο ασφαλείας αν αποτύχει το rename του temp', async () => {
+    const apothiki = new CapacitorApothiki('');
+    diabase('mathimata.json', 'παλιό');
+
+    let metritisRename = 0;
+    const proigoumeniYlopoiisi = vi.mocked(Filesystem.rename).getMockImplementation();
+    vi.mocked(Filesystem.rename).mockImplementation(async (opts) => {
+      metritisRename += 1;
+      if (metritisRename === 2) {
+        throw Object.assign(new Error('rename failed'), { code: 'OS-PLUG-FILE-0013' });
+      }
+      h.kliseis.push(`rename:${opts.from}>${opts.to}`);
+      const dedomena = h.arxeia.get(opts.from);
+      if (dedomena === undefined) {
+        throw Object.assign(new Error('does not exist'), { code: 'OS-PLUG-FILE-0008' });
+      }
+      h.arxeia.set(opts.to, dedomena);
+      h.arxeia.delete(opts.from);
+    });
+
+    try {
+      const res = await apothiki.grapse_keimeno('mathimata.json', 'νέο');
+      expect(res.ok).toBe(false);
+
+      // Το παλιό περιεχόμενο έχει αποκατασταθεί
+      const periexomeno = await apothiki.diavase_keimeno('mathimata.json');
+      expect(periexomeno.ok && periexomeno.timi).toBe('παλιό');
+    } finally {
+      if (proigoumeniYlopoiisi) {
+        vi.mocked(Filesystem.rename).mockImplementation(proigoumeniYlopoiisi);
+      }
+    }
   });
 
   it('διαγραφέας λείπειντος αρχείου → DEN_VRETHIKE', async () => {
