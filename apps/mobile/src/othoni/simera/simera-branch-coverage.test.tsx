@@ -451,10 +451,12 @@ describe('simera — εξέταση, μάθημα και φιλτραρίσμα�
     result.unmount();
   });
 
-  it('διαχειρίζεται δύο εξετάσεις και τις排序', async () => {
+  it('διαχειρίζεται δύο εξετάσεις και τις ταξινομεί', async () => {
+    const d1 = new Date(Date.now() + 5 * 86_400_000).toISOString().slice(0, 10);
+    const d2 = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
     const exetaseis: Exetasi[] = [
-      { kodikos_mathimatos: 'ΠΛΗ201', imerominia: '2026-11-20', tropos: 'kleista_vivlia' },
-      { kodikos_mathimatos: 'ΠΛΗ101', imerominia: '2026-11-15', tropos: 'anoixta_vivlia' },
+      { kodikos_mathimatos: 'ΠΛΗ201', imerominia: d1, tropos: 'kleista_vivlia' },
+      { kodikos_mathimatos: 'ΠΛΗ101', imerominia: d2, tropos: 'anoixta_vivlia' },
     ];
     const result = await apodosi_simeras({ exetaseis });
     await periimeno_fortosi(result);
